@@ -1,0 +1,141 @@
+{
+  "target_time": "2026",
+  "domains": [
+    "ordinal_country_president",
+    "ordinal_country_prime_minister",
+    "ordinal_religious_leader",
+    "ordinal_university_chancellor",
+    "acquisition_purchase_price"
+  ],
+  "accepted": 0,
+  "rejected": 0,
+  "output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\office_history_focus_accepted.jsonl",
+  "rejected_output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\office_history_focus_rejected.jsonl",
+  "problem_backlog_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\office_history_focus_problem_backlog.md",
+  "template_results": [
+    {
+      "domain": "ordinal_country_president",
+      "status": "error:TimeoutError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 1,
+        "cache_hits": 0,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [],
+        "problems": []
+      },
+      "error_message": "TimeoutError: The read operation timed out"
+    },
+    {
+      "domain": "ordinal_country_prime_minister",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3FsubjectLabel+%3Foffice+%3FofficeLabel+%3Fanswer+%3FanswerLabel+%3Fstart+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ6256.%0A++%3Fanswer+p%3AP39+%3Fstmt.%0A++%3Fstmt+ps%3AP39+%3Foffice%3B%0A++++++++pq%3AP580+%3Fstart.%0A++%7B%0A++++%7B+%3Foffice+wdt%3AP1001+%3Fsubject.+%7D%0A++++UNION%0A++++%7B+%3Foffice+wdt%3AP17+%3Fsubject.+%7D%0A++++UNION%0A++++%7B+%3Fstmt+pq%3AP17+%3Fsubject.+%7D%0A++++UNION%0A++++%7B+%3Fstmt+pq%3AP1001+%3Fsubject.+%7D%0A++++UNION%0A++++%7B+%3Fstmt+pq%3AP642+%3Fsubject.+%7D%0A++%7D%0A++%3Foffice+rdfs%3Alabel+%3FofficeLabel.%0A++FILTER%28LANG%28%3FofficeLabel%29+%3D+%22en%22%29%0A++FILTER%28CONTAINS%28LCASE%28STR%28%3FofficeLabel%29%29%2C+%22prime+minister%22%29%29%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0AORDER+BY+%3Fstart+%3Fsubject%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7851,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "ordinal_religious_leader",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3FsubjectLabel+%3Foffice+%3FofficeLabel+%3Fanswer+%3FanswerLabel+%3Fstart+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ246434.%0A++%3Fanswer+p%3AP39+%3Fstmt.%0A++%3Fstmt+ps%3AP39+%3Foffice%3B%0A++++++++pq%3AP580+%3Fstart.%0A++FILTER%28%3Foffice+%3D+%3Fsubject%29%0A++%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0AORDER+BY+%3Fstart+%3Fsubject%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7247,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "ordinal_university_chancellor",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3FsubjectLabel+%3Foffice+%3FofficeLabel+%3Fanswer+%3FanswerLabel+%3Fstart+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ3918.%0A++%3Fanswer+p%3AP39+%3Fstmt.%0A++%3Fstmt+ps%3AP39+%3Foffice%3B%0A++++++++pq%3AP580+%3Fstart.%0A++%7B%0A++++%7B+%3Foffice+wdt%3AP1001+%3Fsubject.+%7D%0A++++UNION%0A++++%7B+%3Foffice+wdt%3AP642+%3Fsubject.+%7D%0A++++UNION%0A++++%7B+%3Foffice+wdt%3AP17+%3Fsubject.+%7D%0A++++UNION%0A++++%7B+%3Fstmt+pq%3AP642+%3Fsubject.+%7D%0A++++UNION%0A++++%7B+%3Fstmt+pq%3AP108+%3Fsubject.+%7D%0A++++UNION%0A++++%7B+%3Fstmt+pq%3AP1001+%3Fsubject.+%7D%0A++%7D%0A++%3Foffice+rdfs%3Alabel+%3FofficeLabel.%0A++FILTER%28LANG%28%3FofficeLabel%29+%3D+%22en%22%29%0A++FILTER%28CONTAINS%28LCASE%28STR%28%3FofficeLabel%29%29%2C+%22chancellor%22%29%29%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0AORDER+BY+%3Fstart+%3Fsubject%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7275,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "acquisition_purchase_price",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Ftarget+%3FtargetLabel+%3Facquirer+%3FacquirerLabel+%3Fstart+%3FpriceAmount+WHERE+%7B%0A++%3Ftarget+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ783794%3B%0A++++++++++p%3AP127+%3Fstmt.%0A++%3Fstmt+ps%3AP127+%3Facquirer%3B%0A++++++++pq%3AP580+%3Fstart%3B%0A++++++++pqv%3AP2130+%3FpriceNode.%0A++%3FpriceNode+wikibase%3AquantityAmount+%3FpriceAmount%3B%0A+++++++++++++wikibase%3AquantityUnit+wd%3AQ4917.%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Ftarget+p%3AP127+%3FotherStmt.%0A++++%3FotherStmt+ps%3AP127+%3Facquirer%3B%0A+++++++++++++++pq%3AP580+%3Fstart%3B%0A+++++++++++++++pqv%3AP2130+%3FotherPriceNode.%0A++++%3FotherPriceNode+wikibase%3AquantityAmount+%3FotherPriceAmount%3B%0A++++++++++++++++++++wikibase%3AquantityUnit+wd%3AQ4917.%0A++++FILTER%28%3FotherStmt+%21%3D+%3Fstmt%29%0A++++FILTER%28%3FotherPriceAmount+%21%3D+%3FpriceAmount%29%0A++%7D%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0AORDER+BY+%3Fstart+%3Ftarget%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 5264,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "resume_version": 1,
+  "domain": "new_trail_country",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 8,
+    "network_requests": 10,
+    "cache_hits": 0,
+    "retry_count": 2,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ179049%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3907,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q137706884%7CQ137706918%7CQ137899046%7CQ138297640%7CQ138298910%7CQ138302227%7CQ138302229%7CQ139121149%7CQ139379226%7CQ139379227%7CQ139379228%7CQ139379229%7CQ139379231%7CQ139379232%7CQ139379233%7CQ139379243%7CQ139379245%7CQ139379246%7CQ139379249%7CQ139379262%7CQ139379263%7CQ139379264%7CQ139379265%7CQ139379270%7CQ139379277%7CQ139379442%7CQ139379457%7CQ139379459%7CQ139379460%7CQ139379470%7CQ139379473%7CQ139379479%7CQ139379482%7CQ139379487%7CQ139379489%7CQ139379490%7CQ139379493%7CQ139379494%7CQ139379511%7CQ139379514%7CQ139379516%7CQ139379517%7CQ139379518%7CQ139379520%7CQ139379523%7CQ139379539%7CQ139379541%7CQ139506263%7CQ142%7CQ20&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4141,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q213%7CQ34%7CQ55693617&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4015,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1019371%7CQ1021080%7CQ102377%7CQ103093%7CQ103659%7CQ103672%7CQ103679%7CQ103686%7CQ103691%7CQ103699%7CQ103707%7CQ103732%7CQ103738%7CQ104231%7CQ104257%7CQ10428388%7CQ104746%7CQ104877%7CQ104891%7CQ104926%7CQ104940%7CQ105075%7CQ106789%7CQ106915%7CQ1085%7CQ1137%7CQ1142%7CQ1152%7CQ1161950%7CQ1173%7CQ117728%7CQ1179%7CQ1190%7CQ12130%7CQ123480%7CQ123855%7CQ126125%7CQ127676%7CQ127693126%7CQ129003%7CQ1367500%7CQ13917%7CQ13947%7CQ13950%7CQ14056%7CQ14103%7CQ14112%7CQ142%7CQ15089606%7CQ15104&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 3,
+        "duration_ms": 11669,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q161258%7CQ16393%7CQ16394%7CQ1646389%7CQ1689665%7CQ16954%7CQ16961%7CQ16987%7CQ16994%7CQ17005%7CQ17009%7CQ17012%7CQ17054%7CQ17063%7CQ17070%7CQ177019%7CQ179049%7CQ179164%7CQ18338206%7CQ18578267%7CQ18677767%7CQ18677875%7CQ18677983%7CQ18678082%7CQ18678265%7CQ188373%7CQ188399%7CQ190550%7CQ190930%7CQ191091%7CQ192536%7CQ192697%7CQ192702%7CQ193266%7CQ193295%7CQ193307%7CQ193317%7CQ20%7CQ2001466%7CQ20181813%7CQ21101734%7CQ213%7CQ214048%7CQ2254%7CQ23408%7CQ25231%7CQ25362%7CQ267462%7CQ271153%7CQ2729021&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 10681,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q301259%7CQ308245%7CQ30971%7CQ317321%7CQ33788%7CQ34%7CQ34617%7CQ35555%7CQ3624078%7CQ37399%7CQ3769%7CQ41614%7CQ42009%7CQ43309861%7CQ43311297%7CQ46070%7CQ463%7CQ473972%7CQ48316%7CQ484008%7CQ484070%7CQ485253%7CQ487502%7CQ492614%7CQ493066%7CQ493815%7CQ493841%7CQ493855%7CQ499397%7CQ499415%7CQ499464%7CQ501532%7CQ503144%7CQ503184%7CQ503209%7CQ504239%7CQ504594%7CQ504817%7CQ50614%7CQ50615%7CQ50616%7CQ50617%7CQ50618%7CQ50619%7CQ50621%7CQ50623%7CQ50624%7CQ50625%7CQ50626%7CQ50627&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 13136,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q50628%7CQ50629%7CQ50630%7CQ50631%7CQ50632%7CQ507670%7CQ508153%7CQ509546%7CQ509568%7CQ510135%7CQ510198%7CQ51576574%7CQ515861%7CQ516336%7CQ52600648%7CQ56404886%7CQ56405721%7CQ56406057%7CQ56407177%7CQ56407178%7CQ585%7CQ605329%7CQ60742846%7CQ6256%7CQ62589%7CQ62623%7CQ62651%7CQ63791824%7CQ7270%7CQ8545897%7CQ951116%7CQ972564&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3817,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=r%C3%A9serve+naturelle+r%C3%A9gionale+du+Tertre+des+Canaux&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 899,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

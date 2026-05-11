@@ -1,0 +1,48 @@
+{
+  "resume_version": 1,
+  "domain": "textbook_publisher",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 4,
+    "network_requests": 0,
+    "cache_hits": 4,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ571%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP123+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 110,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q116199319%7CQ137441247%7CQ138639711%7CQ138654576%7CQ138677570%7CQ138685781%7CQ138749292%7CQ138750485%7CQ1508259%7CQ389251%7CQ912887&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 59,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1320047%7CQ145%7CQ16%7CQ2085381%7CQ45400320%7CQ479716%7CQ571%7CQ658255%7CQ7725634%7CQ865%7CQ96888669&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 183,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Race%2FGender%2FClass%2FMedia%3A+Considering+Diversity+Across+Audiences%2C+Content%2C+and+Producers&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 27,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

@@ -1,0 +1,178 @@
+{
+  "accepted_total": 18,
+  "rejected_total": 6,
+  "accepted_domains": [
+    "album_performer",
+    "artwork_creator",
+    "benchmark_release_date",
+    "book_original_language",
+    "building_architect",
+    "company_founder",
+    "film_director",
+    "film_source_work_author",
+    "museum_country",
+    "novel_author",
+    "ordinal_tournament_winner",
+    "person_first_degree_university",
+    "product_release_date",
+    "rail_station_country",
+    "scholarly_article_journal",
+    "software_developer",
+    "terminal_opening_date",
+    "video_game_developer"
+  ],
+  "missing_domains": [],
+  "template_results": [
+    {
+      "domain": "film_director",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "novel_author",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "book_original_language",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "video_game_developer",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "software_developer",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "scholarly_article_journal",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "artwork_creator",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "album_performer",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "building_architect",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "rail_station_country",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "museum_country",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "company_founder",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "ordinal_tournament_winner",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "person_first_degree_university",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "ok",
+      "telemetry": {
+        "total_requests": 4,
+        "network_requests": 3,
+        "cache_hits": 1,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fperson+%3Fend+WHERE+%7B%0A++%3Fperson+wdt%3AP31+wd%3AQ5.%0A++%3Fperson+p%3AP69+%3Fstmt.%0A++%3Fstmt+ps%3AP69+%3Funiversity%3B%0A++++++++pq%3AP512+%3Fdegree%3B%0A++++++++pq%3AP582+%3Fend.%0A++%3Funiversity+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ3918.%0A++FILTER%28%3Fend+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fend+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+25&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q16695745%7CQ135104388%7CQ131545188%7CQ96429409%7CQ133841760%7CQ139570344%7CQ131193479%7CQ138779907%7CQ115707594%7CQ138796131%7CQ111445845%7CQ121095206%7CQ95991966%7CQ103822695%7CQ104462770%7CQ138746418%7CQ139010372%7CQ139498926%7CQ90502367%7CQ138566371%7CQ131324125%7CQ138348069%7CQ59563491%7CQ138721749%7CQ91298711&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 3793,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q106480935%7CQ10952014%7CQ110428527%7CQ1129925%7CQ1137652%7CQ1143235%7CQ1321380%7CQ1422458%7CQ1472315%7CQ152171%7CQ1551183%7CQ1567050%7CQ16094493%7CQ163727%7CQ1640731%7CQ16827913%7CQ168751%7CQ17487035%7CQ1765120%7CQ1783148%7CQ1816872%7CQ182973%7CQ183816%7CQ189441%7CQ195359%7CQ1961570%7CQ19709637%7CQ1972050%7CQ1974562%7CQ2043612%7CQ214341%7CQ219694%7CQ222738%7CQ25929244%7CQ2983844%7CQ315658%7CQ3238043%7CQ3348434%7CQ3551770%7CQ391028%7CQ39949%7CQ4618975%7CQ4815654%7CQ484108%7CQ49120%7CQ5086798%7CQ534643%7CQ547867%7CQ550263%7CQ6040079&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 6380,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q6088707%7CQ622137%7CQ6400588%7CQ6412129%7CQ6431709%7CQ659706%7CQ6785212%7CQ702482%7CQ7427028%7CQ752297%7CQ7691246%7CQ787674%7CQ798132%7CQ835960%7CQ849697%7CQ850730%7CQ913404%7CQ950900%7CQ99298799&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 3646,
+            "status": "ok"
+          }
+        ]
+      }
+    },
+    {
+      "domain": "film_source_work_author",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "benchmark_release_date",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "product_release_date",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "terminal_opening_date",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    }
+  ],
+  "accepted_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\stage5b_pilot_accepted.jsonl",
+  "rejected_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\stage5b_pilot_rejected.jsonl"
+}

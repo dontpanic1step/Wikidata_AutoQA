@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "terminal_opening_date",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 1,
+    "cache_hits": 4,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ55488%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP571+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4264,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q124466758%7CQ135906413%7CQ4416197%7CQ60968830&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 43,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q159%7CQ17%7CQ170584%7CQ209801%7CQ34%7CQ52502%7CQ55488%7CQ877941%7CQ891%7CQ928830&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 123,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Haga+station&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 0,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q4562757%7CQ131424820&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 0,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

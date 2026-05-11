@@ -1,0 +1,10 @@
+{
+  "domain": "new_nature_reserve_country",
+  "accepted_total": 0,
+  "rejected_total": 47,
+  "accepted": [],
+  "rejection_reasons": [
+    "duplicate_subject_resource",
+    "no_english_label"
+  ]
+}

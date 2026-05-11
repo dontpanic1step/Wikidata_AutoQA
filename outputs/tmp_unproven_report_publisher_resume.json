@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "report_publisher",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 5,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ10870555%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP123+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1541,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q10513470%7CQ106400332%7CQ110543512%7CQ1164334%7CQ1331110%7CQ137720163%7CQ137757893%7CQ137842130%7CQ137926649%7CQ137939465%7CQ137939503%7CQ137939514%7CQ138005846%7CQ138035642%7CQ138189205%7CQ138266453%7CQ138454544%7CQ138465566%7CQ138547368%7CQ138589018%7CQ138714268%7CQ138773862%7CQ139570246%7CQ139683767%7CQ1472511%7CQ187052%7CQ22661177%7CQ30267905%7CQ3427702%7CQ42970%7CQ5867082%7CQ65195567%7CQ7333881%7CQ918501%7CQ972414&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4020,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q10383930%7CQ10870555%7CQ10871790%7CQ10925941%7CQ10983451%7CQ1126006%7CQ112827555%7CQ11396960%7CQ115456878%7CQ1194093%7CQ121662174%7CQ1228945%7CQ123553174%7CQ137126043%7CQ145%7CQ148%7CQ1546%7CQ155271%7CQ163740%7CQ166140%7CQ16917889%7CQ17084016%7CQ1754%7CQ18394273%7CQ1920810%7CQ2085381%7CQ20857065%7CQ2089936%7CQ213%7CQ2201426%7CQ223729%7CQ25732%7CQ30%7CQ31855%7CQ3238445%7CQ327333%7CQ34%7CQ35%7CQ35127%7CQ35535%7CQ408%7CQ43229%7CQ45400320%7CQ480242%7CQ4830453%7CQ51780874%7CQ5227240%7CQ52990223%7CQ55915575%7CQ60&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 11016,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q6576792%7CQ68295960%7CQ7096323%7CQ79913%7CQ96888669&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2185,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Antifragility+Sales+Indonesia&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 877,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

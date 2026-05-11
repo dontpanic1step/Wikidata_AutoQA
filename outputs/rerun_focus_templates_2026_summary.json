@@ -1,0 +1,916 @@
+{
+  "target_time": "2026",
+  "template_total": 18,
+  "accepted_total": 4,
+  "rejected_total": 0,
+  "accepted_domains": [
+    "ordinal_film_in_series_director",
+    "ordinal_tournament_host_city",
+    "terminal_operator_country",
+    "tv_series_source_work_author"
+  ],
+  "rejected_only_domains": [],
+  "no_result_domains": [
+    "bridge_span_count",
+    "company_that_developed_benchmark_founder",
+    "guideline_author_count",
+    "marriage_spouse",
+    "medicine_ingredient_count",
+    "patent_inventor_count",
+    "project_partner_count",
+    "religious_leader_successor",
+    "rover_wheel_count",
+    "spacecraft_crew_count",
+    "spacecraft_payload_count",
+    "story_collection_story_count"
+  ],
+  "error_domains": [
+    "company_that_released_product_founder",
+    "ordinal_volume_author"
+  ],
+  "template_results": [
+    {
+      "domain": "marriage_spouse",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 2,
+        "network_requests": 0,
+        "cache_hits": 2,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ171318%3B%0A++++++++wdt%3AP580+%3Fdate%3B%0A++++++++wdt%3AP26+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 61,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ171318%3B%0A++++++++wdt%3AP580+%3Fdate%3B%0A++++++++wdt%3AP26+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "marriage_spouse",
+              "target_property_pid": "P26",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "religious_leader_successor",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 2,
+        "network_requests": 0,
+        "cache_hits": 2,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ246434%3B%0A++++++++wdt%3AP580+%3Fdate%3B%0A++++++++wdt%3AP156+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 28,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ246434%3B%0A++++++++wdt%3AP580+%3Fdate%3B%0A++++++++wdt%3AP156+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "religious_leader_successor",
+              "target_property_pid": "P156",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "guideline_author_count",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 3,
+        "network_requests": 0,
+        "cache_hits": 3,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ617602%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP50+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ617602%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP50+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ617602%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP50+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "guideline_author_count",
+              "target_property_pid": "P50",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "story_collection_story_count",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 3,
+        "network_requests": 0,
+        "cache_hits": 3,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ13136%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 3,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ13136%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ13136%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "story_collection_story_count",
+              "target_property_pid": "P527",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "spacecraft_crew_count",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 3,
+        "network_requests": 0,
+        "cache_hits": 3,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ40218%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP1029+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ40218%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP1029+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ40218%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP1029+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "spacecraft_crew_count",
+              "target_property_pid": "P1029",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "spacecraft_payload_count",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 3,
+        "network_requests": 0,
+        "cache_hits": 3,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ40218%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ40218%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 3,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ40218%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "spacecraft_payload_count",
+              "target_property_pid": "P527",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "rover_wheel_count",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 3,
+        "network_requests": 0,
+        "cache_hits": 3,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11012%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11012%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11012%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "rover_wheel_count",
+              "target_property_pid": "P527",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "patent_inventor_count",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 3,
+        "network_requests": 0,
+        "cache_hits": 3,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ253623%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP61+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ253623%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP61+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ253623%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP61+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "patent_inventor_count",
+              "target_property_pid": "P61",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "bridge_span_count",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 3,
+        "network_requests": 0,
+        "cache_hits": 3,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ12280%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ12280%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ12280%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP527+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "bridge_span_count",
+              "target_property_pid": "P527",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "medicine_ingredient_count",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 3,
+        "network_requests": 0,
+        "cache_hits": 3,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ12140%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP3781+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ12140%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP3781+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ12140%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP3781+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "medicine_ingredient_count",
+              "target_property_pid": "P3781",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "project_partner_count",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 3,
+        "network_requests": 0,
+        "cache_hits": 3,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ170584%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP749+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ170584%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP749+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ170584%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP749+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+5&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_completed",
+            "message": "Ran a generic support probe for a template without a domain-specific executor.",
+            "context": {
+              "domain": "project_partner_count",
+              "target_property_pid": "P749",
+              "probe_result_count": 0
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "tv_series_source_work_author",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "accepted",
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 0,
+        "cache_hits": 1,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3FsubjectLabel+%3FsourceWork+%3FsourceWorkLabel+%3Fauthor+%3FauthorLabel+%3Fdate+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ5398426%3B%0A+++++++++++wdt%3AP577+%3Fdate%3B%0A+++++++++++wdt%3AP144+%3FsourceWork.%0A++%3FsourceWork+wdt%3AP50+%3Fauthor.%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fsubject+wdt%3AP144+%3FotherSourceWork.%0A++++FILTER%28%3FotherSourceWork+%21%3D+%3FsourceWork%29%0A++%7D%0A++FILTER+NOT+EXISTS+%7B%0A++++%3FsourceWork+wdt%3AP50+%3FotherAuthor.%0A++++FILTER%28%3FotherAuthor+%21%3D+%3Fauthor%29%0A++%7D%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0ALIMIT+10&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 103,
+            "status": "ok"
+          }
+        ],
+        "problems": []
+      },
+      "notes": {}
+    },
+    {
+      "domain": "company_that_released_product_founder",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "error:URLError",
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3FsubjectLabel+%3FbridgeOrg+%3FbridgeOrgLabel+%3Ffounder+%3FfounderLabel+%3Fdate+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ2424752%3B%0A+++++++++++wdt%3AP577+%3Fdate%3B%0A+++++++++++wdt%3AP176+%3FbridgeOrg.%0A++%3FbridgeOrg+wdt%3AP112+%3Ffounder.%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fsubject+wdt%3AP176+%3FotherBridgeOrg.%0A++++FILTER%28%3FotherBridgeOrg+%21%3D+%3FbridgeOrg%29%0A++%7D%0A++FILTER+NOT+EXISTS+%7B%0A++++%3FbridgeOrg+wdt%3AP112+%3FotherFounder.%0A++++FILTER%28%3FotherFounder+%21%3D+%3Ffounder%29%0A++%7D%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0ALIMIT+10&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 9151,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          }
+        ],
+        "problems": []
+      },
+      "notes": {
+        "error_message": "<urlopen error Remote end closed connection without response>"
+      }
+    },
+    {
+      "domain": "company_that_developed_benchmark_founder",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "no_result",
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 0,
+        "cache_hits": 1,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3FsubjectLabel+%3FbridgeOrg+%3FbridgeOrgLabel+%3Ffounder+%3FfounderLabel+%3Fdate+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A+++++++++++wdt%3AP577+%3Fdate%3B%0A+++++++++++wdt%3AP178+%3FbridgeOrg.%0A++%3FbridgeOrg+wdt%3AP112+%3Ffounder.%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fsubject+wdt%3AP178+%3FotherBridgeOrg.%0A++++FILTER%28%3FotherBridgeOrg+%21%3D+%3FbridgeOrg%29%0A++%7D%0A++FILTER+NOT+EXISTS+%7B%0A++++%3FbridgeOrg+wdt%3AP112+%3FotherFounder.%0A++++FILTER%28%3FotherFounder+%21%3D+%3Ffounder%29%0A++%7D%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0ALIMIT+10&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 57,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "support_probe_skipped",
+            "message": "Skipped generic support probe because the template uses a synthetic composed property.",
+            "context": {
+              "domain": "company_that_developed_benchmark_founder",
+              "target_property_pid": "COMPOSED_BENCHMARK_DEVELOPER_FOUNDER"
+            }
+          }
+        ]
+      },
+      "notes": {}
+    },
+    {
+      "domain": "terminal_operator_country",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "accepted",
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 0,
+        "cache_hits": 1,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3FsubjectLabel+%3FbridgeOrg+%3FbridgeOrgLabel+%3Fcountry+%3FcountryLabel+%3Fdate+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ55488%3B%0A+++++++++++wdt%3AP571+%3Fdate%3B%0A+++++++++++wdt%3AP137+%3FbridgeOrg.%0A++%3FbridgeOrg+wdt%3AP17+%3Fcountry.%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fsubject+wdt%3AP137+%3FotherBridgeOrg.%0A++++FILTER%28%3FotherBridgeOrg+%21%3D+%3FbridgeOrg%29%0A++%7D%0A++FILTER+NOT+EXISTS+%7B%0A++++%3FbridgeOrg+wdt%3AP17+%3FotherCountry.%0A++++FILTER%28%3FotherCountry+%21%3D+%3Fcountry%29%0A++%7D%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0ALIMIT+10&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 107,
+            "status": "ok"
+          }
+        ],
+        "problems": []
+      },
+      "notes": {}
+    },
+    {
+      "domain": "ordinal_tournament_host_city",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "accepted",
+      "telemetry": {
+        "total_requests": 7,
+        "network_requests": 0,
+        "cache_hits": 7,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fseries+%3Fanswer+%3Fdate+%3FseriesPropertyPid+%3FdatePropertyPid+WHERE+%7B%0A++%7B%0A++++%3Fedition+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ132241%3B%0A+++++++++++++wdt%3AP179+%3Fseries%3B%0A+++++++++++++wdt%3AP585+%3Fdate%3B%0A+++++++++++++wdt%3AP131+%3Fanswer.%0A++++BIND%28%22P179%22+AS+%3FseriesPropertyPid%29%0A++++BIND%28%22P585%22+AS+%3FdatePropertyPid%29%0A++%7D%0A++UNION%0A++%7B%0A++++%3Fedition+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ27020041%3B%0A+++++++++++++wdt%3AP3450+%3Fseries%3B%0A+++++++++++++wdt%3AP131+%3Fanswer.%0A++++OPTIONAL+%7B+%3Fedition+wdt%3AP582+%3FseasonEnd+%7D%0A++++OPTIONAL+%7B+%3Fedition+wdt%3AP580+%3FseasonStart+%7D%0A++++BIND%28COALESCE%28%3FseasonEnd%2C+%3FseasonStart%29+AS+%3Fdate%29%0A++++FILTER%28BOUND%28%3Fdate%29%29%0A++++BIND%28%22P3450%22+AS+%3FseriesPropertyPid%29%0A++++BIND%28IF%28BOUND%28%3FseasonEnd%29%2C+%22P582%22%2C+%22P580%22%29+AS+%3FdatePropertyPid%29%0A++%7D%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fedition+wdt%3AP131+%3FotherAnswer.%0A++++FILTER%28%3FotherAnswer+%21%3D+%3Fanswer%29%0A++%7D%0A%7D%0AORDER+BY+%3Fdate%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 130,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q101341%7CQ1130925%7CQ133830916%7CQ137714741%7CQ137900859%7CQ138412056%7CQ138507144%7CQ19393726%7CQ1953%7CQ2469502%7CQ2954419%7CQ52471%7CQ570937%7CQ7217778%7CQ8818&props=labels%7Caliases%7Cdescriptions%7Cclaims%7Csitelinks&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 197,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ1130925%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 207,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ2469502%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 130,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ19393726%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 110,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ7217778%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 192,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ2954419%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 215,
+            "status": "ok"
+          }
+        ],
+        "problems": []
+      },
+      "notes": {}
+    },
+    {
+      "domain": "ordinal_film_in_series_director",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "accepted",
+      "telemetry": {
+        "total_requests": 13,
+        "network_requests": 0,
+        "cache_hits": 13,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fseries+%3FseriesLabel+%3Fmember+%3FmemberLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+%3Fseries%3B%0A++++++++++wdt%3AP577+%3Fdate%3B%0A++++++++++wdt%3AP57+%3Fanswer.%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fmember+wdt%3AP57+%3FotherAnswer.%0A++++FILTER%28%3FotherAnswer+%21%3D+%3Fanswer%29%0A++%7D%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0AORDER+BY+%3Fseries+%3Fdate+%3Fmember%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 190,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q113000913%7CQ11361198%7CQ113679111%7CQ114044356%7CQ114681%7CQ114771310%7CQ116950117%7CQ117830073%7CQ122396992%7CQ124317046%7CQ124629091%7CQ124629099%7CQ12472882%7CQ124758309%7CQ125176131%7CQ125679809%7CQ129423731%7CQ131756785%7CQ134460341%7CQ134567538%7CQ134611972%7CQ135094966%7CQ135094986%7CQ136049243%7CQ136400439%7CQ136505092%7CQ136734317%7CQ136770863%7CQ137184395%7CQ137382015%7CQ137926209%7CQ137959452%7CQ138574379%7CQ138783325%7CQ139040111%7CQ139041324%7CQ139569998%7CQ16939437%7CQ19203561%7CQ21715054%7CQ2828181%7CQ318712%7CQ360642%7CQ3853685%7CQ388659%7CQ55623810%7CQ61995088%7CQ640840%7CQ65212577%7CQ67171585&props=labels%7Caliases%7Cdescriptions%7Cclaims%7Csitelinks&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 261,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q698522%7CQ7350620%7CQ80498830%7CQ87098813%7CQ88368009%7CQ934964%7CQ950697%7CQ95678208&props=labels%7Caliases%7Cdescriptions%7Cclaims%7Csitelinks&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 104,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ114044356%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 3,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ114044356%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ116950117%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ116950117%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ116950117%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ124629099%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 86,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ125176131%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 181,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ125679809%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ125679809%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fmember+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++++wdt%3AP179+wd%3AQ125679809%3B%0A++++++++++wdt%3AP577+%3Fdate.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 2,
+            "status": "ok"
+          }
+        ],
+        "problems": []
+      },
+      "notes": {}
+    },
+    {
+      "domain": "ordinal_volume_author",
+      "accepted": 0,
+      "rejected": 0,
+      "status": "error:URLError",
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fseries+%3FseriesLabel+%3Fmember+%3FmemberLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ571%3B%0A++++++++++wdt%3AP179+%3Fseries%3B%0A++++++++++wdt%3AP577+%3Fdate%3B%0A++++++++++wdt%3AP50+%3Fanswer.%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fmember+wdt%3AP50+%3FotherAnswer.%0A++++FILTER%28%3FotherAnswer+%21%3D+%3Fanswer%29%0A++%7D%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0AORDER+BY+%3Fseries+%3Fdate+%3Fmember%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 13025,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          }
+        ],
+        "problems": []
+      },
+      "notes": {
+        "error_message": "<urlopen error Remote end closed connection without response>"
+      }
+    }
+  ],
+  "accepted_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\rerun_focus_templates_2026_accepted.jsonl",
+  "rejected_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\rerun_focus_templates_2026_rejected.jsonl"
+}

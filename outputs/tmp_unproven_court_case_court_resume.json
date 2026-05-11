@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "court_case_court",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 5,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ2334719%3B%0A++++++++wdt%3AP585+%3Fdate%3B%0A++++++++wdt%3AP1591+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1726,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1175852%7CQ137885863%7CQ139592818%7CQ578870&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1442,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q18343076%7CQ2085381%7CQ2334719%7CQ28106049%7CQ29%7CQ30%7CQ327000%7CQ45400320%7CQ5%7CQ697327%7CQ934744&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5718,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=EDWARD+W.+GREASON%2C+Plaintiff%2C+-v-+DAVID+NAHMAD%2C+INTERNATIONAL+ART+CENTER%2C+S.A.%2C+Defendants&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1376,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Sendaviva+case&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1292,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

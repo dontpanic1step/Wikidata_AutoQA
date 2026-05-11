@@ -1,0 +1,72 @@
+{
+  "resume_version": 1,
+  "domain": "newspaper_country",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 7,
+    "network_requests": 7,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11032%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2167,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q139377657%7CQ139553155%7CQ139553746%7CQ139662213%7CQ142%7CQ155%7CQ30&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5354,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1137%7CQ1142%7CQ1152%7CQ1153191%7CQ1166%7CQ11703%7CQ1173%7CQ1179%7CQ1183%7CQ1190%7CQ119158%7CQ1204%7CQ1207%7CQ1211%7CQ1212%7CQ12130%7CQ1214%7CQ1221%7CQ1223%7CQ1227%7CQ1261%7CQ126125%7CQ129003%7CQ1360064%7CQ1370%7CQ1371%7CQ1384%7CQ1387%7CQ1391%7CQ13917%7CQ1393%7CQ13947%7CQ13950%7CQ1397%7CQ1400%7CQ1408%7CQ14103%7CQ14112%7CQ1415%7CQ142%7CQ1428%7CQ1439%7CQ1454%7CQ1456%7CQ146328%7CQ1489259%7CQ1494%7CQ1500063%7CQ1509%7CQ15104&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6174,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1518439%7CQ1522%7CQ1527%7CQ1537%7CQ1546%7CQ1548588%7CQ15499%7CQ155%7CQ1553%7CQ1558%7CQ1581%7CQ1588%7CQ1603%7CQ1612%7CQ161258%7CQ16393%7CQ16394%7CQ1649%7CQ16551%7CQ16635%7CQ16641%7CQ16644%7CQ16954%7CQ16961%7CQ16987%7CQ16994%7CQ17005%7CQ17009%7CQ17012%7CQ17054%7CQ17063%7CQ17070%7CQ173%7CQ175%7CQ1811372%7CQ18338206%7CQ18578267%7CQ18677767%7CQ18677875%7CQ18677983%7CQ18678082%7CQ18678265%7CQ200464%7CQ20181813%7CQ25362%7CQ30%7CQ30971%7CQ33788%7CQ34617%7CQ35127&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 10176,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q3551781%7CQ35555%7CQ3624078%7CQ3769%7CQ38088%7CQ39109%7CQ39517%7CQ40030%7CQ40040%7CQ40123%7CQ40130%7CQ40430%7CQ40780%7CQ40885%7CQ40942%7CQ41115%7CQ41428%7CQ41587%7CQ42362%7CQ42508%7CQ42722%7CQ42824%7CQ43233%7CQ43235%7CQ43255%7CQ43309861%7CQ43311297%7CQ43319%7CQ43695%7CQ43783%7CQ463%7CQ51576574%7CQ547795%7CQ6042084%7CQ6256%7CQ660384%7CQ669315%7CQ724%7CQ7270%7CQ759%7CQ771%7CQ777763%7CQ779%7CQ782%7CQ797%7CQ812%7CQ816%7CQ824%7CQ829%7CQ859563&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 8402,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q99%7CQ99541706&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2330,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Off+The+Record+%28fragrance+publication%29&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 871,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

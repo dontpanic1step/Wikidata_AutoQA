@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "film_screenwriter",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 5,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP58+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5914,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1081775%7CQ111677167%7CQ11432421%7CQ11518934%7CQ11602692%7CQ117429496%7CQ123413914%7CQ1304934%7CQ131428403%7CQ131542846%7CQ133126730%7CQ133627085%7CQ133834880%7CQ134236545%7CQ134548431%7CQ135094966%7CQ135668443%7CQ136049243%7CQ136352585%7CQ136400439%7CQ136565787%7CQ137660018%7CQ137884754%7CQ137884877%7CQ137959452%7CQ138026290%7CQ138461077%7CQ138574379%7CQ138803807%7CQ138863764%7CQ139382827%7CQ139571216%7CQ17537045%7CQ20039611%7CQ2091760%7CQ2158117%7CQ22127114%7CQ22277167%7CQ2337421%7CQ24702826%7CQ2665604%7CQ3772%7CQ490406%7CQ605013%7CQ720771%7CQ95350289%7CQ96712542&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4098,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q11424%7CQ127402430%7CQ18011172%7CQ202866%7CQ20650540%7CQ5%7CQ506240%7CQ652256&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2657,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Scarlet&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2650,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q21504995%7CQ37559702%7CQ17146592%7CQ59391099%7CQ117769123%7CQ110993791&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1463,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

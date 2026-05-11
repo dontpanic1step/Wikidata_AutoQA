@@ -1,0 +1,64 @@
+{
+  "resume_version": 1,
+  "domain": "startup_founder",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 6,
+    "network_requests": 6,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ4830453%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP112+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 9977,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q137969644%7CQ137988565%7CQ138011545%7CQ138318202%7CQ138427366%7CQ138483894%7CQ138565069%7CQ138565085%7CQ138572811%7CQ138572826%7CQ138629327%7CQ138631081%7CQ138653062%7CQ138653130%7CQ138676080%7CQ138676135%7CQ138714024%7CQ138714101%7CQ138745704%7CQ138745895%7CQ138774594%7CQ138806988%7CQ138807082%7CQ138842517%7CQ138848053%7CQ138848062%7CQ138854424%7CQ138854438%7CQ138858582%7CQ138858706%7CQ138891494%7CQ138897003%7CQ139005690%7CQ139005899%7CQ139146038%7CQ139146391%7CQ139403363%7CQ139404669%7CQ139413075%7CQ139413110%7CQ139501040%7CQ139501178%7CQ139501252%7CQ139501266%7CQ139502306%7CQ139502347%7CQ139502541%7CQ139580571%7CQ139580737%7CQ139590659&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4137,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q139590669%7CQ139622654%7CQ362254%7CQ49561909%7CQ626506%7CQ8991047&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3484,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1058914%7CQ145%7CQ148%7CQ149789%7CQ155%7CQ1589009%7CQ17%7CQ17376040%7CQ174193%7CQ18127%7CQ183%7CQ2089936%7CQ30%7CQ3591545%7CQ408%7CQ4230006%7CQ43%7CQ4830453%7CQ5%7CQ668%7CQ6881511%7CQ760%7CQ783794%7CQ878%7CQ902&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 8160,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Absolute+Value&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1241,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q120812%7CQ4669840%7CQ16207674%7CQ11188820&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1602,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

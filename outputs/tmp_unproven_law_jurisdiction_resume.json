@@ -1,0 +1,48 @@
+{
+  "resume_version": 1,
+  "domain": "law_jurisdiction",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 4,
+    "network_requests": 4,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ7748%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP1001+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1685,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q138478722%7CQ183%7CQ31837769%7CQ851&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4676,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1055%7CQ1105411%7CQ1194%7CQ1196%7CQ1197%7CQ1198%7CQ1199%7CQ1200%7CQ1201%7CQ1202%7CQ1205%7CQ1206%7CQ1208%7CQ1209%7CQ1249255%7CQ1315953%7CQ1471266%7CQ16603799%7CQ183%7CQ201781%7CQ234167%7CQ236027%7CQ243656%7CQ269973%7CQ3624078%7CQ417175%7CQ4209223%7CQ464718%7CQ619610%7CQ6256%7CQ63791824%7CQ64%7CQ74063%7CQ7748%7CQ779855%7CQ851%7CQ852774%7CQ953508%7CQ980%7CQ985&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6728,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Federal+Career+Regulation&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1386,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

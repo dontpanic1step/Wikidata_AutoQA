@@ -1,0 +1,789 @@
+{
+  "target_time": "2026",
+  "domains": [
+    "wedding_age_gap",
+    "ordinal_spouse",
+    "biography_birth_place_recent_subject",
+    "biography_native_language_recent_subject",
+    "literary_magazine_country",
+    "film_based_on",
+    "tv_series_creator",
+    "stadium_architect",
+    "graduate_before_employer",
+    "beverage_manufacturer",
+    "biography_place_of_death_recent_subject",
+    "biography_occupation_recent_subject",
+    "biography_notable_work_recent_subject",
+    "university_country",
+    "species_parent_taxon",
+    "company_that_released_product_founder",
+    "person_birth_date",
+    "person_death_date",
+    "sports_event_host_count",
+    "dataset_language_count",
+    "ordinal_country_president",
+    "ordinal_religious_leader",
+    "ordinal_university_chancellor",
+    "ordinal_space_mission_commander",
+    "ordinal_volume_author"
+  ],
+  "accepted": 0,
+  "rejected": 0,
+  "output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\error_bucket_refresh_accepted.jsonl",
+  "rejected_output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\error_bucket_refresh_rejected.jsonl",
+  "problem_backlog_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\error_bucket_refresh_problem_backlog.md",
+  "template_results": [
+    {
+      "domain": "wedding_age_gap",
+      "status": "error:TimeoutError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 1,
+        "cache_hits": 0,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [],
+        "problems": []
+      },
+      "error_message": "TimeoutError: The read operation timed out"
+    },
+    {
+      "domain": "ordinal_spouse",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3Fanswer+%3Fstart+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ5%3B%0A+++++++++++p%3AP26+%3Fstmt.%0A++%3Fstmt+ps%3AP26+%3Fanswer%3B%0A++++++++pq%3AP580+%3Fstart.%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0AORDER+BY+%3Fstart+%3Fsubject%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7061,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "biography_birth_place_recent_subject",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP569+%3Fdate%3B%0A++++++++wdt%3AP19+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-01T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+30&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 6555,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "staged_seed_strategy_used",
+            "message": "Used a staged WDQS seed query with local claim extraction for a broad template.",
+            "context": {
+              "domain": "biography_birth_place_recent_subject",
+              "subject_type_qid": "Q5",
+              "date_property_pid": "P569",
+              "target_property_pid": "P19"
+            }
+          }
+        ]
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "biography_native_language_recent_subject",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP569+%3Fdate%3B%0A++++++++wdt%3AP103+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-01T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+30&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7162,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "staged_seed_strategy_used",
+            "message": "Used a staged WDQS seed query with local claim extraction for a broad template.",
+            "context": {
+              "domain": "biography_native_language_recent_subject",
+              "subject_type_qid": "Q5",
+              "date_property_pid": "P569",
+              "target_property_pid": "P103"
+            }
+          }
+        ]
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "literary_magazine_country",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ41298%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8611,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "film_based_on",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP144+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 5549,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "tv_series_creator",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ5398426%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP170+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7522,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "stadium_architect",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ483110%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP84+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 11394,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "graduate_before_employer",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ5%3B%0A++++++++wdt%3AP569+%3Fdate%3B%0A++++++++wdt%3AP69+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7061,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "beverage_manufacturer",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ40050%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8908,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "biography_place_of_death_recent_subject",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP569+%3Fdate%3B%0A++++++++wdt%3AP20+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-01T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+30&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 6760,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "staged_seed_strategy_used",
+            "message": "Used a staged WDQS seed query with local claim extraction for a broad template.",
+            "context": {
+              "domain": "biography_place_of_death_recent_subject",
+              "subject_type_qid": "Q5",
+              "date_property_pid": "P569",
+              "target_property_pid": "P20"
+            }
+          }
+        ]
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "biography_occupation_recent_subject",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP569+%3Fdate%3B%0A++++++++wdt%3AP106+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-01T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+30&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7765,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "staged_seed_strategy_used",
+            "message": "Used a staged WDQS seed query with local claim extraction for a broad template.",
+            "context": {
+              "domain": "biography_occupation_recent_subject",
+              "subject_type_qid": "Q5",
+              "date_property_pid": "P569",
+              "target_property_pid": "P106"
+            }
+          }
+        ]
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "biography_notable_work_recent_subject",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP569+%3Fdate%3B%0A++++++++wdt%3AP800+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-01T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+30&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8151,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "staged_seed_strategy_used",
+            "message": "Used a staged WDQS seed query with local claim extraction for a broad template.",
+            "context": {
+              "domain": "biography_notable_work_recent_subject",
+              "subject_type_qid": "Q5",
+              "date_property_pid": "P569",
+              "target_property_pid": "P800"
+            }
+          }
+        ]
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "university_country",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ3918%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 6229,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "species_parent_taxon",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP171+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+30&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8117,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "staged_seed_strategy_used",
+            "message": "Used a staged WDQS seed query with local claim extraction for a broad template.",
+            "context": {
+              "domain": "species_parent_taxon",
+              "subject_type_qid": "Q16521",
+              "date_property_pid": "P577",
+              "target_property_pid": "P171"
+            }
+          }
+        ]
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "company_that_released_product_founder",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3FsubjectLabel+%3FbridgeOrg+%3FbridgeOrgLabel+%3Ffounder+%3FfounderLabel+%3Fdate+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ2424752%3B%0A+++++++++++wdt%3AP577+%3Fdate%3B%0A+++++++++++wdt%3AP176+%3FbridgeOrg.%0A++%3FbridgeOrg+wdt%3AP112+%3Ffounder.%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fsubject+wdt%3AP176+%3FotherBridgeOrg.%0A++++FILTER%28%3FotherBridgeOrg+%21%3D+%3FbridgeOrg%29%0A++%7D%0A++FILTER+NOT+EXISTS+%7B%0A++++%3FbridgeOrg+wdt%3AP112+%3FotherFounder.%0A++++FILTER%28%3FotherFounder+%21%3D+%3Ffounder%29%0A++%7D%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0ALIMIT+3&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7535,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "person_birth_date",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP569+%3Fdate%3B%0A++++++++wdt%3AP569+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-01T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+30&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 9604,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "staged_seed_strategy_used",
+            "message": "Used a staged WDQS seed query with local claim extraction for a broad template.",
+            "context": {
+              "domain": "person_birth_date",
+              "subject_type_qid": "Q5",
+              "date_property_pid": "P569",
+              "target_property_pid": "P569"
+            }
+          }
+        ]
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "person_death_date",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP570+%3Fdate%3B%0A++++++++wdt%3AP570+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-01T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+30&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8160,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "staged_seed_strategy_used",
+            "message": "Used a staged WDQS seed query with local claim extraction for a broad template.",
+            "context": {
+              "domain": "person_death_date",
+              "subject_type_qid": "Q5",
+              "date_property_pid": "P570",
+              "target_property_pid": "P570"
+            }
+          }
+        ]
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "sports_event_host_count",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ16510064%3B%0A++++++++wdt%3AP585+%3Fdate%3B%0A++++++++wdt%3AP276+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 10529,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "dataset_language_count",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fdate+%28COUNT%28DISTINCT+%3Fvalue%29+AS+%3FanswerCount%29+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP407+%3Fvalue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0AGROUP+BY+%3Fitem+%3FitemLabel+%3Fdate%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8019,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "ordinal_country_president",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3Foffice+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ6256.%0A++%7B+%3Foffice+wdt%3AP1001+%3Fsubject.+%7D+UNION+%7B+%3Foffice+wdt%3AP17+%3Fsubject.+%7D%0A++%3Foffice+rdfs%3Alabel+%3FofficeLabel.%0A++FILTER%28LANG%28%3FofficeLabel%29+%3D+%22en%22%29%0A++FILTER%28CONTAINS%28LCASE%28STR%28%3FofficeLabel%29%29%2C+%22president%22%29%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 9346,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "ordinal_religious_leader",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ246434.%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7844,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "ordinal_university_chancellor",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3Foffice+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ3918.%0A++%7B+%3Foffice+wdt%3AP1001+%3Fsubject.+%7D+UNION+%7B+%3Foffice+wdt%3AP642+%3Fsubject.+%7D+UNION+%7B+%3Foffice+wdt%3AP17+%3Fsubject.+%7D%0A++%3Foffice+rdfs%3Alabel+%3FofficeLabel.%0A++FILTER%28LANG%28%3FofficeLabel%29+%3D+%22en%22%29%0A++FILTER%28CONTAINS%28LCASE%28STR%28%3FofficeLabel%29%29%2C+%22chancellor%22%29%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8430,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "ordinal_space_mission_commander",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3Fanswer+%3Fstart+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ2133344%3B%0A+++++++++++p%3AP1037+%3Fstmt.%0A++%3Fstmt+ps%3AP1037+%3Fanswer%3B%0A++++++++pq%3AP580+%3Fstart.%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0AORDER+BY+%3Fstart+%3Fsubject%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 6135,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    },
+    {
+      "domain": "ordinal_volume_author",
+      "status": "error:HTTPError",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fseries+%3FseriesLabel+%3Fmember+%3FmemberLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fmember+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ571%3B%0A++++++++++wdt%3AP179+%3Fseries%3B%0A++++++++++wdt%3AP577+%3Fdate%3B%0A++++++++++wdt%3AP50+%3Fanswer.%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fmember+wdt%3AP50+%3FotherAnswer.%0A++++FILTER%28%3FotherAnswer+%21%3D+%3Fanswer%29%0A++%7D%0A++SERVICE+wikibase%3Alabel+%7B+bd%3AserviceParam+wikibase%3Alanguage+%22en%22.+%7D%0A%7D%0AORDER+BY+%3Fseries+%3Fdate+%3Fmember%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 6351,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          }
+        ],
+        "problems": []
+      },
+      "error_message": "HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+    }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "company_industry",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 5,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ783794%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP452+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4948,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q11016%7CQ11660%7CQ11661%7CQ1254596%7CQ12684%7CQ136288803%7CQ137700436%7CQ137862524%7CQ137862606%7CQ137887179%7CQ137988699%7CQ138024150%7CQ138053753%7CQ1381931%7CQ138318202%7CQ138359221%7CQ138528224%7CQ138529014%7CQ138529476%7CQ138579862%7CQ138590979%7CQ138634346%7CQ138667214%7CQ138797386%7CQ138858582%7CQ138952318%7CQ139004606%7CQ139223058%7CQ139229601%7CQ139383948%7CQ139404669%7CQ139551933%7CQ139570352%7CQ139624949%7CQ1540863%7CQ1601153%7CQ16319025%7CQ23699878%7CQ46994%7CQ484847%7CQ507443%7CQ56611639%7CQ645292%7CQ746359%7CQ873442%7CQ880371%7CQ941594&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3112,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q112057532%7CQ11541386%7CQ11862829%7CQ123370638%7CQ125161275%7CQ129238%7CQ134161%7CQ136653105%7CQ137183855%7CQ142%7CQ145%7CQ149789%7CQ1589009%7CQ17%7CQ18127%7CQ183%7CQ184199%7CQ2085381%7CQ213%7CQ219577%7CQ2465832%7CQ2498526%7CQ262%7CQ268592%7CQ27%7CQ2916479%7CQ30%7CQ33%7CQ33685%7CQ3579158%7CQ36%7CQ3958441%7CQ408%7CQ43229%7CQ4442611%7CQ4830453%7CQ5354754%7CQ5621421%7CQ627436%7CQ658255%7CQ668%7CQ6832945%7CQ6881511%7CQ783794%7CQ815823%7CQ843%7CQ854%7CQ865%7CQ891723%7CQ980&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 12348,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=My+Brazilian+Doctor+Telemedicine+LTD&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 864,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=HQ+Logic&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1176,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

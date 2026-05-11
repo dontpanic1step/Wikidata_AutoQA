@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "exhibition_museum",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 5,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ464980%3B%0A++++++++wdt%3AP585+%3Fdate%3B%0A++++++++wdt%3AP276+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1476,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1069457%7CQ131380247%7CQ134963228%7CQ134963238%7CQ136208759%7CQ136337276%7CQ138413318%7CQ138649618%7CQ138667349%7CQ139406351%7CQ139488651%7CQ139548330%7CQ1677018%7CQ2157355%7CQ30643258%7CQ3890437%7CQ641&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2485,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1069457%7CQ1153401%7CQ11588784%7CQ131964%7CQ1329623%7CQ134963238%7CQ136337276%7CQ142%7CQ153136%7CQ1549591%7CQ16310%7CQ1656682%7CQ1677018%7CQ17%7CQ17431399%7CQ1763828%7CQ182832%7CQ183%7CQ189710%7CQ2157355%7CQ223936%7CQ2264924%7CQ2651004%7CQ27556165%7CQ27951514%7CQ27968055%7CQ29643002%7CQ3037%7CQ30643258%7CQ3678587%7CQ38%7CQ3867170%7CQ3867172%7CQ3867174%7CQ3867175%7CQ3867176%7CQ3867184%7CQ3890437%7CQ3902398%7CQ3924689%7CQ4115680%7CQ41176%7CQ464980%7CQ4671277%7CQ4948%7CQ515%7CQ581830%7CQ59861107%7CQ6221%7CQ6360367&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 7186,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q641%7CQ64953083%7CQ667276%7CQ74570489%7CQ747074%7CQ772257%7CQ833%7CQ837%7CQ8621%7CQ8719053%7CQ883803%7CQ90%7CQ9209474&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3994,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=%22Archaeological+sites+of+Africa%2C+Asia+and+Latin+America%22&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 945,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

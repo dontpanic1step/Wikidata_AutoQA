@@ -1,0 +1,72 @@
+{
+  "resume_version": 1,
+  "domain": "university_country",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 7,
+    "network_requests": 7,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ3918%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1821,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q109595042%7CQ133289082%7CQ136399586%7CQ137380738%7CQ137387035%7CQ137425091%7CQ137878783%7CQ17%7CQ851%7CQ902&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2934,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1037393%7CQ1042291%7CQ110296306%7CQ1105411%7CQ11057861%7CQ112099%7CQ120730%7CQ122723%7CQ123258%7CQ123376%7CQ1249255%7CQ125863%7CQ127264%7CQ127513%7CQ127877%7CQ128186%7CQ128196%7CQ129499%7CQ130290%7CQ130300%7CQ130308%7CQ131277%7CQ131281%7CQ131287%7CQ131314%7CQ131320%7CQ131358%7CQ1315953%7CQ132705%7CQ132720%7CQ132751%7CQ132929%7CQ132936%7CQ133879%7CQ133924%7CQ133935%7CQ134093%7CQ1354%7CQ1471266%7CQ1490%7CQ15701%7CQ158087%7CQ160420%7CQ160734%7CQ161454%7CQ169376%7CQ17%7CQ19594930%7CQ201781%7CQ234167&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6236,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q236027%7CQ243656%7CQ269973%7CQ330158%7CQ3354859%7CQ3624078%7CQ3692%7CQ379382%7CQ383092%7CQ38723%7CQ3889692%7CQ3918%7CQ417175%7CQ44843%7CQ459723%7CQ459732%7CQ464718%7CQ465613%7CQ47896%7CQ48326%7CQ498027%7CQ501696%7CQ5341295%7CQ617375%7CQ62078547%7CQ6256%7CQ71699%7CQ71707%7CQ728218%7CQ74063%7CQ766445%7CQ779855%7CQ80011%7CQ80434%7CQ81863%7CQ83273%7CQ847319%7CQ851%7CQ852774%7CQ876023%7CQ877220%7CQ902%7CQ902104%7CQ953508&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4848,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Dhaka+Central+University&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 825,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Riyadh+University+of+Arts&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 885,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Nasu+Junior+College&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1234,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

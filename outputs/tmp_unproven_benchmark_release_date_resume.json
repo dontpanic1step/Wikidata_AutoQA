@@ -1,0 +1,48 @@
+{
+  "resume_version": 1,
+  "domain": "benchmark_release_date",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 4,
+    "network_requests": 4,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP577+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3271,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q137655809%7CQ137846727%7CQ137925470%7CQ138411672%7CQ138511367%7CQ138567135%7CQ138717134%7CQ138745342%7CQ138779523%7CQ138788362%7CQ138824203%7CQ138827465%7CQ138835415%7CQ138835460%7CQ138858669%7CQ138863469%7CQ138864035%7CQ138866905%7CQ138915998%7CQ139086080%7CQ139282826%7CQ139393633%7CQ139393817%7CQ139393818%7CQ139393819%7CQ139393821%7CQ139532316%7CQ139551939%7CQ139555169&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2626,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1172284%7CQ136536596%7CQ15097084%7CQ17537576%7CQ19386377%7CQ212%7CQ29%7CQ3331189%7CQ34%7CQ35127%7CQ39%7CQ56245%7CQ62809234%7CQ7094076%7CQ780605&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4857,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=standard1910.com&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 945,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

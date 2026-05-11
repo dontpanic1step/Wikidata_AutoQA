@@ -1,0 +1,48 @@
+{
+  "resume_version": 1,
+  "domain": "animation_studio",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 4,
+    "network_requests": 5,
+    "cache_hits": 0,
+    "retry_count": 1,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ202866%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP272+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2205,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q10498468%7CQ1054807%7CQ11289604%7CQ11305613%7CQ113640013%7CQ118390770%7CQ12301653%7CQ124808467%7CQ125676574%7CQ125676579%7CQ126709560%7CQ126722991%7CQ127118135%7CQ127552%7CQ128798957%7CQ133126730%7CQ133267930%7CQ133834880%7CQ133873410%7CQ134571218%7CQ135068898%7CQ135068911%7CQ135094966%7CQ135189759%7CQ135668443%7CQ136049243%7CQ182361%7CQ277763%7CQ52700115%7CQ63863205%7CQ79356130%7CQ854654&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 2,
+        "duration_ms": 5194,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1107679%7CQ11396960%7CQ11424%7CQ142%7CQ17%7CQ1762059%7CQ18011172%7CQ183%7CQ202866%7CQ20650540%7CQ234087%7CQ24856%7CQ30%7CQ35%7CQ368290%7CQ4830453%7CQ65%7CQ746628%7CQ99&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 16552,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=The+Super+Elfkins&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1304,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

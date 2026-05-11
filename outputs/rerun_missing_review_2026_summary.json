@@ -1,0 +1,183 @@
+{
+  "target_time": "2026",
+  "domains_requested": [
+    "album_label",
+    "biology_article_journal",
+    "chemistry_article_journal",
+    "company_parent_organization",
+    "cookbook_author",
+    "dataset_creator_ai",
+    "dataset_creator_math",
+    "math_award_presenter",
+    "math_paper_journal",
+    "math_textbook_author",
+    "new_dam_country",
+    "new_nature_reserve_country",
+    "new_park_country",
+    "paper_author_count",
+    "paper_conference_ai",
+    "philosophy_book_author",
+    "physical_science_dataset_creator",
+    "physics_book_author",
+    "report_author_count",
+    "startup_founder_count",
+    "taxonomy_database_creator",
+    "textbook_publisher"
+  ],
+  "domain_total": 22,
+  "accepted_total": 12,
+  "rejected_total": 249,
+  "results": [
+    {
+      "domain": "album_label",
+      "status": "accepted",
+      "question": "Which label released the album Overload?",
+      "answer": "CD Baby"
+    },
+    {
+      "domain": "biology_article_journal",
+      "status": "rejected_only",
+      "reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ]
+    },
+    {
+      "domain": "chemistry_article_journal",
+      "status": "rejected_only",
+      "reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ]
+    },
+    {
+      "domain": "company_parent_organization",
+      "status": "accepted",
+      "question": "Which organization is the parent of the company Egger Ventures?",
+      "answer": "Egger & Co"
+    },
+    {
+      "domain": "cookbook_author",
+      "status": "accepted",
+      "question": "Who wrote the cookbook Zürich POP (Spanish edition)?",
+      "answer": "Honys Torres"
+    },
+    {
+      "domain": "dataset_creator_ai",
+      "status": "rejected_only",
+      "reasons": [
+        "subject_topic_mismatch"
+      ]
+    },
+    {
+      "domain": "dataset_creator_math",
+      "status": "rejected_only",
+      "reasons": [
+        "subject_topic_mismatch"
+      ]
+    },
+    {
+      "domain": "math_award_presenter",
+      "status": "rejected_only",
+      "reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ]
+    },
+    {
+      "domain": "math_paper_journal",
+      "status": "rejected_only",
+      "reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ]
+    },
+    {
+      "domain": "math_textbook_author",
+      "status": "accepted",
+      "question": "Who wrote the mathematics book Geometry of Divine Mercy?",
+      "answer": "Oriss Soleyenni"
+    },
+    {
+      "domain": "new_dam_country",
+      "status": "accepted",
+      "question": "In which country is the dam Hailuoto fixed link located?",
+      "answer": "Finland"
+    },
+    {
+      "domain": "new_nature_reserve_country",
+      "status": "rejected_only",
+      "reasons": [
+        "duplicate_subject_resource",
+        "no_english_label"
+      ]
+    },
+    {
+      "domain": "new_park_country",
+      "status": "accepted",
+      "question": "In which country is the park PokéPark Kanto located?",
+      "answer": "Japan"
+    },
+    {
+      "domain": "paper_author_count",
+      "status": "accepted",
+      "question": "How many authors wrote the article The Epistemic Erosion Spiral: How Clinical Drift Erodes Social Work’s Legitimacy?",
+      "answer": "1"
+    },
+    {
+      "domain": "paper_conference_ai",
+      "status": "rejected_only",
+      "reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ]
+    },
+    {
+      "domain": "philosophy_book_author",
+      "status": "accepted",
+      "question": "Who wrote the philosophy book Scientific Illuminism?",
+      "answer": "Frater Lachesis Peyton"
+    },
+    {
+      "domain": "physical_science_dataset_creator",
+      "status": "accepted",
+      "question": "Who created the physical science dataset Objective Projection Dataset?",
+      "answer": "Levent Bulut"
+    },
+    {
+      "domain": "physics_book_author",
+      "status": "rejected_only",
+      "reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ]
+    },
+    {
+      "domain": "report_author_count",
+      "status": "accepted",
+      "question": "How many authors wrote the report Strangers: A Memoir of Marriage?",
+      "answer": "1"
+    },
+    {
+      "domain": "startup_founder_count",
+      "status": "accepted",
+      "question": "How many founders did the startup Charred Pictures have?",
+      "answer": "1"
+    },
+    {
+      "domain": "taxonomy_database_creator",
+      "status": "rejected_only",
+      "reasons": [
+        "subject_topic_mismatch"
+      ]
+    },
+    {
+      "domain": "textbook_publisher",
+      "status": "accepted",
+      "question": "Which publisher released the textbook The Correlation?",
+      "answer": "Independently Published book edition"
+    }
+  ],
+  "accepted_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\rerun_missing_review_2026_accepted.jsonl",
+  "rejected_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\rerun_missing_review_2026_rejected.jsonl"
+}

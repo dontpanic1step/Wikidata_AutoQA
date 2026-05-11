@@ -4,6 +4,8 @@
 
 This note explains how the current code base differs from the GitHub `main` branch and from the earlier `5-10` branch.
 
+This document also serves as a preservation note: branch `5-11` is intended to preserve the current code base and the current generated `outputs/` snapshot before a major project restructuring.
+
 The short version is:
 
 - `main` is the simpler baseline.

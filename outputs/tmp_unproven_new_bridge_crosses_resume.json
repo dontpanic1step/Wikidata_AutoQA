@@ -1,0 +1,48 @@
+{
+  "resume_version": 1,
+  "domain": "new_bridge_crosses",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 4,
+    "network_requests": 4,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ12280%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP177+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2992,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q10549427%7CQ112482298%7CQ133259569%7CQ134455016%7CQ139071594%7CQ1469578%7CQ1703184%7CQ3125487%7CQ94852%7CQ95740548&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1639,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1009249%7CQ10549429%7CQ105501780%7CQ109264881%7CQ1101%7CQ113866885%7CQ1210334%7CQ12280%7CQ12284%7CQ1384%7CQ1408%7CQ142%7CQ158555%7CQ16052%7CQ1704122%7CQ1757%7CQ1826001%7CQ183%7CQ18615527%7CQ2056881%7CQ2434010%7CQ262710%7CQ2680952%7CQ30%7CQ3069213%7CQ33%7CQ3368%7CQ3853432%7CQ39486269%7CQ400430%7CQ4022%7CQ4291972%7CQ46622%7CQ490505%7CQ55%7CQ694%7CQ82794%7CQ9258947&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 8098,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Kruunuvuorensilta&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1690,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

@@ -1,0 +1,128 @@
+{
+  "resume_version": 1,
+  "domain": "ordinal_tournament_winner",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 14,
+    "network_requests": 9,
+    "cache_hits": 5,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fseries+%3Fwinner+%3Fdate+%3FseriesPropertyPid+%3FdatePropertyPid+WHERE+%7B%0A++%7B%0A++++%3Fedition+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ132241%3B%0A+++++++++++++wdt%3AP179+%3Fseries%3B%0A+++++++++++++wdt%3AP585+%3Fdate%3B%0A+++++++++++++wdt%3AP1346+%3Fwinner.%0A++++BIND%28%22P179%22+AS+%3FseriesPropertyPid%29%0A++++BIND%28%22P585%22+AS+%3FdatePropertyPid%29%0A++%7D%0A++UNION%0A++%7B%0A++++%3Fedition+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ27020041%3B%0A+++++++++++++wdt%3AP3450+%3Fseries%3B%0A+++++++++++++wdt%3AP1346+%3Fwinner.%0A++++OPTIONAL+%7B+%3Fedition+wdt%3AP582+%3FseasonEnd+%7D%0A++++OPTIONAL+%7B+%3Fedition+wdt%3AP580+%3FseasonStart+%7D%0A++++BIND%28COALESCE%28%3FseasonEnd%2C+%3FseasonStart%29+AS+%3Fdate%29%0A++++FILTER%28BOUND%28%3Fdate%29%29%0A++++BIND%28%22P3450%22+AS+%3FseriesPropertyPid%29%0A++++BIND%28IF%28BOUND%28%3FseasonEnd%29%2C+%22P582%22%2C+%22P580%22%29+AS+%3FdatePropertyPid%29%0A++%7D%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER+NOT+EXISTS+%7B%0A++++%3Fedition+wdt%3AP1346+%3FotherWinner.%0A++++FILTER%28%3FotherWinner+%21%3D+%3Fwinner%29%0A++%7D%0A%7D%0AORDER+BY+%3Fdate%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 27381,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q101669342%7CQ1023370%7CQ10436587%7CQ105082150%7CQ10661249%7CQ107920939%7CQ108199828%7CQ108282030%7CQ108294417%7CQ11051224%7CQ111889154%7CQ112604490%7CQ1130925%7CQ1132627%7CQ113628470%7CQ113628478%7CQ116134921%7CQ116141513%7CQ116141593%7CQ116267190%7CQ117089858%7CQ11914262%7CQ121392101%7CQ122147423%7CQ122147460%7CQ122147505%7CQ122150600%7CQ122150665%7CQ12334313%7CQ1261217%7CQ126690036%7CQ127867755%7CQ128765544%7CQ130741931%7CQ134466997%7CQ134590336%7CQ134693359%7CQ134776992%7CQ134877143%7CQ135426815%7CQ135933429%7CQ136171326%7CQ136171328%7CQ136302788%7CQ136312594%7CQ136457796%7CQ136536898%7CQ136645028%7CQ136677019%7CQ136789668&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3709,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q136933280%7CQ137324915%7CQ137592122%7CQ137731198%7CQ137786040%7CQ137877190%7CQ137885936%7CQ137900859%7CQ137920513%7CQ137921405%7CQ137972430%7CQ138005954%7CQ138197927%7CQ138340046%7CQ138389849%7CQ138496975%7CQ138499091%7CQ138513092%7CQ138565126%7CQ138604090%7CQ138798530%7CQ139009%7CQ139329043%7CQ139491684%7CQ139558316%7CQ139597128%7CQ142555%7CQ1454730%7CQ1519755%7CQ157087%7CQ15980635%7CQ16591797%7CQ16642%7CQ1675148%7CQ1694963%7CQ1756013%7CQ1957301%7CQ21403041%7CQ21641556%7CQ23022452%7CQ2320004%7CQ2348714%7CQ2352567%7CQ239447%7CQ239973%7CQ24191031%7CQ244472%7CQ25316293%7CQ259387%7CQ2601636&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3331,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q2642651%7CQ26457%7CQ267245%7CQ2744659%7CQ28444659%7CQ2868091%7CQ2949710%7CQ2952261%7CQ300130%7CQ300191%7CQ3014093%7CQ3060065%7CQ3327327%7CQ347523%7CQ3504456%7CQ36362%7CQ385099%7CQ392130%7CQ393357%7CQ3961987%7CQ4701706%7CQ482998%7CQ4852013%7CQ4852154%7CQ4906515%7CQ518116%7CQ52122812%7CQ5262327%7CQ542222%7CQ54927%7CQ60464673%7CQ617123%7CQ656272%7CQ658815%7CQ6840609%7CQ6840610%7CQ700366%7CQ725151%7CQ7260972%7CQ738154%7CQ739287%7CQ7793819%7CQ8027385%7CQ806391%7CQ819694%7CQ834357%7CQ887620%7CQ910298%7CQ97777870%7CQ99771109&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4818,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ137885936%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 30,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ725151%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 19,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ24191031%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 11,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ105082150%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 11,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ2949710%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1333,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ806391%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 55,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ239973%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1549,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ347523%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1496,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ101669342%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1318,
+        "status": "ok"
+      },
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fedition+%3Fdate+WHERE+%7B%0A++%3Fedition+wdt%3AP3450+wd%3AQ910298%3B%0A+++++++++++wdt%3AP582+%3Fdate.%0A%7D&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1480,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

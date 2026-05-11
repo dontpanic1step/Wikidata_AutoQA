@@ -1,0 +1,120 @@
+{
+  "resume_version": 1,
+  "domain": "event_venue",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 13,
+    "network_requests": 13,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1656682%3B%0A++++++++wdt%3AP585+%3Fdate%3B%0A++++++++wdt%3AP276+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 19095,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1062079%7CQ1069457%7CQ10800831%7CQ1130050%7CQ1147163%7CQ115379423%7CQ115469119%7CQ12030040%7CQ12397272%7CQ131011099%7CQ131380247%7CQ131801357%7CQ131917844%7CQ134884409%7CQ135673676%7CQ135742242%7CQ136208759%7CQ136368342%7CQ136720307%7CQ136892520%7CQ137291753%7CQ137368728%7CQ137382909%7CQ137386946%7CQ137710611%7CQ137759414%7CQ137786298%7CQ137821306%7CQ137821621%7CQ137823646%7CQ137830780%7CQ137846684%7CQ137847106%7CQ137852360%7CQ137917082%7CQ137920248%7CQ137925827%7CQ137970348%7CQ137995136%7CQ138091596%7CQ138301942%7CQ138316322%7CQ138412274%7CQ138413318%7CQ138640407%7CQ138667349%7CQ138796871%7CQ138825593%7CQ138835843%7CQ138858263&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2599,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q139028602%7CQ139515363%7CQ139545627%7CQ139548330%7CQ15079383%7CQ16668670%7CQ1677018%7CQ17063%7CQ1772966%7CQ186080%7CQ2010607%7CQ2146978%7CQ2807%7CQ2842986%7CQ30%7CQ30643258%7CQ3075039%7CQ3207410%7CQ3279650%7CQ3639568%7CQ38380%7CQ39984%7CQ45101554%7CQ460889%7CQ49108%7CQ4959024%7CQ499169%7CQ57546772%7CQ598086%7CQ60988142%7CQ64%7CQ641%7CQ6487%7CQ662477%7CQ769609%7CQ808694%7CQ860166%7CQ895585&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 7426,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1001991%7CQ1010634%7CQ1060829%7CQ1062079%7CQ1069129%7CQ1069457%7CQ107233983%7CQ10800831%7CQ1085%7CQ1093829%7CQ1120190%7CQ11299%7CQ1130050%7CQ11407181%7CQ114401982%7CQ1147163%7CQ1153401%7CQ115469119%7CQ1156329%7CQ11588784%7CQ1166%7CQ11697775%7CQ11703%7CQ117286854%7CQ1183%7CQ11913491%7CQ119284%7CQ1200957%7CQ12030040%7CQ1204%7CQ1207%7CQ1211%7CQ1212%7CQ1214%7CQ1221%7CQ1221156%7CQ1223%7CQ1227%7CQ12397272%7CQ12411%7CQ124750618%7CQ12584%7CQ1261%7CQ1307779%7CQ131801357%7CQ131964%7CQ132676%7CQ1329623%7CQ133442%7CQ1360064&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5406,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1370%7CQ1371%7CQ1371037%7CQ1378975%7CQ1384%7CQ1386518%7CQ1387%7CQ1391%7CQ1393%7CQ1397%7CQ1400%7CQ1408%7CQ1415%7CQ142%7CQ1428%7CQ1439%7CQ1449%7CQ1454%7CQ1456%7CQ146328%7CQ148%7CQ148499%7CQ1489259%7CQ1494%7CQ1500063%7CQ15079383%7CQ1509%7CQ150981%7CQ1518439%7CQ1522%7CQ15239622%7CQ1527%7CQ153136%7CQ153562%7CQ1537%7CQ1539016%7CQ1543677%7CQ1546%7CQ1548588%7CQ1549591%7CQ1553%7CQ1558%7CQ156278%7CQ157367%7CQ157669%7CQ158064%7CQ158083%7CQ158089%7CQ158095%7CQ1581&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 35895,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q158106%7CQ1588%7CQ158876%7CQ158893%7CQ15974307%7CQ16022392%7CQ1603%7CQ161036%7CQ1612%7CQ163012%7CQ16310%7CQ1637706%7CQ163966%7CQ1649%7CQ16551%7CQ1656682%7CQ16635%7CQ16641%7CQ16644%7CQ16668670%7CQ1668730%7CQ16735822%7CQ1677018%7CQ16957%7CQ16970%7CQ17%7CQ17063%7CQ1724731%7CQ1726063%7CQ173%7CQ17431399%7CQ1758503%7CQ1763370%7CQ1763376%7CQ1763694%7CQ1763828%7CQ1772966%7CQ1811372%7CQ182832%7CQ183%7CQ186080%7CQ189004%7CQ189710%7CQ1901835%7CQ1920630%7CQ1928529%7CQ19409%7CQ1947988%7CQ1954908%7CQ1969345&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5797,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q19829%7CQ2000929%7CQ200126%7CQ2002296%7CQ200250%7CQ2003054%7CQ2010607%7CQ2017682%7CQ202216%7CQ2074737%7CQ2076109%7CQ207694%7CQ2086991%7CQ2087001%7CQ2087010%7CQ2087020%7CQ2087041%7CQ2087082%7CQ2087092%7CQ2087100%7CQ21032622%7CQ211830%7CQ213%7CQ2146978%7CQ215175%7CQ2154459%7CQ2190251%7CQ223936%7CQ2264924%7CQ23002039%7CQ23002054%7CQ238723%7CQ239%7CQ2390761%7CQ24004405%7CQ24354%7CQ24699794%7CQ2495862%7CQ257391%7CQ2634%7CQ2686587%7CQ2716259%7CQ27306%7CQ2736444%7CQ27556165%7CQ2772772%7CQ277753%7CQ27951514%7CQ27968055%7CQ2807&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4229,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q2842986%7CQ28564%7CQ28769526%7CQ29%7CQ2936643%7CQ2936664%7CQ2936666%7CQ2936679%7CQ2936691%7CQ2936692%7CQ2936707%7CQ2936712%7CQ2936728%7CQ2936730%7CQ2936748%7CQ2936750%7CQ2936751%7CQ2936752%7CQ2936771%7CQ2936777%7CQ2936778%7CQ2936794%7CQ2936828%7CQ2991084%7CQ30%7CQ3010205%7CQ3040803%7CQ30643258%7CQ3075039%7CQ31%7CQ3139%7CQ3207410%7CQ3267860%7CQ3279650%7CQ329609%7CQ33%7CQ3304140%7CQ33506%7CQ3413187%7CQ3469910%7CQ3498109%7CQ35%7CQ3551781%7CQ3624078%7CQ3639568%7CQ36784%7CQ3678587%7CQ38%7CQ3813%7CQ38380&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 9839,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q3867170%7CQ3867172%7CQ3867174%7CQ3867175%7CQ3867176%7CQ3867184%7CQ3918%7CQ3924689%7CQ3957%7CQ39984%7CQ40231%7CQ40249%7CQ4071168%7CQ4115680%7CQ41176%7CQ41253%7CQ41304%7CQ427213%7CQ42744322%7CQ43%7CQ43229%7CQ43287%7CQ4504495%7CQ45101554%7CQ460889%7CQ46370%7CQ464980%7CQ4671277%7CQ47034%7CQ4781%7CQ484170%7CQ49108%7CQ49111%7CQ4948%7CQ495%7CQ4959024%7CQ4989906%7CQ499169%7CQ504125%7CQ504703%7CQ515%7CQ51929311%7CQ534634%7CQ54073%7CQ54236%7CQ547795%7CQ55300%7CQ56061%7CQ57546772%7CQ5756&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4920,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q581830%7CQ589403%7CQ598086%7CQ6040928%7CQ6042084%7CQ60988142%7CQ614316%7CQ62049%7CQ6256%7CQ625994%7CQ6360367%7CQ64%7CQ641%7CQ641226%7CQ64578911%7CQ6487%7CQ64953083%7CQ65%7CQ656196%7CQ660384%7CQ662477%7CQ667276%7CQ669315%7CQ67123843%7CQ691779%7CQ700264%7CQ700420%7CQ701253%7CQ7075%7CQ707813%7CQ70972%7CQ713750%7CQ7140593%7CQ719487%7CQ724%7CQ7318%7CQ745108%7CQ747074%7CQ7540126%7CQ759%7CQ769609%7CQ770411%7CQ771%7CQ772257%7CQ777763%7CQ779%7CQ782%7CQ7888355%7CQ794954%7CQ79695687&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5223,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q797%7CQ808694%7CQ811979%7CQ812%7CQ816%7CQ824%7CQ829%7CQ833%7CQ846048%7CQ860166%7CQ8646%7CQ8719053%7CQ881%7CQ883803%7CQ88523604%7CQ895585%7CQ896903%7CQ911008%7CQ919536%7CQ953368%7CQ955825%7CQ96888669%7CQ970581%7CQ99%7CQ994373%7CQ99541706&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4478,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=61st+Venice+Biennale&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1660,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Angesicht+der+Hoffnung&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1020,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

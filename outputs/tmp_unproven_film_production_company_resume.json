@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "film_production_company",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 5,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ11424%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP272+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5484,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q100772936%7CQ1054807%7CQ107105860%7CQ108872988%7CQ11289604%7CQ11305613%7CQ116677364%7CQ116908492%7CQ117745793%7CQ118765520%7CQ124637302%7CQ126722991%7CQ127118135%7CQ1324070%7CQ133126730%7CQ133267930%7CQ133627085%7CQ133834880%7CQ133873410%7CQ134236545%7CQ134548431%7CQ135068898%7CQ135068911%7CQ135094966%7CQ135189759%7CQ135193178%7CQ135668443%7CQ136049243%7CQ137190293%7CQ137660018%7CQ137826900%7CQ137909598%7CQ138004379%7CQ138330190%7CQ138426314%7CQ139285779%7CQ139382827%7CQ1485801%7CQ15477071%7CQ1633138%7CQ182361%7CQ19860639%7CQ25915604%7CQ2630816%7CQ2748604%7CQ277763%7CQ4740868%7CQ511731%7CQ52700115%7CQ59644269&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4325,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q63863205%7CQ64361975%7CQ7070690%7CQ79356130%7CQ854654&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1646,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q10689397%7CQ1107679%7CQ11396960%7CQ11424%7CQ142%7CQ17%7CQ171150%7CQ1762059%7CQ1781%7CQ18011172%7CQ18127%7CQ183%7CQ193977%7CQ202866%7CQ20650540%7CQ234087%7CQ29%7CQ30%7CQ34%7CQ368290%7CQ375336%7CQ43229%7CQ4830453%7CQ506240%7CQ55%7CQ5908002%7CQ65%7CQ783794%7CQ99&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5765,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=That+Time+I+Got+Reincarnated+as+a+Slime%3A+The+Movie+%E2%80%93+Tears+of+the+Azure+Sea&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 854,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

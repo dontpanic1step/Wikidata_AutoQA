@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "album_label",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 4,
+    "cache_hits": 1,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ482994%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP264+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6133,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q100965324%7CQ1023161%7CQ106296918%7CQ109363578%7CQ1124153%7CQ121434492%7CQ134294834%7CQ134706412%7CQ136409746%7CQ136432587%7CQ136499487%7CQ136524128%7CQ136831464%7CQ137205879%7CQ137217854%7CQ137219649%7CQ137391775%7CQ137398901%7CQ137768661%7CQ137770034%7CQ137782490%7CQ137783563%7CQ137785183%7CQ137787331%7CQ137793769%7CQ137795417%7CQ137799228%7CQ137799888%7CQ137829473%7CQ137841895%7CQ137843736%7CQ137859486%7CQ137864401%7CQ137883950%7CQ137887592%7CQ137888563%7CQ137908868%7CQ137912232%7CQ137918862%7CQ138304178%7CQ138588362%7CQ138603658%7CQ138603716%7CQ1470264%7CQ158867%7CQ158886%7CQ18089592%7CQ183387%7CQ1849138%7CQ190585&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3520,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1988428%7CQ231694%7CQ238095%7CQ28736417%7CQ4018224%7CQ4413456%7CQ483938%7CQ5494088%7CQ56760250%7CQ56886777%7CQ6305494%7CQ693194%7CQ770103%7CQ929804&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2854,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q102786%7CQ12540664%7CQ145%7CQ1542343%7CQ16%7CQ1660312%7CQ167270%7CQ17%7CQ18127%7CQ183%7CQ1916382%7CQ208569%7CQ209939%7CQ213%7CQ2442401%7CQ2608849%7CQ261636%7CQ27949697%7CQ30%7CQ33%7CQ38%7CQ40%7CQ43060%7CQ482994%7CQ4830453%7CQ5354754%7CQ766%7CQ84310035%7CQ884%7CQ891723&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 12436,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Mainstream+Overtures&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 15,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

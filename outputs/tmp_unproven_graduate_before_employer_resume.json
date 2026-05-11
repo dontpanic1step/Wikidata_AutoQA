@@ -1,0 +1,15 @@
+{
+  "resume_version": 1,
+  "domain": "graduate_before_employer",
+  "target_time": "2026",
+  "status": "no_result",
+  "telemetry": {
+    "total_requests": 0,
+    "network_requests": 0,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": []
+  },
+  "notes": {}
+}

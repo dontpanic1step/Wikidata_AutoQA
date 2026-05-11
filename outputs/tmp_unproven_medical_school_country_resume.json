@@ -1,0 +1,72 @@
+{
+  "resume_version": 1,
+  "domain": "medical_school_country",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 7,
+    "network_requests": 6,
+    "cache_hits": 1,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ3914%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 13261,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q136399586%7CQ136527948%7CQ137380738%7CQ137387035%7CQ138542358%7CQ138904550%7CQ138904557%7CQ138904562%7CQ138905124%7CQ138905125%7CQ138906018%7CQ138906237%7CQ138906242%7CQ138906248%7CQ138906251%7CQ138908499%7CQ139032828%7CQ139257142%7CQ139257143%7CQ139308973%7CQ139555191%7CQ17%7CQ229%7CQ55%7CQ851&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3550,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1037393%7CQ1042630%7CQ1093%7CQ1101%7CQ110296306%7CQ1105411%7CQ112099%7CQ11396118%7CQ1184716%7CQ1206958%7CQ120730%7CQ122723%7CQ123258%7CQ123376%7CQ1249255%7CQ125863%7CQ127264%7CQ127513%7CQ127877%7CQ128186%7CQ128196%7CQ129499%7CQ130290%7CQ130300%7CQ130308%7CQ131277%7CQ131281%7CQ131287%7CQ131314%7CQ131320%7CQ131358%7CQ1315953%7CQ132705%7CQ132720%7CQ132751%7CQ132929%7CQ132936%7CQ133879%7CQ133924%7CQ133935%7CQ134093%7CQ138573992%7CQ1471266%7CQ1490%7CQ15239622%7CQ15304003%7CQ15701%7CQ160420%7CQ160734%7CQ161454&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6026,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q169376%7CQ17%7CQ188628%7CQ201781%7CQ204266%7CQ2143781%7CQ229%7CQ234167%7CQ236027%7CQ243656%7CQ24863351%7CQ25396%7CQ25528%7CQ26180%7CQ269973%7CQ29999%7CQ3624078%7CQ3692%7CQ383092%7CQ38723%7CQ3889692%7CQ3918%7CQ417175%7CQ43271061%7CQ44843%7CQ45798%7CQ464718%7CQ467479%7CQ47896%7CQ48326%7CQ490520%7CQ498027%7CQ51576574%7CQ5341295%7CQ5358913%7CQ55%7CQ55099871%7CQ56351315%7CQ59133%7CQ59146%7CQ59147%7CQ59148%7CQ59150%7CQ59153%7CQ602903%7CQ617375%7CQ62078547%7CQ6256%7CQ646805%7CQ683858&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5029,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q694%7CQ701%7CQ705%7CQ707%7CQ71699%7CQ71707%7CQ7275%7CQ728218%7CQ74063%7CQ752%7CQ766445%7CQ770%7CQ772%7CQ773%7CQ775%7CQ776%7CQ779855%7CQ80011%7CQ80434%7CQ81863%7CQ819689%7CQ83273%7CQ840603%7CQ840610%7CQ851%7CQ851149%7CQ852774%7CQ869032%7CQ953508&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6308,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Riyadh+University+of+Arts&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 17,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Drama+School+THOC&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 904,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

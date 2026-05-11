@@ -1,0 +1,48 @@
+{
+  "resume_version": 1,
+  "domain": "climate_report_author",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 4,
+    "network_requests": 4,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ10870555%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP50+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3439,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q10513470%7CQ110543512%7CQ113550157%7CQ132917952%7CQ136327722%7CQ137052779%7CQ137476392%7CQ137794064%7CQ137825603%7CQ137939465%7CQ137939503%7CQ137939514%7CQ138005846%7CQ138035642%7CQ138235408%7CQ138413270%7CQ138413328%7CQ138604225%7CQ138621391%7CQ138622579%7CQ138624029%7CQ138625142%7CQ138626870%7CQ138628053%7CQ138629734%7CQ138752407%7CQ139504352%7CQ139548958%7CQ139574692%7CQ139590445%7CQ139667421%7CQ180%7CQ20164342%7CQ28052613%7CQ75758426%7CQ7934142%7CQ80877297&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3847,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q10383930%7CQ10870555%7CQ112983%7CQ1228945%7CQ163740%7CQ16917889%7CQ213%7CQ223729%7CQ30%7CQ3099732%7CQ4184%7CQ43229%7CQ4830453%7CQ5%7CQ708676%7CQ7725634&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6313,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=From+Construction+to+Marginalization&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 939,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

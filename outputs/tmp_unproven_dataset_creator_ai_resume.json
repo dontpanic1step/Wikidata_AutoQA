@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "dataset_creator_ai",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 0,
+    "cache_hits": 5,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP170+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 1,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q138048287%7CQ138600930%7CQ138827465%7CQ139393633%7CQ139393658%7CQ139393817%7CQ139393818%7CQ139393819%7CQ139393821%7CQ139551829%7CQ139551939%7CQ139555169&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 9,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q10541491%7CQ1172284%7CQ1714118%7CQ17537576%7CQ212805%7CQ29%7CQ34%7CQ43229%7CQ5%7CQ615699&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 93,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Wikitolica+Open+Data&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 1,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Swedish+Construction+FAQ&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 1,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

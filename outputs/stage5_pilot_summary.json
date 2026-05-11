@@ -1,0 +1,225 @@
+{
+  "accepted_total": 12,
+  "rejected_total": 5,
+  "accepted_domains": [
+    "album_performer",
+    "artwork_creator",
+    "book_original_language",
+    "building_architect",
+    "company_founder",
+    "film_director",
+    "museum_country",
+    "novel_author",
+    "rail_station_country",
+    "scholarly_article_journal",
+    "software_developer",
+    "video_game_developer"
+  ],
+  "missing_domains": [],
+  "template_results": [
+    {
+      "domain": "film_director",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "novel_author",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "book_original_language",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "video_game_developer",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "software_developer",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "scholarly_article_journal",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "artwork_creator",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "album_performer",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "building_architect",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    },
+    {
+      "domain": "rail_station_country",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "ok",
+      "telemetry": {
+        "total_requests": 7,
+        "network_requests": 5,
+        "cache_hits": 2,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31+wd%3AQ55488%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-06T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+25&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q124466758%7CQ135906413%7CQ17%7CQ34%7CQ60968830&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 38,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q102377%7CQ103093%7CQ103659%7CQ103672%7CQ103679%7CQ103686%7CQ103691%7CQ103699%7CQ103707%7CQ103732%7CQ103738%7CQ1037393%7CQ104231%7CQ104257%7CQ104746%7CQ104877%7CQ104891%7CQ104926%7CQ104940%7CQ105075%7CQ106789%7CQ106915%7CQ112099%7CQ120730%7CQ122723%7CQ123258%7CQ123376%7CQ125863%7CQ127264%7CQ127513%7CQ127877%7CQ128186%7CQ128196%7CQ129499%7CQ130290%7CQ130300%7CQ130308%7CQ131277%7CQ131281%7CQ131287%7CQ131314%7CQ131320%7CQ131358%7CQ132705%7CQ132720%7CQ132751%7CQ132929%7CQ132936%7CQ133879%7CQ133924&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 38919,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q133935%7CQ134093%7CQ1490%7CQ15701%7CQ160420%7CQ160734%7CQ161454%7CQ169376%7CQ17%7CQ179164%7CQ209801%7CQ34%7CQ3624078%7CQ41614%7CQ44843%7CQ47896%7CQ48326%7CQ52502%7CQ55488%7CQ617375%7CQ6256%7CQ63791824%7CQ71699%7CQ71707%7CQ766445%7CQ80011%7CQ80434%7CQ81863%7CQ83273%7CQ877941&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 6148,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Haga+station&language=en&type=item&limit=10&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 1837,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q4562757%7CQ131424820&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 1297,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Shikibu+Station&language=en&type=item&limit=10&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 2028,
+            "status": "ok"
+          }
+        ]
+      }
+    },
+    {
+      "domain": "museum_country",
+      "accepted": 1,
+      "rejected": 1,
+      "status": "ok",
+      "telemetry": {
+        "total_requests": 7,
+        "network_requests": 5,
+        "cache_hits": 2,
+        "retry_count": 0,
+        "errors": 0,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31+wd%3AQ33506%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-06T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+25&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q112872204%7CQ131783017%7CQ138762453%7CQ138952286%7CQ139555219%7CQ139664107%7CQ145%7CQ29999%7CQ45%7CQ55%7CQ668&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 201,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1012706%7CQ1061%7CQ1093%7CQ1101%7CQ112099%7CQ1159%7CQ1162%7CQ1164%7CQ1165%7CQ1168%7CQ1171%7CQ1174%7CQ1177%7CQ1180%7CQ1184%7CQ1185%7CQ1186%7CQ1188%7CQ1191%7CQ1193%7CQ1195%7CQ1250464%7CQ1353%7CQ1356%7CQ1363%7CQ1437%7CQ1445%7CQ145%7CQ1498%7CQ1499%7CQ1502%7CQ1505%7CQ15304003%7CQ1595639%7CQ1599%7CQ17000324%7CQ200667%7CQ20181813%7CQ207199%7CQ208139%7CQ21%7CQ210527%7CQ21203%7CQ22%7CQ22048%7CQ223832%7CQ22424%7CQ225189%7CQ244510%7CQ244512&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 7620,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q244517%7CQ244521%7CQ25%7CQ25263%7CQ25279%7CQ25396%7CQ25528%7CQ26%7CQ26180%7CQ26253%7CQ26273%7CQ26927%7CQ273525%7CQ273529%7CQ273533%7CQ274109%7CQ274118%7CQ29999%7CQ31573%7CQ321455%7CQ322792%7CQ326203%7CQ326214%7CQ33506%7CQ3624078%7CQ373528%7CQ379372%7CQ40888%7CQ417175%7CQ43433%7CQ45%7CQ46107%7CQ55%7CQ6256%7CQ66278313%7CQ66710%7CQ66743%7CQ668%7CQ677037%7CQ694%7CQ701%7CQ705%7CQ707%7CQ727%7CQ752%7CQ770%7CQ772%7CQ773%7CQ775%7CQ776&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 12691,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q77997266%7CQ803%7CQ83247%7CQ843868%7CQ9899&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 4838,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Football+Museum+of+Wales+and+Wrexham+Museum&language=en&type=item&limit=10&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 1127,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=The+Apple+Museum&language=en&type=item&limit=10&format=json",
+            "accept": "application/json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 1406,
+            "status": "ok"
+          }
+        ]
+      }
+    },
+    {
+      "domain": "company_founder",
+      "accepted": 1,
+      "rejected": 0,
+      "status": "resumed_from_cache"
+    }
+  ],
+  "accepted_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\stage5_pilot_accepted.jsonl",
+  "rejected_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\stage5_pilot_rejected.jsonl"
+}

@@ -1,0 +1,88 @@
+{
+  "resume_version": 1,
+  "domain": "rail_station_country",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 9,
+    "network_requests": 6,
+    "cache_hits": 3,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ55488%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3406,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q124466758%7CQ135906413%7CQ159%7CQ17%7CQ34%7CQ4416197%7CQ60968830&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4656,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q102377%7CQ103093%7CQ103659%7CQ103672%7CQ103679%7CQ103686%7CQ103691%7CQ103699%7CQ103707%7CQ103732%7CQ103738%7CQ1037393%7CQ104231%7CQ104257%7CQ104746%7CQ104877%7CQ104891%7CQ104926%7CQ104940%7CQ105075%7CQ106789%7CQ106915%7CQ112099%7CQ120730%7CQ122723%7CQ123258%7CQ123376%7CQ125863%7CQ127264%7CQ127513%7CQ127693126%7CQ127877%7CQ128186%7CQ128196%7CQ129499%7CQ130290%7CQ130300%7CQ130308%7CQ131277%7CQ131281%7CQ131287%7CQ131314%7CQ131320%7CQ131358%7CQ1323642%7CQ132705%7CQ132720%7CQ132751%7CQ132929%7CQ132936&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6769,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q133879%7CQ133924%7CQ133935%7CQ134093%7CQ1490%7CQ15701%7CQ159%7CQ15966495%7CQ160420%7CQ160734%7CQ161454%7CQ169376%7CQ1697%7CQ17%7CQ170584%7CQ17094638%7CQ1727%7CQ1749%7CQ1759%7CQ179164%7CQ182902%7CQ1875%7CQ190229%7CQ1914%7CQ2015%7CQ2073%7CQ207737%7CQ208308%7CQ209801%7CQ214262%7CQ216301%7CQ2164%7CQ2191%7CQ2218%7CQ2240%7CQ2246%7CQ2292%7CQ2347%7CQ2448%7CQ2596%7CQ2654%7CQ2702%7CQ2753%7CQ2792%7CQ2810%7CQ2842%7CQ3129%7CQ3178%7CQ3329%7CQ34&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6242,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q3447%7CQ3510%7CQ3550%7CQ3573%7CQ3624078%7CQ3680%7CQ3734%7CQ3819%7CQ3941%7CQ3953%7CQ41614%7CQ4341%7CQ44843%7CQ47896%7CQ48326%7CQ5118%7CQ5187%7CQ5207%7CQ5219%7CQ5237%7CQ52502%7CQ5267%7CQ5328%7CQ5334%7CQ5338%7CQ5340%7CQ5387%7CQ5400%7CQ5422%7CQ5446%7CQ5462%7CQ5466%7CQ5481%7CQ5545%7CQ55488%7CQ5634%7CQ5710%7CQ5714%7CQ5741%7CQ5824%7CQ5835%7CQ5851%7CQ5884%7CQ5942%7CQ5971%7CQ6076%7CQ617375%7CQ622876%7CQ6256%7CQ6320&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4958,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q63791824%7CQ6407%7CQ649%7CQ6543%7CQ656%7CQ6563%7CQ6585%7CQ6605%7CQ6809%7CQ6838%7CQ6886%7CQ71699%7CQ71707%7CQ7525%7CQ766445%7CQ7730%7CQ7788%7CQ7797%7CQ7948%7CQ7971%7CQ7984%7CQ80011%7CQ80434%7CQ81863%7CQ83273%7CQ846866%7CQ859563%7CQ877941%7CQ891%7CQ928830%7CQ960&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3600,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Haga+station&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 22,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q4562757%7CQ131424820&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 30,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Shikibu+Station&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 21,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

@@ -1,0 +1,17 @@
+{
+  "resume_version": 1,
+  "domain": "wedding_age_gap",
+  "target_time": "2026",
+  "status": "error:TimeoutError",
+  "telemetry": {
+    "total_requests": 1,
+    "network_requests": 1,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": []
+  },
+  "notes": {
+    "error_message": "The read operation timed out"
+  }
+}

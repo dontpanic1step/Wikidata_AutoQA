@@ -1,0 +1,80 @@
+{
+  "resume_version": 1,
+  "domain": "library_country",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 8,
+    "network_requests": 8,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ7075%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3017,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q138226403%7CQ138718434%7CQ138858591%7CQ138917078%7CQ139244807%7CQ145%7CQ155%7CQ298%7CQ30%7CQ43&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6562,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q112099%7CQ1166%7CQ11703%7CQ1183%7CQ119158%7CQ1204%7CQ1207%7CQ1211%7CQ1212%7CQ1214%7CQ1221%7CQ1223%7CQ1224984%7CQ1227%7CQ123934%7CQ125506%7CQ1261%7CQ126874%7CQ127693126%7CQ128978%7CQ129387%7CQ130553%7CQ131293%7CQ131384%7CQ131387%7CQ131597%7CQ1323642%7CQ132637%7CQ134187%7CQ134413%7CQ1360064%7CQ1370%7CQ1371%7CQ1384%7CQ1387%7CQ1391%7CQ1393%7CQ1397%7CQ1400%7CQ1408%7CQ1415%7CQ1428%7CQ1439%7CQ145%7CQ1454%7CQ1456%7CQ146328%7CQ1489259%7CQ1494%7CQ1500063&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6876,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1509%7CQ1518439%7CQ1522%7CQ1527%7CQ1537%7CQ1546%7CQ1548588%7CQ15499%7CQ155%7CQ155219%7CQ1553%7CQ1558%7CQ157341%7CQ1581%7CQ1588%7CQ1603%7CQ1612%7CQ1649%7CQ16551%7CQ16635%7CQ16641%7CQ16644%7CQ173%7CQ175%7CQ1811372%7CQ200464%7CQ20181813%7CQ21%7CQ2109%7CQ2114%7CQ2118%7CQ2120%7CQ2121%7CQ212805%7CQ2131%7CQ2133%7CQ2166%7CQ2170%7CQ2176%7CQ2177%7CQ2178%7CQ2181%7CQ2189%7CQ219458%7CQ219956%7CQ22%7CQ2279529%7CQ2297724%7CQ23109%7CQ24076693&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4559,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q25%7CQ26%7CQ268043%7CQ272662%7CQ272947%7CQ281206%7CQ28564%7CQ298%7CQ30%7CQ3152824%7CQ31573%7CQ339834%7CQ344490%7CQ3551781%7CQ3624078%7CQ376797%7CQ38088%7CQ388469%7CQ388995%7CQ39109%7CQ39517%7CQ40030%7CQ40040%7CQ40123%7CQ40130%7CQ40249%7CQ40430%7CQ40549%7CQ40780%7CQ40885%7CQ40942%7CQ41115%7CQ41428%7CQ41587%7CQ42362%7CQ42508%7CQ42722%7CQ42824%7CQ43%7CQ430693%7CQ43233%7CQ43235%7CQ432391%7CQ43255%7CQ43319%7CQ43690%7CQ43695%7CQ43745%7CQ43783%7CQ43924&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 10568,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q45220%7CQ46763%7CQ47117%7CQ47813%7CQ482779%7CQ482788%7CQ482825%7CQ482834%7CQ482975%7CQ483040%7CQ483053%7CQ483063%7CQ483078%7CQ483083%7CQ483091%7CQ483100%7CQ483154%7CQ483168%7CQ483173%7CQ483180%7CQ483191%7CQ483195%7CQ483472%7CQ483481%7CQ484392%7CQ51576574%7CQ5255892%7CQ534799%7CQ547795%7CQ6042084%7CQ6067386%7CQ619610%7CQ620742%7CQ6256%7CQ6266%7CQ647378%7CQ660384%7CQ669315%7CQ7075%7CQ7094076%7CQ724%7CQ75445%7CQ759%7CQ771%7CQ777763%7CQ779%7CQ782%7CQ797%7CQ79760%7CQ79840&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5710,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q79846%7CQ80036%7CQ80051%7CQ80088%7CQ80370%7CQ80550%7CQ812%7CQ81551%7CQ816%7CQ82089%7CQ82096%7CQ824%7CQ829%7CQ83069%7CQ83073%7CQ83077%7CQ83081%7CQ83102%7CQ83239%7CQ83274%7CQ83342%7CQ83965%7CQ859563%7CQ93209%7CQ99%7CQ99541706&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3991,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Digital+Ad+Archive&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1052,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

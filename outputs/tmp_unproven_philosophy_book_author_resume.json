@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "philosophy_book_author",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 5,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ571%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP50+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2837,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q102077433%7CQ1049096%7CQ110788399%7CQ112207726%7CQ11359823%7CQ118152105%7CQ133844573%7CQ134731703%7CQ135199959%7CQ136709632%7CQ136709654%7CQ136768725%7CQ136769037%7CQ137161242%7CQ137211192%7CQ137555268%7CQ137555269%7CQ137555270%7CQ137592240%7CQ137640453%7CQ137646845%7CQ137660678%7CQ137710370%7CQ137737281%7CQ137827252%7CQ137828399%7CQ137847816%7CQ137852495%7CQ137922289%7CQ137922340%7CQ137970671%7CQ138025697%7CQ138107469%7CQ138282007%7CQ138329761%7CQ138330490%7CQ138342579%7CQ138500299%7CQ138611569%7CQ138632822%7CQ138637830%7CQ138638703%7CQ138806893%7CQ138806961%7CQ138807264%7CQ138844110%7CQ138844149%7CQ138846057%7CQ138846245%7CQ138846285&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3487,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q138846319%7CQ138846341%7CQ138846355%7CQ138846368%7CQ138846379%7CQ138846391%7CQ138846403%7CQ138853340%7CQ139253224%7CQ139256496%7CQ139378097%7CQ139497175%7CQ139551248%7CQ139551290%7CQ139557729%7CQ139558204%7CQ139577790%7CQ139586686%7CQ139596120%7CQ139622947%7CQ139623309%7CQ21703891%7CQ24644348%7CQ28469412%7CQ3206305%7CQ57971534%7CQ616917%7CQ6774606%7CQ76284194%7CQ8259266%7CQ859960&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4332,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q11396303%7CQ122731938%7CQ125632018%7CQ198614%7CQ22661166%7CQ3331189%7CQ43013%7CQ497976%7CQ5%7CQ548408%7CQ57933693%7CQ732577%7CQ7725634%7CQ8274%7CQ933530&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2291,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=The+Zepherous+Universe%3A+Visual+Archive+One+-+A+Coloring+Companion&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1208,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

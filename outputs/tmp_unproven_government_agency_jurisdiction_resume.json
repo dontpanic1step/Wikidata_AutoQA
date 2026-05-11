@@ -1,0 +1,104 @@
+{
+  "resume_version": 1,
+  "domain": "government_agency_jurisdiction",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 11,
+    "network_requests": 11,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ327333%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP1001+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5957,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1019%7CQ10677695%7CQ1197%7CQ1206%7CQ1208%7CQ1246%7CQ136849350%7CQ137399263%7CQ137488341%7CQ137669905%7CQ137747512%7CQ137917761%7CQ137926983%7CQ138169134%7CQ138338077%7CQ138461090%7CQ138574008%7CQ138663471%7CQ138788604%7CQ139009001%7CQ139323635%7CQ139373872%7CQ176%7CQ219%7CQ33%7CQ34%7CQ408%7CQ419%7CQ4628%7CQ55%7CQ60%7CQ881&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6021,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1007272%7CQ1019%7CQ102377%7CQ103093%7CQ103659%7CQ103672%7CQ103679%7CQ103686%7CQ103691%7CQ103699%7CQ103707%7CQ103732%7CQ103738%7CQ104231%7CQ104257%7CQ104746%7CQ104877%7CQ104891%7CQ104926%7CQ104940%7CQ105075%7CQ106789%7CQ1068386%7CQ106915%7CQ10711424%7CQ107600990%7CQ1093%7CQ1093829%7CQ1101%7CQ110376455%7CQ1104675%7CQ1112985%7CQ112099%7CQ1122368%7CQ1124109%7CQ11299%7CQ113120%7CQ11828004%7CQ1221156%7CQ123480%7CQ1246%7CQ1251933%7CQ131198%7CQ133888%7CQ1384%7CQ141810%7CQ1450377%7CQ1474984%7CQ15063611%7CQ1506932&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6350,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q15304003%7CQ1549591%7CQ15529552%7CQ15577%7CQ1585725%7CQ16%7CQ16036965%7CQ162020%7CQ1711%7CQ1715%7CQ172216%7CQ1733%7CQ174844%7CQ1754%7CQ178994%7CQ179164%7CQ1802122%7CQ182809%7CQ183%7CQ183487%7CQ18419%7CQ18424%7CQ18426%7CQ18432%7CQ184981%7CQ1854%7CQ1858%7CQ187874%7CQ192611%7CQ200250%7CQ200938%7CQ201162%7CQ2012057%7CQ2012227%7CQ2012234%7CQ2012242%7CQ2012423%7CQ2012430%7CQ2012583%7CQ2012589%7CQ2012621%7CQ2012772%7CQ2012785%7CQ202686%7CQ202904%7CQ2043104%7CQ2043130%7CQ2043136%7CQ2043155%7CQ2048354&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 9009,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q2048755%7CQ205057%7CQ205068%7CQ205078%7CQ205089%7CQ205104%7CQ205112%7CQ205126%7CQ207413%7CQ207424%7CQ207973%7CQ208182%7CQ208183%7CQ208185%7CQ208186%7CQ208511%7CQ209597%7CQ20980723%7CQ210061%7CQ210896%7CQ211208%7CQ211793%7CQ211795%7CQ2137705%7CQ215221%7CQ216075%7CQ219%7CQ220736%7CQ222948%7CQ223832%7CQ2264924%7CQ2304022%7CQ2332060%7CQ2347012%7CQ23522%7CQ2396053%7CQ2447449%7CQ2479200%7CQ2500688%7CQ2507200%7CQ2507287%7CQ2513453%7CQ25282%7CQ25396%7CQ25528%7CQ25789%7CQ26180%7CQ2634400%7CQ26575%7CQ2773&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3739,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q2790675%7CQ2814%7CQ29076424%7CQ2916%7CQ2936%7CQ2986735%7CQ2993943%7CQ29999%7CQ30%7CQ3014%7CQ3033%7CQ31057%7CQ31063%7CQ314240%7CQ314251%7CQ3191420%7CQ3200%7CQ3206%7CQ3214%7CQ321529%7CQ3224%7CQ3235%7CQ3258%7CQ327333%7CQ33%7CQ33271%7CQ33304%7CQ33351%7CQ33354%7CQ33369%7CQ33379%7CQ33396%7CQ33403%7CQ33408%7CQ34%7CQ34366%7CQ35%7CQ35715%7CQ36004%7CQ36074%7CQ36235%7CQ3624078%7CQ3625575%7CQ36399%7CQ36409%7CQ36446%7CQ36512%7CQ3655958%7CQ3656386%7CQ3657448&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 8929,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q3657833%7CQ36579%7CQ36587%7CQ36592%7CQ36608%7CQ36610%7CQ36662%7CQ36676%7CQ36687%7CQ36690%7CQ36721%7CQ36865%7CQ36900%7CQ369220%7CQ36955%7CQ3828%7CQ3857%7CQ3907%7CQ3931%7CQ4024%7CQ408%7CQ41614%7CQ4174%7CQ419%7CQ4329229%7CQ43702%7CQ445936%7CQ450622%7CQ489821%7CQ505220%7CQ506250%7CQ510572%7CQ515%7CQ51929311%7CQ55%7CQ55306%7CQ5689%7CQ5691%7CQ5692%7CQ5693%7CQ5694%7CQ5695%7CQ5696%7CQ5697%7CQ5698%7CQ569998%7CQ5700%7CQ5701%7CQ5702%7CQ5703&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5977,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q5704%7CQ5706%7CQ5708%7CQ5709%7CQ5711%7CQ5712%7CQ5897%7CQ5906%7CQ5907%7CQ5910%7CQ5913%7CQ5915%7CQ5919%7CQ5922%7CQ5923%7CQ5926%7CQ5927%7CQ59281%7CQ5929%7CQ5931%7CQ5932%7CQ5934%7CQ5936%7CQ5939%7CQ5940%7CQ5941%7CQ5945%7CQ5947%7CQ5948%7CQ5952%7CQ5956%7CQ5958%7CQ5963%7CQ5966%7CQ5970%7CQ5973%7CQ5978%7CQ60%7CQ6018%7CQ6022%7CQ6037%7CQ6040%7CQ6041%7CQ6045%7CQ6047%7CQ6053%7CQ6057%7CQ6061%7CQ6064%7CQ6068&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 6134,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q6071%7CQ6075%7CQ6081%7CQ6087%7CQ6092%7CQ6098%7CQ6102%7CQ6109%7CQ6115%7CQ6119%7CQ6125%7CQ6132%7CQ6139%7CQ6142%7CQ6146%7CQ6152%7CQ6156%7CQ615914%7CQ6165%7CQ6173%7CQ6178%7CQ6181%7CQ6256%7CQ63791824%7CQ639418%7CQ640506%7CQ656073%7CQ6587068%7CQ66724388%7CQ669259%7CQ680780%7CQ68295960%7CQ68312351%7CQ692825%7CQ693911%7CQ694%7CQ701%7CQ705%7CQ707%7CQ728139%7CQ72818%7CQ7333405%7CQ752%7CQ756617%7CQ759957%7CQ770%7CQ772%7CQ773%7CQ775%7CQ776&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4033,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q794039%7CQ794044%7CQ794063%7CQ794068%7CQ794116%7CQ804311%7CQ809729%7CQ841197%7CQ849866%7CQ860148%7CQ860157%7CQ860303%7CQ860365%7CQ860399%7CQ881%7CQ896905%7CQ896926%7CQ897087%7CQ897924%7CQ903985%7CQ907395%7CQ927561%7CQ931679&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5234,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Royal+Commission+on+Antisemitism+and+Social+Cohesion&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 894,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

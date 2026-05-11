@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "sports_venue_city",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 4,
+    "cache_hits": 1,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1076486%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP131+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4533,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1053677%7CQ115804542%7CQ138845212%7CQ139461583%7CQ139620099%7CQ1436816%7CQ16251517%7CQ2011302%7CQ23197%7CQ40435&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2560,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1053677%7CQ1093829%7CQ110714853%7CQ114843%7CQ1177705%7CQ1436816%7CQ15063611%7CQ15213%7CQ1549591%7CQ1906268%7CQ2011302%7CQ202904%7CQ219%7CQ23197%7CQ2338524%7CQ2881272%7CQ30%7CQ3301053%7CQ40435%7CQ41176%7CQ483110%7CQ58339518%7CQ62049%7CQ641226%7CQ664%7CQ668%7CQ692912%7CQ902814&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 7014,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=New+Buffalo+Bills+Stadium&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1881,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=New+Nissan+Stadium&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": true,
+        "attempts": 0,
+        "duration_ms": 34,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}

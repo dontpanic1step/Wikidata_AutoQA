@@ -1,0 +1,121 @@
+{
+  "target_time": "2026",
+  "domains": [
+    "ordinal_country_prime_minister"
+  ],
+  "accepted": 0,
+  "rejected": 0,
+  "output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\p39_refine_single_v3_accepted.jsonl",
+  "rejected_output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\p39_refine_single_v3_rejected.jsonl",
+  "problem_backlog_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\p39_refine_single_v3_problem_backlog.md",
+  "template_results": [
+    {
+      "domain": "ordinal_country_prime_minister",
+      "status": "no_result",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 7,
+        "network_requests": 7,
+        "cache_hits": 4,
+        "retry_count": 4,
+        "errors": 2,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3Foffice+WHERE+%7B%0A++%3Fsubject+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ6256.%0A++%7B+%3Foffice+wdt%3AP1001+%3Fsubject.+%7D+UNION+%7B+%3Foffice+wdt%3AP17+%3Fsubject.+%7D%0A++%3Foffice+rdfs%3Alabel+%3FofficeLabel.%0A++FILTER%28LANG%28%3FofficeLabel%29+%3D+%22en%22%29%0A++FILTER%28CONTAINS%28LCASE%28STR%28%3FofficeLabel%29%29%2C+%22prime+minister%22%29%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3Foffice+%3Fanswer+%3Fstart+WHERE+%7B%0A++VALUES+%28%3Fsubject+%3Foffice%29+%7B+%28wd%3AQ16+wd%3AQ839078%29+%28wd%3AQ43+wd%3AQ5261074%29+%28wd%3AQ43+wd%3AQ2430415%29+%28wd%3AQ29+wd%3AQ3113035%29+%28wd%3AQ17+wd%3AQ274948%29+%28wd%3AQ16+wd%3AQ3556884%29+%28wd%3AQ29+wd%3AQ37936537%29+%28wd%3AQ29+wd%3AQ34650962%29+%28wd%3AQ29+wd%3AQ37335701%29+%28wd%3AQ29+wd%3AQ6366492%29+%7D%0A++%3Fanswer+p%3AP39+%3Fstmt.%0A++%3Fstmt+ps%3AP39+%3Foffice%3B%0A++++++++pq%3AP580+%3Fstart.%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0AORDER+BY+%3Fstart+%3Fsubject%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3Foffice+%3Fanswer+%3Fstart+WHERE+%7B%0A++VALUES+%28%3Fsubject+%3Foffice%29+%7B+%28wd%3AQ16+wd%3AQ24559%29+%28wd%3AQ16+wd%3AQ24569%29+%28wd%3AQ17+wd%3AQ11267653%29+%28wd%3AQ17+wd%3AQ1767791%29+%28wd%3AQ79+wd%3AQ101070183%29+%28wd%3AQ79+wd%3AQ101096064%29+%28wd%3AQ29+wd%3AQ844587%29+%28wd%3AQ754+wd%3AQ30101326%29+%28wd%3AQ79+wd%3AQ1571396%29+%28wd%3AQ16+wd%3AQ7580157%29+%7D%0A++%3Fanswer+p%3AP39+%3Fstmt.%0A++%3Fstmt+ps%3AP39+%3Foffice%3B%0A++++++++pq%3AP580+%3Fstart.%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0AORDER+BY+%3Fstart+%3Fsubject%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3Foffice+%3Fanswer+%3Fstart+WHERE+%7B%0A++VALUES+%28%3Fsubject+%3Foffice%29+%7B+%28wd%3AQ17+wd%3AQ11394707%29+%28wd%3AQ754+wd%3AQ107861214%29+%28wd%3AQ757+wd%3AQ30101507%29+%28wd%3AQ757+wd%3AQ114739134%29+%28wd%3AQ17+wd%3AQ243185%29+%28wd%3AQ760+wd%3AQ30101433%29+%28wd%3AQ760+wd%3AQ109641152%29+%28wd%3AQ766+wd%3AQ1430943%29+%28wd%3AQ763+wd%3AQ113541054%29+%28wd%3AQ763+wd%3AQ30101336%29+%7D%0A++%3Fanswer+p%3AP39+%3Fstmt.%0A++%3Fstmt+ps%3AP39+%3Foffice%3B%0A++++++++pq%3AP580+%3Fstart.%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0AORDER+BY+%3Fstart+%3Fsubject%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 1,
+            "duration_ms": 570,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fsubject+%3Foffice+%3Fanswer+%3Fstart+WHERE+%7B%0A++VALUES+%28%3Fsubject+%3Foffice%29+%7B+%28wd%3AQ766+wd%3AQ127386429%29+%28wd%3AQ766+wd%3AQ112109864%29+%28wd%3AQ159+wd%3AQ842386%29+%28wd%3AQ769+wd%3AQ30100613%29+%28wd%3AQ781+wd%3AQ108319005%29+%28wd%3AQ766+wd%3AQ41513836%29+%28wd%3AQ16+wd%3AQ125276038%29+%28wd%3AQ778+wd%3AQ565424%29+%28wd%3AQ778+wd%3AQ25917099%29+%28wd%3AQ230+wd%3AQ1975365%29+%7D%0A++%3Fanswer+p%3AP39+%3Fstmt.%0A++%3Fstmt+ps%3AP39+%3Foffice%3B%0A++++++++pq%3AP580+%3Fstart.%0A++FILTER%28%3Fstart+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fstart+%3C%3D+%222026-05-09T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0AORDER+BY+%3Fstart+%3Fsubject%0ALIMIT+15&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8857,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Foffice+%3Fanswer+%3Fstart+WHERE+%7B%0A++VALUES+%3Foffice+%7B+wd%3AQ3113035+%7D%0A++%3Fanswer+p%3AP39+%3Fstmt.%0A++%3Fstmt+ps%3AP39+%3Foffice%3B%0A++++++++pq%3AP580+%3Fstart.%0A%7D&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 6920,
+            "status": "error",
+            "error_type": "HTTPError",
+            "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q124040442%7CQ29%7CQ3113035&props=labels%7Caliases%7Cdescriptions%7Cclaims%7Csitelinks&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 37,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "chunked_office_holder_lookup_failed",
+            "message": "A later office-holder chunk failed; continuing with partial results.",
+            "context": {
+              "domain": "ordinal_country_prime_minister",
+              "chunk_size": 10,
+              "collected_rows": 1,
+              "error_type": "HTTPError",
+              "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+            }
+          },
+          {
+            "kind": "chunked_office_history_lookup_failed",
+            "message": "A later office-history chunk failed; continuing with partial histories.",
+            "context": {
+              "domain": "ordinal_country_prime_minister",
+              "chunk_size": 1,
+              "loaded_offices": 0,
+              "error_type": "HTTPError",
+              "error_message": "HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)"
+            }
+          },
+          {
+            "kind": "support_probe_skipped",
+            "message": "Skipped generic support probe because a prior heavy-query failure already explains the outcome.",
+            "context": {
+              "domain": "ordinal_country_prime_minister",
+              "target_property_pid": "P39"
+            }
+          }
+        ]
+      },
+      "error_message": ""
+    }
+  ]
+}

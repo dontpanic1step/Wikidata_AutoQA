@@ -1,0 +1,56 @@
+{
+  "resume_version": 1,
+  "domain": "hospital_country",
+  "target_time": "2026",
+  "status": "accepted",
+  "telemetry": {
+    "total_requests": 5,
+    "network_requests": 5,
+    "cache_hits": 0,
+    "retry_count": 0,
+    "errors": 0,
+    "events": [
+      {
+        "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3FitemLabel+%3Fanswer+%3FanswerLabel+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ16917%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%0A++SERVICE+wikibase%3Alabel+%7B%0A++++bd%3AserviceParam+wikibase%3Alanguage+%22en%22.%0A++%7D%0A%7D%0ALIMIT+50&format=json",
+        "accept": "application/sparql-results+json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 2290,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q110693258%7CQ124635412%7CQ142%7CQ33&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 4770,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1137%7CQ1142%7CQ1152%7CQ1173%7CQ1179%7CQ1190%7CQ12130%7CQ12191%7CQ126125%7CQ129003%7CQ13917%7CQ13947%7CQ13950%7CQ14103%7CQ14112%7CQ142%7CQ15104%7CQ161258%7CQ16393%7CQ16394%7CQ16917%7CQ16954%7CQ16961%7CQ16987%7CQ16994%7CQ17005%7CQ17009%7CQ17012%7CQ17054%7CQ17063%7CQ17070%7CQ179164%7CQ18338206%7CQ18578267%7CQ18677767%7CQ18677875%7CQ18677983%7CQ18678082%7CQ18678265%7CQ20181813%7CQ202158%7CQ25362%7CQ30971%7CQ33%7CQ33788%7CQ34617%7CQ35555%7CQ3624078%7CQ3769%7CQ43309861&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 5190,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q43311297%7CQ463%7CQ51576574%7CQ5689%7CQ5691%7CQ5692%7CQ5693%7CQ5694%7CQ5695%7CQ5696%7CQ5697%7CQ5698%7CQ5700%7CQ5701%7CQ5702%7CQ5703%7CQ5704%7CQ5706%7CQ5708%7CQ5709%7CQ5711%7CQ5712%7CQ6256%7CQ63791824%7CQ7270%7CQ811941&props=labels%7Caliases%7Cdescriptions%7Cclaims&languages=en&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 3679,
+        "status": "ok"
+      },
+      {
+        "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Assi-sairaala&language=en&type=item&limit=10&format=json",
+        "accept": "application/json",
+        "cache_hit": false,
+        "attempts": 1,
+        "duration_ms": 1810,
+        "status": "ok"
+      }
+    ]
+  },
+  "notes": {}
+}
