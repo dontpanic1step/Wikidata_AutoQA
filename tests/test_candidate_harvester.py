@@ -73,13 +73,13 @@ class CandidateHarvesterTests(unittest.TestCase):
             def sparql_query(self, query: str):
                 self.queries.append(query)
                 if len(self.queries) == 1:
-                    return [
-                        {
-                            "item": {"value": "http://www.wikidata.org/entity/Q1"},
-                            "date": {"value": "+2026-01-02T00:00:00Z"},
-                        }
-                    ]
-                return []
+                    raise RuntimeError("direct query too broad")
+                return [
+                    {
+                        "item": {"value": "http://www.wikidata.org/entity/Q1"},
+                        "date": {"value": "+2026-01-02T00:00:00Z"},
+                    }
+                ]
 
             def get_entities(self, ids):
                 records = {}
@@ -128,6 +128,150 @@ class CandidateHarvesterTests(unittest.TestCase):
                 for problem in client.problems
             )
         )
+
+    def test_broad_template_tries_direct_query_before_falling_back_to_staged_seed(self) -> None:
+        template = DomainTemplate(
+            domain="product_manufacturer",
+            topic="Economy and Business",
+            answer_type="Organization",
+            question_family="which_company_manufactured_product",
+            subject_type_qid="Q2424752",
+            subject_type_label="product",
+            date_property_pid="P577",
+            target_property_pid="P176",
+            target_property_label="manufacturer",
+            canonical_question_template="Which company manufactured the product {descriptor}?",
+            reasoning_style="single_fact",
+            query_tags=["staged_seed_query", "seed_window_weekly"],
+        )
+
+        class FakeClient:
+            def __init__(self) -> None:
+                self.queries: list[str] = []
+                self.problems: list[dict] = []
+
+            def record_problem(self, kind: str, message: str, **context) -> None:
+                self.problems.append({"kind": kind, "message": message, "context": context})
+
+            def sparql_query(self, query: str):
+                self.queries.append(query)
+                if len(self.queries) == 1:
+                    raise RuntimeError("wdqs unavailable")
+                return [
+                    {
+                        "item": {"value": "http://www.wikidata.org/entity/Q10"},
+                        "date": {"value": "+2026-01-02T00:00:00Z"},
+                    }
+                ]
+
+            def get_entities(self, ids):
+                records = {}
+                for qid in ids:
+                    if qid == "Q10":
+                        records[qid] = {
+                            "labels": {"en": {"value": "Example Product"}},
+                            "claims": {
+                                "P31": [{"mainsnak": {"datavalue": {"value": {"id": "Q2424752"}}}}],
+                                "P176": [
+                                    {
+                                        "rank": "normal",
+                                        "mainsnak": {
+                                            "snaktype": "value",
+                                            "datavalue": {"value": {"id": "Q20"}},
+                                        },
+                                    }
+                                ],
+                            },
+                        }
+                    elif qid == "Q20":
+                        records[qid] = {
+                            "labels": {"en": {"value": "Example Manufacturer"}},
+                            "claims": {},
+                        }
+                return records
+
+        client = FakeClient()
+        settings = Settings(target_time="2026", harvest_limit_per_template=5)
+
+        candidates = harvest_candidates(client=client, settings=settings, template=template)
+
+        self.assertEqual(len(candidates), 1)
+        self.assertGreaterEqual(len(client.queries), 2)
+        self.assertIn("?answer", client.queries[0])
+        self.assertTrue(
+            any(problem["kind"] == "direct_candidate_query_failed" for problem in client.problems)
+        )
+        self.assertTrue(
+            any(problem["kind"] == "staged_seed_strategy_used" for problem in client.problems)
+        )
+
+    def test_seed_fallback_keeps_missing_subject_label_for_pipeline_rejection(self) -> None:
+        template = DomainTemplate(
+            domain="new_nature_reserve_country",
+            topic="Geography",
+            answer_type="Place",
+            question_family="which_country_nature_reserve_located",
+            subject_type_qid="Q473972",
+            subject_type_label="nature reserve",
+            date_property_pid="P571",
+            target_property_pid="P17",
+            target_property_label="country",
+            canonical_question_template="In which country is the nature reserve {descriptor} located?",
+            reasoning_style="single_fact",
+            query_tags=["staged_seed_query"],
+        )
+
+        class FakeClient:
+            def __init__(self) -> None:
+                self.problems: list[dict] = []
+
+            def record_problem(self, kind: str, message: str, **context) -> None:
+                self.problems.append({"kind": kind, "message": message, "context": context})
+
+            def sparql_query(self, _query: str):
+                if not hasattr(self, "called"):
+                    self.called = True
+                    raise RuntimeError("direct query failed")
+                return [
+                    {
+                        "item": {"value": "http://www.wikidata.org/entity/Q30"},
+                        "date": {"value": "+2026-02-03T00:00:00Z"},
+                    }
+                ]
+
+            def get_entities(self, ids):
+                records = {}
+                for qid in ids:
+                    if qid == "Q30":
+                        records[qid] = {
+                            "claims": {
+                                "P31": [{"mainsnak": {"datavalue": {"value": {"id": "Q473972"}}}}],
+                                "P17": [
+                                    {
+                                        "rank": "normal",
+                                        "mainsnak": {
+                                            "snaktype": "value",
+                                            "datavalue": {"value": {"id": "Q34"}},
+                                        },
+                                    }
+                                ],
+                            },
+                        }
+                    elif qid == "Q34":
+                        records[qid] = {
+                            "labels": {"en": {"value": "Sweden"}},
+                            "claims": {},
+                        }
+                return records
+
+        client = FakeClient()
+        settings = Settings(target_time="2026", harvest_limit_per_template=5)
+
+        candidates = harvest_candidates(client=client, settings=settings, template=template)
+
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0].subject_label, "")
+        self.assertEqual(candidates[0].answer_labels, ["Sweden"])
 
     def test_query_tags_can_override_seed_window_size(self) -> None:
         template = DomainTemplate(

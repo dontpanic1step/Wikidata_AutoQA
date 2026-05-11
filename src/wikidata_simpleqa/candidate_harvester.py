@@ -45,45 +45,46 @@ def harvest_candidates(
     if reasoning_style != "single_fact":
         return harvest_composed_candidates(client=client, settings=settings, template=template)
 
-    if _use_staged_seed_strategy(template):
-        client.record_problem(
-            "staged_seed_strategy_used",
-            "Used a staged WDQS seed query with local claim extraction for a broad template.",
-            domain=template.domain,
-            subject_type_qid=template.subject_type_qid,
-            date_property_pid=template.date_property_pid,
-            target_property_pid=template.target_property_pid,
-        )
-        return _harvest_candidates_via_subject_seeds(
-            client=client,
-            settings=settings,
-            template=template,
-        )
-
     query = build_candidate_query(
         template=template,
         target_start_date=settings.target_start_date,
         date_upper_bound=settings.date_upper_bound,
         limit=min(settings.harvest_limit_per_template, template.retrieval_limit),
     )
-    rows = client.sparql_query(query)
-    rows = _filter_unique_rows(rows)
-    qids = _collect_qids(rows)
-    entities = client.get_entities(qids) if qids else {}
-    related_qids = _collect_related_qids(entities)
-    related_entities = client.get_entities(related_qids) if related_qids else {}
-    candidates: list[CandidateFact] = []
-    for row in rows:
-        candidate = _row_to_candidate(
-            row=row,
-            entities=entities,
-            related_entities=related_entities,
+    try:
+        rows = client.sparql_query(query)
+        rows = _filter_unique_rows(rows)
+        return _rows_to_candidates(
+            rows=rows,
             settings=settings,
             template=template,
             query=query,
+            client=client,
         )
-        candidates.append(candidate)
-    return candidates
+    except Exception as exc:  # noqa: BLE001
+        client.record_problem(
+            "direct_candidate_query_failed",
+            "The direct WDQS candidate query failed before validation could start.",
+            domain=template.domain,
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+        )
+        if not _use_staged_seed_strategy(template):
+            return []
+
+    client.record_problem(
+        "staged_seed_strategy_used",
+        "Used a staged WDQS seed query with local claim extraction for a broad template after a direct query failure.",
+        domain=template.domain,
+        subject_type_qid=template.subject_type_qid,
+        date_property_pid=template.date_property_pid,
+        target_property_pid=template.target_property_pid,
+    )
+    return _harvest_candidates_via_subject_seeds(
+        client=client,
+        settings=settings,
+        template=template,
+    )
 
 
 def _use_staged_seed_strategy(template: DomainTemplate) -> bool:
@@ -155,6 +156,34 @@ def _harvest_candidates_via_subject_seeds(
     return candidates
 
 
+def _rows_to_candidates(
+    *,
+    rows: list[dict[str, Any]],
+    settings: Settings,
+    template: DomainTemplate,
+    query: str,
+    client: WikidataClient,
+) -> list[CandidateFact]:
+    """Hydrate direct WDQS rows into pipeline candidates."""
+    qids = _collect_qids(rows)
+    entities = client.get_entities(qids) if qids else {}
+    related_qids = _collect_related_qids(entities)
+    related_entities = client.get_entities(related_qids) if related_qids else {}
+    candidates: list[CandidateFact] = []
+    for row in rows:
+        candidates.append(
+            _row_to_candidate(
+                row=row,
+                entities=entities,
+                related_entities=related_entities,
+                settings=settings,
+                template=template,
+                query=query,
+            )
+        )
+    return candidates
+
+
 def _run_windowed_subject_seed_queries(
     client: WikidataClient,
     settings: Settings,
@@ -178,7 +207,20 @@ def _run_windowed_subject_seed_queries(
             limit=limit,
         )
         queries.append(query)
-        rows = client.sparql_query(query)
+        try:
+            rows = client.sparql_query(query)
+        except Exception as exc:  # noqa: BLE001
+            client.record_problem(
+                "windowed_subject_seed_query_failed",
+                "One staged WDQS subject-seed query failed; returning any rows collected so far.",
+                domain=template.domain,
+                window_start=window_start,
+                window_end=window_end,
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+                partial_rows=len(all_rows),
+            )
+            break
         for row in rows:
             item_qid = row["item"]["value"].rsplit("/", 1)[-1]
             date_value = normalize_wikidata_date_literal(row["date"]["value"])
@@ -451,8 +493,6 @@ def _seed_row_to_candidate(
     subject_entity = row["subject_entity"]
     answer_value = row["answer_value"]
     subject_label, subject_label_source = _select_label(subject_entity, None)
-    if not subject_label:
-        return None
     if not _subject_matches_template_type(subject_entity, related_entities, template):
         return None
 
@@ -467,8 +507,6 @@ def _seed_row_to_candidate(
         answer_label, answer_label_source = _select_label(answer_entity, None)
         answer_aliases = _extract_aliases(answer_entity)
         answer_record_qid = answer_value["record_qid"]
-    if not answer_label:
-        return None
 
     subject_aliases = _extract_aliases(subject_entity)
     subject_type_qids = _extract_claim_qids(subject_entity, "P31")

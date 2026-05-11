@@ -164,22 +164,32 @@ def run_live_phase(
             )
             combined_accepted.extend(result.accepted)
             combined_rejected.extend(result.rejected)
+            telemetry = result.telemetry
+            has_request_errors = bool(telemetry.get("errors", 0))
+            if result.accepted:
+                status = "accepted"
+            elif result.rejected:
+                status = "rejected_only"
+            elif has_request_errors:
+                status = "no_result_with_request_errors"
+            else:
+                status = "no_result"
             template_results.append(
                 {
                     "domain": template.domain,
-                    "status": "accepted" if result.accepted else "rejected_only" if result.rejected else "no_result",
+                    "status": status,
                     "accepted": len(result.accepted),
                     "rejected": len(result.rejected),
-                    "telemetry": result.telemetry,
+                    "telemetry": telemetry,
                     "error_message": "",
                 }
             )
-            if result.telemetry.get("errors", 0):
+            if has_request_errors:
                 backlog_items.append(
                     {
                         "scope": template.domain,
                         "title": "Live run completed with request-layer errors",
-                        "evidence": json.dumps(result.telemetry, ensure_ascii=False)[:500],
+                        "evidence": json.dumps(telemetry, ensure_ascii=False)[:500],
                         "next_step": "Review request events and decide whether the instability is query-specific or environment-specific.",
                     }
                 )
@@ -240,6 +250,8 @@ def run_rebuild_phase() -> dict[str, object]:
         [sys.executable, "scripts/export_template_catalog.py"],
         [sys.executable, "scripts/build_review_bundle.py"],
         [sys.executable, "scripts/build_template_status_index.py"],
+        [sys.executable, "scripts/build_template_salvage_board.py"],
+        [sys.executable, "scripts/build_template_portfolio_report.py"],
     ]
     command_results = [_run_subprocess(command) for command in commands]
     failed = [result for result in command_results if result["returncode"] != 0]

@@ -78,6 +78,27 @@ def collect_rejection_reasons(paths: list[Path]) -> dict[str, list[str]]:
     }
 
 
+def collect_rejection_reasons_by_source(paths: list[Path]) -> dict[str, dict[str, list[str]]]:
+    """Return normalized rejection reasons grouped by artifact source and domain."""
+    reasons_by_source: dict[str, dict[str, set[str]]] = {}
+    for path in paths:
+        source_name = _artifact_source_name(path, "_rejected.jsonl")
+        source_reasons = reasons_by_source.setdefault(source_name, {})
+        for record in read_jsonl(path):
+            domain = str(record.get("domain", "")).strip()
+            reason = str(record.get("rejection_reason", "")).strip()
+            if not domain or not reason:
+                continue
+            source_reasons.setdefault(domain, set()).add(reason)
+    return {
+        source_name: {
+            domain: sorted(reasons)
+            for domain, reasons in sorted(domain_map.items())
+        }
+        for source_name, domain_map in sorted(reasons_by_source.items())
+    }
+
+
 def collect_latest_run_results(summary_paths: list[Path]) -> dict[str, dict[str, Any]]:
     """Return the latest known per-domain run result from ordered summaries."""
     latest: dict[str, dict[str, Any]] = {}
@@ -112,16 +133,78 @@ def collect_latest_run_results(summary_paths: list[Path]) -> dict[str, dict[str,
     return latest
 
 
+def collect_run_history(
+    summary_paths: list[Path],
+    *,
+    accepted_paths: list[Path],
+    rejected_paths: list[Path],
+) -> dict[str, list[dict[str, Any]]]:
+    """Return ordered per-domain run history with semantic evidence attached."""
+    accepted_invalid_reasons_by_source = collect_accepted_invalid_reasons_by_source(accepted_paths)
+    rejected_reasons_by_source = collect_rejection_reasons_by_source(rejected_paths)
+    history: dict[str, list[dict[str, Any]]] = {}
+    for path in summary_paths:
+        summary = read_json(path)
+        if not summary:
+            continue
+        template_results = summary.get("template_results")
+        if not isinstance(template_results, list):
+            template_results = _coerce_template_results(summary)
+        if not isinstance(template_results, list):
+            continue
+        source_name = _artifact_source_name(path, "_summary.json")
+        for result in template_results:
+            if not isinstance(result, dict):
+                continue
+            domain = str(result.get("domain", "")).strip()
+            if not domain:
+                continue
+            filtered_reasons = accepted_invalid_reasons_by_source.get(source_name, {}).get(domain, [])
+            rejection_reasons = rejected_reasons_by_source.get(source_name, {}).get(domain, [])
+            all_reasons = sorted(set(filtered_reasons) | set(rejection_reasons))
+            normalized = {
+                "domain": domain,
+                "source_summary": str(path),
+                "source_name": source_name,
+                "status": str(result.get("status", "")).strip(),
+                "accepted": int(result.get("accepted", 0) or 0),
+                "rejected": int(result.get("rejected", 0) or 0),
+                "target_time": str(
+                    result.get("target_time", summary.get("target_time", ""))
+                ).strip(),
+                "telemetry": result.get("telemetry", {}),
+                "notes": result.get("notes", {}),
+                "error_message": str(result.get("error_message", "")).strip(),
+                "filtered_reasons": filtered_reasons,
+                "rejection_reasons": rejection_reasons,
+                "all_rejection_reasons": all_reasons,
+                "semantic_outcome": _resolve_run_semantic_outcome(
+                    str(result.get("status", "")).strip(),
+                    filtered_reasons,
+                ),
+            }
+            history.setdefault(domain, []).append(normalized)
+    return history
+
+
 def build_template_status_index(
     *,
     review_bundle_path: Path,
     summary_paths: list[Path],
     rejected_paths: list[Path],
     accepted_paths: list[Path],
+    status_mode: str = "latest_live_status",
 ) -> dict[str, Any]:
     """Build the canonical status index for every catalog template."""
+    if status_mode not in {"latest_live_status", "best_known_semantic_status"}:
+        raise ValueError(f"Unsupported status_mode: {status_mode}")
     proven_map = load_review_bundle_proven_map(review_bundle_path)
     latest_results = collect_latest_run_results(summary_paths)
+    run_history = collect_run_history(
+        summary_paths,
+        accepted_paths=accepted_paths,
+        rejected_paths=rejected_paths,
+    )
     rejection_reasons = collect_rejection_reasons(rejected_paths)
     latest_accepted_records = collect_latest_accepted_records(accepted_paths)
 
@@ -133,9 +216,31 @@ def build_template_status_index(
             "invalid_reasons",
             [],
         )
-        status = _resolve_template_status(template.domain, proven_map, latest, filtered_reasons)
         all_rejection_reasons = sorted(
             set(rejection_reasons.get(template.domain, [])) | set(filtered_reasons)
+        )
+        latest_live_status = _resolve_template_status(
+            template.domain,
+            proven_map,
+            latest,
+            filtered_reasons,
+            [],
+        )
+        best_known_semantic_status = _resolve_template_status(
+            template.domain,
+            proven_map,
+            latest,
+            filtered_reasons,
+            all_rejection_reasons,
+        )
+        status = (
+            best_known_semantic_status
+            if status_mode == "best_known_semantic_status"
+            else latest_live_status
+        )
+        reliability = _build_reliability_summary(
+            run_history.get(template.domain, []),
+            best_known_semantic_status=best_known_semantic_status,
         )
         counts[status] = counts.get(status, 0) + 1
         statuses.append(
@@ -145,15 +250,20 @@ def build_template_status_index(
                 "question_family": template.question_family,
                 "catalog_status": template.status,
                 "current_status": status,
+                "status_mode": status_mode,
+                "latest_live_status": latest_live_status,
+                "best_known_semantic_status": best_known_semantic_status,
                 "proven_example": proven_map.get(template.domain),
                 "latest_run": latest or None,
                 "status_detail": _build_status_detail(status, latest),
                 "rejection_reasons": all_rejection_reasons,
+                "reliability": reliability,
             }
         )
 
     return {
         "review_bundle_path": str(review_bundle_path),
+        "status_mode": status_mode,
         "summary_sources": [str(path) for path in summary_paths],
         "rejected_sources": [str(path) for path in rejected_paths],
         "accepted_sources": [str(path) for path in accepted_paths],
@@ -204,7 +314,11 @@ def render_template_status_markdown(index: dict[str, Any]) -> str:
             if bucket == "rejected_only":
                 reasons = row.get("rejection_reasons", [])
                 rendered_reasons = ", ".join(f"`{reason}`" for reason in reasons) or "`unknown`"
-                lines.append(f"- `{domain}`: {rendered_reasons}")
+                reliability_text = _render_reliability_detail(row.get("reliability", {}))
+                if reliability_text:
+                    lines.append(f"- `{domain}`: {rendered_reasons}; {reliability_text}")
+                else:
+                    lines.append(f"- `{domain}`: {rendered_reasons}")
                 continue
             if bucket == "error":
                 latest = row.get("latest_run") or {}
@@ -224,8 +338,13 @@ def render_template_status_markdown(index: dict[str, Any]) -> str:
             status = latest.get("status", "untracked")
             detail = row.get("status_detail") or {}
             detail_text = _render_status_detail(detail)
-            if detail_text:
+            reliability_text = _render_reliability_detail(row.get("reliability", {}))
+            if detail_text and reliability_text:
+                lines.append(f"- `{domain}`: `{status}`; {detail_text}; {reliability_text}")
+            elif detail_text:
                 lines.append(f"- `{domain}`: `{status}`; {detail_text}")
+            elif reliability_text:
+                lines.append(f"- `{domain}`: `{status}`; {reliability_text}")
             else:
                 lines.append(f"- `{domain}`: `{status}`")
     return "\n".join(lines) + "\n"
@@ -236,6 +355,7 @@ def _resolve_template_status(
     proven_map: dict[str, dict[str, str]],
     latest_result: dict[str, Any],
     filtered_reasons: list[str],
+    all_rejection_reasons: list[str] | None = None,
 ) -> str:
     """Resolve one canonical current status for a template."""
     if domain in proven_map:
@@ -245,6 +365,10 @@ def _resolve_template_status(
         return "rejected_only"
     if status == "rejected_only":
         return "rejected_only"
+    if status == "no_result_with_request_errors":
+        if all_rejection_reasons:
+            return "rejected_only"
+        return "unproven_no_result"
     if status.startswith("error:"):
         return "error"
     if status == "no_result":
@@ -395,6 +519,24 @@ def _render_status_detail(detail: dict[str, Any]) -> str:
     return ", ".join(extras)
 
 
+def _render_reliability_detail(reliability: dict[str, Any]) -> str:
+    """Render a concise Markdown reliability summary."""
+    if not reliability:
+        return ""
+    total_runs = reliability.get("total_runs")
+    if not total_runs:
+        return ""
+    request_clean_runs = reliability.get("request_clean_runs")
+    candidate_yield_runs = reliability.get("candidate_yield_runs")
+    semantic_repro_rate = reliability.get("semantic_repro_rate")
+    parts = [f"`pass_rate={request_clean_runs}/{total_runs}`"]
+    if candidate_yield_runs is not None:
+        parts.append(f"`candidate_yield={candidate_yield_runs}/{total_runs}`")
+    if semantic_repro_rate is not None:
+        parts.append(f"`semantic_repro_rate={semantic_repro_rate:.2f}`")
+    return "Operational reliability " + ", ".join(parts)
+
+
 def _sparse_answer_tag(latest_result: dict[str, Any]) -> str:
     """Return a normalized sparse-answer tag keyed by the run target time."""
     target_time = str(latest_result.get("target_time", "")).strip()
@@ -434,6 +576,24 @@ def collect_latest_accepted_records(accepted_paths: list[Path]) -> dict[str, dic
                 "invalid_reasons": invalid_reason_resolver(record),
             }
     return latest
+
+
+def collect_accepted_invalid_reasons_by_source(paths: list[Path]) -> dict[str, dict[str, list[str]]]:
+    """Return invalid accepted-record reasons grouped by artifact source and domain."""
+    invalid_reason_resolver = _load_invalid_reason_resolver()
+    grouped: dict[str, dict[str, list[str]]] = {}
+    for path in paths:
+        source_name = _artifact_source_name(path, "_accepted.jsonl")
+        domain_map = grouped.setdefault(source_name, {})
+        records = read_jsonl(path)
+        if not records:
+            continue
+        for record in records:
+            domain = str(record.get("domain", "")).strip()
+            if not domain:
+                continue
+            domain_map[domain] = invalid_reason_resolver(record)
+    return grouped
 
 
 def _load_invalid_reason_resolver():
@@ -485,3 +645,90 @@ def _coerce_template_results(summary: dict[str, Any]) -> list[dict[str, Any]]:
             }
         ]
     return []
+
+
+def _artifact_source_name(path: Path, suffix: str) -> str:
+    """Return a normalized source stem from one artifact path."""
+    return path.name.removesuffix(suffix)
+
+
+def _resolve_run_semantic_outcome(status: str, filtered_reasons: list[str]) -> str | None:
+    """Resolve whether one concrete run produced a semantic conclusion."""
+    if status == "accepted":
+        return "rejected_only" if filtered_reasons else "accepted"
+    if status == "rejected_only":
+        return "rejected_only"
+    return None
+
+
+def _build_reliability_summary(
+    history: list[dict[str, Any]],
+    *,
+    best_known_semantic_status: str,
+) -> dict[str, Any]:
+    """Summarize pass-rate style reliability metrics from repeated runs."""
+    if not history:
+        return {}
+
+    total_runs = len(history)
+    request_error_runs = 0
+    request_clean_runs = 0
+    candidate_yield_runs = 0
+    conclusive_runs = 0
+    matching_semantic_runs = 0
+    total_requests_sum = 0
+    network_requests_sum = 0
+    retry_count_sum = 0
+    cache_hits_sum = 0
+
+    target_semantic_outcome: str | None
+    if best_known_semantic_status == "proven":
+        target_semantic_outcome = "accepted"
+    elif best_known_semantic_status == "rejected_only":
+        target_semantic_outcome = "rejected_only"
+    else:
+        target_semantic_outcome = None
+
+    outcome_counts: dict[str, int] = {}
+    for run in history:
+        status = str(run.get("status", "")).strip()
+        telemetry = run.get("telemetry", {})
+        if status.startswith("error:") or status == "no_result_with_request_errors":
+            request_error_runs += 1
+        else:
+            request_clean_runs += 1
+        if int(run.get("accepted", 0) or 0) > 0 or int(run.get("rejected", 0) or 0) > 0:
+            candidate_yield_runs += 1
+        semantic_outcome = run.get("semantic_outcome")
+        if semantic_outcome:
+            conclusive_runs += 1
+            outcome_counts[str(semantic_outcome)] = outcome_counts.get(str(semantic_outcome), 0) + 1
+            if semantic_outcome == target_semantic_outcome:
+                matching_semantic_runs += 1
+        total_requests_sum += int(telemetry.get("total_requests", 0) or 0)
+        network_requests_sum += int(telemetry.get("network_requests", 0) or 0)
+        retry_count_sum += int(telemetry.get("retry_count", 0) or 0)
+        cache_hits_sum += int(telemetry.get("cache_hits", 0) or 0)
+
+    return {
+        "total_runs": total_runs,
+        "request_clean_runs": request_clean_runs,
+        "request_error_runs": request_error_runs,
+        "pass_rate": round(request_clean_runs / total_runs, 4),
+        "request_failure_rate": round(request_error_runs / total_runs, 4),
+        "candidate_yield_runs": candidate_yield_runs,
+        "candidate_yield_rate": round(candidate_yield_runs / total_runs, 4),
+        "conclusive_runs": conclusive_runs,
+        "semantic_outcome_counts": dict(sorted(outcome_counts.items())),
+        "semantic_repro_rate": (
+            round(matching_semantic_runs / conclusive_runs, 4)
+            if conclusive_runs and target_semantic_outcome
+            else None
+        ),
+        "average_total_requests": round(total_requests_sum / total_runs, 2),
+        "average_network_requests": round(network_requests_sum / total_runs, 2),
+        "average_retry_count": round(retry_count_sum / total_runs, 2),
+        "average_cache_hits": round(cache_hits_sum / total_runs, 2),
+        "latest_source_name": str(history[-1].get("source_name", "")).strip(),
+        "target_semantic_outcome": target_semantic_outcome,
+    }

@@ -94,6 +94,26 @@ class WorkflowTests(unittest.TestCase):
         self.assertEqual(items[0]["scope"], "ordinal_spouse")
         self.assertIn("URLError", items[0]["evidence"])
 
+    def test_problem_backlog_skips_nonfatal_live_request_error_status(self) -> None:
+        items = collect_problem_backlog_items(
+            [
+                {
+                    "phase": "live",
+                    "status": "completed",
+                    "details": {
+                        "template_results": [
+                            {
+                                "domain": "product_manufacturer",
+                                "status": "no_result_with_request_errors",
+                                "error_message": "",
+                            }
+                        ]
+                    },
+                }
+            ]
+        )
+        self.assertEqual(items, [])
+
     def test_problem_backlog_markdown_renders_items(self) -> None:
         markdown = render_problem_backlog_markdown(
             [

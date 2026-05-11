@@ -69,7 +69,7 @@ class SparqlQueryBuilderTests(unittest.TestCase):
         self.assertNotIn("SERVICE wikibase:label", query)
         self.assertIn("GROUP BY ?item ?date", query)
 
-    def test_candidate_query_can_require_english_subject_label_without_label_service(self) -> None:
+    def test_candidate_query_keeps_direct_path_lightweight_even_with_english_label_tag(self) -> None:
         template = DomainTemplate(
             domain="monastery_country",
             topic="Philosophy and Religion",
@@ -91,11 +91,11 @@ class SparqlQueryBuilderTests(unittest.TestCase):
             limit=3,
         )
 
-        self.assertIn('?item rdfs:label ?itemEnLabel.', query)
-        self.assertIn('FILTER(LANG(?itemEnLabel) = "en")', query)
+        self.assertNotIn("?itemEnLabel", query)
+        self.assertNotIn("rdfs:label", query)
         self.assertNotIn("SERVICE wikibase:label", query)
 
-    def test_subject_seed_query_can_require_english_subject_label(self) -> None:
+    def test_subject_seed_query_keeps_seed_path_lightweight_even_with_english_label_tag(self) -> None:
         template = DomainTemplate(
             domain="product_manufacturer",
             topic="Economy and Business",
@@ -117,8 +117,8 @@ class SparqlQueryBuilderTests(unittest.TestCase):
             limit=3,
         )
 
-        self.assertIn('?item rdfs:label ?itemEnLabel.', query)
-        self.assertIn('FILTER(LANG(?itemEnLabel) = "en")', query)
+        self.assertNotIn("?itemEnLabel", query)
+        self.assertNotIn("rdfs:label", query)
 
 
 if __name__ == "__main__":

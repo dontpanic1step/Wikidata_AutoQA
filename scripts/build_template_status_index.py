@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import argparse
 from pathlib import Path
 import sys
 
@@ -22,12 +23,25 @@ from wikidata_simpleqa.workflow import (  # noqa: E402
 )
 
 
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--status-mode",
+        choices=["latest_live_status", "best_known_semantic_status"],
+        default="latest_live_status",
+        help="Choose whether current_status reflects the newest live run or the best known semantic verdict.",
+    )
+    return parser.parse_args()
+
+
 def main() -> int:
+    args = parse_args()
     index = build_template_status_index(
         review_bundle_path=ROOT / "outputs" / "review_2026_all_generated_qas.tsv",
         summary_paths=status_summary_paths(ROOT),
         rejected_paths=status_rejected_paths(ROOT),
         accepted_paths=status_accepted_paths(ROOT),
+        status_mode=args.status_mode,
     )
     json_path = ROOT / "outputs" / "template_status_index.json"
     md_path = ROOT / "outputs" / "template_status_index.md"
@@ -38,6 +52,7 @@ def main() -> int:
             {
                 "json_path": str(json_path),
                 "md_path": str(md_path),
+                "status_mode": args.status_mode,
                 "counts": index["counts"],
             },
             indent=2,

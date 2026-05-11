@@ -1,0 +1,66 @@
+{
+  "version": 1,
+  "promotion_thresholds": {
+    "pass_rate": 0.6,
+    "candidate_yield_rate": 0.4,
+    "semantic_repro_rate": 1.0
+  },
+  "templates": {
+    "product_manufacturer": {
+      "salvage_stage": "query_rewrite",
+      "salvage_attempt_count": 1,
+      "last_rewrite_type": "query_simplification",
+      "rewrite_hypothesis": "Keep the direct query as the default path and continue shrinking staged fallback usage so the template can reproduce its semantic rejection without WDQS churn.",
+      "rewrite_outcome": "improved_reporting_and_partial_semantic_recovery",
+      "retirement_blocker": ""
+    },
+    "dataset_creator_math": {
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Replace broad topic-keyword filtering with stronger structured dataset scoping before changing the question family.",
+      "rewrite_outcome": "",
+      "retirement_blocker": ""
+    },
+    "dataset_creator_ai": {
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Narrow AI dataset discovery to entities with stronger machine-learning subject signals so semantic rejection is tested on better candidates.",
+      "rewrite_outcome": "",
+      "retirement_blocker": ""
+    },
+    "taxonomy_database_creator": {
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Separate taxonomy-oriented datasets from general biological datasets before deciding whether this family needs replacement.",
+      "rewrite_outcome": "",
+      "retirement_blocker": ""
+    },
+    "medical_school_country": {
+      "salvage_stage": "family_scope_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Test whether this family should target more stable institution subclasses or a neighboring education-location family with better label coverage.",
+      "rewrite_outcome": "",
+      "retirement_blocker": ""
+    },
+    "textbook_publisher": {
+      "salvage_stage": "canonical_question_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Clarify the educational-work descriptor and de-duplicate it against broader book-publisher families before considering retirement.",
+      "rewrite_outcome": "",
+      "retirement_blocker": ""
+    },
+    "new_nature_reserve_country": {
+      "salvage_stage": "family_scope_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Check whether the nature-reserve family should be widened to a more stable protected-area class while preserving geography diversity.",
+      "rewrite_outcome": "",
+      "retirement_blocker": ""
+    }
+  }
+}
