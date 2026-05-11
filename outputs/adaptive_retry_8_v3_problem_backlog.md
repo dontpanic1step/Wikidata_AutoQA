@@ -1,0 +1,28 @@
+# Workflow Problem Backlog
+
+This file tracks issues that should be reviewed beyond the narrow per-template loop.
+
+- `product_manufacturer`: Live run completed with request-layer errors
+  Evidence: {"total_requests": 24, "network_requests": 6, "cache_hits": 22, "retry_count": 4, "errors": 2, "events": [{"url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ2424752%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50
+  Next step: Review request events and decide whether the instability is query-specific or environment-specific.
+- `event_venue`: Live run completed with request-layer errors
+  Evidence: {"total_requests": 1, "network_requests": 3, "cache_hits": 0, "retry_count": 2, "errors": 1, "events": [{"url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1656682%3B%0A++++++++wdt%3AP585+%3Fdate%3B%0A++++++++wdt%3AP276+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&f
+  Next step: Review request events and decide whether the instability is query-specific or environment-specific.
+- `dataset_creator_math`: Live run completed with request-layer errors
+  Evidence: {"total_requests": 1, "network_requests": 3, "cache_hits": 0, "retry_count": 2, "errors": 1, "events": [{"url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP170+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&f
+  Next step: Review request events and decide whether the instability is query-specific or environment-specific.
+- `dataset_creator_ai`: Live run completed with request-layer errors
+  Evidence: {"total_requests": 1, "network_requests": 3, "cache_hits": 0, "retry_count": 2, "errors": 1, "events": [{"url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP170+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&f
+  Next step: Review request events and decide whether the instability is query-specific or environment-specific.
+- `taxonomy_database_creator`: Live run completed with request-layer errors
+  Evidence: {"total_requests": 1, "network_requests": 3, "cache_hits": 0, "retry_count": 2, "errors": 1, "events": [{"url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP170+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&f
+  Next step: Review request events and decide whether the instability is query-specific or environment-specific.
+- `medical_school_country`: Live run completed with request-layer errors
+  Evidence: {"total_requests": 1, "network_requests": 3, "cache_hits": 0, "retry_count": 2, "errors": 1, "events": [{"url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ3914%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&forma
+  Next step: Review request events and decide whether the instability is query-specific or environment-specific.
+- `textbook_publisher`: Live run completed with request-layer errors
+  Evidence: {"total_requests": 1, "network_requests": 3, "cache_hits": 0, "retry_count": 2, "errors": 1, "events": [{"url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ571%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP123+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&forma
+  Next step: Review request events and decide whether the instability is query-specific or environment-specific.
+- `new_nature_reserve_country`: Live run completed with request-layer errors
+  Evidence: {"total_requests": 1, "network_requests": 3, "cache_hits": 0, "retry_count": 2, "errors": 1, "events": [{"url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ473972%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&for
+  Next step: Review request events and decide whether the instability is query-specific or environment-specific.

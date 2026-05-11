@@ -1,0 +1,532 @@
+{
+  "target_time": "2026",
+  "domains": [
+    "product_manufacturer",
+    "event_venue",
+    "dataset_creator_math",
+    "dataset_creator_ai",
+    "taxonomy_database_creator",
+    "medical_school_country",
+    "textbook_publisher",
+    "new_nature_reserve_country"
+  ],
+  "accepted": 0,
+  "rejected": 1,
+  "output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\adaptive_retry_8_v3_accepted.jsonl",
+  "rejected_output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\adaptive_retry_8_v3_rejected.jsonl",
+  "problem_backlog_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\adaptive_retry_8_v3_problem_backlog.md",
+  "template_results": [
+    {
+      "domain": "product_manufacturer",
+      "status": "rejected_only",
+      "accepted": 0,
+      "rejected": 1,
+      "telemetry": {
+        "total_requests": 24,
+        "network_requests": 6,
+        "cache_hits": 22,
+        "retry_count": 4,
+        "errors": 2,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ2424752%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7781,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-07T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-08T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-14T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-15T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-21T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-22T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-01-28T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-29T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-02-04T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-02-05T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-02-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-02-12T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-02-18T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-02-19T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-02-25T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-02-26T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-03-04T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-03-05T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-03-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-03-12T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-03-18T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-03-19T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-03-25T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 1,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-03-26T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-04-01T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-04-02T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-04-08T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-04-09T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-04-15T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-04-16T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-04-22T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-04-23T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-04-29T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-04-30T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-06T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          },
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+DISTINCT+%3Fitem+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP176+%3FseedValue.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-05-07T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+100&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8099,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q136769199%7CQ137645204%7CQ138567511&props=labels%7Caliases%7Cdescriptions%7Cclaims%7Csitelinks&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 22,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q193559%7CQ27070331%7CQ312&props=labels%7Caliases%7Cdescriptions%7Cclaims%7Csitelinks&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 61,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbgetentities&ids=Q1055701%7CQ1058914%7CQ1137109%7CQ135911675%7CQ148%7CQ167037%7CQ17517%7CQ18388277%7CQ19723451%7CQ210167%7CQ2424752%7CQ2477770%7CQ273140%7CQ30%7CQ3065317%7CQ4830453%7CQ55990535%7CQ6881511%7CQ75687%7CQ891723&props=labels%7Caliases%7Cdescriptions%7Cclaims%7Csitelinks&languages=en&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 72,
+            "status": "ok"
+          },
+          {
+            "url": "https://www.wikidata.org/w/api.php?action=wbsearchentities&search=Honor+Power2&language=en&type=item&limit=10&format=json",
+            "accept": "application/json",
+            "cache_hit": true,
+            "attempts": 0,
+            "duration_ms": 0,
+            "status": "ok"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "direct_candidate_query_failed",
+            "message": "The direct WDQS candidate query failed before validation could start.",
+            "context": {
+              "domain": "product_manufacturer",
+              "error_type": "URLError",
+              "error_message": "<urlopen error Remote end closed connection without response>"
+            }
+          },
+          {
+            "kind": "staged_seed_strategy_used",
+            "message": "Used a staged WDQS seed query with local claim extraction for a broad template after a direct query failure.",
+            "context": {
+              "domain": "product_manufacturer",
+              "subject_type_qid": "Q2424752",
+              "date_property_pid": "P577",
+              "target_property_pid": "P176"
+            }
+          },
+          {
+            "kind": "windowed_subject_seed_query_failed",
+            "message": "One staged WDQS subject-seed query failed; returning any rows collected so far.",
+            "context": {
+              "domain": "product_manufacturer",
+              "window_start": "2026-05-07",
+              "window_end": "2026-05-11",
+              "error_type": "URLError",
+              "error_message": "<urlopen error Remote end closed connection without response>",
+              "partial_rows": 3
+            }
+          },
+          {
+            "kind": "windowed_subject_seed_queries_used",
+            "message": "Split broad subject seed discovery into smaller monthly WDQS windows.",
+            "context": {
+              "domain": "product_manufacturer",
+              "query_count": 19
+            }
+          }
+        ]
+      },
+      "error_message": ""
+    },
+    {
+      "domain": "event_venue",
+      "status": "no_result_with_request_errors",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1656682%3B%0A++++++++wdt%3AP585+%3Fdate%3B%0A++++++++wdt%3AP276+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8934,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "direct_candidate_query_failed",
+            "message": "The direct WDQS candidate query failed before validation could start.",
+            "context": {
+              "domain": "event_venue",
+              "error_type": "URLError",
+              "error_message": "<urlopen error Remote end closed connection without response>"
+            }
+          }
+        ]
+      },
+      "error_message": ""
+    },
+    {
+      "domain": "dataset_creator_math",
+      "status": "no_result_with_request_errors",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP170+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 10014,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "direct_candidate_query_failed",
+            "message": "The direct WDQS candidate query failed before validation could start.",
+            "context": {
+              "domain": "dataset_creator_math",
+              "error_type": "URLError",
+              "error_message": "<urlopen error Remote end closed connection without response>"
+            }
+          }
+        ]
+      },
+      "error_message": ""
+    },
+    {
+      "domain": "dataset_creator_ai",
+      "status": "no_result_with_request_errors",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP170+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 10809,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "direct_candidate_query_failed",
+            "message": "The direct WDQS candidate query failed before validation could start.",
+            "context": {
+              "domain": "dataset_creator_ai",
+              "error_type": "URLError",
+              "error_message": "<urlopen error Remote end closed connection without response>"
+            }
+          }
+        ]
+      },
+      "error_message": ""
+    },
+    {
+      "domain": "taxonomy_database_creator",
+      "status": "no_result_with_request_errors",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ1172284%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP170+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 8933,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "direct_candidate_query_failed",
+            "message": "The direct WDQS candidate query failed before validation could start.",
+            "context": {
+              "domain": "taxonomy_database_creator",
+              "error_type": "URLError",
+              "error_message": "<urlopen error Remote end closed connection without response>"
+            }
+          }
+        ]
+      },
+      "error_message": ""
+    },
+    {
+      "domain": "medical_school_country",
+      "status": "no_result_with_request_errors",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ3914%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 9834,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "direct_candidate_query_failed",
+            "message": "The direct WDQS candidate query failed before validation could start.",
+            "context": {
+              "domain": "medical_school_country",
+              "error_type": "URLError",
+              "error_message": "<urlopen error Remote end closed connection without response>"
+            }
+          }
+        ]
+      },
+      "error_message": ""
+    },
+    {
+      "domain": "textbook_publisher",
+      "status": "no_result_with_request_errors",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ571%3B%0A++++++++wdt%3AP577+%3Fdate%3B%0A++++++++wdt%3AP123+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 7178,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "direct_candidate_query_failed",
+            "message": "The direct WDQS candidate query failed before validation could start.",
+            "context": {
+              "domain": "textbook_publisher",
+              "error_type": "URLError",
+              "error_message": "<urlopen error Remote end closed connection without response>"
+            }
+          }
+        ]
+      },
+      "error_message": ""
+    },
+    {
+      "domain": "new_nature_reserve_country",
+      "status": "no_result_with_request_errors",
+      "accepted": 0,
+      "rejected": 0,
+      "telemetry": {
+        "total_requests": 1,
+        "network_requests": 3,
+        "cache_hits": 0,
+        "retry_count": 2,
+        "errors": 1,
+        "events": [
+          {
+            "url": "https://query.wikidata.org/sparql?query=SELECT+%3Fitem+%3Fanswer+%3Fdate+WHERE+%7B%0A++%3Fitem+wdt%3AP31%2Fwdt%3AP279%2A+wd%3AQ473972%3B%0A++++++++wdt%3AP571+%3Fdate%3B%0A++++++++wdt%3AP17+%3Fanswer.%0A%0A++FILTER%28%3Fdate+%3E%3D+%222026-01-01T00%3A00%3A00Z%22%5E%5Exsd%3AdateTime%29%0A++FILTER%28%3Fdate+%3C%3D+%222026-05-11T23%3A59%3A59Z%22%5E%5Exsd%3AdateTime%29%0A%7D%0ALIMIT+50&format=json",
+            "accept": "application/sparql-results+json",
+            "cache_hit": false,
+            "attempts": 3,
+            "duration_ms": 9391,
+            "status": "error",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          }
+        ],
+        "problems": [
+          {
+            "kind": "direct_candidate_query_failed",
+            "message": "The direct WDQS candidate query failed before validation could start.",
+            "context": {
+              "domain": "new_nature_reserve_country",
+              "error_type": "URLError",
+              "error_message": "<urlopen error Remote end closed connection without response>"
+            }
+          }
+        ]
+      },
+      "error_message": ""
+    }
+  ]
+}

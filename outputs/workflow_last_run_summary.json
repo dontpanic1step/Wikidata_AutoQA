@@ -1,0 +1,66 @@
+{
+  "phases": [
+    {
+      "phase": "rebuild",
+      "status": "completed",
+      "details": {
+        "commands": [
+          {
+            "command": [
+              "D:\\miniconda3\\python.exe",
+              "scripts/export_template_catalog.py"
+            ],
+            "returncode": 0,
+            "stdout": "{'rows': 197, 'tsv': 'D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\outputs\\\\template_catalog_review.tsv', 'markdown': 'D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\docs\\\\template_catalog_review.md'}",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "D:\\miniconda3\\python.exe",
+              "scripts/build_review_bundle.py"
+            ],
+            "returncode": 0,
+            "stdout": "{\n  \"rows\": 64,\n  \"tsv_path\": \"D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\outputs\\\\review_2026_all_generated_qas.tsv\",\n  \"md_path\": \"D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\outputs\\\\review_2026_all_generated_qas.md\"\n}",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "D:\\miniconda3\\python.exe",
+              "scripts/build_template_status_index.py"
+            ],
+            "returncode": 0,
+            "stdout": "{\n  \"json_path\": \"D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\outputs\\\\template_status_index.json\",\n  \"md_path\": \"D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\outputs\\\\template_status_index.md\",\n  \"status_mode\": \"latest_live_status\",\n  \"counts\": {\n    \"error\": 25,\n    \"proven\": 64,\n    \"rejected_only\": 15,\n    \"unproven_no_result\": 86,\n    \"untracked\": 1\n  }\n}",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "D:\\miniconda3\\python.exe",
+              "scripts/build_template_salvage_board.py"
+            ],
+            "returncode": 0,
+            "stdout": "{\n  \"json_path\": \"D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\outputs\\\\template_salvage_board.json\",\n  \"md_path\": \"D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\outputs\\\\template_salvage_board.md\",\n  \"registry_path\": \"D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\config\\\\template_salvage_registry.json\",\n  \"counts\": {\n    \"near_promotion_candidates\": 14,\n    \"salvage_potential:high\": 36,\n    \"salvage_potential:low\": 6,\n    \"salvage_potential:medium\": 85,\n    \"salvage_stage:canonical_question_rewrite\": 2,\n    \"salvage_stage:family_scope_rewrite\": 71,\n    \"salvage_stage:query_rewrite\": 20,\n    \"salvage_stage:template_definition_rewrite\": 34,\n    \"workstream:A_semantic_rewrite\": 22,\n    \"workstream:B_sparse_rewrite\": 94,\n    \"workstream:C_operational_rewrite\": 11\n  }\n}",
+            "stderr": ""
+          },
+          {
+            "command": [
+              "D:\\miniconda3\\python.exe",
+              "scripts/build_template_portfolio_report.py"
+            ],
+            "returncode": 0,
+            "stdout": "{\n  \"json_path\": \"D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\outputs\\\\template_portfolio_report.json\",\n  \"md_path\": \"D:\\\\Study\\\\AI\\\\My-research\\\\Wikidata_Framework\\\\outputs\\\\template_portfolio_report.md\",\n  \"headline\": {\n    \"total_templates\": 191,\n    \"proven_templates\": 64,\n    \"non_proven_templates\": 127,\n    \"promotion_ready_templates\": 0,\n    \"near_promotion_templates\": 14,\n    \"salvage_in_progress\": 127,\n    \"replacement_needed\": 0,\n    \"rewrite_success_rate\": 1.0\n  }\n}",
+            "stderr": ""
+          }
+        ],
+        "policy_registry_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\config\\policy_overrides.json",
+        "policy_registry_markdown": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\policy_override_registry.md"
+      }
+    },
+    {
+      "phase": "report",
+      "status": "completed",
+      "details": {
+        "report_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\workflow_last_run_summary.json"
+      }
+    }
+  ]
+}

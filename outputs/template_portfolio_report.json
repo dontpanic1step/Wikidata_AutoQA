@@ -1,0 +1,880 @@
+{
+  "headline": {
+    "total_templates": 191,
+    "proven_templates": 64,
+    "non_proven_templates": 127,
+    "promotion_ready_templates": 0,
+    "near_promotion_templates": 14,
+    "salvage_in_progress": 127,
+    "replacement_needed": 0,
+    "rewrite_success_rate": 1.0
+  },
+  "status_counts": {
+    "error": 25,
+    "proven": 64,
+    "rejected_only": 22,
+    "unproven_no_result": 79,
+    "untracked": 1
+  },
+  "workstream_counts": {
+    "A_semantic_rewrite": 22,
+    "B_sparse_rewrite": 94,
+    "C_operational_rewrite": 11
+  },
+  "topic_counts": {
+    "Architecture and Transportation": 6,
+    "Arts and Media": 7,
+    "Computer Science and AI": 9,
+    "Earth, Environment, and Space": 8,
+    "Economy and Business": 5,
+    "Education": 9,
+    "Engineering and Technology": 9,
+    "Food, Agriculture, and Daily Life": 4,
+    "Geography": 2,
+    "Language and Literature": 6,
+    "Life Sciences": 7,
+    "Mathematics": 6,
+    "Medicine and Health": 8,
+    "People": 9,
+    "Philosophy and Religion": 7,
+    "Physical Sciences": 6,
+    "Politics and Law": 6,
+    "Society and Culture": 5,
+    "Sports and Recreation": 8
+  },
+  "question_family_counts": {
+    "how_many_active_ingredients_medicine": 1,
+    "how_many_authors_guideline": 1,
+    "how_many_crew_spacecraft": 1,
+    "how_many_days_festival": 1,
+    "how_many_dollars_company_spent_to_acquire_target": 1,
+    "how_many_editors_textbook": 1,
+    "how_many_goals_footballer_in_ordinal_tournament": 1,
+    "how_many_host_cities_event": 1,
+    "how_many_inventors_patent": 1,
+    "how_many_languages_dataset": 1,
+    "how_many_partners_project": 1,
+    "how_many_payloads_spacecraft": 1,
+    "how_many_spans_bridge": 1,
+    "how_many_stories_collection": 1,
+    "how_many_wheels_rover": 1,
+    "what_active_ingredient_medicine": 1,
+    "what_age_gap_couple": 1,
+    "what_language_novella_originally_written": 1,
+    "what_language_religious_text": 1,
+    "what_license_software": 1,
+    "what_native_language_person": 1,
+    "what_notable_work_person": 1,
+    "what_occupation_person": 1,
+    "what_parent_taxon_species": 1,
+    "what_subject_math_article": 1,
+    "what_work_film_based_on": 1,
+    "when_person_born": 1,
+    "when_person_died": 1,
+    "where_competition_held": 1,
+    "where_event_held": 1,
+    "where_person_born": 1,
+    "where_person_died": 1,
+    "where_space_mission_launched": 1,
+    "where_theater_located": 1,
+    "which_agency_operates_satellite": 1,
+    "which_agency_operates_spacecraft": 1,
+    "which_agency_operates_telescope": 1,
+    "which_body_operates_airport": 1,
+    "which_body_operates_instrument": 1,
+    "which_body_operates_league": 1,
+    "which_body_presents_math_award": 1,
+    "which_body_wrote_guideline": 1,
+    "which_city_airport_serves": 1,
+    "which_city_hosts_festival": 1,
+    "which_company_built_aircraft": 1,
+    "which_company_built_satellite": 1,
+    "which_company_built_spacecraft": 1,
+    "which_company_built_train": 1,
+    "which_company_designed_chip_architecture": 1,
+    "which_company_developed_bioinformatics_software": 1,
+    "which_company_developed_database_system": 1,
+    "which_company_developed_math_software": 1,
+    "which_company_developed_model": 1,
+    "which_company_developed_operating_system": 1,
+    "which_company_developed_vaccine": 1,
+    "which_company_made_appliance": 1,
+    "which_company_made_battery": 1,
+    "which_company_made_beverage": 1,
+    "which_company_made_instrument": 1,
+    "which_company_made_medical_device": 1,
+    "which_company_manufactured_product": 1,
+    "which_company_operates_exchange": 1,
+    "which_company_operates_port": 1,
+    "which_conference_published_ai_paper": 1,
+    "which_country_biobank_located": 1,
+    "which_country_church_located": 1,
+    "which_country_exchange_located": 1,
+    "which_country_heritage_site_located": 1,
+    "which_country_hosted_ordinal_tournament": 1,
+    "which_country_hosted_tournament": 1,
+    "which_country_lighthouse_located": 1,
+    "which_country_literary_magazine": 1,
+    "which_country_medical_school_located": 1,
+    "which_country_monastery_located": 1,
+    "which_country_nature_reserve_located": 1,
+    "which_country_signed_treaty": 1,
+    "which_country_temple_located": 1,
+    "which_country_university_located": 1,
+    "which_department_issued_policy": 1,
+    "which_journal_published_biology_article": 1,
+    "which_journal_published_chemistry_article": 1,
+    "which_journal_published_math_article": 1,
+    "which_jurisdiction_constitution": 1,
+    "which_legislature_passed_law": 1,
+    "which_org_developed_crop_variety": 1,
+    "which_org_led_genome_project": 1,
+    "which_publisher_guideline": 1,
+    "which_publisher_released_textbook": 1,
+    "which_university_before_employer": 1,
+    "which_university_granted_degree": 1,
+    "who_composed_opera": 1,
+    "who_created_ai_dataset": 1,
+    "who_created_math_dataset": 1,
+    "who_created_robot": 1,
+    "who_created_series": 1,
+    "who_created_taxonomy_dataset": 1,
+    "who_described_species": 1,
+    "who_designed_bridge": 1,
+    "who_designed_engine": 1,
+    "who_designed_programming_language": 1,
+    "who_designed_stadium": 1,
+    "who_designed_vehicle": 1,
+    "who_directed_music_video": 1,
+    "who_founded_club": 1,
+    "who_founded_company_that_developed_benchmark": 1,
+    "who_founded_company_that_released_product": 1,
+    "who_founded_museum": 1,
+    "who_founded_restaurant": 1,
+    "who_founded_school": 1,
+    "who_hosts_podcast": 1,
+    "who_led_environment_project": 1,
+    "who_narrated_documentary": 1,
+    "who_succeeded_religious_leader": 1,
+    "who_was_ordinal_president": 1,
+    "who_was_ordinal_prime_minister": 1,
+    "who_was_ordinal_religious_leader": 1,
+    "who_was_ordinal_space_mission_commander": 1,
+    "who_was_ordinal_spouse": 1,
+    "who_was_ordinal_university_chancellor": 1,
+    "who_wrote_curriculum": 1,
+    "who_wrote_encyclical": 1,
+    "who_wrote_math_textbook": 1,
+    "who_wrote_ordinal_volume": 1,
+    "who_wrote_physics_book": 1,
+    "who_wrote_poem": 1,
+    "who_wrote_poetry_collection": 1,
+    "who_wrote_textbook": 1
+  },
+  "top_candidates": [
+    {
+      "domain": "new_nature_reserve_country",
+      "topic": "Geography",
+      "question_family": "which_country_nature_reserve_located",
+      "answer_type": "Place",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "unproven_no_result",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 0.4444,
+      "candidate_yield_rate": 0.3333,
+      "semantic_repro_rate": 0.5,
+      "top_rejection_reasons": [
+        "duplicate_subject_resource",
+        "no_english_label"
+      ],
+      "top_request_problem_kinds": [
+        "direct_candidate_query_failed"
+      ],
+      "salvage_potential": "high",
+      "salvage_stage": "family_scope_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Check whether the nature-reserve family should be widened to a more stable protected-area class while preserving geography diversity.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 5,
+        "answer_type_proven_count": 17,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": false,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven",
+          "pass_rate_below_threshold",
+          "candidate_yield_below_threshold",
+          "semantic_repro_below_threshold"
+        ],
+        "gap_score": 0.7223,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "medical_school_country",
+      "topic": "Medicine and Health",
+      "question_family": "which_country_medical_school_located",
+      "answer_type": "Place",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "unproven_no_result",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 0.2857,
+      "candidate_yield_rate": 0.2857,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "canonical_question_failed_validation",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [
+        "direct_candidate_query_failed"
+      ],
+      "salvage_potential": "high",
+      "salvage_stage": "family_scope_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Test whether this family should target more stable institution subclasses or a neighboring education-location family with better label coverage.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 1,
+        "answer_type_proven_count": 17,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": false,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven",
+          "pass_rate_below_threshold",
+          "candidate_yield_below_threshold"
+        ],
+        "gap_score": 0.4286,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "dataset_creator_ai",
+      "topic": "Computer Science and AI",
+      "question_family": "who_created_ai_dataset",
+      "answer_type": "Person",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "unproven_no_result",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 0.375,
+      "candidate_yield_rate": 0.25,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "canonical_question_failed_validation",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [
+        "direct_candidate_query_failed"
+      ],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Narrow AI dataset discovery to entities with stronger machine-learning subject signals so semantic rejection is tested on better candidates.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 4,
+        "answer_type_proven_count": 20,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": false,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven",
+          "pass_rate_below_threshold",
+          "candidate_yield_below_threshold"
+        ],
+        "gap_score": 0.375,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "dataset_creator_math",
+      "topic": "Mathematics",
+      "question_family": "who_created_math_dataset",
+      "answer_type": "Person",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "unproven_no_result",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 0.375,
+      "candidate_yield_rate": 0.25,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "canonical_question_failed_validation",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [
+        "direct_candidate_query_failed"
+      ],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Replace broad topic-keyword filtering with stronger structured dataset scoping before changing the question family.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 0,
+        "answer_type_proven_count": 20,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": false,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven",
+          "pass_rate_below_threshold",
+          "candidate_yield_below_threshold"
+        ],
+        "gap_score": 0.375,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "taxonomy_database_creator",
+      "topic": "Life Sciences",
+      "question_family": "who_created_taxonomy_dataset",
+      "answer_type": "Person",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "unproven_no_result",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 0.375,
+      "candidate_yield_rate": 0.25,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "canonical_question_failed_validation",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [
+        "direct_candidate_query_failed"
+      ],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Separate taxonomy-oriented datasets from general biological datasets before deciding whether this family needs replacement.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 0,
+        "answer_type_proven_count": 20,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": false,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven",
+          "pass_rate_below_threshold",
+          "candidate_yield_below_threshold"
+        ],
+        "gap_score": 0.375,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "textbook_publisher",
+      "topic": "Education",
+      "question_family": "which_publisher_released_textbook",
+      "answer_type": "Organization",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "unproven_no_result",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 0.375,
+      "candidate_yield_rate": 0.375,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "duplicate_subject_resource",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [
+        "direct_candidate_query_failed"
+      ],
+      "salvage_potential": "high",
+      "salvage_stage": "canonical_question_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Clarify the educational-work descriptor and de-duplicate it against broader book-publisher families before considering retirement.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 0,
+        "answer_type_proven_count": 15,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": false,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven",
+          "pass_rate_below_threshold",
+          "candidate_yield_below_threshold"
+        ],
+        "gap_score": 0.25,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "product_manufacturer",
+      "topic": "Economy and Business",
+      "question_family": "which_company_manufactured_product",
+      "answer_type": "Organization",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "rejected_only",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 0.4286,
+      "candidate_yield_rate": 0.4286,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "canonical_question_failed_validation"
+      ],
+      "top_request_problem_kinds": [
+        "direct_candidate_query_failed",
+        "staged_seed_strategy_used",
+        "windowed_subject_seed_query_failed",
+        "windowed_subject_seed_queries_used"
+      ],
+      "salvage_potential": "high",
+      "salvage_stage": "query_rewrite",
+      "salvage_attempt_count": 1,
+      "last_rewrite_type": "query_simplification",
+      "rewrite_hypothesis": "Keep the direct query as the default path and continue shrinking staged fallback usage so the template can reproduce its semantic rejection without WDQS churn.",
+      "rewrite_outcome": "improved_reporting_and_partial_semantic_recovery",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "low",
+        "topic_proven_count": 7,
+        "answer_type_proven_count": 15,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": false,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven",
+          "pass_rate_below_threshold"
+        ],
+        "gap_score": 0.1714,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "biology_article_journal",
+      "topic": "Life Sciences",
+      "question_family": "which_journal_published_biology_article",
+      "answer_type": "Organization",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "rejected_only",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 1.0,
+      "candidate_yield_rate": 0.6667,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Tighten topic scope using structured Wikidata signals instead of broad keyword gating.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 0,
+        "answer_type_proven_count": 15,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": true,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven"
+        ],
+        "gap_score": 0.0,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "chemistry_article_journal",
+      "topic": "Physical Sciences",
+      "question_family": "which_journal_published_chemistry_article",
+      "answer_type": "Organization",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "rejected_only",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 1.0,
+      "candidate_yield_rate": 0.6667,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Tighten topic scope using structured Wikidata signals instead of broad keyword gating.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 3,
+        "answer_type_proven_count": 15,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": true,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven"
+        ],
+        "gap_score": 0.0,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "math_award_presenter",
+      "topic": "Mathematics",
+      "question_family": "which_body_presents_math_award",
+      "answer_type": "Organization",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "rejected_only",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 1.0,
+      "candidate_yield_rate": 0.6667,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Tighten topic scope using structured Wikidata signals instead of broad keyword gating.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 0,
+        "answer_type_proven_count": 15,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": true,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven"
+        ],
+        "gap_score": 0.0,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "math_paper_journal",
+      "topic": "Mathematics",
+      "question_family": "which_journal_published_math_article",
+      "answer_type": "Organization",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "rejected_only",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 1.0,
+      "candidate_yield_rate": 0.6667,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Tighten topic scope using structured Wikidata signals instead of broad keyword gating.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 0,
+        "answer_type_proven_count": 15,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": true,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven"
+        ],
+        "gap_score": 0.0,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "math_textbook_author",
+      "topic": "Mathematics",
+      "question_family": "who_wrote_math_textbook",
+      "answer_type": "Person",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "rejected_only",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 1.0,
+      "candidate_yield_rate": 1.0,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Tighten topic scope using structured Wikidata signals instead of broad keyword gating.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 0,
+        "answer_type_proven_count": 20,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": true,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven"
+        ],
+        "gap_score": 0.0,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "monastery_country",
+      "topic": "Philosophy and Religion",
+      "question_family": "which_country_monastery_located",
+      "answer_type": "Place",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "rejected_only",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 1.0,
+      "candidate_yield_rate": 1.0,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "no_english_label"
+      ],
+      "top_request_problem_kinds": [],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Narrow the subject class toward entities with stronger English label coverage.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 1,
+        "answer_type_proven_count": 17,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": true,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven"
+        ],
+        "gap_score": 0.0,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "paper_conference_ai",
+      "topic": "Computer Science and AI",
+      "question_family": "which_conference_published_ai_paper",
+      "answer_type": "Organization",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "rejected_only",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 1.0,
+      "candidate_yield_rate": 0.6667,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Tighten topic scope using structured Wikidata signals instead of broad keyword gating.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 4,
+        "answer_type_proven_count": 15,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": true,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven"
+        ],
+        "gap_score": 0.0,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    },
+    {
+      "domain": "physics_book_author",
+      "topic": "Physical Sciences",
+      "question_family": "who_wrote_physics_book",
+      "answer_type": "Person",
+      "reasoning_style": "single_fact",
+      "temporal_mode": "atemporal",
+      "current_status": "rejected_only",
+      "latest_live_status": "rejected_only",
+      "best_known_semantic_status": "rejected_only",
+      "pass_rate": 1.0,
+      "candidate_yield_rate": 0.6667,
+      "semantic_repro_rate": 1.0,
+      "top_rejection_reasons": [
+        "no_english_label",
+        "subject_topic_mismatch"
+      ],
+      "top_request_problem_kinds": [],
+      "salvage_potential": "high",
+      "salvage_stage": "template_definition_rewrite",
+      "salvage_attempt_count": 0,
+      "last_rewrite_type": "",
+      "rewrite_hypothesis": "Tighten topic scope using structured Wikidata signals instead of broad keyword gating.",
+      "rewrite_outcome": "",
+      "retirement_blocker": "",
+      "retireable": false,
+      "diversity_contribution": {
+        "level": "medium",
+        "topic_proven_count": 3,
+        "answer_type_proven_count": 20,
+        "reasoning_style_proven_count": 50,
+        "temporal_mode_proven_count": 55
+      },
+      "promotion_gate": {
+        "near_ready": true,
+        "eligible_now": false,
+        "blocked_by": [
+          "semantic_status_not_proven"
+        ],
+        "gap_score": 0.0,
+        "recommended_workstream": "A_semantic_rewrite"
+      },
+      "workstream": "A_semantic_rewrite",
+      "status_detail_bucket": ""
+    }
+  ]
+}

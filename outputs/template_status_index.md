@@ -1,0 +1,215 @@
+# Template Status Index
+
+## Counts
+
+- `error`: `25`
+- `proven`: `64`
+- `rejected_only`: `15`
+- `unproven_no_result`: `86`
+- `untracked`: `1`
+
+## Proven
+
+- `film_director`: `Who directed the anime film Cosmic Princess Kaguya!?` -> `Shingo Yamashita`
+- `novel_author`: `Who wrote the novel Murder on the Indigo Sea?` -> `Harper Burton`
+- `book_original_language`: `What language was the book ACHE: What Kind of Life Is This? originally written in?` -> `Indonesian`
+- `video_game_developer`: `Which company developed the fan disc Memories Off Sōsō: Break out of my shell?` -> `Mages`
+- `software_developer`: `Which company developed the software GPT-5.4?` -> `OpenAI`
+- `scholarly_article_journal`: `In which journal was the academic work Library Social Work: The Overlooked Macro Practice Opportunity published?` -> `SSRN Electronic Journal`
+- `artwork_creator`: `Who created the mural Souvenir?` -> `NEVERCREW`
+- `album_performer`: `Which artist released the studio album Mainstream Overtures?` -> `Giacomo Bucci`
+- `building_architect`: `Who designed the arena Cromwell Events Centre?` -> `Jasmax`
+- `rail_station_country`: `In which country is the railway station Shikibu Station located?` -> `Japan`
+- `museum_country`: `In which country is the museum The Apple Museum located?` -> `Netherlands`
+- `company_founder`: `Who founded the company Syrn?` -> `Sydney Sweeney`
+- `ordinal_tournament_winner`: `Who won the 10th edition of NCAA Division III football?` -> `Wisconsin–River Falls Falcons football`
+- `person_first_degree_university`: `From which university did Naomi C Futhey receive a first degree?` -> `University of British Columbia`
+- `film_source_work_author`: `Who wrote the work that the film All You Need Is Kill was based on?` -> `Hiroshi Sakurazaka`
+- `benchmark_release_date`: `On what day, month, and year was the benchmark UA Administrative Codes released?` -> `4 March 2026`
+- `product_release_date`: `On what day, month, and year was the product Honor Power2 released?` -> `5 January 2026`
+- `terminal_opening_date`: `On what day, month, and year did the terminal Haga station in Gothenburg Municipality open?` -> `1 January 2026`
+- `new_park_country`: `In which country is the park PokéPark Kanto located?` -> `Japan`
+- `new_metro_station_country`: `In which country is the metro station Sennaya (metro Nizhny Novgorod) located?` -> `Russia`
+- `new_bridge_crosses`: `What body of water does the bridge Portal North Bridge cross?` -> `Hackensack River`
+- `new_trail_country`: `In which country is the trail réserve naturelle régionale du Tertre des Canaux located?` -> `France`
+- `law_jurisdiction`: `In which jurisdiction does the law Federal Career Regulation apply?` -> `Germany`
+- `court_case_court`: `Which court decided the case Sendaviva case?` -> `Government of Navarra`
+- `startup_founder`: `Who founded the startup Absolute Value?` -> `Patrick Flanagan`
+- `company_founded_country`: `In which country was the company Crezia Solutions Co., Ltd. founded?` -> `Japan`
+- `award_conferred_by`: `Which organization confers the award Academy Award for Achievement in Casting?` -> `Academy of Motion Picture Arts and Sciences`
+- `exhibition_museum`: `Which museum hosted the exhibition "Archaeological sites of Africa, Asia and Latin America"?` -> `National Museum of Nepal`
+- `philosophy_book_author`: `Who wrote the philosophy book Scientific Illuminism?` -> `Frater Lachesis Peyton`
+- `book_publisher`: `Which publisher released the book Born sick in the USA : improving the health of a nation?` -> `Cambridge University Press`
+- `essay_collection_author`: `Who wrote the essay collection “Real men go to Tehran” — The Zion-Con fantasy of regime change in Iran?` -> `Junaid S. Ahmad`
+- `film_screenwriter`: `Who wrote the film Girls und Panzer: Motto Love Love Sakusen Desu! – Act 2?` -> `Noboru Kimura`
+- `album_label`: `Which label released the album Overload?` -> `CD Baby`
+- `comic_writer`: `Who wrote the comic Dinosaurs And Non-Dinosaurs?` -> `Randall Munroe`
+- `animation_studio`: `Which studio produced the animated film The Super Elfkins?` -> `Akkord Film Produktion`
+- `sports_venue_city`: `Which city includes the sports venue New Nissan Stadium?` -> `Nashville`
+- `physical_science_dataset_creator`: `Who created the physical science dataset Objective Projection Dataset?` -> `Levent Bulut`
+- `hospital_country`: `In which country is the hospital Assi-sairaala located?` -> `Finland`
+- `climate_report_author`: `Which organization wrote the report From Construction to Marginalization?` -> `Manfred Neugebauer`
+- `framework_license`: `What license does the framework S&box use?` -> `MIT License`
+- `device_manufacturer`: `Which company manufactured the device MacBook Neo?` -> `Apple Inc.`
+- `new_dam_country`: `In which country is the dam Hailuoto fixed link located?` -> `Finland`
+- `government_agency_jurisdiction`: `To which jurisdiction does the government agency Royal Commission on Antisemitism and Social Cohesion apply?` -> `Australia`
+- `company_parent_organization`: `Which organization is the parent of the company Egger Ventures?` -> `Egger & Co`
+- `library_country`: `In which country is the library Digital Ad Archive located?` -> `United States`
+- `play_author`: `Who wrote the play Mamyne namysto?` -> `Svitlana Tarabarova`
+- `newspaper_country`: `In which country is the newspaper Off The Record (fragrance publication) based?` -> `United States`
+- `film_production_company`: `Which company produced the film That Time I Got Reincarnated as a Slime: The Movie – Tears of the Azure Sea?` -> `Eight Bit`
+- `manga_author`: `Who wrote the manga The Fragrant Flower Blooms with Dignity?` -> `Saka Mikami`
+- `sports_team_home_venue`: `At which venue does the team Zamora F.C B play home matches?` -> `Estadio Agustín Tovar`
+- `report_publisher`: `Which publisher released the report Antifragility Sales Indonesia?` -> `Zenodo`
+- `cookbook_author`: `Who wrote the cookbook Zürich POP (german)?` -> `Honys Torres`
+- `terminal_operator_country`: `In which country is the organization that operates the terminal Tegarayamaheiwakōen Station based?` -> `Japan`
+- `tv_series_source_work_author`: `Who wrote the work that the television series Tune In to the Midnight Heart was based on?` -> `Masakuni Igarashi`
+- `film_release_date`: `On what day, month, and year was the film Takeover released?` -> `8 May 2026`
+- `paper_author_count`: `How many authors wrote the article The Epistemic Erosion Spiral: How Clinical Drift Erodes Social Work’s Legitimacy?` -> `1`
+- `report_author_count`: `How many authors wrote the report Strangers: A Memoir of Marriage?` -> `1`
+- `album_track_count`: `How many tracks are on the album Bully?` -> `2`
+- `company_founder_count`: `How many founders did the company ORBIS AI have?` -> `1`
+- `startup_founder_count`: `How many founders did the startup Charred Pictures have?` -> `1`
+- `treaty_signatory_count`: `How many signatories did the treaty Hansa Arrangement have?` -> `2`
+- `ordinal_tournament_host_city`: `Which city hosted the 80th edition of Copa del Rey de Baloncesto?` -> `Valencia`
+- `ordinal_company_ceo`: `Who was the 2nd chief executive officer of SYENSQO?` -> `Mike Radossich`
+- `ordinal_film_in_series_director`: `Who directed the 15th film in the series The Strangers?` -> `Renny Harlin`
+
+## Rejected Only
+
+- `product_manufacturer`: `canonical_question_failed_validation`; Operational reliability `pass_rate=3/7`, `candidate_yield=3/7`, `semantic_repro_rate=1.00`
+- `festival_host_city`: `subject_label_contains_year`; Operational reliability `pass_rate=1/1`, `candidate_yield=1/1`, `semantic_repro_rate=1.00`
+- `tournament_host_country`: `subject_label_contains_year`; Operational reliability `pass_rate=1/1`, `candidate_yield=1/1`, `semantic_repro_rate=1.00`
+- `competition_venue`: `no_answer_label`, `subject_label_contains_year`; Operational reliability `pass_rate=1/1`, `candidate_yield=1/1`, `semantic_repro_rate=1.00`
+- `math_textbook_author`: `no_english_label`, `subject_topic_mismatch`; Operational reliability `pass_rate=3/3`, `candidate_yield=3/3`, `semantic_repro_rate=1.00`
+- `math_paper_journal`: `no_english_label`, `subject_topic_mismatch`; Operational reliability `pass_rate=3/3`, `candidate_yield=2/3`, `semantic_repro_rate=1.00`
+- `chemistry_article_journal`: `no_english_label`, `subject_topic_mismatch`; Operational reliability `pass_rate=3/3`, `candidate_yield=2/3`, `semantic_repro_rate=1.00`
+- `physics_book_author`: `no_english_label`, `subject_topic_mismatch`; Operational reliability `pass_rate=3/3`, `candidate_yield=2/3`, `semantic_repro_rate=1.00`
+- `biology_article_journal`: `no_english_label`, `subject_topic_mismatch`; Operational reliability `pass_rate=3/3`, `candidate_yield=2/3`, `semantic_repro_rate=1.00`
+- `paper_conference_ai`: `no_english_label`, `subject_topic_mismatch`; Operational reliability `pass_rate=3/3`, `candidate_yield=2/3`, `semantic_repro_rate=1.00`
+- `monastery_country`: `no_english_label`; Operational reliability `pass_rate=1/1`, `candidate_yield=1/1`, `semantic_repro_rate=1.00`
+- `textbook_author`: `subject_topic_mismatch`; Operational reliability `pass_rate=2/2`, `candidate_yield=2/2`, `semantic_repro_rate=1.00`
+- `math_award_presenter`: `no_english_label`, `subject_topic_mismatch`; Operational reliability `pass_rate=3/3`, `candidate_yield=2/3`, `semantic_repro_rate=1.00`
+- `festival_day_count`: `subject_label_contains_year`; Operational reliability `pass_rate=2/2`, `candidate_yield=1/2`, `semantic_repro_rate=1.00`
+- `textbook_editor_count`: `subject_topic_mismatch`; Operational reliability `pass_rate=2/2`, `candidate_yield=1/2`, `semantic_repro_rate=1.00`
+
+## Error
+
+- `wedding_age_gap`: `error:TimeoutError`; `TimeoutError: The read operation timed out`
+- `ordinal_spouse`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `biography_birth_place_recent_subject`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `biography_native_language_recent_subject`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `literary_magazine_country`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `film_based_on`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `tv_series_creator`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `stadium_architect`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `graduate_before_employer`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `beverage_manufacturer`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `biography_place_of_death_recent_subject`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `biography_occupation_recent_subject`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `biography_notable_work_recent_subject`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `university_country`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `species_parent_taxon`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `company_that_released_product_founder`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `person_birth_date`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `person_death_date`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `sports_event_host_count`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `dataset_language_count`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `ordinal_country_president`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `ordinal_religious_leader`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `ordinal_university_chancellor`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `ordinal_space_mission_commander`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+- `ordinal_volume_author`: `error:HTTPError`; `HTTPError: HTTP Error 429: Aggressively rate-limiting to 1 req / min - this rule was created during active wdqs outage; we'll try to lift this throttle if it doesn't help, but feel free to reach out to us if this throttle stays in place for several days (7070860)`
+
+## Unproven No Result
+
+- `new_airport_serves_city`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `law_legislature`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `treaty_signatory_country`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `policy_department`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `exchange_operator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `museum_founder`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `event_venue`: `no_result_with_request_errors`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=3`); Operational reliability `pass_rate=2/7`, `candidate_yield=2/7`, `semantic_repro_rate=0.50`
+- `religious_leader_successor`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=2`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `encyclical_author`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `religious_text_language`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `temple_country`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `poetry_collection_author`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `novella_original_language`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `documentary_narrator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `music_video_director`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `podcast_host`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `theater_location`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `club_founder`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `degree_granting_university`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `school_founder`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `curriculum_author`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `textbook_publisher`: `no_result_with_request_errors`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=3`); Operational reliability `pass_rate=3/8`, `candidate_yield=3/8`, `semantic_repro_rate=1.00`
+- `math_software_developer`: `no_result`; A real staged seed search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026_seeded`, `sparse_answer_2026`, `total_requests=6`, `network_requests=6`); Operational reliability `pass_rate=1/2`, `candidate_yield=0/2`
+- `dataset_creator_math`: `no_result_with_request_errors`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=3`); Operational reliability `pass_rate=3/8`, `candidate_yield=2/8`, `semantic_repro_rate=1.00`
+- `instrument_manufacturer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `space_telescope_operator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `genome_project_lead_org`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `species_described_by`: `no_result`; A real staged seed search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026_seeded`, `sparse_answer_2026`, `total_requests=5`, `network_requests=5`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `bioinformatics_software_developer`: `no_result`; A real staged seed search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026_seeded`, `sparse_answer_2026`, `total_requests=6`, `network_requests=0`); Operational reliability `pass_rate=1/2`, `candidate_yield=0/2`
+- `biobank_country`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `medicine_active_ingredient`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `vaccine_developer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `clinical_guideline_author`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `medical_device_manufacturer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `spacecraft_operator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `space_mission_launch_site`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `satellite_manufacturer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `environmental_project_lead`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `ai_model_developer`: `no_result`; A real staged seed search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026_seeded`, `sparse_answer_2026`, `total_requests=6`, `network_requests=0`); Operational reliability `pass_rate=1/2`, `candidate_yield=0/2`
+- `programming_language_designer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `dataset_creator_ai`: `no_result_with_request_errors`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=3`); Operational reliability `pass_rate=3/8`, `candidate_yield=2/8`, `semantic_repro_rate=1.00`
+- `robot_creator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `vehicle_designer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `chip_architecture_designer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `bridge_architect`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `port_operator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `train_manufacturer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `crop_variety_developer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `kitchen_appliance_manufacturer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `restaurant_founder`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `new_nature_reserve_country`: `no_result_with_request_errors`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=3`); Operational reliability `pass_rate=4/9`, `candidate_yield=3/9`, `semantic_repro_rate=0.50`
+- `constitution_jurisdiction`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `stock_exchange_country`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `heritage_site_country`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `church_country`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `poem_author`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `opera_composer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `sports_league_operator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `math_article_main_subject`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `spacecraft_manufacturer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `scientific_instrument_operator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `taxonomy_database_creator`: `no_result_with_request_errors`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=3`); Operational reliability `pass_rate=3/8`, `candidate_yield=2/8`, `semantic_repro_rate=1.00`
+- `medical_school_country`: `no_result_with_request_errors`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=3`); Operational reliability `pass_rate=2/7`, `candidate_yield=2/7`, `semantic_repro_rate=1.00`
+- `clinical_guideline_publisher`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `satellite_operator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `operating_system_developer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `database_system_developer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `software_license`: `no_result`; A real staged seed search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026_seeded`, `sparse_answer_2026`, `total_requests=5`, `network_requests=5`); Operational reliability `pass_rate=1/2`, `candidate_yield=0/2`
+- `aircraft_manufacturer`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `engine_designer`: `no_result`; A real staged seed search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026_seeded`, `sparse_answer_2026`, `total_requests=8`, `network_requests=8`); Operational reliability `pass_rate=1/2`, `candidate_yield=0/2`
+- `battery_manufacturer`: `no_result`; A real staged seed search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026_seeded`, `sparse_answer_2026`, `total_requests=22`, `network_requests=0`); Operational reliability `pass_rate=1/2`, `candidate_yield=0/2`
+- `airport_operator`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `lighthouse_country`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=1`); Operational reliability `pass_rate=2/2`, `candidate_yield=0/2`
+- `company_that_developed_benchmark_founder`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=1`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `footballer_goals_in_ordinal_tournament`: `no_result`; The run completed without a candidate, but recorded query/runtime failures mean this is not a normal sparse empty result. (`degraded_no_result_due_to_query_failure`, `sparse_answer_2026`, `no_room_for_refinement`, `total_requests=10`, `network_requests=30`); Operational reliability `pass_rate=4/8`, `candidate_yield=0/8`
+- `acquisition_purchase_price`: `no_result`; The run completed without a candidate, but recorded query/runtime failures mean this is not a normal sparse empty result. (`degraded_no_result_due_to_query_failure`, `sparse_answer_2026`, `no_room_for_refinement`, `total_requests=5`, `network_requests=15`); Operational reliability `pass_rate=4/8`, `candidate_yield=0/8`
+- `guideline_author_count`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=3`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `story_collection_story_count`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=3`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `spacecraft_crew_count`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=3`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `spacecraft_payload_count`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=3`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `rover_wheel_count`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=3`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `patent_inventor_count`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=3`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `bridge_span_count`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=3`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `medicine_ingredient_count`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=3`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `project_partner_count`: `no_result`; A real search ran, but the 2026 window still looks sparse for this template. (`implemented_sparse_2026`, `sparse_answer_2026`, `total_requests=3`, `network_requests=0`); Operational reliability `pass_rate=3/3`, `candidate_yield=0/3`
+- `ordinal_country_prime_minister`: `no_result`; The run completed without a candidate, but recorded query/runtime failures mean this is not a normal sparse empty result. (`degraded_no_result_due_to_query_failure`, `sparse_answer_2026`, `no_room_for_refinement`, `total_requests=7`, `network_requests=7`); Operational reliability `pass_rate=3/11`, `candidate_yield=0/11`
+
+## Untracked
+
+- `ordinal_tournament_host_country`: `untracked`

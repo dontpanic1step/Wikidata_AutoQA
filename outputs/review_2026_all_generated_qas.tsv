@@ -1,0 +1,65 @@
+domain	topic	question_family	question	answer	source_run
+film_director	Arts and Media	who_directed_film	Who directed the anime film Cosmic Princess Kaguya!?	Shingo Yamashita	prior_proven_stage5b
+novel_author	Language and Literature	who_wrote_novel	Who wrote the novel Murder on the Indigo Sea?	Harper Burton	prior_proven_stage5b
+book_original_language	Language and Literature	what_language_originally_written	What language was the book ACHE: What Kind of Life Is This? originally written in?	Indonesian	prior_proven_stage5b
+video_game_developer	Computer Science and AI	which_company_developed_video_game	Which company developed the fan disc Memories Off Sōsō: Break out of my shell?	Mages	prior_proven_stage5b
+software_developer	Computer Science and AI	which_company_developed_software	Which company developed the software GPT-5.4?	OpenAI	prior_proven_stage5b
+scholarly_article_journal	Physical Sciences	which_journal_published_article	In which journal was the academic work Library Social Work: The Overlooked Macro Practice Opportunity published?	SSRN Electronic Journal	prior_proven_stage5b
+artwork_creator	Arts and Media	who_created_artwork	Who created the mural Souvenir?	NEVERCREW	prior_proven_stage5b
+album_performer	Arts and Media	which_artist_released_album	Which artist released the studio album Mainstream Overtures?	Giacomo Bucci	prior_proven_stage5b
+building_architect	Architecture and Transportation	who_designed_building	Who designed the arena Cromwell Events Centre?	Jasmax	prior_proven_stage5b
+rail_station_country	Architecture and Transportation	which_country_station_located	In which country is the railway station Shikibu Station located?	Japan	prior_proven_stage5b
+museum_country	Society and Culture	which_country_museum_located	In which country is the museum The Apple Museum located?	Netherlands	prior_proven_stage5b
+company_founder	Economy and Business	who_founded_company	Who founded the company Syrn?	Sydney Sweeney	prior_proven_stage5b
+ordinal_tournament_winner	Sports and Recreation	who_won_ordinal_tournament	Who won the 10th edition of NCAA Division III football?	Wisconsin–River Falls Falcons football	prior_proven_stage5b
+person_first_degree_university	People	which_university_first_degree	From which university did Naomi C Futhey receive a first degree?	University of British Columbia	prior_proven_stage5b
+film_source_work_author	Arts and Media	who_wrote_source_work_for_film	Who wrote the work that the film All You Need Is Kill was based on?	Hiroshi Sakurazaka	prior_proven_stage5b
+benchmark_release_date	Computer Science and AI	when_benchmark_released	On what day, month, and year was the benchmark UA Administrative Codes released?	4 March 2026	prior_proven_stage5b
+product_release_date	Engineering and Technology	when_product_released	On what day, month, and year was the product Honor Power2 released?	5 January 2026	prior_proven_stage5b
+terminal_opening_date	Architecture and Transportation	when_terminal_opened	On what day, month, and year did the terminal Haga station in Gothenburg Municipality open?	1 January 2026	prior_proven_stage5b
+new_metro_station_country	Geography	which_country_station_located	In which country is the metro station Sennaya (metro Nizhny Novgorod) located?	Russia	rerun_nonreject_2026
+new_bridge_crosses	Geography	what_body_of_water_bridge_crosses	What body of water does the bridge Portal North Bridge cross?	Hackensack River	rerun_nonreject_2026
+new_trail_country	Geography	which_country_trail_located	In which country is the trail réserve naturelle régionale du Tertre des Canaux located?	France	rerun_nonreject_2026
+law_jurisdiction	Politics and Law	which_jurisdiction_law	In which jurisdiction does the law Federal Career Regulation apply?	Germany	rerun_nonreject_2026
+court_case_court	Politics and Law	which_court_decided_case	Which court decided the case Sendaviva case?	Government of Navarra	rerun_nonreject_2026
+startup_founder	Economy and Business	who_founded_startup	Who founded the startup Absolute Value?	Patrick Flanagan	rerun_nonreject_2026
+company_founded_country	Economy and Business	which_country_company_founded	In which country was the company Crezia Solutions Co., Ltd. founded?	Japan	rerun_nonreject_2026
+award_conferred_by	Society and Culture	which_body_conferred_award	Which organization confers the award Academy Award for Achievement in Casting?	Academy of Motion Picture Arts and Sciences	rerun_nonreject_2026
+exhibition_museum	Society and Culture	which_museum_hosted_exhibition	"Which museum hosted the exhibition ""Archaeological sites of Africa, Asia and Latin America""?"	National Museum of Nepal	rerun_nonreject_2026
+book_publisher	Language and Literature	which_publisher_released_book	Which publisher released the book Born sick in the USA : improving the health of a nation?	Cambridge University Press	rerun_nonreject_2026
+essay_collection_author	Language and Literature	who_wrote_essay_collection	Who wrote the essay collection “Real men go to Tehran” — The Zion-Con fantasy of regime change in Iran?	Junaid S. Ahmad	rerun_nonreject_2026
+film_screenwriter	Arts and Media	who_wrote_film	Who wrote the film Girls und Panzer: Motto Love Love Sakusen Desu! – Act 2?	Noboru Kimura	rerun_nonreject_2026
+comic_writer	Arts and Media	who_wrote_comic	Who wrote the comic Dinosaurs And Non-Dinosaurs?	Randall Munroe	rerun_nonreject_2026
+animation_studio	Arts and Media	which_studio_produced_animation	Which studio produced the animated film The Super Elfkins?	Akkord Film Produktion	rerun_nonreject_2026
+sports_venue_city	Sports and Recreation	which_city_sports_venue_located	Which city includes the sports venue New Nissan Stadium?	Nashville	rerun_nonreject_2026
+hospital_country	Medicine and Health	which_country_hospital_located	In which country is the hospital Assi-sairaala located?	Finland	rerun_nonreject_2026
+climate_report_author	Earth, Environment, and Space	which_body_wrote_report	Which organization wrote the report From Construction to Marginalization?	Manfred Neugebauer	rerun_nonreject_2026
+framework_license	Computer Science and AI	what_license_framework	What license does the framework S&box use?	MIT License	rerun_nonreject_2026
+device_manufacturer	Engineering and Technology	which_company_made_device	Which company manufactured the device MacBook Neo?	Apple Inc.	rerun_nonreject_2026
+new_dam_country	Geography	which_country_dam_located	In which country is the dam Hailuoto fixed link located?	Finland	rerun_nonreject_2026
+government_agency_jurisdiction	Politics and Law	which_jurisdiction_agency	To which jurisdiction does the government agency Royal Commission on Antisemitism and Social Cohesion apply?	Australia	rerun_nonreject_2026
+company_parent_organization	Economy and Business	which_parent_company	Which organization is the parent of the company Egger Ventures?	Egger & Co	rerun_nonreject_2026
+library_country	Society and Culture	which_country_library_located	In which country is the library Digital Ad Archive located?	United States	rerun_nonreject_2026
+play_author	Language and Literature	who_wrote_play	Who wrote the play Mamyne namysto?	Svitlana Tarabarova	rerun_nonreject_2026
+newspaper_country	Language and Literature	which_country_newspaper_based	In which country is the newspaper Off The Record (fragrance publication) based?	United States	rerun_nonreject_2026
+film_production_company	Arts and Media	which_company_produced_film	Which company produced the film That Time I Got Reincarnated as a Slime: The Movie – Tears of the Azure Sea?	Eight Bit	rerun_nonreject_2026
+manga_author	Arts and Media	who_wrote_manga	Who wrote the manga The Fragrant Flower Blooms with Dignity?	Saka Mikami	rerun_nonreject_2026
+sports_team_home_venue	Sports and Recreation	which_venue_team_plays_home	At which venue does the team Zamora F.C B play home matches?	Estadio Agustín Tovar	rerun_nonreject_2026
+report_publisher	Earth, Environment, and Space	which_publisher_report	Which publisher released the report Antifragility Sales Indonesia?	Zenodo	rerun_nonreject_2026
+cookbook_author	Food, Agriculture, and Daily Life	who_wrote_cookbook	Who wrote the cookbook Zürich POP (german)?	Honys Torres	rerun_nonreject_2026
+film_release_date	Arts and Media	when_film_released	On what day, month, and year was the film Takeover released?	8 May 2026	rerun_nonreject_2026
+album_track_count	Arts and Media	how_many_tracks_album	How many tracks are on the album Bully?	2	rerun_nonreject_2026
+company_founder_count	Economy and Business	how_many_founders_company	How many founders did the company ORBIS AI have?	1	rerun_nonreject_2026
+treaty_signatory_count	Politics and Law	how_many_signatories_treaty	How many signatories did the treaty Hansa Arrangement have?	2	rerun_nonreject_2026
+album_label	Arts and Media	which_label_released_album	Which label released the album Overload?	CD Baby	rerun_missing_review_2026
+new_park_country	Geography	which_country_park_located	In which country is the park PokéPark Kanto located?	Japan	rerun_missing_review_2026
+paper_author_count	Physical Sciences	how_many_authors_paper	How many authors wrote the article The Epistemic Erosion Spiral: How Clinical Drift Erodes Social Work’s Legitimacy?	1	rerun_missing_review_2026
+philosophy_book_author	Philosophy and Religion	who_wrote_philosophy_book	Who wrote the philosophy book Scientific Illuminism?	Frater Lachesis Peyton	rerun_missing_review_2026
+physical_science_dataset_creator	Physical Sciences	who_created_science_dataset	Who created the physical science dataset Objective Projection Dataset?	Levent Bulut	rerun_missing_review_2026
+report_author_count	Earth, Environment, and Space	how_many_authors_report	How many authors wrote the report Strangers: A Memoir of Marriage?	1	rerun_missing_review_2026
+startup_founder_count	Economy and Business	how_many_founders_startup	How many founders did the startup Charred Pictures have?	1	rerun_missing_review_2026
+tv_series_source_work_author	Arts and Media	who_wrote_source_work_for_series	Who wrote the work that the television series Tune In to the Midnight Heart was based on?	Masakuni Igarashi	rerun_focus_templates_2026
+terminal_operator_country	Architecture and Transportation	which_country_operator_of_terminal	In which country is the organization that operates the terminal Tegarayamaheiwakōen Station based?	Japan	rerun_focus_templates_2026
+ordinal_tournament_host_city	Sports and Recreation	which_city_hosted_ordinal_tournament	Which city hosted the 80th edition of Copa del Rey de Baloncesto?	Valencia	rerun_focus_templates_2026
+ordinal_film_in_series_director	Arts and Media	who_directed_ordinal_film_in_series	Who directed the 15th film in the series The Strangers?	Renny Harlin	rerun_focus_templates_2026
+ordinal_company_ceo	Economy and Business	who_was_ordinal_company_ceo	Who was the 2nd chief executive officer of SYENSQO?	Mike Radossich	rewrite_probe_focus_v2
