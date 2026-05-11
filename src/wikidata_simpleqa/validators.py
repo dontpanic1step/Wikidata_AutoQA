@@ -8,7 +8,7 @@ from typing import Iterable
 
 from .constants import MONTH_NAMES, TEMPORAL_PHRASES
 from .entity_normalization import normalize_name
-from .models import CandidateFact
+from .models import CandidateFact, DomainTemplate
 from .reasoning import is_multi_hop_reasoning_style, normalize_reasoning_style
 
 YEAR_PATTERN = re.compile(r"\b(17|18|19|20|21)\d{2}\b")
@@ -18,6 +18,7 @@ TEMPORAL_PATTERN = re.compile(
     r"\b(" + "|".join(re.escape(phrase) for phrase in TEMPORAL_PHRASES) + r")\b",
     re.IGNORECASE,
 )
+ORDINAL_MARKER_PATTERN = re.compile(r"\b(\d+(st|nd|rd|th)|first|second|third|fourth|fifth)\b", re.IGNORECASE)
 
 MUTABLE_ROLE_PROPERTY_PIDS = {
     "P26",   # spouse
@@ -25,9 +26,15 @@ MUTABLE_ROLE_PROPERTY_PIDS = {
     "P54",   # member of sports team
     "P102",  # member of political party
     "P108",  # employer
+    "P169",  # chief executive officer
+    "P1037", # director / manager
 }
 
-MUTABLE_OR_HIGH_RISK_PROPERTY_PIDS = MUTABLE_ROLE_PROPERTY_PIDS | {
+HIGH_RISK_STATISTIC_PROPERTY_PIDS = {
+    "P1351",  # number of points/goals/set scored
+}
+
+MUTABLE_OR_HIGH_RISK_PROPERTY_PIDS = MUTABLE_ROLE_PROPERTY_PIDS | HIGH_RISK_STATISTIC_PROPERTY_PIDS | {
     "P106",   # occupation
     "P136",   # genre
     "P161",   # cast member
@@ -71,6 +78,40 @@ MUTABLE_RELATIONSHIP_HINTS = (
     "current minister",
 )
 
+LOCATION_TOKEN_STOPWORDS = {
+    "administrative",
+    "area",
+    "borough",
+    "campus",
+    "canton",
+    "city",
+    "country",
+    "county",
+    "district",
+    "federal",
+    "governorate",
+    "island",
+    "islands",
+    "kingdom",
+    "municipality",
+    "north",
+    "northern",
+    "oblast",
+    "park",
+    "province",
+    "railway",
+    "region",
+    "republic",
+    "south",
+    "southern",
+    "state",
+    "station",
+    "territorial",
+    "town",
+    "united",
+    "west",
+}
+
 
 def has_forbidden_temporal_text(text: str) -> bool:
     """Return whether text contains forbidden temporal content."""
@@ -97,7 +138,11 @@ def question_targets_mutable_fact(question: str) -> bool:
     """Return whether the question wording asks for a mutable fact."""
     lowered = question.lower()
     if any(hint in lowered for hint in MUTABLE_RELATIONSHIP_HINTS):
+        if "spouse" in lowered and ORDINAL_MARKER_PATTERN.search(question):
+            return False
         return True
+    if "goals" in lowered and "edition of" in lowered and ORDINAL_MARKER_PATTERN.search(question):
+        return False
     return any(hint in lowered for hint in CUMULATIVE_STATISTIC_HINTS)
 
 
@@ -105,12 +150,18 @@ def candidate_is_time_invariant(candidate: CandidateFact, run_date: str) -> bool
     """Return whether the candidate appears to be a settled, stable fact."""
     if not is_settled_by_run_date(candidate.date_value, run_date):
         return False
-    if candidate.target_property_pid in MUTABLE_OR_HIGH_RISK_PROPERTY_PIDS:
+    if (
+        candidate.target_property_pid in MUTABLE_OR_HIGH_RISK_PROPERTY_PIDS
+        and not _allows_historically_settled_slice(candidate, candidate.target_property_pid)
+    ):
         return False
     if is_multi_hop_reasoning_style(candidate.reasoning_style):
         for hop in candidate.reasoning_path:
             property_pid = hop.get("property_pid", "")
-            if property_pid in MUTABLE_OR_HIGH_RISK_PROPERTY_PIDS:
+            if (
+                property_pid in MUTABLE_OR_HIGH_RISK_PROPERTY_PIDS
+                and not _allows_historically_settled_slice(candidate, property_pid)
+            ):
                 return False
     return True
 
@@ -174,6 +225,33 @@ def question_leaks_location_answer_context(question: str, candidate: CandidateFa
     for label in context_labels:
         normalized_label = normalize_name(str(label))
         if normalized_label and normalized_label in normalized_question:
+            return True
+    question_tokens = set(_tokenize_normalized_text(normalized_question))
+    for token in _salient_location_tokens(context_labels):
+        if token in question_tokens:
+            return True
+    return False
+
+
+def candidate_matches_topic_constraints(
+    candidate: CandidateFact,
+    template: DomainTemplate,
+) -> bool:
+    """Return whether a candidate satisfies any required deterministic topic hints."""
+    if not template.required_topic_keywords:
+        return True
+    evidence_texts = [
+        candidate.subject_label,
+        candidate.source_metadata.get("subject_description", ""),
+    ]
+    evidence_texts.extend(candidate.source_metadata.get("subject_type_labels", []))
+    evidence_texts.extend(candidate.source_metadata.get("subject_main_subject_labels", []))
+    normalized_evidence = " ".join(normalize_name(str(text)) for text in evidence_texts if text)
+    if not normalized_evidence.strip():
+        return False
+    for keyword in template.required_topic_keywords:
+        normalized_keyword = normalize_name(keyword)
+        if normalized_keyword and normalized_keyword in normalized_evidence:
             return True
     return False
 
@@ -306,6 +384,21 @@ def ordinal_candidate_is_safe(candidate: CandidateFact) -> bool:
     return True
 
 
+def _allows_historically_settled_slice(candidate: CandidateFact, property_pid: str) -> bool:
+    """Return whether a historically settled slice explicitly allows one risky property."""
+    metadata = candidate.source_metadata.get("time_invariance", {})
+    if not isinstance(metadata, dict):
+        return False
+    if not metadata.get("historically_settled", False):
+        return False
+    if not metadata.get("history_complete", False):
+        return False
+    allowed_pids = metadata.get("allowed_property_pids", [])
+    if property_pid not in allowed_pids:
+        return False
+    return True
+
+
 def reasoning_provenance_is_complete(candidate: CandidateFact) -> bool:
     """Return whether a candidate has a complete compositional provenance record."""
     if not is_multi_hop_reasoning_style(candidate.reasoning_style):
@@ -324,3 +417,21 @@ def is_simple_question(question: str) -> bool:
     if any(pattern in lowered for pattern in forbidden_patterns):
         return False
     return len(question.strip()) <= 200
+
+
+def _salient_location_tokens(labels: list[str]) -> set[str]:
+    """Return conservative location tokens that would leak a country answer."""
+    tokens: set[str] = set()
+    for label in labels:
+        for token in _tokenize_normalized_text(normalize_name(str(label))):
+            if len(token) < 4:
+                continue
+            if token in LOCATION_TOKEN_STOPWORDS:
+                continue
+            tokens.add(token)
+    return tokens
+
+
+def _tokenize_normalized_text(text: str) -> list[str]:
+    """Split normalized text into alphanumeric tokens."""
+    return re.findall(r"[a-z0-9]+", text.lower())

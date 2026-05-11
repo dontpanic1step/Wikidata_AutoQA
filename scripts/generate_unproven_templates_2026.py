@@ -17,9 +17,10 @@ from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.domain_templates import get_all_templates
 from wikidata_simpleqa.io import write_jsonl
 from wikidata_simpleqa.pipeline import run_pipeline_for_templates
+from wikidata_simpleqa.subject_resources import canonical_subject_resource
 from wikidata_simpleqa.wikidata_client import WikidataClient
 
-RESUME_VERSION = 1
+RESUME_VERSION = 2
 
 
 def _read_jsonl(path: Path) -> list[dict]:
@@ -47,6 +48,21 @@ def _renumber_ids(records: list[dict], prefix: str) -> list[dict]:
     return renumbered
 
 
+def _subject_resource_key(record: dict) -> str:
+    """Return the canonical subject-resource key stored in an output record."""
+    resource_key = str(record.get("subject_resource_key", "")).strip()
+    if resource_key:
+        return resource_key
+    resource_url = str(record.get("subject_resource_url", "")).strip()
+    if resource_url:
+        return resource_url
+    subject_qid = str(record.get("subject_qid", "")).strip()
+    if subject_qid:
+        _, fallback_key = canonical_subject_resource(subject_qid)
+        return fallback_key
+    return ""
+
+
 def _aggregate_problem_counts(results: list[dict[str, object]]) -> dict[str, int]:
     counter: Counter[str] = Counter()
     for result in results:
@@ -59,6 +75,9 @@ def _aggregate_problem_counts(results: list[dict[str, object]]) -> dict[str, int
                     counter["network_limit:http_429"] += 1
                 if "timed out" in message.lower() or "timeout" in message.lower():
                     counter["network_limit:timeout"] += 1
+        for problem in result.get("telemetry", {}).get("problems", []):
+            kind = str(problem.get("kind", "unknown"))
+            counter[f"problem:{kind}"] += 1
         status = str(result.get("status", ""))
         if status == "no_result":
             counter["outcome:no_result"] += 1
@@ -129,6 +148,20 @@ def main() -> int:
     rejected_only_domains: list[str] = []
     no_result_domains: list[str] = []
     error_domains: list[str] = []
+    seen_questions: set[str] = set()
+    seen_subject_resources: set[str] = set()
+
+    for prior_path in (
+        ROOT / "outputs" / "stage5b_pilot_accepted.jsonl",
+        ROOT / "outputs" / "stage5_pilot_accepted.jsonl",
+    ):
+        for record in _read_jsonl(prior_path):
+            question = str(record.get("question", "")).strip()
+            if question:
+                seen_questions.add(question)
+            resource_key = _subject_resource_key(record)
+            if resource_key:
+                seen_subject_resources.add(resource_key)
 
     for template in templates:
         accepted_tmp_path = ROOT / "outputs" / f"tmp_unproven_{template.domain}_accepted.jsonl"
@@ -146,6 +179,13 @@ def main() -> int:
         if can_resume:
             accepted.extend(cached_accepted[:1])
             rejected.extend(cached_rejected)
+            for record in cached_accepted[:1]:
+                question = str(record.get("question", "")).strip()
+                if question:
+                    seen_questions.add(question)
+                resource_key = _subject_resource_key(record)
+                if resource_key:
+                    seen_subject_resources.add(resource_key)
             status = str(resume_manifest.get("status", "resumed_from_cache"))
             if cached_accepted:
                 accepted_domains.add(template.domain)
@@ -184,7 +224,13 @@ def main() -> int:
         status = "no_result"
         notes: dict[str, object] = {}
         try:
-            result = run_pipeline_for_templates(settings=settings, templates=[template], client=client)
+            result = run_pipeline_for_templates(
+                settings=settings,
+                templates=[template],
+                client=client,
+                seen_questions=seen_questions,
+                seen_subject_resources=seen_subject_resources,
+            )
             accepted.extend(result.accepted[:1])
             rejected.extend(result.rejected)
             if result.accepted:

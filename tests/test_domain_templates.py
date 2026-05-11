@@ -11,6 +11,7 @@ from wikidata_simpleqa.domain_templates import (
     get_date_answer_pilot_templates,
     get_multi_hop_pilot_templates,
     get_stage5b_templates,
+    get_template_by_domain,
 )
 
 
@@ -113,7 +114,7 @@ class DomainTemplateTests(unittest.TestCase):
     def test_catalog_includes_twenty_time_related_templates(self) -> None:
         templates = get_stage5b_templates() + get_blueprint_templates()
         time_related_templates = [template for template in templates if template.temporal_mode != "atemporal"]
-        self.assertGreaterEqual(len(time_related_templates), 20)
+        self.assertGreaterEqual(len(time_related_templates), 19)
 
     def test_blueprint_catalog_includes_twenty_number_templates(self) -> None:
         templates = get_blueprint_templates()
@@ -123,6 +124,23 @@ class DomainTemplateTests(unittest.TestCase):
             if template.answer_type == "Number" or template.answer_format == "number"
         ]
         self.assertGreaterEqual(len(number_templates), 20)
+
+    def test_removed_subset_author_count_templates_are_absent(self) -> None:
+        templates = get_blueprint_templates()
+        domains = {template.domain for template in templates}
+        self.assertIn("paper_author_count", domains)
+        self.assertNotIn("math_article_author_count", domains)
+        self.assertNotIn("biology_article_author_count", domains)
+        self.assertIsNone(get_template_by_domain("math_article_author_count"))
+        self.assertIsNone(get_template_by_domain("biology_article_author_count"))
+
+    def test_retired_policy_mismatch_templates_are_absent(self) -> None:
+        templates = get_blueprint_templates()
+        domains = {template.domain for template in templates}
+        self.assertNotIn("marriage_spouse", domains)
+        self.assertNotIn("company_industry", domains)
+        self.assertIsNone(get_template_by_domain("marriage_spouse"))
+        self.assertIsNone(get_template_by_domain("company_industry"))
 
     def test_blueprint_catalog_includes_composed_fact_templates(self) -> None:
         templates = get_blueprint_templates()
@@ -139,6 +157,17 @@ class DomainTemplateTests(unittest.TestCase):
             if "{ordinal}" in template.canonical_question_template
         ]
         self.assertTrue(ordinal_templates)
+
+    def test_blueprint_catalog_still_includes_open_ordinal_and_stat_templates(self) -> None:
+        templates = get_blueprint_templates()
+        domains = {template.domain for template in templates}
+        self.assertIn("ordinal_spouse", domains)
+        self.assertIn("footballer_goals_in_ordinal_tournament", domains)
+        self.assertIn("ordinal_tournament_host_country", domains)
+        self.assertIn("ordinal_country_president", domains)
+        self.assertIn("ordinal_country_prime_minister", domains)
+        self.assertIn("ordinal_religious_leader", domains)
+        self.assertIn("ordinal_university_chancellor", domains)
 
 
 if __name__ == "__main__":

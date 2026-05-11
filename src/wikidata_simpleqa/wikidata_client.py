@@ -27,6 +27,7 @@ class WikidataClient:
     cache_dir: Path | None = None
     request_events: list[dict[str, Any]] = field(init=False, default_factory=list)
     request_counters: dict[str, int] = field(init=False, default_factory=dict)
+    problem_reports: list[dict[str, Any]] = field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
         install_proxy(self.proxy)
@@ -40,6 +41,7 @@ class WikidataClient:
             "retry_count": 0,
             "errors": 0,
         }
+        self.problem_reports: list[dict[str, Any]] = []
 
     def sparql_query(self, query: str) -> list[dict[str, Any]]:
         """Execute a SPARQL query and return binding rows."""
@@ -60,7 +62,7 @@ class WikidataClient:
             params = {
                 "action": "wbgetentities",
                 "ids": "|".join(chunk),
-                "props": "labels|aliases|descriptions|claims",
+                "props": "labels|aliases|descriptions|claims|sitelinks",
                 "languages": "en",
                 "format": "json",
             }
@@ -188,7 +190,23 @@ class WikidataClient:
         return {
             **self.request_counters,
             "events": self.request_events.copy(),
+            "problems": self.problem_reports.copy(),
         }
+
+    def record_problem(
+        self,
+        kind: str,
+        message: str,
+        **context: Any,
+    ) -> None:
+        """Store a structured harvesting or query problem for later review."""
+        self.problem_reports.append(
+            {
+                "kind": kind,
+                "message": message,
+                "context": context,
+            }
+        )
 
     def _cache_path(self, url: str, accept: str) -> Path | None:
         """Return the on-disk cache path for one request."""

@@ -99,7 +99,7 @@ These are still strong candidates, but they need more property-specific validati
 These require deterministic multi-claim composition, explicit reasoning-path metadata, or richer answer typing.
 
 1. `wedding_age_gap`
-2. `marriage_spouse`
+2. `ordinal_spouse`
 3. `person_first_degree_university`
 4. `religious_leader_successor`
 5. `graduate_before_employer`

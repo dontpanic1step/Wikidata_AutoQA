@@ -12,8 +12,10 @@ from .domain_templates import get_stage1_templates
 from .io import write_jsonl
 from .llm_rewrite import build_rewrite_payload, make_rewrite_client
 from .models import CandidateFact, RejectedCandidate
+from .subject_resources import canonical_subject_resource
 from .validators import (
     answer_is_unique,
+    candidate_matches_topic_constraints,
     candidate_is_time_invariant,
     find_exact_name_competitors,
     has_forbidden_temporal_text,
@@ -47,7 +49,13 @@ def run_pipeline(settings: Settings) -> PipelineResult:
     return run_pipeline_for_templates(settings=settings, templates=get_stage1_templates())
 
 
-def run_pipeline_for_templates(settings: Settings, templates, client: WikidataClient | None = None) -> PipelineResult:
+def run_pipeline_for_templates(
+    settings: Settings,
+    templates,
+    client: WikidataClient | None = None,
+    seen_questions: set[str] | None = None,
+    seen_subject_resources: set[str] | None = None,
+) -> PipelineResult:
     """Run the pipeline for an explicit template list."""
     if client is None:
         client = WikidataClient(
@@ -61,7 +69,10 @@ def run_pipeline_for_templates(settings: Settings, templates, client: WikidataCl
         rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds)
     accepted_records: list[dict] = []
     rejected_records: list[dict] = []
-    seen_questions: set[str] = set()
+    if seen_questions is None:
+        seen_questions = set()
+    if seen_subject_resources is None:
+        seen_subject_resources = set()
 
     for template in templates:
         accepted_for_template = 0
@@ -123,6 +134,19 @@ def run_pipeline_for_templates(settings: Settings, templates, client: WikidataCl
 
             _apply_rewrite_if_enabled(candidate, rewrite_client)
             final_question = (candidate.rewritten_question or candidate.canonical_question).strip()
+            _ensure_subject_resource(candidate)
+            if candidate.subject_resource_key in seen_subject_resources:
+                rejected_records.append(
+                    RejectedCandidate(
+                        reason="duplicate_subject_resource",
+                        candidate=candidate,
+                        notes={
+                            "subject_resource_url": candidate.subject_resource_url,
+                            "subject_resource_key": candidate.subject_resource_key,
+                        },
+                    ).to_output_record()
+                )
+                continue
             if final_question in seen_questions:
                 rejected_records.append(
                     RejectedCandidate(
@@ -134,6 +158,7 @@ def run_pipeline_for_templates(settings: Settings, templates, client: WikidataCl
                 continue
 
             seen_questions.add(final_question)
+            seen_subject_resources.add(candidate.subject_resource_key)
             example_id = f"wikidata_verified_pilot_{len(accepted_records) + 1:06d}"
             accepted_records.append(candidate.to_output_record(example_id))
             accepted_for_template += 1
@@ -216,6 +241,8 @@ def _validate_candidate(
         return RejectedCandidate(reason="no_english_label", candidate=candidate)
     if not candidate.answer_labels:
         return RejectedCandidate(reason="no_answer_label", candidate=candidate)
+    if not candidate_matches_topic_constraints(candidate, template):
+        return RejectedCandidate(reason="subject_topic_mismatch", candidate=candidate)
     if has_year(candidate.subject_label) and not settings.allow_year_in_official_title:
         return RejectedCandidate(reason="subject_label_contains_year", candidate=candidate)
     if has_forbidden_temporal_text(candidate.subject_label):
@@ -285,3 +312,14 @@ def _validate_candidate(
 def _question_must_be_non_temporal(candidate: CandidateFact) -> bool:
     """Return whether the question surface must avoid explicit temporal wording."""
     return candidate.answer_type != "Date"
+
+
+def _ensure_subject_resource(candidate: CandidateFact) -> None:
+    """Populate a stable subject resource URL/key when missing."""
+    if candidate.subject_resource_url and candidate.subject_resource_key:
+        return
+    subject_resource_url, subject_resource_key = canonical_subject_resource(candidate.subject_qid)
+    if not candidate.subject_resource_url:
+        candidate.subject_resource_url = subject_resource_url
+    if not candidate.subject_resource_key:
+        candidate.subject_resource_key = subject_resource_key

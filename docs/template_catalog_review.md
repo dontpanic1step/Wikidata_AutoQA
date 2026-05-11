@@ -8,17 +8,17 @@
 
 ## Headline Stats
 
-- Total templates: `199`
-- Number-answer templates: `24`
+- Total templates: `197`
+- Number-answer templates: `22`
 - Date-answer templates: `9`
-- Time-related templates (including date-answer): `20`
+- Time-related templates (including date-answer): `21`
 
 ## Status Axis
 
 | Activation Status | Count |
 |---|---:|
 | active | 12 |
-| blueprint | 181 |
+| blueprint | 179 |
 | date_answer_pilot | 3 |
 | multi_hop_pilot | 3 |
 
@@ -26,7 +26,7 @@
 
 | Evidence Status | Count |
 |---|---:|
-| not_yet_proven | 181 |
+| not_yet_proven | 179 |
 | proven_in_runs | 18 |
 
 ## Domain Axis
@@ -37,21 +37,21 @@
 | Arts and Media | 21 |
 | Computer Science and AI | 14 |
 | Earth, Environment, and Space | 11 |
-| Economy and Business | 13 |
+| Economy and Business | 12 |
 | Education | 9 |
 | Engineering and Technology | 12 |
 | Food, Agriculture, and Daily Life | 5 |
 | Geography | 7 |
 | Language and Literature | 12 |
-| Life Sciences | 8 |
-| Mathematics | 7 |
+| Life Sciences | 7 |
+| Mathematics | 6 |
 | Medicine and Health | 9 |
 | People | 11 |
 | Philosophy and Religion | 8 |
 | Physical Sciences | 9 |
 | Politics and Law | 10 |
 | Society and Culture | 9 |
-| Sports and Recreation | 12 |
+| Sports and Recreation | 13 |
 
 ## Answer Type Axis
 
@@ -60,11 +60,11 @@
 | Date | 9 |
 | Entity | 1 |
 | Language | 4 |
-| Number | 24 |
+| Number | 22 |
 | Organization | 55 |
-| Other | 7 |
+| Other | 6 |
 | Person | 57 |
-| Place | 40 |
+| Place | 41 |
 | Work | 2 |
 
 ## Answer Format Axis
@@ -73,15 +73,15 @@
 |---|---:|
 | date | 9 |
 | entity | 166 |
-| number | 24 |
+| number | 22 |
 
 ## Temporal Axis
 
 | Temporal Mode | Count |
 |---|---:|
-| atemporal | 179 |
+| atemporal | 176 |
 | date_answer | 9 |
-| time_related_join | 11 |
+| time_related_join | 12 |
 
 ## Full Catalog
 
@@ -106,7 +106,7 @@
 | product_release_date | date_answer_pilot | proven_in_runs | Engineering and Technology | Date | date | date_answer | single_fact | product (Q2424752) | P577 | P577 | stage5b_pilot | On what day, month, and year was the product {descriptor} released? |
 | terminal_opening_date | date_answer_pilot | proven_in_runs | Architecture and Transportation | Date | date | date_answer | single_fact | terminal (Q55488) | P571 | P571 | stage5b_pilot | On what day, month, and year did the terminal {descriptor} open? |
 | wedding_age_gap | blueprint | not_yet_proven | People | Number | number | atemporal | multi_hop_join | wedding (Q27020041) | P585 | P1534 |  | What was the age gap between the couple in {descriptor}? |
-| marriage_spouse | blueprint | not_yet_proven | People | Person | entity | atemporal | multi_hop_join | marriage (Q171318) | P580 | P26 |  | Who married {descriptor}? |
+| ordinal_spouse | blueprint | not_yet_proven | People | Person | entity | time_related_join | multi_hop_ordinal | human (Q5) | P580 | P26 |  | Who was the {ordinal} spouse of {descriptor}? |
 | biography_birth_place_recent_subject | blueprint | not_yet_proven | People | Place | entity | atemporal | single_fact | human (Q5) | P569 | P19 |  | Where was {descriptor} born? |
 | biography_native_language_recent_subject | blueprint | not_yet_proven | People | Language | entity | atemporal | single_fact | human (Q5) | P569 | P103 |  | What is the native language of {descriptor}? |
 | person_first_degree_university | blueprint | not_yet_proven | People | Organization | entity | time_related_join | multi_hop_join | human (Q5) | P69 | P69 |  | From which university did {descriptor} receive a degree? |
@@ -211,7 +211,6 @@
 | constitution_jurisdiction | blueprint | not_yet_proven | Politics and Law | Place | entity | atemporal | single_fact | constitution (Q7755) | P577 | P1001 |  | To which jurisdiction does the constitution {descriptor} apply? |
 | government_agency_jurisdiction | blueprint | not_yet_proven | Politics and Law | Place | entity | atemporal | single_fact | government agency (Q327333) | P571 | P1001 |  | To which jurisdiction does the government agency {descriptor} apply? |
 | company_parent_organization | blueprint | not_yet_proven | Economy and Business | Organization | entity | atemporal | single_fact | company (Q783794) | P571 | P749 |  | Which organization is the parent of the company {descriptor}? |
-| company_industry | blueprint | not_yet_proven | Economy and Business | Other | entity | atemporal | single_fact | company (Q783794) | P571 | P452 |  | What industry is the company {descriptor} in? |
 | stock_exchange_country | blueprint | not_yet_proven | Economy and Business | Place | entity | atemporal | single_fact | stock exchange (Q11654) | P571 | P17 |  | In which country is the stock exchange {descriptor} located? |
 | library_country | blueprint | not_yet_proven | Society and Culture | Place | entity | atemporal | single_fact | library (Q7075) | P571 | P17 |  | In which country is the library {descriptor} located? |
 | heritage_site_country | blueprint | not_yet_proven | Society and Culture | Place | entity | atemporal | single_fact | heritage site (Q9259) | P571 | P17 |  | In which country is the heritage site {descriptor} located? |
@@ -250,14 +249,12 @@
 | company_that_developed_benchmark_founder | blueprint | not_yet_proven | Computer Science and AI | Person | entity | time_related_join | multi_hop_join | benchmark (Q1172284) | P577 | COMPOSED_BENCHMARK_DEVELOPER_FOUNDER |  | Who founded the organization that developed the benchmark {descriptor}? |
 | terminal_operator_country | blueprint | not_yet_proven | Architecture and Transportation | Place | entity | time_related_join | multi_hop_join | terminal (Q55488) | P571 | COMPOSED_TERMINAL_OPERATOR_COUNTRY |  | In which country is the organization that operates the terminal {descriptor} based? |
 | tv_series_source_work_author | blueprint | not_yet_proven | Arts and Media | Person | entity | time_related_join | multi_hop_join | television series (Q5398426) | P577 | COMPOSED_SOURCE_WORK_AUTHOR |  | Who wrote the work that the television series {descriptor} was based on? |
-| footballer_goals_in_ordinal_tournament | blueprint | not_yet_proven | Sports and Recreation | Number | number | time_related_join | multi_hop_ordinal | association football player (Q937857) | P585 | COMPOSED_ORDINAL_TOURNAMENT_GOALS |  | How many goals did {descriptor} score in the {ordinal} tournament? |
+| footballer_goals_in_ordinal_tournament | blueprint | not_yet_proven | Sports and Recreation | Number | number | time_related_join | multi_hop_ordinal | association football player (Q937857) | P585 | COMPOSED_ORDINAL_TOURNAMENT_GOALS |  | How many goals did {player_label} score in the {ordinal} edition of {descriptor}? |
 | acquisition_purchase_price | blueprint | not_yet_proven | Economy and Business | Number | number | time_related_join | multi_hop_join | company (Q783794) | P571 | COMPOSED_ACQUISITION_PRICE |  | How many dollars did {acquirer_label} spend to acquire {descriptor}? |
 | person_birth_date | blueprint | not_yet_proven | People | Date | date | date_answer | single_fact | human (Q5) | P569 | P569 |  | On what day, month, and year was {descriptor} born? |
 | person_death_date | blueprint | not_yet_proven | People | Date | date | date_answer | single_fact | human (Q5) | P570 | P570 |  | On what day, month, and year did {descriptor} die? |
 | film_release_date | blueprint | not_yet_proven | Arts and Media | Date | date | date_answer | single_fact | film (Q11424) | P577 | P577 |  | On what day, month, and year was the film {descriptor} released? |
 | paper_author_count | blueprint | not_yet_proven | Physical Sciences | Number | number | atemporal | multi_hop_join | scholarly article (Q13442814) | P577 | P50 |  | How many authors wrote the article {descriptor}? |
-| math_article_author_count | blueprint | not_yet_proven | Mathematics | Number | number | atemporal | multi_hop_join | scholarly article (Q13442814) | P577 | P50 |  | How many authors wrote the mathematics article {descriptor}? |
-| biology_article_author_count | blueprint | not_yet_proven | Life Sciences | Number | number | atemporal | multi_hop_join | scholarly article (Q13442814) | P577 | P50 |  | How many authors wrote the biology article {descriptor}? |
 | guideline_author_count | blueprint | not_yet_proven | Medicine and Health | Number | number | atemporal | multi_hop_join | clinical guideline (Q617602) | P577 | P50 |  | How many authors wrote the guideline {descriptor}? |
 | report_author_count | blueprint | not_yet_proven | Earth, Environment, and Space | Number | number | atemporal | multi_hop_join | report (Q10870555) | P577 | P50 |  | How many authors wrote the report {descriptor}? |
 | album_track_count | blueprint | not_yet_proven | Arts and Media | Number | number | atemporal | multi_hop_join | album (Q482994) | P577 | P658 |  | How many tracks are on the album {descriptor}? |
@@ -272,7 +269,7 @@
 | patent_inventor_count | blueprint | not_yet_proven | Engineering and Technology | Number | number | atemporal | multi_hop_join | patent (Q253623) | P577 | P61 |  | How many inventors are listed on the patent {descriptor}? |
 | bridge_span_count | blueprint | not_yet_proven | Architecture and Transportation | Number | number | atemporal | multi_hop_join | bridge (Q12280) | P571 | P527 |  | How many spans does the bridge {descriptor} have? |
 | sports_event_host_count | blueprint | not_yet_proven | Sports and Recreation | Number | number | atemporal | multi_hop_join | sports competition (Q16510064) | P585 | P276 |  | How many host locations were used for {descriptor}? |
-| textbook_editor_count | blueprint | not_yet_proven | Education | Number | number | atemporal | multi_hop_join | textbook (Q571) | P577 | P98 |  | How many editors worked on the textbook edition {descriptor}? |
+| textbook_editor_count | blueprint | not_yet_proven | Education | Number | number | atemporal | multi_hop_join | textbook (Q571) | P577 | P98 |  | How many editors worked on the textbook {descriptor}? |
 | medicine_ingredient_count | blueprint | not_yet_proven | Medicine and Health | Number | number | atemporal | multi_hop_join | medication (Q12140) | P577 | P3781 |  | How many active ingredients are in the medicine {descriptor}? |
 | dataset_language_count | blueprint | not_yet_proven | Computer Science and AI | Number | number | atemporal | multi_hop_join | dataset (Q1172284) | P577 | P407 |  | How many languages are represented in the dataset {descriptor}? |
 | project_partner_count | blueprint | not_yet_proven | Engineering and Technology | Number | number | atemporal | multi_hop_join | project (Q170584) | P571 | P749 |  | How many partner organizations were involved in the project {descriptor}? |
@@ -280,6 +277,7 @@
 | ordinal_country_prime_minister | blueprint | not_yet_proven | Politics and Law | Person | entity | atemporal | multi_hop_ordinal | country (Q6256) | P585 | P39 |  | Who was the {ordinal} prime minister of {descriptor}? |
 | ordinal_tournament_winner | blueprint | not_yet_proven | Sports and Recreation | Person | entity | time_related_join | multi_hop_ordinal | tournament (Q132241) | P585 | P1346 |  | Who won the {ordinal} edition of {descriptor}? |
 | ordinal_tournament_host_city | blueprint | not_yet_proven | Sports and Recreation | Place | entity | atemporal | multi_hop_ordinal | tournament (Q132241) | P585 | P131 |  | Which city hosted the {ordinal} edition of {descriptor}? |
+| ordinal_tournament_host_country | blueprint | not_yet_proven | Sports and Recreation | Place | entity | atemporal | multi_hop_ordinal | tournament (Q132241) | P585 | P17 |  | Which country hosted the {ordinal} edition of {descriptor}? |
 | ordinal_religious_leader | blueprint | not_yet_proven | Philosophy and Religion | Person | entity | atemporal | multi_hop_ordinal | religious office (Q246434) | P580 | P39 |  | Who was the {ordinal} leader of {descriptor}? |
 | ordinal_university_chancellor | blueprint | not_yet_proven | Education | Person | entity | atemporal | multi_hop_ordinal | university (Q3918) | P585 | P39 |  | Who was the {ordinal} chancellor of {descriptor}? |
 | ordinal_company_ceo | blueprint | not_yet_proven | Economy and Business | Person | entity | atemporal | multi_hop_ordinal | company (Q783794) | P585 | P169 |  | Who was the {ordinal} chief executive officer of {descriptor}? |

@@ -140,6 +140,10 @@ Important interpretation:
 - A question is acceptable when it asks about an intrinsic, historical, or settled attribution of an entity/event/work.
 - A question is not acceptable when it asks about a mutable status, a current relationship, an office/job, a cumulative statistic, or a value that can naturally change over a person's life/career or an organization's operation.
 - Do **not** accept a mutable fact merely because it is unlikely to change soon. For example, even if a footballer is very unlikely to retire in the target year, their career goal count is still mutable and should be rejected.
+- Historically settled slices of otherwise mutable properties may still be accepted when deterministic provenance proves that the slice is fixed.
+  - Example: a person's `first spouse` can be acceptable if the ordinal spouse sequence is derived from dated spouse statements and the historical slot is settled.
+  - Example: goals scored in one completed tournament edition can be acceptable if the total is tied to that finished edition rather than to a live or career total.
+  - Example: an ordinal office/role answer can be acceptable only when the executor reconstructs a complete dated historical sequence rather than asking for a current office holder.
 
 Acceptable examples:
 
@@ -172,7 +176,7 @@ Implementation rule:
 
 ```text
 If the answer might differ depending on when the question is asked, reject the candidate.
-If the value is a mutable status, relationship, affiliation, office, or cumulative statistic, reject it even when it looks stable in the short run.
+If the value is a mutable status, relationship, affiliation, office, or cumulative statistic, reject it even when it looks stable in the short run, unless the candidate explicitly proves a historically settled slice with deterministic provenance.
 ```
 
 Recommended metadata:
@@ -508,6 +512,13 @@ Avoid in the first version:
 - Number of employees.
 - Sports season winners if the official label requires a year.
 - Any fact whose question naturally requires `current`, `latest`, or `as of`.
+- Narrower template variants whose answer set is a real semantic subset of a broader existing question family already present in our template catalog.
+
+Template-generation rule:
+
+- If template `B` only adds a topic adjective or surface specialization to template `A`, and `A` is already an existing question family in our template catalog, but every valid `B` question is still just an instance of `A`, do not keep both templates.
+- Keep the broader template and delete the narrower one from the catalog instead of relying on runtime deduplication.
+- Example: keep `how_many_authors_paper`, and do not create parallel templates like `how_many_authors_math_article` or `how_many_authors_biology_article`.
 
 ---
 
@@ -2144,3 +2155,12 @@ Accept a candidate only if:
 If any of these fail, reject the candidate.
 
 High precision matters more than high recall, especially in the first version.
+
+## Template Status Maintenance
+
+Maintain a canonical template-status index in `outputs/template_status_index.json` and `outputs/template_status_index.md`.
+
+- Rebuild it after every meaningful rerun or review-bundle update.
+- Every template in the catalog must have a current status such as `proven`, `rejected_only`, `error`, or another explicit non-proven state.
+- `rejected_only` and `error` entries must carry machine-readable reasons taken from the latest available run artifacts.
+- The review bundle defines the current `proven` set; stale historical accepts do not remain proven if they are filtered out by newer deterministic rules.
