@@ -16,9 +16,10 @@ from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.domain_templates import get_active_templates
 from wikidata_simpleqa.io import write_jsonl
 from wikidata_simpleqa.pipeline import run_pipeline_for_templates
+from wikidata_simpleqa.subject_resources import canonical_subject_resource
 from wikidata_simpleqa.wikidata_client import WikidataClient
 
-RESUME_VERSION = 1
+RESUME_VERSION = 2
 
 
 def _read_jsonl(path: Path) -> list[dict]:
@@ -46,11 +47,25 @@ def _read_resume_manifest(path: Path) -> dict | None:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _subject_resource_key(record: dict) -> str:
+    """Return the canonical subject-resource key stored in an output record."""
+    resource_key = str(record.get("subject_resource_key", "")).strip()
+    if resource_key:
+        return resource_key
+    subject_qid = str(record.get("subject_qid", "")).strip()
+    if subject_qid:
+        _, fallback_key = canonical_subject_resource(subject_qid)
+        return fallback_key
+    return ""
+
+
 def main() -> int:
     accepted: list[dict] = []
     rejected: list[dict] = []
     template_results: list[dict[str, str | int]] = []
     accepted_domains: set[str] = set()
+    seen_questions: set[str] = set()
+    seen_subject_resources: set[str] = set()
 
     for template in get_active_templates():
         accepted_tmp_path = ROOT / "outputs" / f"tmp_{template.domain}_accepted.jsonl"
@@ -69,6 +84,13 @@ def main() -> int:
             accepted.extend(cached_accepted[:1])
             if cached_accepted:
                 accepted_domains.add(template.domain)
+            for record in cached_accepted[:1]:
+                question = str(record.get("question", "")).strip()
+                if question:
+                    seen_questions.add(question)
+                resource_key = _subject_resource_key(record)
+                if resource_key:
+                    seen_subject_resources.add(resource_key)
             rejected.extend(cached_rejected)
             template_results.append(
                 {
@@ -98,7 +120,13 @@ def main() -> int:
                 cache_dir=settings.cache_dir,
             )
             try:
-                result = run_pipeline_for_templates(settings=settings, templates=[template], client=client)
+                result = run_pipeline_for_templates(
+                    settings=settings,
+                    templates=[template],
+                    client=client,
+                    seen_questions=seen_questions,
+                    seen_subject_resources=seen_subject_resources,
+                )
                 accepted.extend(result.accepted[:1])
                 if result.accepted:
                     accepted_domains.add(template.domain)

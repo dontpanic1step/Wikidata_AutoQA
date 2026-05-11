@@ -63,6 +63,32 @@ class AnswerLeakageTests(unittest.TestCase):
         candidate.canonical_question = "In which country is the museum Shikoku History Museum located?"
         self.assertFalse(question_leaks_location_answer_context(candidate.canonical_question, candidate))
 
+    def test_rejects_country_question_when_title_contains_city_token(self) -> None:
+        candidate = CandidateFact(
+            subject_qid="Q3312744",
+            subject_label="Sea Life London Aquarium",
+            subject_aliases=[],
+            domain="new_park_country",
+            topic="Geography",
+            answer_type="Place",
+            question_family="which_country_park_located",
+            subject_type_qids=["Q22698"],
+            target_property_pid="P17",
+            target_property_label="country",
+            answer_qids=["Q145"],
+            answer_labels=["United Kingdom"],
+            answer_aliases=["the UK"],
+            date_property_pid="P571",
+            date_value="2026-03-01",
+            target_time="2026",
+            canonical_question="In which country is the park Sea Life London Aquarium located?",
+            source_metadata={
+                "subject_location_labels": ["London Borough of Lambeth"],
+                "answer_subdivision_labels": ["England", "Scotland", "Wales"],
+            },
+        )
+        self.assertTrue(question_leaks_location_answer_context(candidate.canonical_question, candidate))
+
 
 if __name__ == "__main__":
     unittest.main()

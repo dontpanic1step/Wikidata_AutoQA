@@ -44,6 +44,10 @@ The following rules are now explicit:
    Example:
    `who_theorem_named_after` has been removed.
 
+7. A narrower template should not remain in the catalog when it is only a real semantic subset of a broader existing question family already present in our template catalog.
+   Example:
+   keep `how_many_authors_paper`, but do not add separate templates such as `how_many_authors_math_article` or `how_many_authors_biology_article`.
+
 ## Important Clarification
 
 The "newness" requirement applies to the harvested subject or event, not necessarily to every supporting fact used in composition.

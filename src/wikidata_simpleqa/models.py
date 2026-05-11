@@ -30,6 +30,8 @@ class DomainTemplate:
     evidence_status: str = "not_run"
     evidence_runs: list[str] = field(default_factory=list)
     evidence_notes: str = ""
+    query_tags: list[str] = field(default_factory=list)
+    required_topic_keywords: list[str] = field(default_factory=list)
     exact_instance_only: bool = False
     retrieval_limit: int = 100
 
@@ -79,6 +81,8 @@ class CandidateFact:
     shortcut_checks: dict[str, Any] = field(default_factory=dict)
     provenance_complete: bool = False
     question_requires_all_hops: bool | None = None
+    subject_resource_url: str = ""
+    subject_resource_key: str = ""
     source_metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_output_record(self, example_id: str) -> dict[str, Any]:
@@ -91,6 +95,8 @@ class CandidateFact:
             "answer": answer,
             "answer_aliases": self.answer_aliases,
             "subject_qid": self.subject_qid,
+            "subject_resource_url": self.subject_resource_url,
+            "subject_resource_key": self.subject_resource_key,
             "answer_qids": self.answer_qids,
             "property_pid": self.target_property_pid,
             "domain": self.domain,

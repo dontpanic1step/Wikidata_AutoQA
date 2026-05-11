@@ -50,6 +50,7 @@ REJECTION_REASONS = {
     "rewrite_lost_required_anchor",
     "rewrite_leaks_answer",
     "duplicate_question",
+    "duplicate_subject_resource",
     "quota_exceeded",
     "reasoning_path_not_connected",
     "shortcut_answerable_without_all_hops",

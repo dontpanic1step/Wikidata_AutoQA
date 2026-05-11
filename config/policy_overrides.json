@@ -1,0 +1,94 @@
+{
+  "decisions": [
+    {
+      "domain": "ordinal_spouse",
+      "decision_type": "historically_settled_slice",
+      "approval_status": "approved",
+      "reviewer": "user",
+      "decision_date": "2026-05-09",
+      "allowed_property_pids": ["P26"],
+      "rationale": "Ordinal spouse asks for a settled historical slot rather than a current spouse.",
+      "notes": "Executor must carry deterministic history-complete provenance."
+    },
+    {
+      "domain": "footballer_goals_in_ordinal_tournament",
+      "decision_type": "historically_settled_slice",
+      "approval_status": "approved",
+      "reviewer": "user",
+      "decision_date": "2026-05-09",
+      "allowed_property_pids": ["P1351"],
+      "rationale": "Goals in a completed tournament edition are fixed once the edition is settled.",
+      "notes": "Executor must anchor the answer to one finished edition in a deterministic series history."
+    },
+    {
+      "domain": "ordinal_country_president",
+      "decision_type": "policy_review_pending",
+      "approval_status": "review_needed",
+      "reviewer": "user",
+      "decision_date": "2026-05-09",
+      "allowed_property_pids": ["P39"],
+      "rationale": "Historically settled office-holder ordinals appear admissible, but the office-history executor is still missing.",
+      "notes": "Pending executor design for office-to-holder chronology."
+    },
+    {
+      "domain": "ordinal_country_prime_minister",
+      "decision_type": "policy_review_pending",
+      "approval_status": "review_needed",
+      "reviewer": "user",
+      "decision_date": "2026-05-09",
+      "allowed_property_pids": ["P39"],
+      "rationale": "Historically settled office-holder ordinals appear admissible, but the office-history executor is still missing.",
+      "notes": "Pending executor design for office-to-holder chronology."
+    },
+    {
+      "domain": "ordinal_religious_leader",
+      "decision_type": "policy_review_pending",
+      "approval_status": "review_needed",
+      "reviewer": "user",
+      "decision_date": "2026-05-09",
+      "allowed_property_pids": ["P39"],
+      "rationale": "Historically settled office-holder ordinals appear admissible, but the office-history executor is still missing.",
+      "notes": "Pending executor design for office-to-holder chronology."
+    },
+    {
+      "domain": "ordinal_university_chancellor",
+      "decision_type": "policy_review_pending",
+      "approval_status": "review_needed",
+      "reviewer": "user",
+      "decision_date": "2026-05-09",
+      "allowed_property_pids": ["P39"],
+      "rationale": "Historically settled office-holder ordinals appear admissible, but the office-history executor is still missing.",
+      "notes": "Pending executor design for office-to-holder chronology."
+    },
+    {
+      "domain": "ordinal_company_ceo",
+      "decision_type": "historically_settled_slice",
+      "approval_status": "approved",
+      "reviewer": "user",
+      "decision_date": "2026-05-09",
+      "allowed_property_pids": ["P169"],
+      "rationale": "Ordinal CEO asks for a settled historical position in the company's leadership sequence.",
+      "notes": "Implemented via subject-side role history executor."
+    },
+    {
+      "domain": "ordinal_space_mission_commander",
+      "decision_type": "historically_settled_slice",
+      "approval_status": "approved",
+      "reviewer": "user",
+      "decision_date": "2026-05-09",
+      "allowed_property_pids": ["P1037"],
+      "rationale": "Mission commander chronology is historically settled once the mission record is complete.",
+      "notes": "Implemented via subject-side role history executor."
+    },
+    {
+      "domain": "acquisition_purchase_price",
+      "decision_type": "executor_gap",
+      "approval_status": "review_needed",
+      "reviewer": "user",
+      "decision_date": "2026-05-09",
+      "allowed_property_pids": [],
+      "rationale": "The answer may be stable, but the composed acquisition-price reasoning path is not yet implemented deterministically.",
+      "notes": "Needs explicit acquisition event modeling."
+    }
+  ]
+}
