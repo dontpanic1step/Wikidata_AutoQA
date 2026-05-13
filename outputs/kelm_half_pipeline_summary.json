@@ -1,0 +1,10 @@
+{
+  "generated": 10,
+  "accepted": 0,
+  "rejected": 10,
+  "input_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\data\\kelm\\quadruples-train.tsv",
+  "output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\kelm_half_pipeline_accepted.jsonl",
+  "rejected_output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\kelm_half_pipeline_rejected.jsonl",
+  "rewrite_enabled": true,
+  "telemetry": {}
+}
