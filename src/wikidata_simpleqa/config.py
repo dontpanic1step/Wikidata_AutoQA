@@ -30,6 +30,17 @@ class Settings:
     date_upper_bound: str | None = None
     pilot_total: int = 20
     harvest_limit_per_template: int = 100
+    cutoff_year: int = 2025
+    enabled_routes: tuple[str, ...] = (
+        "route2_wikidata_wikipedia_hybrid",
+        "route1_wikidata_light",
+    )
+    duckduckgo_top_k: int = 10
+    longtail_prefilter_max_sitelinks: int = 80
+    longtail_prefilter_max_claims: int = 400
+    search_longtail_max_full_question_hit_rate: float = 0.0
+    search_longtail_max_keyword_hit_rate: float = 0.1
+    search_longtail_max_overall_hit_rate: float = 0.1
     allow_year_in_official_title: bool = False
     reject_future_dated_candidates: bool = True
     reject_current_or_latest_facts: bool = True

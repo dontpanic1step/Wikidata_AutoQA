@@ -419,6 +419,8 @@ def _row_to_candidate(
         subject_qid,
         subject_entity,
     )
+    subject_wikipedia_title = _extract_enwiki_title(subject_entity)
+    subject_wikipedia_url = _wikipedia_url_from_title(subject_wikipedia_title)
 
     return CandidateFact(
         subject_qid=subject_qid,
@@ -468,6 +470,10 @@ def _row_to_candidate(
             "wikidata_access_date": settings.run_date,
             "retrieval_method": "WDQS + wbgetentities + wbsearchentities",
             "sparql_query": query,
+            "subject_wikipedia_title": subject_wikipedia_title,
+            "subject_wikipedia_url": subject_wikipedia_url,
+            "subject_sitelink_count": _count_sitelinks(subject_entity),
+            "subject_claim_count": _count_claims(subject_entity),
             "subject_description": _extract_description(subject_entity),
             "subject_type_labels": subject_type_labels,
             "subject_main_subject_labels": subject_main_subject_labels,
@@ -529,6 +535,8 @@ def _seed_row_to_candidate(
         subject_qid,
         subject_entity,
     )
+    subject_wikipedia_title = _extract_enwiki_title(subject_entity)
+    subject_wikipedia_url = _wikipedia_url_from_title(subject_wikipedia_title)
 
     return CandidateFact(
         subject_qid=subject_qid,
@@ -578,6 +586,10 @@ def _seed_row_to_candidate(
             "wikidata_access_date": settings.run_date,
             "retrieval_method": "WDQS subject seed + wbgetentities claim extraction",
             "sparql_query": query,
+            "subject_wikipedia_title": subject_wikipedia_title,
+            "subject_wikipedia_url": subject_wikipedia_url,
+            "subject_sitelink_count": _count_sitelinks(subject_entity),
+            "subject_claim_count": _count_claims(subject_entity),
             "subject_description": _extract_description(subject_entity),
             "subject_type_labels": subject_type_labels,
             "subject_main_subject_labels": subject_main_subject_labels,
@@ -659,6 +671,36 @@ def _extract_aliases(entity: dict[str, Any]) -> list[str]:
 def _extract_description(entity: dict[str, Any]) -> str:
     descriptions = entity.get("descriptions", {})
     return descriptions.get("en", {}).get("value", "")
+
+
+def _extract_enwiki_title(entity: dict[str, Any]) -> str:
+    """Return the English Wikipedia sitelink title when available."""
+    sitelinks = entity.get("sitelinks", {})
+    enwiki = sitelinks.get("enwiki", {})
+    return str(enwiki.get("title", "")).strip()
+
+
+def _wikipedia_url_from_title(title: str) -> str:
+    """Return the canonical English Wikipedia URL for a title."""
+    if not title:
+        return ""
+    return "https://en.wikipedia.org/wiki/" + title.replace(" ", "_")
+
+
+def _count_sitelinks(entity: dict[str, Any]) -> int:
+    """Return the number of sitelinks on one hydrated entity."""
+    sitelinks = entity.get("sitelinks", {})
+    if not isinstance(sitelinks, dict):
+        return 0
+    return len(sitelinks)
+
+
+def _count_claims(entity: dict[str, Any]) -> int:
+    """Return the number of claim rows on one hydrated entity."""
+    claims = entity.get("claims", {})
+    if not isinstance(claims, dict):
+        return 0
+    return sum(len(rows) for rows in claims.values() if isinstance(rows, list))
 
 
 def _extract_claim_qids(entity: dict[str, Any], pid: str) -> list[str]:

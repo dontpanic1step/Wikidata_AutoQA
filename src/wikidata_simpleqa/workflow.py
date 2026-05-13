@@ -33,82 +33,151 @@ class PolicyDecision:
     notes: str = ""
 
 
+@dataclass(frozen=True, slots=True)
+class ArtifactRegistry:
+    """Registry describing which workflow artifacts belong to one root."""
+
+    root: Path
+    outputs_dir: Path
+    canonical_run_artifacts: tuple[RunArtifacts, ...]
+    review_source_names: tuple[str, ...]
+
+    def all_run_artifacts(self) -> list[RunArtifacts]:
+        """Return canonical artifacts plus any later focused rerun artifacts on disk."""
+        artifacts = list(self.canonical_run_artifacts)
+        known_summary_names = {artifact.summary_path.name for artifact in artifacts}
+        discovered: list[RunArtifacts] = []
+        for summary_path in sorted(
+            self.outputs_dir.glob("*_summary.json"),
+            key=lambda path: (path.stat().st_mtime, path.name),
+        ):
+            if summary_path.name in known_summary_names:
+                continue
+            stem = summary_path.name.removesuffix("_summary.json")
+            accepted_path = self.outputs_dir / f"{stem}_accepted.jsonl"
+            rejected_path = self.outputs_dir / f"{stem}_rejected.jsonl"
+            if not accepted_path.exists() and not rejected_path.exists():
+                continue
+            discovered.append(
+                RunArtifacts(
+                    source_name=stem,
+                    accepted_path=accepted_path,
+                    rejected_path=rejected_path,
+                    summary_path=summary_path,
+                    include_in_review=False,
+                )
+            )
+        return artifacts + discovered
+
+    def review_run_artifacts(self) -> list[RunArtifacts]:
+        """Return only artifact sets that should feed the review bundle."""
+        artifact_map = {
+            artifact.source_name: artifact
+            for artifact in self.canonical_run_artifacts
+        }
+        review_artifacts = [
+            artifact_map[name]
+            for name in self.review_source_names
+            if name in artifact_map
+        ]
+        known_default_names = {artifact.source_name for artifact in self.canonical_run_artifacts}
+        discovered = [
+            artifact
+            for artifact in self.all_run_artifacts()
+            if artifact.source_name not in known_default_names
+        ]
+        known_names = {artifact.source_name for artifact in review_artifacts}
+        for artifact in discovered:
+            if artifact.source_name in known_names:
+                continue
+            if _artifact_has_records(artifact.accepted_path):
+                review_artifacts.append(artifact)
+                known_names.add(artifact.source_name)
+        return review_artifacts
+
+    def summary_paths(self) -> list[Path]:
+        """Return ordered summary paths for canonical status classification."""
+        return [artifact.summary_path for artifact in self.all_run_artifacts()]
+
+    def rejected_paths(self) -> list[Path]:
+        """Return ordered rejected-record paths for canonical status classification."""
+        return [artifact.rejected_path for artifact in self.all_run_artifacts()]
+
+    def accepted_paths(self) -> list[Path]:
+        """Return ordered accepted-record paths for canonical status classification."""
+        return [artifact.accepted_path for artifact in self.all_run_artifacts()]
+
+
+def default_artifact_registry(root: Path) -> ArtifactRegistry:
+    """Return the default artifact registry for one repository root."""
+    outputs = root / "outputs"
+    return ArtifactRegistry(
+        root=root,
+        outputs_dir=outputs,
+        canonical_run_artifacts=(
+            RunArtifacts(
+                source_name="stage5_pilot",
+                accepted_path=outputs / "stage5_pilot_accepted.jsonl",
+                rejected_path=outputs / "stage5_pilot_rejected.jsonl",
+                summary_path=outputs / "stage5_pilot_summary.json",
+                include_in_review=False,
+            ),
+            RunArtifacts(
+                source_name="prior_proven_stage5b",
+                accepted_path=outputs / "stage5b_pilot_accepted.jsonl",
+                rejected_path=outputs / "stage5b_pilot_rejected.jsonl",
+                summary_path=outputs / "stage5b_pilot_summary.json",
+            ),
+            RunArtifacts(
+                source_name="unproven_templates_2026",
+                accepted_path=outputs / "unproven_templates_2026_accepted.jsonl",
+                rejected_path=outputs / "unproven_templates_2026_rejected.jsonl",
+                summary_path=outputs / "unproven_templates_2026_summary.json",
+                include_in_review=False,
+            ),
+            RunArtifacts(
+                source_name="rerun_nonreject_2026",
+                accepted_path=outputs / "unproven_nonreject_2026_rerun_accepted.jsonl",
+                rejected_path=outputs / "unproven_nonreject_2026_rerun_rejected.jsonl",
+                summary_path=outputs / "unproven_nonreject_2026_rerun_summary.json",
+            ),
+            RunArtifacts(
+                source_name="rerun_missing_review_2026",
+                accepted_path=outputs / "rerun_missing_review_2026_accepted.jsonl",
+                rejected_path=outputs / "rerun_missing_review_2026_rejected.jsonl",
+                summary_path=outputs / "rerun_missing_review_2026_summary.json",
+            ),
+            RunArtifacts(
+                source_name="rerun_focus_templates_2026",
+                accepted_path=outputs / "rerun_focus_templates_2026_accepted.jsonl",
+                rejected_path=outputs / "rerun_focus_templates_2026_rejected.jsonl",
+                summary_path=outputs / "rerun_focus_templates_2026_summary.json",
+            ),
+            RunArtifacts(
+                source_name="rerun_last_untracked",
+                accepted_path=outputs / "rerun_last_untracked_accepted.jsonl",
+                rejected_path=outputs / "rerun_last_untracked_rejected.jsonl",
+                summary_path=outputs / "rerun_last_untracked_summary.json",
+                include_in_review=False,
+            ),
+        ),
+        review_source_names=(
+            "prior_proven_stage5b",
+            "rerun_nonreject_2026",
+            "rerun_missing_review_2026",
+            "rerun_focus_templates_2026",
+        ),
+    )
+
+
 def default_run_artifacts(root: Path) -> list[RunArtifacts]:
     """Return the canonical artifact registry used by report scripts."""
-    outputs = root / "outputs"
-    return [
-        RunArtifacts(
-            source_name="stage5_pilot",
-            accepted_path=outputs / "stage5_pilot_accepted.jsonl",
-            rejected_path=outputs / "stage5_pilot_rejected.jsonl",
-            summary_path=outputs / "stage5_pilot_summary.json",
-            include_in_review=False,
-        ),
-        RunArtifacts(
-            source_name="prior_proven_stage5b",
-            accepted_path=outputs / "stage5b_pilot_accepted.jsonl",
-            rejected_path=outputs / "stage5b_pilot_rejected.jsonl",
-            summary_path=outputs / "stage5b_pilot_summary.json",
-        ),
-        RunArtifacts(
-            source_name="unproven_templates_2026",
-            accepted_path=outputs / "unproven_templates_2026_accepted.jsonl",
-            rejected_path=outputs / "unproven_templates_2026_rejected.jsonl",
-            summary_path=outputs / "unproven_templates_2026_summary.json",
-            include_in_review=False,
-        ),
-        RunArtifacts(
-            source_name="rerun_nonreject_2026",
-            accepted_path=outputs / "unproven_nonreject_2026_rerun_accepted.jsonl",
-            rejected_path=outputs / "unproven_nonreject_2026_rerun_rejected.jsonl",
-            summary_path=outputs / "unproven_nonreject_2026_rerun_summary.json",
-        ),
-        RunArtifacts(
-            source_name="rerun_missing_review_2026",
-            accepted_path=outputs / "rerun_missing_review_2026_accepted.jsonl",
-            rejected_path=outputs / "rerun_missing_review_2026_rejected.jsonl",
-            summary_path=outputs / "rerun_missing_review_2026_summary.json",
-        ),
-        RunArtifacts(
-            source_name="rerun_focus_templates_2026",
-            accepted_path=outputs / "rerun_focus_templates_2026_accepted.jsonl",
-            rejected_path=outputs / "rerun_focus_templates_2026_rejected.jsonl",
-            summary_path=outputs / "rerun_focus_templates_2026_summary.json",
-        ),
-        RunArtifacts(
-            source_name="rerun_last_untracked",
-            accepted_path=outputs / "rerun_last_untracked_accepted.jsonl",
-            rejected_path=outputs / "rerun_last_untracked_rejected.jsonl",
-            summary_path=outputs / "rerun_last_untracked_summary.json",
-            include_in_review=False,
-        ),
-    ]
+    return list(default_artifact_registry(root).canonical_run_artifacts)
 
 
 def discovered_run_artifacts(root: Path) -> list[RunArtifacts]:
     """Return canonical artifacts plus any later focused rerun artifacts on disk."""
-    artifacts = list(default_run_artifacts(root))
-    known_summary_names = {artifact.summary_path.name for artifact in artifacts}
-    outputs = root / "outputs"
-    discovered: list[RunArtifacts] = []
-    for summary_path in sorted(outputs.glob("*_summary.json"), key=lambda path: (path.stat().st_mtime, path.name)):
-        if summary_path.name in known_summary_names:
-            continue
-        stem = summary_path.name.removesuffix("_summary.json")
-        accepted_path = outputs / f"{stem}_accepted.jsonl"
-        rejected_path = outputs / f"{stem}_rejected.jsonl"
-        if not accepted_path.exists() and not rejected_path.exists():
-            continue
-        discovered.append(
-            RunArtifacts(
-                source_name=stem,
-                accepted_path=accepted_path,
-                rejected_path=rejected_path,
-                summary_path=summary_path,
-                include_in_review=False,
-            )
-        )
-    return artifacts + discovered
+    return default_artifact_registry(root).all_run_artifacts()
 
 
 def default_policy_registry_path(root: Path) -> Path:
@@ -155,44 +224,22 @@ def policy_registry_map(path: Path) -> dict[str, PolicyDecision]:
 
 def review_run_artifacts(root: Path) -> list[RunArtifacts]:
     """Return only artifact sets that should feed the review bundle."""
-    default_artifacts = default_run_artifacts(root)
-    artifact_map = {artifact.source_name: artifact for artifact in default_artifacts}
-    ordered_names = [
-        "prior_proven_stage5b",
-        "rerun_nonreject_2026",
-        "rerun_missing_review_2026",
-        "rerun_focus_templates_2026",
-    ]
-    review_artifacts = [artifact_map[name] for name in ordered_names if name in artifact_map]
-    known_default_names = {artifact.source_name for artifact in default_artifacts}
-    discovered = [
-        artifact
-        for artifact in discovered_run_artifacts(root)
-        if artifact.source_name not in known_default_names
-    ]
-    known_names = {artifact.source_name for artifact in review_artifacts}
-    for artifact in discovered:
-        if artifact.source_name in known_names:
-            continue
-        if _artifact_has_records(artifact.accepted_path):
-            review_artifacts.append(artifact)
-            known_names.add(artifact.source_name)
-    return review_artifacts
+    return default_artifact_registry(root).review_run_artifacts()
 
 
 def status_summary_paths(root: Path) -> list[Path]:
     """Return ordered summary paths for canonical status classification."""
-    return [artifact.summary_path for artifact in discovered_run_artifacts(root)]
+    return default_artifact_registry(root).summary_paths()
 
 
 def status_rejected_paths(root: Path) -> list[Path]:
     """Return ordered rejected-record paths for canonical status classification."""
-    return [artifact.rejected_path for artifact in discovered_run_artifacts(root)]
+    return default_artifact_registry(root).rejected_paths()
 
 
 def status_accepted_paths(root: Path) -> list[Path]:
     """Return ordered accepted-record paths for canonical status classification."""
-    return [artifact.accepted_path for artifact in discovered_run_artifacts(root)]
+    return default_artifact_registry(root).accepted_paths()
 
 
 def render_policy_registry_markdown(decisions: list[PolicyDecision]) -> str:

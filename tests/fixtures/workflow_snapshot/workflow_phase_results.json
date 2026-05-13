@@ -1,0 +1,27 @@
+[
+  {
+    "phase": "offline",
+    "status": "completed",
+    "details": {
+      "returncode": 0
+    }
+  },
+  {
+    "phase": "live",
+    "status": "failed",
+    "details": {
+      "template_results": [
+        {
+          "domain": "ordinal_spouse",
+          "status": "error:URLError",
+          "error_message": "URLError: remote closed"
+        },
+        {
+          "domain": "product_manufacturer",
+          "status": "no_result_with_request_errors",
+          "error_message": ""
+        }
+      ]
+    }
+  }
+]

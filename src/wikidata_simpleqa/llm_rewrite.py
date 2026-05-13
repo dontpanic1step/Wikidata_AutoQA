@@ -6,14 +6,19 @@ import json
 import os
 from abc import ABC, abstractmethod
 from dataclasses import asdict
+from time import sleep
 from typing import Any
+from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 from .config import LLMConfig
 from .models import CandidateFact
-from .network import install_proxy
+from .network import clear_proxy, install_proxy
 
 SYSTEM_PROMPT = "You rewrite verified factual questions. Return JSON only."
+OPENROUTER_REFERER = "https://example.com/wikidata-simpleqa"
+OPENROUTER_TITLE = "Wikidata SimpleQA Generator"
+OPENROUTER_USER_AGENT = "wikidata-simpleqa-generator/0.1"
 
 
 class RewriteClient(ABC):
@@ -35,6 +40,7 @@ class OpenRouterRewriteClient(RewriteClient):
         self.api_key = os.environ.get(config.api_key_env)
         if not self.api_key:
             raise ValueError(f"Missing API key in environment variable {config.api_key_env}")
+        self.proxy = config.proxy
         install_proxy(config.proxy)
 
     def rewrite_question(self, payload: dict[str, Any]) -> dict[str, Any]:
@@ -48,20 +54,50 @@ class OpenRouterRewriteClient(RewriteClient):
                 {"role": "user", "content": build_rewrite_prompt(payload)},
             ],
         }
-        request = Request(
-            url=f"{self.base_url.rstrip('/')}/chat/completions",
-            data=json.dumps(request_payload).encode("utf-8"),
-            headers={
-                "Authorization": f"Bearer {self.api_key}",
-                "Content-Type": "application/json",
-                "Accept": "application/json",
-            },
-            method="POST",
-        )
-        with urlopen(request, timeout=self.timeout_seconds) as response:
-            body = json.loads(response.read().decode("utf-8"))
+        body = self._request_with_retry(request_payload, use_proxy=bool(self.proxy))
         text = body["choices"][0]["message"]["content"]
         return parse_json_object(text)
+
+    def _request_with_retry(self, request_payload: dict[str, Any], *, use_proxy: bool) -> dict[str, Any]:
+        """Send one OpenRouter request with retries and optional direct fallback."""
+        if use_proxy:
+            install_proxy(self.proxy)
+        else:
+            clear_proxy()
+        last_error: Exception | None = None
+        try:
+            for attempt in range(3):
+                request = Request(
+                    url=f"{self.base_url.rstrip('/')}/chat/completions",
+                    data=json.dumps(request_payload).encode("utf-8"),
+                    headers={
+                        "Authorization": f"Bearer {self.api_key}",
+                        "Content-Type": "application/json",
+                        "Accept": "application/json",
+                        "User-Agent": OPENROUTER_USER_AGENT,
+                        "HTTP-Referer": OPENROUTER_REFERER,
+                        "X-OpenRouter-Title": OPENROUTER_TITLE,
+                    },
+                    method="POST",
+                )
+                try:
+                    with urlopen(request, timeout=self.timeout_seconds) as response:
+                        return json.loads(response.read().decode("utf-8"))
+                except (HTTPError, URLError) as exc:
+                    last_error = exc
+                    if attempt == 2:
+                        break
+                    sleep(min(2 ** attempt, 4))
+        finally:
+            if self.proxy:
+                install_proxy(self.proxy)
+            else:
+                clear_proxy()
+        if use_proxy and self.proxy:
+            return self._request_with_retry(request_payload, use_proxy=False)
+        if last_error is not None:
+            raise last_error
+        raise RuntimeError("OpenRouter request failed without an explicit error")
 
 
 def make_rewrite_client(config: LLMConfig | None, timeout_seconds: float) -> RewriteClient | None:
@@ -101,7 +137,26 @@ def build_rewrite_payload(candidate: CandidateFact) -> dict[str, Any]:
 
 def build_rewrite_prompt(payload: dict[str, Any]) -> str:
     """Build the one-shot prompt for question rewriting."""
+    if payload.get("task_type") == "kelm_question_and_queries":
+        return build_kelm_rewrite_prompt(payload)
     serialized = json.dumps(payload, ensure_ascii=False, indent=2)
+    forbidden_patterns = payload.get(
+        "forbidden_patterns",
+        [
+            "years",
+            "dates",
+            "this year",
+            "current",
+            "latest",
+            "recent",
+            "as of",
+        ],
+    )
+    forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
+    cutoff_year = payload.get("cutoff_year")
+    cutoff_rule = ""
+    if cutoff_year is not None:
+        cutoff_rule = f"- Avoid question wording that depends on events in {cutoff_year} or later.\n"
     return (
         "Rewrite the canonical question into one concise SimpleQA-style fact-seeking question.\n\n"
         "Rules:\n"
@@ -109,12 +164,51 @@ def build_rewrite_prompt(payload: dict[str, Any]) -> str:
         "- Do not answer the question.\n"
         "- Do not add or remove factual constraints.\n"
         "- Preserve all required anchors.\n"
-        "- Do not include any year, date, month, or temporal phrase.\n"
-        "- Do not use words like current, latest, recent, former, previous, or as of.\n"
-        "- Do not include the answer or any answer alias.\n"
+        f"- Avoid these forbidden patterns: {forbidden_text}.\n"
+        f"{cutoff_rule}"
+        "- Do not include the answer or any answer alias in any casing, capitalization, or normalized variant.\n"
         "- Do not change the target relation.\n"
         "- Prefer a short, plain, natural question.\n\n"
         f"Payload:\n{serialized}"
+    )
+
+
+def build_kelm_rewrite_prompt(payload: dict[str, Any]) -> str:
+    """Build the KELM-specific rewrite-and-query prompt."""
+    forbidden_patterns = payload.get("forbidden_patterns", [])
+    forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
+    return (
+        "You are generating a SimpleQA-style factual question and answer-blind search queries for long-tail verification.\n\n"
+        "Input:\n"
+        f"- Serialized triple: {payload.get('serialized_triple', '')}\n"
+        f"- KELM sentence: {payload.get('kelm_sentence', '')}\n"
+        f"- Answer: {payload.get('answer', '')}\n"
+        f"- Forbidden text: {forbidden_text}\n"
+        f"- Cutoff year: {payload.get('cutoff_year', '')}\n\n"
+        "Task:\n"
+        "1. Rewrite the KELM sentence and triple into a natural factual question whose answer is exactly the provided answer.\n"
+        "2. Preserve as much non-answer contextual information from the KELM sentence as possible in the question, including descriptors, locations, roles, and names, as long as they do not leak the answer.\n"
+        "3. Do not use rigid templates. Write naturally.\n"
+        "4. Do not include the answer or any alias, casing variant, capitalization variant, or normalized form of the answer in the question.\n"
+        "5. Then generate 3 to 5 answer-blind search queries that a user might try before knowing the answer.\n\n"
+        "Important constraints:\n"
+        "- The search queries must not contain the answer or any alias, casing variant, capitalization variant, or normalized form of the answer.\n"
+        "- The queries should use only information available in the question, KELM sentence, or non-answer parts of the triple.\n"
+        f"- Avoid these forbidden patterns: {forbidden_text}.\n"
+        f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
+        "- The first query will be the rewritten question itself and will be added by code. Do not include the whole rewritten question in search_queries.\n"
+        "- Prefer queries combining the subject with relation words, descriptors, locations, or other non-answer context.\n"
+        "- Use quotation marks around rare names or exact entity names when helpful.\n\n"
+        "Date and number constraints:\n"
+        "- If the answer is a number, the unit or quantity type must be clear in the question.\n"
+        "- If the answer is a date, only ask for the precision that is actually supported by the source. If the source only states a year, ask for the year, not the day/month/year.\n"
+        "- Do not create false precision from serialized dates such as \"01 January YYYY\" unless the KELM sentence or source explicitly supports the full date.\n\n"
+        "Output valid JSON only:\n"
+        "{\n"
+        '  "rewritten_question": string,\n'
+        '  "search_queries": string[],\n'
+        '  "discard_reason": string | null\n'
+        "}\n"
     )
 
 

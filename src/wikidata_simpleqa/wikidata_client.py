@@ -91,6 +91,21 @@ class WikidataClient:
             raise RuntimeError(f"wbsearchentities response missing search key: {sorted(payload.keys())}")
         return search
 
+    def load_text_mapping(self, namespace: str, key: str) -> dict[str, Any] | None:
+        """Load one cached text-to-entity mapping payload."""
+        cache_path = self._mapping_cache_path(namespace, key)
+        if cache_path is None or not cache_path.exists():
+            return None
+        return json.loads(cache_path.read_text(encoding="utf-8"))
+
+    def store_text_mapping(self, namespace: str, key: str, payload: dict[str, Any]) -> None:
+        """Store one cached text-to-entity mapping payload."""
+        cache_path = self._mapping_cache_path(namespace, key)
+        if cache_path is None:
+            return
+        cache_path.parent.mkdir(parents=True, exist_ok=True)
+        cache_path.write_text(json.dumps(payload, ensure_ascii=False), encoding="utf-8")
+
     def _request_json(self, url: str, accept: str = "application/json") -> dict[str, Any]:
         """Perform a JSON GET request with a Wikidata-friendly User-Agent."""
         self.request_counters["total_requests"] += 1
@@ -214,3 +229,10 @@ class WikidataClient:
             return None
         digest = hashlib.sha256(f"{accept}\n{url}".encode("utf-8")).hexdigest()
         return self.cache_dir / f"{digest}.json"
+
+    def _mapping_cache_path(self, namespace: str, key: str) -> Path | None:
+        """Return the cache path for one text-to-entity mapping lookup."""
+        if self.cache_dir is None:
+            return None
+        digest = hashlib.sha256(key.encode("utf-8")).hexdigest()
+        return self.cache_dir / "text_mappings" / namespace / f"{digest}.json"

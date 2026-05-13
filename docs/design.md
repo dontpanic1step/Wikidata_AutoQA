@@ -1,5 +1,19 @@
 # Wikidata-to-SimpleQA-Verified-Style Dataset Generator
 
+## Current 5-11-2 Note
+
+This file contains older branch design material and should not be treated as the exact implementation contract for the current `5-11-2` KELM half-pipeline.
+
+Current implementation notes for active workflow and results now live under `docs/current/`.
+
+For the current KELM half-pipeline:
+
+- KELM question generation is LLM-led rather than template-led.
+- Wikidata grounding prefers `wbsearchentities` and `wbgetentities`.
+- second-stage long-tail filtering uses the rewritten question plus LLM-generated answer-blind queries.
+
+The detailed current workflow is documented separately so this historical design file can remain readable.
+
 ## 0. Purpose
 
 Build an open-source framework that generates **SimpleQA Verified-style short factual questions** from Wikidata.

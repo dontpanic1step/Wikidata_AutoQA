@@ -14,7 +14,7 @@ if str(SRC) not in sys.path:
 
 from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.config import LLMConfig
-from wikidata_simpleqa.pipeline import run_pipeline
+from wikidata_simpleqa.generation_pipeline import run_generation_pipeline
 
 
 def parse_args() -> argparse.Namespace:
@@ -24,6 +24,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-date", type=str, default=None)
     parser.add_argument("--pilot-total", type=int, default=20)
     parser.add_argument("--harvest-limit", type=int, default=100)
+    parser.add_argument("--cutoff-year", type=int, default=2025)
+    parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--enable-rewrite", action="store_true")
     parser.add_argument("--rewrite-provider", type=str, default="openrouter")
@@ -60,13 +62,15 @@ def main() -> int:
         run_date=args.run_date or Settings(target_time=args.target_time).run_date,
         pilot_total=args.pilot_total,
         harvest_limit_per_template=args.harvest_limit,
+        cutoff_year=args.cutoff_year,
+        duckduckgo_top_k=args.duckduckgo_top_k,
         proxy=args.proxy,
         output_path=args.output,
         rejected_output_path=args.rejected_output,
         rewrite_enabled=args.enable_rewrite,
         rewrite_llm=rewrite_llm,
     )
-    result = run_pipeline(settings)
+    result = run_generation_pipeline(settings)
     summary = {
         "accepted": len(result.accepted),
         "rejected": len(result.rejected),

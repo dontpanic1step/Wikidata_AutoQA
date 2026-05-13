@@ -8,6 +8,8 @@ from urllib.request import ProxyHandler, build_opener, install_opener
 
 import socks
 
+ORIGINAL_SOCKET = socket.socket
+
 
 def install_proxy(proxy: str | None) -> None:
     """Install a process-wide proxy configuration for urllib-based clients."""
@@ -34,3 +36,9 @@ def install_proxy(proxy: str | None) -> None:
         return
 
     raise ValueError(f"Unsupported proxy scheme: {parsed.scheme}")
+
+
+def clear_proxy() -> None:
+    """Reset urllib and socket state back to direct networking."""
+    install_opener(build_opener())
+    socket.socket = ORIGINAL_SOCKET

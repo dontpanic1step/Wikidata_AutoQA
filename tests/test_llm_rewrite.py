@@ -5,7 +5,18 @@ from __future__ import annotations
 import unittest
 
 from test_support import ROOT  # noqa: F401
-from wikidata_simpleqa.llm_rewrite import build_rewrite_payload, parse_json_object
+from unittest.mock import patch
+
+from wikidata_simpleqa.llm_rewrite import (
+    OPENROUTER_REFERER,
+    OPENROUTER_TITLE,
+    OPENROUTER_USER_AGENT,
+    OpenRouterRewriteClient,
+    build_rewrite_payload,
+    build_rewrite_prompt,
+    parse_json_object,
+)
+from wikidata_simpleqa.config import LLMConfig
 from wikidata_simpleqa.models import CandidateFact
 from wikidata_simpleqa.pipeline import _validate_rewritten_question
 from wikidata_simpleqa.validators import is_simple_question, preserves_required_anchors
@@ -46,6 +57,53 @@ class LLMRewriteTests(unittest.TestCase):
         payload = build_rewrite_payload(make_candidate())
         self.assertIn("Project Hail Mary", payload["required_anchors"])
         self.assertIn("film", payload["required_anchors"])
+
+    def test_kelm_prompt_requests_queries_and_discard_reason(self) -> None:
+        prompt = build_rewrite_prompt(
+            {
+                "task_type": "kelm_question_and_queries",
+                "serialized_triple": "Shiels Jewellers inception 01 January 1945",
+                "kelm_sentence": "Shiels Jewellers is an Australian jewellery retailer and was founded by Jack Shiels in Adelaide in 1945.",
+                "answer": "1945",
+                "forbidden_patterns": ["current", "latest"],
+                "cutoff_year": 2025,
+            }
+        )
+        self.assertIn("KELM sentence", prompt)
+        self.assertIn('"search_queries"', prompt)
+        self.assertIn('"discard_reason"', prompt)
+        self.assertIn("casing variant", prompt)
+        self.assertIn("capitalization variant", prompt)
+
+    def test_openrouter_request_constants_are_defined(self) -> None:
+        self.assertTrue(OPENROUTER_REFERER.startswith("https://"))
+        self.assertTrue(OPENROUTER_TITLE)
+        self.assertIn("wikidata-simpleqa-generator", OPENROUTER_USER_AGENT)
+
+    def test_openrouter_retries_direct_after_proxy_failure(self) -> None:
+        config = LLMConfig(
+            provider="openrouter",
+            model="openai/gpt-4.1-mini",
+            api_key_env="OPENROUTER_API_KEY",
+            proxy="socks5://127.0.0.1:7897",
+        )
+        with (
+            patch.dict("os.environ", {"OPENROUTER_API_KEY": "test-key"}),
+            patch.object(OpenRouterRewriteClient, "_request_with_retry") as request_with_retry,
+        ):
+            request_with_retry.return_value = {
+                "choices": [
+                    {
+                        "message": {
+                            "content": '{"question":"Where was Peter Kelland educated?"}',
+                        }
+                    }
+                ]
+            }
+            client = OpenRouterRewriteClient(config=config, timeout_seconds=30.0)
+            result = client.rewrite_question({"canonical_question": "Where did Peter Kelland study?"})
+        self.assertEqual(result["question"], "Where was Peter Kelland educated?")
+        request_with_retry.assert_called_once()
 
     def test_anchor_preservation_passes_when_all_anchors_remain(self) -> None:
         self.assertTrue(
