@@ -33,6 +33,20 @@ ALLOWED_SUBJECT_KIND_OVERRIDES = {
     "scholarly article": {"academic work", "working paper", "scholarly article"},
     "video game": {"fan disc", "visual novel", "role-playing video game"},
 }
+API_LIGHT_FALLBACK_SEEDS = {
+    "product_manufacturer": [
+        "PlayStation 5 Pro",
+        "Samsung Galaxy S25 Ultra",
+        "iPhone 17",
+        "Nintendo Switch 2",
+        "Honor Power2",
+    ],
+}
+PRODUCT_COMPATIBLE_TYPE_QIDS = {
+    "Q10929058",  # product model
+    "Q19723451",  # smartphone model
+    "Q17517",  # mobile phone
+}
 
 
 def harvest_candidates(
@@ -45,10 +59,34 @@ def harvest_candidates(
     if reasoning_style != "single_fact":
         return harvest_composed_candidates(client=client, settings=settings, template=template)
 
+    client.record_problem(
+        "direct_candidate_query_used",
+        "Using the heavy direct WDQS candidate query as the default single-fact Route 1 harvest path.",
+        domain=template.domain,
+        subject_type_qid=template.subject_type_qid,
+        date_property_pid=template.date_property_pid,
+        target_property_pid=template.target_property_pid,
+    )
+    candidates = _harvest_candidates_via_direct_query(
+        client=client,
+        settings=settings,
+        template=template,
+    )
+    if candidates:
+        return candidates
+
+    if not settings.route1_light_fallback_enabled:
+        client.record_problem(
+            "subject_seed_fallback_disabled",
+            "The direct WDQS candidate query returned no candidates, and the light subject-seed fallback is disabled.",
+            domain=template.domain,
+        )
+        return []
+
     if _use_staged_seed_strategy(template):
         client.record_problem(
-            "staged_seed_strategy_used",
-            "Preferred staged subject-seed discovery with local claim extraction as the default single-fact Route 1 harvest path.",
+            "subject_seed_fallback_used",
+            "The direct WDQS candidate query returned no candidates; trying the light subject-seed fallback with local claim extraction.",
             domain=template.domain,
             subject_type_qid=template.subject_type_qid,
             date_property_pid=template.date_property_pid,
@@ -64,40 +102,108 @@ def harvest_candidates(
                 return candidates
             client.record_problem(
                 "subject_seed_path_returned_no_candidates",
-                "The default light subject-seed path returned no candidates; trying the heavy direct WDQS query as fallback.",
+                "The light subject-seed fallback returned no candidates.",
                 domain=template.domain,
             )
         except Exception as exc:  # noqa: BLE001
             client.record_problem(
                 "subject_seed_path_failed",
-                "The default light subject-seed path failed during hydration; trying the heavy direct WDQS query as fallback.",
+                "The light subject-seed fallback failed during hydration.",
                 domain=template.domain,
                 error_type=type(exc).__name__,
                 error_message=str(exc),
             )
-        client.record_problem(
-            "direct_candidate_query_fallback_used",
-            "Falling back to the heavy direct WDQS candidate query after the light subject-seed path failed or returned no candidates.",
-            domain=template.domain,
-            subject_type_qid=template.subject_type_qid,
-            date_property_pid=template.date_property_pid,
-            target_property_pid=template.target_property_pid,
-        )
-        return _harvest_candidates_via_direct_query(
-            client=client,
-            settings=settings,
-            template=template,
-        )
-
-    return _harvest_candidates_via_direct_query(
+    api_candidates = _harvest_candidates_via_api_seeds(
         client=client,
         settings=settings,
         template=template,
     )
+    if api_candidates:
+        return api_candidates
+    return []
+
+
+def _harvest_candidates_via_api_seeds(
+    client: WikidataClient,
+    settings: Settings,
+    template: DomainTemplate,
+) -> list[CandidateFact]:
+    """Harvest known API-search seeds when WDQS is unavailable."""
+    seed_labels = API_LIGHT_FALLBACK_SEEDS.get(template.template_key, [])
+    if not seed_labels:
+        return []
+    client.record_problem(
+        "api_light_seed_fallback_used",
+        "Using wbsearchentities + wbgetentities seed fallback after WDQS paths failed.",
+        domain=template.domain,
+        seed_count=len(seed_labels),
+    )
+    subject_qids: list[str] = []
+    seed_by_qid: dict[str, str] = {}
+    for seed_label in seed_labels:
+        try:
+            results = client.search_entities(seed_label, limit=5)
+        except Exception as exc:  # noqa: BLE001
+            client.record_problem(
+                "api_light_seed_search_failed",
+                "A wbsearchentities seed lookup failed.",
+                domain=template.domain,
+                seed_label=seed_label,
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+            )
+            continue
+        for result in results:
+            qid = str(result.get("id", "")).strip()
+            label = str(result.get("label", "")).strip()
+            if qid and label.casefold() == seed_label.casefold():
+                subject_qids.append(qid)
+                seed_by_qid[qid] = seed_label
+                break
+    entities = client.get_entities(subject_qids) if subject_qids else {}
+    provisional_rows: list[dict[str, Any]] = []
+    answer_qids: set[str] = set()
+    for subject_qid, subject_entity in entities.items():
+        date_value = _extract_unique_date_value(subject_entity, template)
+        answer_value = _extract_unique_answer_value(subject_entity, template)
+        if not date_value or answer_value is None:
+            continue
+        provisional_rows.append(
+            {
+                "subject_qid": subject_qid,
+                "subject_entity": subject_entity,
+                "subject_label_fallback": seed_by_qid.get(subject_qid, ""),
+                "date_value": date_value,
+                "answer_value": answer_value,
+            }
+        )
+        answer_qid = answer_value.get("qid")
+        if answer_qid is not None:
+            answer_qids.add(answer_qid)
+    answer_entities = client.get_entities(sorted(answer_qids)) if answer_qids else {}
+    related_qids = set(_collect_related_qids(entities))
+    related_qids.update(_collect_related_qids(answer_entities))
+    related_entities = client.get_entities(sorted(related_qids)) if related_qids else {}
+    candidates: list[CandidateFact] = []
+    for row in provisional_rows:
+        candidate = _seed_row_to_candidate(
+            row=row,
+            answer_entities=answer_entities,
+            related_entities=related_entities,
+            settings=settings,
+            template=template,
+            query="API light fallback seeds: " + ", ".join(seed_labels),
+        )
+        if candidate is None:
+            continue
+        candidate.source_metadata["retrieval_method"] = "wbsearchentities + wbgetentities API seed fallback"
+        candidate.source_metadata["api_seed_label"] = seed_by_qid.get(candidate.subject_qid, "")
+        candidates.append(candidate)
+    return candidates
 
 
 def _use_staged_seed_strategy(template: DomainTemplate) -> bool:
-    """Return whether this template should use hydrated subject-seed harvesting."""
+    """Return whether this template may use hydrated subject-seed fallback."""
     return True
 
 
@@ -227,58 +333,89 @@ def _run_windowed_subject_seed_queries(
     settings: Settings,
     template: DomainTemplate,
 ) -> tuple[list[dict[str, Any]], str]:
-    """Run the default subject-seed query without WDQS date-window filters."""
+    """Run smaller subject-seed WDQS queries and merge unique subject/date rows."""
     limit = min(settings.harvest_limit_per_template, template.retrieval_limit)
     all_rows: list[dict[str, Any]] = []
     seen_pairs: set[tuple[str, str]] = set()
-    query = build_subject_seed_query(
-        template=template,
-        target_start_date=settings.target_start_date,
-        date_upper_bound=settings.date_upper_bound,
-        limit=limit,
+    queries: list[str] = []
+    windows = _iter_date_windows(
+        settings.target_start_date,
+        settings.date_upper_bound or settings.target_start_date,
+        _seed_window_days(template, settings.route1_subject_seed_window_granularity),
     )
-    try:
-        rows = client.sparql_query(query)
-    except Exception as exc:  # noqa: BLE001
+    for window_start, window_end in reversed(windows):
+        if len(all_rows) >= limit:
+            break
+        query = build_subject_seed_query(
+            template=template,
+            target_start_date=window_start,
+            date_upper_bound=window_end,
+            limit=limit,
+        )
+        queries.append(query)
+        try:
+            rows = client.sparql_query(query)
+        except Exception as exc:  # noqa: BLE001
+            client.record_problem(
+                "windowed_subject_seed_query_failed",
+                "One subject-seed WDQS window failed; continuing with later windows.",
+                domain=template.domain,
+                window_start=window_start,
+                window_end=window_end,
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+            )
+            continue
+        for row in rows:
+            item_qid = row["item"]["value"].rsplit("/", 1)[-1]
+            date_value = normalize_wikidata_date_literal(row["date"]["value"])
+            key = (item_qid, date_value)
+            if key in seen_pairs:
+                continue
+            seen_pairs.add(key)
+            all_rows.append(row)
+            if len(all_rows) >= limit:
+                break
+    if not all_rows:
         client.record_problem(
             "subject_seed_query_failed",
-            "The default subject-seed query failed before local claim extraction could start.",
+            "All subject-seed WDQS windows failed or returned no rows before local claim extraction could start.",
             domain=template.domain,
-            error_type=type(exc).__name__,
-            error_message=str(exc),
+            query_count=len(queries),
         )
-        return [], query
-    for row in rows:
-        item_qid = row["item"]["value"].rsplit("/", 1)[-1]
-        date_value = normalize_wikidata_date_literal(row["date"]["value"])
-        key = (item_qid, date_value)
-        if key in seen_pairs:
-            continue
-        seen_pairs.add(key)
-        all_rows.append(row)
+        return [], "\n\n".join(queries)
     client.record_problem(
-        "subject_seed_query_used",
-        "Used the default subject-seed WDQS query without date-window filtering.",
+        "windowed_subject_seed_queries_used",
+        "Used windowed subject-seed WDQS queries for local claim extraction.",
         domain=template.domain,
-        query_count=1,
+        query_count=len(queries),
+        row_count=len(all_rows),
+        window_order="descending",
+        window_granularity=settings.route1_subject_seed_window_granularity,
     )
-    return all_rows, query
+    return all_rows, "\n\n".join(queries)
 
 
-def _seed_window_days(template: DomainTemplate) -> int | None:
-    """Return an optional fixed seed-window size for very broad templates."""
+def _seed_window_days(template: DomainTemplate, granularity: str) -> int | None:
+    """Return an optional fixed seed-window size for subject-seed fallback."""
     if "seed_window_daily" in template.query_tags:
         return 1
     if "seed_window_weekly" in template.query_tags:
         return 7
     if "seed_window_monthly" in template.query_tags:
         return None
+    if granularity == "day":
+        return 1
+    if granularity == "month":
+        return None
+    if granularity == "year":
+        return 366
     if template.subject_type_qid == "Q5":
         return 1
     return None
 
 
-def _iter_month_windows(
+def _iter_date_windows(
     start_date: str,
     end_date: str,
     window_days: int | None = None,
@@ -399,6 +536,28 @@ def _extract_unique_answer_value(
     if len(values) != 1:
         return None
     return next(iter(values.values()))
+
+
+def _extract_unique_date_value(
+    subject_entity: dict[str, Any],
+    template: DomainTemplate,
+) -> str | None:
+    """Extract one non-deprecated date value for the template date property."""
+    claims = subject_entity.get("claims", {}).get(template.date_property_pid, [])
+    values: set[str] = set()
+    for claim in claims:
+        if claim.get("rank") == "deprecated":
+            continue
+        mainsnak = claim.get("mainsnak", {})
+        if mainsnak.get("snaktype") != "value":
+            continue
+        value = mainsnak.get("datavalue", {}).get("value")
+        time_value = value.get("time") if isinstance(value, dict) else None
+        if time_value:
+            values.add(normalize_wikidata_date_literal(time_value))
+    if len(values) != 1:
+        return None
+    return next(iter(values))
 
 
 def _row_to_candidate(
@@ -523,7 +682,12 @@ def _seed_row_to_candidate(
     subject_qid = str(row["subject_qid"])
     subject_entity = row["subject_entity"]
     answer_value = row["answer_value"]
-    subject_label, subject_label_source = _select_label(subject_entity, None)
+    subject_label, subject_label_source = _select_label(
+        subject_entity,
+        str(row.get("subject_label_fallback", "")).strip() or None,
+    )
+    if not subject_label:
+        return None
     if not _subject_matches_template_type(subject_entity, related_entities, template):
         return None
 
@@ -634,6 +798,11 @@ def _subject_matches_template_type(
 ) -> bool:
     """Return whether the hydrated subject matches the template type conservatively."""
     direct_type_qids = _extract_claim_qids(subject_entity, "P31")
+    if (
+        template.subject_type_qid == "Q2424752"
+        and any(qid in PRODUCT_COMPATIBLE_TYPE_QIDS for qid in direct_type_qids)
+    ):
+        return True
     if template.subject_type_qid in direct_type_qids:
         return True
     for direct_type_qid in direct_type_qids:

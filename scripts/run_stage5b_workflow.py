@@ -15,7 +15,7 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from wikidata_simpleqa.config import Settings
-from wikidata_simpleqa.domain_templates import get_template_by_domain
+from wikidata_simpleqa.domain_templates import get_template_by_key
 from wikidata_simpleqa.io import write_jsonl
 from wikidata_simpleqa.pipeline import run_pipeline_for_templates
 from wikidata_simpleqa.wikidata_client import WikidataClient
@@ -46,7 +46,7 @@ def parse_args() -> argparse.Namespace:
         default=["offline", "rebuild", "report"],
     )
     parser.add_argument("--target-time", type=str, default="2026")
-    parser.add_argument("--domains", nargs="*", default=[])
+    parser.add_argument("--template-keys", "--domains", dest="template_keys", nargs="*", default=[])
     parser.add_argument("--pilot-total", type=int, default=1)
     parser.add_argument("--harvest-limit", type=int, default=3)
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
@@ -120,18 +120,18 @@ def run_offline_phase(test_modules: list[str]) -> dict[str, object]:
 def run_live_phase(
     *,
     target_time: str,
-    domains: list[str],
+    template_keys: list[str],
     pilot_total: int,
     harvest_limit: int,
     proxy: str,
     run_name: str,
 ) -> dict[str, object]:
-    """Run a focused live generation pass for the requested domains."""
+    """Run a focused live generation pass for the requested template keys."""
     templates = []
-    for domain in domains:
-        template = get_template_by_domain(domain)
+    for template_key in template_keys:
+        template = get_template_by_key(template_key)
         if template is None:
-            raise ValueError(f"Unknown template domain: {domain}")
+            raise ValueError(f"Unknown template key: {template_key}")
         templates.append(template)
 
     output = ROOT / "outputs" / f"{run_name}_accepted.jsonl"
@@ -176,7 +176,7 @@ def run_live_phase(
                 status = "no_result"
             template_results.append(
                 {
-                    "domain": template.domain,
+                    "domain": template.template_key,
                     "status": status,
                     "accepted": len(result.accepted),
                     "rejected": len(result.rejected),
@@ -187,7 +187,7 @@ def run_live_phase(
             if has_request_errors:
                 backlog_items.append(
                     {
-                        "scope": template.domain,
+                        "scope": template.template_key,
                         "title": "Live run completed with request-layer errors",
                         "evidence": json.dumps(telemetry, ensure_ascii=False)[:500],
                         "next_step": "Review request events and decide whether the instability is query-specific or environment-specific.",
@@ -198,7 +198,7 @@ def run_live_phase(
             error_message = f"{type(exc).__name__}: {exc}"
             template_results.append(
                 {
-                    "domain": template.domain,
+                    "domain": template.template_key,
                     "status": f"error:{type(exc).__name__}",
                     "accepted": 0,
                     "rejected": 0,
@@ -208,7 +208,7 @@ def run_live_phase(
             )
             backlog_items.append(
                 {
-                    "scope": template.domain,
+                    "scope": template.template_key,
                     "title": "Live confirmation failed before template-level conclusion",
                     "evidence": error_message,
                     "next_step": "Inspect proxy/network settings and rerun with a stable connection before drawing template conclusions.",
@@ -341,12 +341,12 @@ def main() -> int:
             phase_results.append(run_offline_phase(args.offline_tests))
             continue
         if phase == "live":
-            if not args.domains:
-                raise ValueError("--domains is required for the live phase")
+            if not args.template_keys:
+                raise ValueError("--template-keys is required for the live phase")
             phase_results.append(
                 run_live_phase(
                     target_time=args.target_time,
-                    domains=args.domains,
+                    template_keys=args.template_keys,
                     pilot_total=args.pilot_total,
                     harvest_limit=args.harvest_limit,
                     proxy="" if args.no_proxy else args.proxy,

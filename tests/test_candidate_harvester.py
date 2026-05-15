@@ -7,6 +7,7 @@ import unittest
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.candidate_harvester import (
     _extract_label,
+    _iter_date_windows,
     _seed_window_days,
     _select_label,
     _select_subject_kind,
@@ -32,6 +33,34 @@ class CandidateHarvesterTests(unittest.TestCase):
         self.assertEqual(label, "Fallback title")
         self.assertEqual(source, "wdqs_label_fallback")
 
+    def test_seed_window_granularity_defaults_to_year(self) -> None:
+        template = DomainTemplate(
+            domain="product_manufacturer",
+            topic="Economy and Business",
+            answer_type="Organization",
+            question_family="which_company_manufactured_product",
+            subject_type_qid="Q2424752",
+            subject_type_label="product",
+            date_property_pid="P577",
+            target_property_pid="P176",
+            target_property_label="manufacturer",
+            canonical_question_template="Which company manufactured the product {descriptor}?",
+        )
+        self.assertEqual(_seed_window_days(template, "year"), 366)
+        self.assertIsNone(_seed_window_days(template, "month"))
+        self.assertEqual(_seed_window_days(template, "day"), 1)
+
+    def test_day_windows_can_be_processed_in_descending_order(self) -> None:
+        windows = _iter_date_windows("2026-01-01", "2026-01-03", 1)
+        self.assertEqual(
+            list(reversed(windows)),
+            [
+                ("2026-01-03", "2026-01-03"),
+                ("2026-01-02", "2026-01-02"),
+                ("2026-01-01", "2026-01-01"),
+            ],
+        )
+
     def test_select_subject_kind_rejects_unrelated_proper_name_labels(self) -> None:
         template = DomainTemplate(
             domain="company_founder",
@@ -48,7 +77,7 @@ class CandidateHarvesterTests(unittest.TestCase):
         subject_kind = _select_subject_kind(template, ["Antal Turr", "company"])
         self.assertEqual(subject_kind, "company")
 
-    def test_single_fact_template_uses_default_seed_query_and_local_claim_extraction(self) -> None:
+    def test_single_fact_template_uses_direct_wdqs_by_default(self) -> None:
         template = DomainTemplate(
             domain="biography_birth_place_recent_subject",
             topic="People",
@@ -76,6 +105,7 @@ class CandidateHarvesterTests(unittest.TestCase):
                 return [
                     {
                         "item": {"value": "http://www.wikidata.org/entity/Q1"},
+                        "answer": {"type": "uri", "value": "http://www.wikidata.org/entity/Q2"},
                         "date": {"value": "+2026-01-02T00:00:00Z"},
                     }
                 ]
@@ -108,24 +138,21 @@ class CandidateHarvesterTests(unittest.TestCase):
                 return records
 
         client = FakeClient()
-        settings = Settings(target_time="2026", harvest_limit_per_template=5)
+        settings = Settings(target_time="2026", date_upper_bound="2026-01-01", harvest_limit_per_template=5)
 
         candidates = harvest_candidates(client=client, settings=settings, template=template)
 
         self.assertEqual(len(candidates), 1)
         self.assertEqual(candidates[0].subject_label, "Example Person")
         self.assertEqual(candidates[0].answer_labels, ["Example City"])
-        self.assertGreaterEqual(len(client.queries), 1)
+        self.assertEqual(len(client.queries), 1)
         self.assertIn("wdt:P569", client.queries[0])
-        self.assertNotIn("?answer", client.queries[0])
+        self.assertIn("?answer", client.queries[0])
         self.assertTrue(
-            any(problem["kind"] == "staged_seed_strategy_used" for problem in client.problems)
-        )
-        self.assertTrue(
-            any(problem["kind"] == "subject_seed_query_used" for problem in client.problems)
+            any(problem["kind"] == "direct_candidate_query_used" for problem in client.problems)
         )
 
-    def test_single_fact_template_skips_direct_query_and_uses_staged_seed_immediately(self) -> None:
+    def test_staged_seed_query_tag_still_uses_direct_wdqs_first(self) -> None:
         template = DomainTemplate(
             domain="product_manufacturer",
             topic="Economy and Business",
@@ -154,6 +181,7 @@ class CandidateHarvesterTests(unittest.TestCase):
                 return [
                     {
                         "item": {"value": "http://www.wikidata.org/entity/Q10"},
+                        "answer": {"type": "uri", "value": "http://www.wikidata.org/entity/Q20"},
                         "date": {"value": "+2026-01-02T00:00:00Z"},
                     }
                 ]
@@ -185,18 +213,18 @@ class CandidateHarvesterTests(unittest.TestCase):
                 return records
 
         client = FakeClient()
-        settings = Settings(target_time="2026", harvest_limit_per_template=5)
+        settings = Settings(target_time="2026", date_upper_bound="2026-01-01", harvest_limit_per_template=5)
 
         candidates = harvest_candidates(client=client, settings=settings, template=template)
 
         self.assertEqual(len(candidates), 1)
-        self.assertGreaterEqual(len(client.queries), 1)
-        self.assertNotIn("?answer", client.queries[0])
+        self.assertEqual(len(client.queries), 1)
+        self.assertIn("?answer", client.queries[0])
         self.assertTrue(
-            any(problem["kind"] == "staged_seed_strategy_used" for problem in client.problems)
+            any(problem["kind"] == "direct_candidate_query_used" for problem in client.problems)
         )
 
-    def test_exact_instance_templates_also_use_fast_seed_path_by_default(self) -> None:
+    def test_exact_instance_templates_may_use_fast_seed_fallback(self) -> None:
         template = DomainTemplate(
             domain="museum_country",
             topic="Society and Culture",
@@ -212,7 +240,7 @@ class CandidateHarvesterTests(unittest.TestCase):
         )
         self.assertTrue(_use_staged_seed_strategy(template))
 
-    def test_seed_query_failure_falls_back_to_direct_wdqs_query(self) -> None:
+    def test_direct_query_failure_falls_back_to_subject_seed_path(self) -> None:
         template = DomainTemplate(
             domain="film_director",
             topic="Arts and Media",
@@ -237,11 +265,10 @@ class CandidateHarvesterTests(unittest.TestCase):
             def sparql_query(self, query: str):
                 self.queries.append(query)
                 if len(self.queries) == 1:
-                    raise RuntimeError("seed failed")
+                    raise RuntimeError("direct failed")
                 return [
                     {
                         "item": {"value": "http://www.wikidata.org/entity/Q1"},
-                        "answer": {"type": "uri", "value": "http://www.wikidata.org/entity/Q2"},
                         "date": {"value": "+2020-01-02T00:00:00Z"},
                     }
                 ]
@@ -252,7 +279,18 @@ class CandidateHarvesterTests(unittest.TestCase):
                     if qid == "Q1":
                         records[qid] = {
                             "labels": {"en": {"value": "Example Film"}},
-                            "claims": {"P31": [{"mainsnak": {"datavalue": {"value": {"id": "Q11424"}}}}]},
+                            "claims": {
+                                "P31": [{"mainsnak": {"datavalue": {"value": {"id": "Q11424"}}}}],
+                                "P57": [
+                                    {
+                                        "rank": "normal",
+                                        "mainsnak": {
+                                            "snaktype": "value",
+                                            "datavalue": {"value": {"id": "Q2"}},
+                                        },
+                                    }
+                                ],
+                            },
                         }
                     elif qid == "Q2":
                         records[qid] = {
@@ -262,20 +300,182 @@ class CandidateHarvesterTests(unittest.TestCase):
                 return records
 
         client = FakeClient()
-        settings = Settings(target_time="2026", harvest_limit_per_template=5)
+        settings = Settings(target_time="2026", date_upper_bound="2026-01-01", harvest_limit_per_template=5)
         candidates = harvest_candidates(client=client, settings=settings, template=template)
 
         self.assertEqual(len(candidates), 1)
         self.assertEqual(candidates[0].subject_label, "Example Film")
         self.assertEqual(candidates[0].answer_labels, ["Jane Doe"])
         self.assertEqual(len(client.queries), 2)
-        self.assertNotIn("?answer", client.queries[0])
-        self.assertIn("?answer", client.queries[1])
+        self.assertIn("?answer", client.queries[0])
+        self.assertNotIn("?answer", client.queries[1])
         self.assertTrue(
-            any(problem["kind"] == "direct_candidate_query_fallback_used" for problem in client.problems)
+            any(problem["kind"] == "subject_seed_fallback_used" for problem in client.problems)
         )
 
-    def test_seed_hydration_failure_falls_back_to_direct_wdqs_query(self) -> None:
+    def test_direct_query_no_rows_then_seed_hydration_failure_returns_empty(self) -> None:
+        template = DomainTemplate(
+            domain="film_director",
+            topic="Arts and Media",
+            answer_type="Person",
+            question_family="who_directed_film",
+            subject_type_qid="Q11424",
+            subject_type_label="film",
+            date_property_pid="P577",
+            target_property_pid="P57",
+            target_property_label="director",
+            canonical_question_template="Who directed the film {descriptor}?",
+        )
+
+        class FakeClient:
+            def __init__(self) -> None:
+                self.queries: list[str] = []
+                self.problems: list[dict] = []
+
+            def record_problem(self, kind: str, message: str, **context) -> None:
+                self.problems.append({"kind": kind, "message": message, "context": context})
+
+            def sparql_query(self, query: str):
+                self.queries.append(query)
+                if len(self.queries) == 1:
+                    return []
+                return [
+                    {
+                        "item": {"value": "http://www.wikidata.org/entity/Q1"},
+                        "date": {"value": "+2020-01-02T00:00:00Z"},
+                    }
+                ]
+
+            def get_entities(self, ids):
+                if ids == ["Q1"]:
+                    raise RuntimeError("hydration failed")
+                return {}
+
+        client = FakeClient()
+        settings = Settings(target_time="2026", date_upper_bound="2026-01-01", harvest_limit_per_template=5)
+        candidates = harvest_candidates(client=client, settings=settings, template=template)
+
+        self.assertEqual(candidates, [])
+        self.assertEqual(len(client.queries), 2)
+        self.assertTrue(
+            any(problem["kind"] == "subject_seed_path_failed" for problem in client.problems)
+        )
+
+    def test_direct_query_no_rows_does_not_use_disabled_light_fallback(self) -> None:
+        template = DomainTemplate(
+            domain="film_director",
+            topic="Arts and Media",
+            answer_type="Person",
+            question_family="who_directed_film",
+            subject_type_qid="Q11424",
+            subject_type_label="film",
+            date_property_pid="P577",
+            target_property_pid="P57",
+            target_property_label="director",
+            canonical_question_template="Who directed the film {descriptor}?",
+        )
+
+        class FakeClient:
+            def __init__(self) -> None:
+                self.queries: list[str] = []
+                self.problems: list[dict] = []
+
+            def record_problem(self, kind: str, message: str, **context) -> None:
+                self.problems.append({"kind": kind, "message": message, "context": context})
+
+            def sparql_query(self, query: str):
+                self.queries.append(query)
+                return []
+
+            def get_entities(self, ids):
+                return {}
+
+        client = FakeClient()
+        settings = Settings(
+            target_time="2026",
+            harvest_limit_per_template=5,
+            route1_light_fallback_enabled=False,
+        )
+        candidates = harvest_candidates(client=client, settings=settings, template=template)
+
+        self.assertEqual(candidates, [])
+        self.assertEqual(len(client.queries), 1)
+        self.assertTrue(
+            any(problem["kind"] == "subject_seed_fallback_disabled" for problem in client.problems)
+        )
+
+    def test_direct_query_no_rows_falls_back_to_subject_seed_success(self) -> None:
+        template = DomainTemplate(
+            domain="film_director",
+            topic="Arts and Media",
+            answer_type="Person",
+            question_family="who_directed_film",
+            subject_type_qid="Q11424",
+            subject_type_label="film",
+            date_property_pid="P577",
+            target_property_pid="P57",
+            target_property_label="director",
+            canonical_question_template="Who directed the film {descriptor}?",
+        )
+
+        class FakeClient:
+            def __init__(self) -> None:
+                self.queries: list[str] = []
+                self.problems: list[dict] = []
+
+            def record_problem(self, kind: str, message: str, **context) -> None:
+                self.problems.append({"kind": kind, "message": message, "context": context})
+
+            def sparql_query(self, query: str):
+                self.queries.append(query)
+                if len(self.queries) == 1:
+                    return []
+                return [
+                    {
+                        "item": {"value": "http://www.wikidata.org/entity/Q1"},
+                        "date": {"value": "+2020-01-02T00:00:00Z"},
+                    }
+                ]
+
+            def get_entities(self, ids):
+                records = {}
+                for qid in ids:
+                    if qid == "Q1":
+                        records[qid] = {
+                            "labels": {"en": {"value": "Example Film"}},
+                            "claims": {
+                                "P31": [{"mainsnak": {"datavalue": {"value": {"id": "Q11424"}}}}],
+                                "P57": [
+                                    {
+                                        "rank": "normal",
+                                        "mainsnak": {
+                                            "snaktype": "value",
+                                            "datavalue": {"value": {"id": "Q2"}},
+                                        },
+                                    }
+                                ],
+                            },
+                        }
+                    elif qid == "Q2":
+                        records[qid] = {
+                            "labels": {"en": {"value": "Jane Doe"}},
+                            "claims": {},
+                        }
+                return records
+
+        client = FakeClient()
+        settings = Settings(target_time="2026", date_upper_bound="2026-01-01", harvest_limit_per_template=5)
+        candidates = harvest_candidates(client=client, settings=settings, template=template)
+
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(len(client.queries), 2)
+        self.assertIn("?answer", client.queries[0])
+        self.assertNotIn("?answer", client.queries[1])
+        self.assertTrue(
+            any(problem["kind"] == "subject_seed_fallback_used" for problem in client.problems)
+        )
+
+    def test_legacy_seed_hydration_failure_fixture_no_longer_falls_back_to_direct(self) -> None:
         template = DomainTemplate(
             domain="film_director",
             topic="Arts and Media",
@@ -303,16 +503,11 @@ class CandidateHarvesterTests(unittest.TestCase):
                     return [
                         {
                             "item": {"value": "http://www.wikidata.org/entity/Q1"},
+                            "answer": {"type": "uri", "value": "http://www.wikidata.org/entity/Q2"},
                             "date": {"value": "+2020-01-02T00:00:00Z"},
                         }
                     ]
-                return [
-                    {
-                        "item": {"value": "http://www.wikidata.org/entity/Q1"},
-                        "answer": {"type": "uri", "value": "http://www.wikidata.org/entity/Q2"},
-                        "date": {"value": "+2020-01-02T00:00:00Z"},
-                    }
-                ]
+                raise AssertionError("light fallback should not run after direct success")
 
             def get_entities(self, ids):
                 if ids == ["Q1"]:
@@ -336,15 +531,10 @@ class CandidateHarvesterTests(unittest.TestCase):
         candidates = harvest_candidates(client=client, settings=settings, template=template)
 
         self.assertEqual(len(candidates), 1)
-        self.assertEqual(len(client.queries), 2)
-        self.assertTrue(
-            any(problem["kind"] == "subject_seed_path_failed" for problem in client.problems)
-        )
-        self.assertTrue(
-            any(problem["kind"] == "direct_candidate_query_fallback_used" for problem in client.problems)
-        )
+        self.assertEqual(len(client.queries), 1)
+        self.assertEqual(candidates[0].answer_labels, ["Jane Doe"])
 
-    def test_seed_fallback_keeps_missing_subject_label_for_pipeline_rejection(self) -> None:
+    def test_seed_fallback_drops_missing_subject_label_candidate(self) -> None:
         template = DomainTemplate(
             domain="new_nature_reserve_country",
             topic="Geography",
@@ -405,9 +595,7 @@ class CandidateHarvesterTests(unittest.TestCase):
 
         candidates = harvest_candidates(client=client, settings=settings, template=template)
 
-        self.assertEqual(len(candidates), 1)
-        self.assertEqual(candidates[0].subject_label, "")
-        self.assertEqual(candidates[0].answer_labels, ["Sweden"])
+        self.assertEqual(candidates, [])
 
     def test_query_tags_can_override_seed_window_size(self) -> None:
         template = DomainTemplate(
@@ -423,7 +611,7 @@ class CandidateHarvesterTests(unittest.TestCase):
             canonical_question_template="Where was {descriptor} born?",
             query_tags=["seed_window_weekly"],
         )
-        self.assertEqual(_seed_window_days(template), 7)
+        self.assertEqual(_seed_window_days(template, "month"), 7)
 
 
 if __name__ == "__main__":

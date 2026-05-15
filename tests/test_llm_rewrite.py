@@ -76,6 +76,9 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn('"answer_aliases"', prompt)
         self.assertIn('"discard_reason"', prompt)
         self.assertIn("Do not narrow or specialize it", prompt)
+        self.assertIn("Do not add, remove, narrow, broaden, or change any information", prompt)
+        self.assertIn("The rewritten_question must not contain the answer or any answer alias", prompt)
+        self.assertIn("Generate exactly 5 answer-blind search queries", prompt)
 
     def test_kelm_prompt_requests_queries_and_discard_reason(self) -> None:
         prompt = build_rewrite_prompt(
@@ -94,6 +97,9 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn('"discard_reason"', prompt)
         self.assertIn("casing variant", prompt)
         self.assertIn("capitalization variant", prompt)
+        self.assertIn("Do not add, remove, narrow, broaden, or change information", prompt)
+        self.assertIn("The rewritten_question must not contain the answer or any alias", prompt)
+        self.assertIn("generate exactly 5 answer-blind search queries", prompt)
 
     def test_openrouter_request_constants_are_defined(self) -> None:
         self.assertTrue(OPENROUTER_REFERER.startswith("https://"))

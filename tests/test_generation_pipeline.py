@@ -53,16 +53,6 @@ class ErrorSearchClient:
         raise RuntimeError("search backend unavailable")
 
 
-class FakeCheapModelClient:
-    """Cheap-model QA stub for pipeline tests."""
-
-    def __init__(self, response: str) -> None:
-        self.response = response
-
-    def complete_text(self, prompt: str) -> str:
-        return self.response
-
-
 class FakePanelModelClient:
     """Answer-model stub for the second-stage grading panel."""
 
@@ -650,7 +640,7 @@ class GenerationPipelineTests(unittest.TestCase):
         self.assertEqual(result.accepted, [])
         self.assertEqual(result.rejected[0]["rejection_reason"], "search_longtail_verifier_error")
 
-    def test_process_generated_candidates_rejects_when_cheap_model_answers_correctly(self) -> None:
+    def test_process_generated_candidates_records_removed_cheap_model_rejection_phase(self) -> None:
         source_candidate = make_candidate()
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
@@ -705,15 +695,76 @@ class GenerationPipelineTests(unittest.TestCase):
                         "Example Film director Jane Doe": [],
                     }
                 ),
-                cheap_model_client=FakeCheapModelClient(
-                    "Jane Doe"
+                rewrite_client=None,
+            )
+        self.assertEqual(len(result.accepted), 1)
+        self.assertEqual(result.accepted[0]["cheap_model_verification_features"]["enabled"], False)
+        self.assertEqual(
+            result.accepted[0]["cheap_model_verification_features"]["reason"],
+            "cheap_model_longtail_rejection_removed_for_simpleqa_verified_alignment",
+        )
+
+    def test_number_reference_margin_runs_before_search_without_cheap_model_rejection(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="What is the chapter count of Example Film?",
+            canonical_question="What is the chapter count of Example Film?",
+            answer="100",
+            answer_aliases=[],
+            subject_entity=EntityReference(
+                name="Example Film",
+                qid="Q1",
+                wikipedia_title="Example_Film",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+            ),
+            answer_entity=EntityReference(name="100"),
+            relation_or_claim="chapter count",
+            evidence=EvidenceRecord(
+                text="Example Film has 100 chapters.",
+                url="https://example.test/score",
+                source_title="Example Film",
+                retrieved_at="2026-05-15",
+            ),
+            question_family="how_many_chapters",
+            answer_type="Number",
+            topic="Tests",
+            target_time="2020",
+            source_template_domain="example_score",
+            source_metadata={
+                "stable_answer_override": True,
+            },
+            source_candidate=source_candidate,
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+            )
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=FakeSearchClient(
+                    {
+                        "What is the chapter count of Example Film?": [],
+                        "Example Film chapter count": [],
+                        "Example Film chapter count 100": [],
+                    }
                 ),
                 rewrite_client=None,
             )
-        self.assertEqual(result.accepted, [])
+        self.assertEqual(len(result.accepted), 1)
+        margin = result.accepted[0]["source_metadata"]["number_reference_margin"]
+        self.assertEqual(margin["reference_answer"], "100 (acceptable range: anything between 99 and 101)")
+        cheap_features = result.accepted[0]["cheap_model_verification_features"]
+        self.assertFalse(cheap_features["enabled"])
         self.assertEqual(
-            result.rejected[0]["rejection_reason"],
-            "cheap_model_longtail_verifier_rejected",
+            cheap_features["reason"],
+            "cheap_model_longtail_rejection_removed_for_simpleqa_verified_alignment",
         )
 
     def test_process_generated_candidates_records_second_stage_panel_accuracy(self) -> None:
@@ -860,6 +911,42 @@ class GenerationPipelineTests(unittest.TestCase):
             result.rejected[0]["rejection_reason"],
             "second_stage_grading_accuracy_threshold_exceeded",
         )
+
+    def test_number_snippet_judge_trigger_range_is_minus_ten_to_thirty(self) -> None:
+        from wikidata_simpleqa.generation_pipeline import _needs_number_snippet_judge
+
+        source_candidate = make_candidate()
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="How many points did Example Film score?",
+            canonical_question="How many points did Example Film score?",
+            answer="-10",
+            answer_aliases=[],
+            subject_entity=EntityReference(name="Example Film", qid="Q1"),
+            answer_entity=EntityReference(name="-10"),
+            relation_or_claim="points",
+            evidence=EvidenceRecord(
+                text="Example Film scored -10 points.",
+                url="https://example.test",
+                source_title="Example Film",
+                retrieved_at="2026-05-13",
+            ),
+            answer_type="Number",
+            topic="Tests",
+            source_candidate=source_candidate,
+        )
+        self.assertTrue(_needs_number_snippet_judge(candidate))
+        candidate.answer = "-11"
+        self.assertFalse(_needs_number_snippet_judge(candidate))
+        candidate.answer = "30"
+        self.assertTrue(_needs_number_snippet_judge(candidate))
+        candidate.answer = "31"
+        self.assertFalse(_needs_number_snippet_judge(candidate))
+        candidate.answer = "12.5"
+        self.assertFalse(_needs_number_snippet_judge(candidate))
+        candidate.answer = "12th"
+        self.assertFalse(_needs_number_snippet_judge(candidate))
 
 
 if __name__ == "__main__":

@@ -161,7 +161,7 @@ Each accepted or rejected candidate must be traceable through:
 - target property PID,
 - date property PID,
 - harvested date value,
-- domain key,
+- template key,
 - deterministic validation results,
 - ambiguity status,
 - competitor QIDs when applicable,
@@ -273,13 +273,14 @@ Reject if the question directly includes the answer or a trivial form of it.
 
 Reject rewritten questions that remove required non-temporal disambiguation anchors.
 
-## Domain Template Contract
+## Template Contract
 
-The implementation must use config-driven domain templates rather than hard-coded procedural branches.
+The implementation must use config-driven templates rather than hard-coded procedural branches.
 
-Each domain template must define at least:
+Each template must define at least:
 
-- a domain key,
+- a template key,
+- a broad domain,
 - allowed subject type QIDs,
 - a date property PID,
 - a target answer property PID,

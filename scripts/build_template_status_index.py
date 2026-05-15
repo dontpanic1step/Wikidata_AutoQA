@@ -44,7 +44,7 @@ def main() -> int:
         status_mode=args.status_mode,
     )
     json_path = ROOT / "outputs" / "template_status_index.json"
-    md_path = ROOT / "outputs" / "template_status_index.md"
+    md_path = ROOT / "docs" / "template_status_index.md"
     json_path.write_text(json.dumps(index, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     md_path.write_text(render_template_status_markdown(index), encoding="utf-8")
     print(

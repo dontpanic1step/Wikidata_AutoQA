@@ -24,10 +24,10 @@ def parse_args() -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--domains",
+        "--template-keys",
         nargs="+",
         required=True,
-        help="One or more template domains to summarize.",
+        help="One or more template keys to summarize.",
     )
     parser.add_argument(
         "--status-mode",
@@ -50,8 +50,8 @@ def render_markdown(rows: list[dict[str, object]], *, status_mode: str) -> str:
         "",
         f"- Status mode: `{status_mode}`",
         "",
-        "| Domain | Current | Live | Semantic | Pass Rate | Candidate Yield | Semantic Repro | Avg Network Requests |",
-        "|---|---|---|---|---|---|---|---|",
+        "| Template | Domain | Current | Live | Semantic | Pass Rate | Candidate Yield | Semantic Repro | Avg Network Requests |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for row in rows:
         reliability = row.get("reliability", {})
@@ -67,7 +67,8 @@ def render_markdown(rows: list[dict[str, object]], *, status_mode: str) -> str:
         semantic_repro_text = "-" if semantic_repro is None else f"{semantic_repro:.2f}"
         avg_network_requests = reliability.get("average_network_requests", "-")
         lines.append(
-            "| {domain} | {current} | {live} | {semantic} | {pass_rate} | {candidate_yield} | {semantic_repro} | {avg_network_requests} |".format(
+            "| {template_key} | {domain} | {current} | {live} | {semantic} | {pass_rate} | {candidate_yield} | {semantic_repro} | {avg_network_requests} |".format(
+                template_key=row["template_key"],
                 domain=row["domain"],
                 current=row["current_status"],
                 live=row["latest_live_status"],
@@ -98,21 +99,21 @@ def main() -> int:
         accepted_paths=status_accepted_paths(ROOT),
         status_mode=args.status_mode,
     )
-    row_map = {row["domain"]: row for row in index["templates"]}
+    row_map = {row["template_key"]: row for row in index["templates"]}
     rows: list[dict[str, object]] = []
     missing = []
-    for domain in args.domains:
-        row = row_map.get(domain)
+    for template_key in args.template_keys:
+        row = row_map.get(template_key)
         if row is None:
-            missing.append(domain)
+            missing.append(template_key)
             continue
         rows.append(row)
     if missing:
-        raise ValueError(f"Unknown template domains: {', '.join(sorted(missing))}")
+        raise ValueError(f"Unknown template keys: {', '.join(sorted(missing))}")
 
     payload = {
         "status_mode": args.status_mode,
-        "domains": args.domains,
+        "template_keys": args.template_keys,
         "templates": rows,
     }
     output_json = ROOT / "outputs" / f"{args.output_prefix}.json"
@@ -124,7 +125,7 @@ def main() -> int:
             {
                 "json_path": str(output_json),
                 "md_path": str(output_md),
-                "domains": args.domains,
+                "template_keys": args.template_keys,
                 "status_mode": args.status_mode,
             },
             indent=2,

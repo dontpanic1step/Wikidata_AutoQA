@@ -47,17 +47,17 @@ class WorkflowFixtureTests(unittest.TestCase):
         dataset_row = next(
             template
             for template in index["templates"]
-            if template["domain"] == "dataset_creator_math"
+            if template["template_key"] == "dataset_creator_math"
         )
         accepted_row = next(
             template
             for template in index["templates"]
-            if template["domain"] == "product_manufacturer"
+            if template["template_key"] == "product_manufacturer"
         )
         proven_row = next(
             template
             for template in index["templates"]
-            if template["domain"] == "film_director"
+            if template["template_key"] == "film_director"
         )
         self.assertEqual(dataset_row["current_status"], "unproven_no_result")
         self.assertEqual(dataset_row["best_known_semantic_status"], "rejected_only")

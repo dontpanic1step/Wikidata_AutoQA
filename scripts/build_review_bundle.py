@@ -12,7 +12,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from wikidata_simpleqa.domain_templates import RETIRED_TEMPLATE_NOTES, get_template_by_domain
+from wikidata_simpleqa.domain_templates import RETIRED_TEMPLATE_NOTES, get_template_by_key
 from wikidata_simpleqa.models import CandidateFact
 from wikidata_simpleqa.subject_resources import canonical_subject_resource
 from wikidata_simpleqa.validators import (
@@ -48,12 +48,21 @@ def _subject_resource_key(record: dict) -> str:
     return ""
 
 
+def _record_template_key(record: dict) -> str:
+    """Return the template key from canonical or legacy artifact fields."""
+    for field in ("template_key", "legacy_domain", "domain"):
+        value = str(record.get(field, "")).strip()
+        if value:
+            return value
+    return ""
+
+
 def record_invalid_reasons(record: dict) -> list[str]:
     """Return deterministic reasons why a stored accepted record is no longer valid."""
-    domain = str(record.get("domain", "")).strip()
-    if domain in RETIRED_TEMPLATE_NOTES:
+    template_key = _record_template_key(record)
+    if template_key in RETIRED_TEMPLATE_NOTES:
         return ["retired_template"]
-    template = get_template_by_domain(str(record.get("domain", "")).strip())
+    template = get_template_by_key(template_key)
     if template is None:
         return ["unknown_template"]
     candidate = CandidateFact(
@@ -96,18 +105,18 @@ def main() -> int:
         for artifact in review_run_artifacts(ROOT)
     ]
     rows: list[dict[str, str]] = []
-    seen_domains: set[str] = set()
+    seen_template_keys: set[str] = set()
     seen_questions: set[str] = set()
     seen_subject_resources: set[str] = set()
 
     for source_name, path in ordered_sources:
         for record in _read_jsonl(path):
-            domain = str(record.get("domain", "")).strip()
+            template_key = _record_template_key(record)
             question = str(record.get("question", "")).strip()
             subject_resource_key = _subject_resource_key(record)
             if record_invalid_reasons(record):
                 continue
-            if not domain or domain in seen_domains:
+            if not template_key or template_key in seen_template_keys:
                 continue
             if question and question in seen_questions:
                 continue
@@ -115,15 +124,15 @@ def main() -> int:
                 continue
             rows.append(
                 {
-                    "domain": domain,
-                    "topic": str(record.get("topic", "")).strip(),
+                    "domain": str(record.get("template_domain", record.get("topic", record.get("domain", "")))).strip(),
+                    "template_key": template_key,
                     "question_family": str(record.get("question_family", "")).strip(),
                     "question": question,
                     "answer": str(record.get("answer", "")).strip(),
                     "source_run": source_name,
                 }
             )
-            seen_domains.add(domain)
+            seen_template_keys.add(template_key)
             if question:
                 seen_questions.add(question)
             if subject_resource_key:
@@ -134,12 +143,12 @@ def main() -> int:
 
     with tsv_path.open("w", encoding="utf-8", newline="") as handle:
         writer = csv.writer(handle, delimiter="\t")
-        writer.writerow(["domain", "topic", "question_family", "question", "answer", "source_run"])
+        writer.writerow(["template_key", "domain", "question_family", "question", "answer", "source_run"])
         for row in rows:
             writer.writerow(
                 [
+                    row["template_key"],
                     row["domain"],
-                    row["topic"],
                     row["question_family"],
                     row["question"],
                     row["answer"],
@@ -152,12 +161,12 @@ def main() -> int:
         "",
         f"- Review rows: `{len(rows)}`",
         "",
-        "| Domain | Topic | Question Family | Question | Reference Answer | Source Run |",
+        "| Template | Domain | Question Family | Question | Reference Answer | Source Run |",
         "|---|---|---|---|---|---|",
     ]
     for row in rows:
         lines.append(
-            f"| {row['domain']} | {row['topic']} | {row['question_family']} | {row['question']} | {row['answer']} | {row['source_run']} |"
+            f"| {row['template_key']} | {row['domain']} | {row['question_family']} | {row['question']} | {row['answer']} | {row['source_run']} |"
         )
     md_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(json.dumps({"rows": len(rows), "tsv_path": str(tsv_path), "md_path": str(md_path)}, indent=2))

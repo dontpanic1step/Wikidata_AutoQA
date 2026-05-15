@@ -101,7 +101,7 @@ def build_salvage_board(
     if not isinstance(thresholds, dict):
         thresholds = DEFAULT_PROMOTION_THRESHOLDS.copy()
 
-    template_map = {template.domain: template for template in get_all_templates()}
+    template_map = {template.template_key: template for template in get_all_templates()}
     rows = status_index.get("templates", [])
     if not isinstance(rows, list):
         rows = []
@@ -112,15 +112,15 @@ def build_salvage_board(
     board_rows: list[dict[str, Any]] = []
     counts = Counter()
     for row in rows:
-        domain = str(row.get("domain", "")).strip()
-        if not domain:
+        template_key = str(row.get("template_key", "") or row.get("domain", "")).strip()
+        if not template_key:
             continue
         if row.get("best_known_semantic_status") == "proven":
             continue
-        template = template_map.get(domain)
+        template = template_map.get(template_key)
         if template is None:
             continue
-        registry_entry = registry_templates.get(domain, {})
+        registry_entry = registry_templates.get(template_key, {})
         if not isinstance(registry_entry, dict):
             registry_entry = {}
         board_row = _build_board_row(
@@ -145,7 +145,7 @@ def build_salvage_board(
         _salvage_priority_rank(item["salvage_potential"]),
         _workstream_priority_rank(item["workstream"]),
         -float(item["promotion_gate"].get("gap_score", 0.0)),
-        item["domain"],
+        item["template_key"],
     )
     board_rows.sort(key=sort_key)
 
@@ -174,14 +174,15 @@ def render_salvage_board_markdown(board: dict[str, Any]) -> str:
             "",
             "## Templates",
             "",
-            "| Domain | Potential | Workstream | Stage | Promotion | Diversity | Next Rewrite |",
-            "|---|---|---|---|---|---|---|",
+            "| Template Key | Domain | Potential | Workstream | Stage | Promotion | Diversity | Next Rewrite |",
+            "|---|---|---|---|---|---|---|---|",
         ]
     )
     for row in rows:
         promotion = "ready" if row["promotion_gate"]["eligible_now"] else "not_ready"
         lines.append(
-            "| {domain} | {salvage_potential} | {workstream} | {salvage_stage} | {promotion} | {diversity_contribution} | {last_rewrite_type} |".format(
+            "| {template_key} | {domain} | {salvage_potential} | {workstream} | {salvage_stage} | {promotion} | {diversity_contribution} | {last_rewrite_type} |".format(
+                template_key=row["template_key"],
                 domain=row["domain"],
                 salvage_potential=row["salvage_potential"],
                 workstream=row["workstream"],
@@ -283,13 +284,14 @@ def render_portfolio_report_markdown(report: dict[str, Any]) -> str:
             "",
             "## Top Candidates",
             "",
-            "| Domain | Potential | Workstream | Promotion | Hypothesis |",
-            "|---|---|---|---|---|",
+            "| Template Key | Domain | Potential | Workstream | Promotion | Hypothesis |",
+            "|---|---|---|---|---|---|",
         ]
     )
     for row in top_candidates:
         lines.append(
-            "| {domain} | {salvage_potential} | {workstream} | {promotion} | {rewrite_hypothesis} |".format(
+            "| {template_key} | {domain} | {salvage_potential} | {workstream} | {promotion} | {rewrite_hypothesis} |".format(
+                template_key=row["template_key"],
                 domain=row["domain"],
                 salvage_potential=row["salvage_potential"],
                 workstream=row["workstream"],
@@ -362,8 +364,9 @@ def _build_board_row(
         retirement_blocker=retirement_blocker,
     )
     return {
+        "template_key": row.get("template_key", template.template_key),
         "domain": row["domain"],
-        "topic": template.topic,
+        "topic": template.template_domain,
         "question_family": template.question_family,
         "answer_type": template.answer_type,
         "reasoning_style": template.reasoning_style,
@@ -401,7 +404,8 @@ def _build_diversity_context(
     reasoning_style_counts = Counter()
     temporal_mode_counts = Counter()
     for row in proven_rows:
-        template = template_map.get(str(row.get("domain", "")).strip())
+        template_key = str(row.get("template_key", "") or row.get("domain", "")).strip()
+        template = template_map.get(template_key)
         if template is None:
             continue
         topic_counts[template.topic] += 1

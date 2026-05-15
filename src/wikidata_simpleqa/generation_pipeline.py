@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+from time import perf_counter
 
 from .cheap_model_qa import make_cheap_model_qa_client
 from .entity_normalization import normalize_name
@@ -13,7 +14,6 @@ from .generation_models import GeneratedCandidate
 from .generator_validators import (
     build_removed_prefilter_stub,
     run_fact_level_longtail_prefilter,
-    run_cheap_model_longtail_verifier,
     run_search_based_longtail_verifier,
     validate_generated_candidate,
     validate_question_surface,
@@ -22,6 +22,7 @@ from .grading import ModelPanelMember, evaluate_model_panel, make_grader_client,
 from .generators import WikidataLightGenerator, WikidataWikipediaHybridGenerator
 from .io import write_jsonl
 from .llm_rewrite import make_rewrite_client
+from .number_reference import NUMBER_REFERENCE_MARGIN_KEY, build_number_reference_margin
 from .reasoning import normalize_reasoning_style
 from .search_client import DuckDuckGoSearchClient
 from .wikipedia_client import WikipediaClient
@@ -49,12 +50,13 @@ def run_generation_pipeline(
     wikidata_client: WikidataClient | None = None,
     wikipedia_client: WikipediaClient | None = None,
     search_client: DuckDuckGoSearchClient | None = None,
-    cheap_model_client=None,
     snippet_judge_client=None,
     second_stage_model_clients: list[ModelPanelMember] | None = None,
     grading_grader_client=None,
 ) -> GenerationResult:
     """Run the staged multi-generator pipeline and write accepted/rejected outputs."""
+    pipeline_start = perf_counter()
+    phase_timings: dict[str, float] = {}
     if templates is None:
         templates = [
             template
@@ -84,15 +86,11 @@ def run_generation_pipeline(
             timeout_seconds=settings.timeout_seconds,
             cache_dir=settings.cache_dir,
         )
-    if cheap_model_client is None and settings.cheap_model_longtail_enabled:
-        cheap_model_client = make_cheap_model_qa_client(
-            settings.cheap_model_longtail_llm,
-            settings.timeout_seconds,
-        )
     rewrite_client = None
     if settings.rewrite_enabled:
         rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds)
 
+    generation_start = perf_counter()
     generators = []
     if "route2_wikidata_wikipedia_hybrid" in settings.enabled_routes:
         generators.append(WikidataWikipediaHybridGenerator(wikipedia_client=wikipedia_client))
@@ -106,24 +104,31 @@ def run_generation_pipeline(
             settings=settings,
             client=wikidata_client,
         ))
+    phase_timings["candidate_generation_seconds"] = _elapsed(generation_start)
+    processing_start = perf_counter()
     result = process_generated_candidates(
         all_generated_candidates,
         settings=settings,
         search_client=search_client,
-        cheap_model_client=cheap_model_client,
         snippet_judge_client=snippet_judge_client,
         rewrite_client=rewrite_client,
         second_stage_model_clients=second_stage_model_clients,
         grading_grader_client=grading_grader_client,
     )
+    phase_timings["candidate_processing_seconds"] = _elapsed(processing_start)
+    write_start = perf_counter()
     write_jsonl(settings.output_path, result.accepted)
     write_jsonl(settings.rejected_output_path, result.rejected)
+    phase_timings["output_write_seconds"] = _elapsed(write_start)
+    phase_timings["total_seconds"] = _elapsed(pipeline_start)
     process_telemetry = result.telemetry.copy()
     telemetry = {
         "wikidata": wikidata_client.stats_snapshot(),
         "wikipedia": wikipedia_client.request_events.copy(),
         "search": search_client.request_events.copy(),
         "enabled_routes": list(settings.enabled_routes),
+        "phase_timings_seconds": phase_timings,
+        "bottlenecks": _summarize_bottlenecks(phase_timings),
     }
     telemetry.update(process_telemetry.get("process_generated_candidates", {}))
     result.telemetry = telemetry
@@ -135,7 +140,6 @@ def process_generated_candidates(
     *,
     settings: Settings,
     search_client,
-    cheap_model_client=None,
     snippet_judge_client=None,
     rewrite_client=None,
     second_stage_model_clients: list[ModelPanelMember] | None = None,
@@ -157,11 +161,15 @@ def process_generated_candidates(
         ) if settings.second_stage_grading_grader_llm is not None else None
 
     for candidate in generated_candidates:
+        candidate_start = perf_counter()
+        candidate_timings: dict[str, float] = {}
         early_rejection_reason = next(
             (note for note in candidate.notes if note in EARLY_REJECTION_REASONS),
             "",
         )
         if early_rejection_reason:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason=early_rejection_reason,
@@ -178,9 +186,13 @@ def process_generated_candidates(
 
         candidate.prefilter_longtail_features = build_removed_prefilter_stub(candidate)
 
+        rewrite_start = perf_counter()
         _apply_rewrite_if_enabled(candidate, rewrite_client, settings)
+        candidate_timings["rewrite_seconds"] = _elapsed(rewrite_start)
         llm_discard_reason = str(candidate.source_metadata.get("llm_discard_reason", "")).strip()
         if llm_discard_reason:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason="llm_rewrite_discarded",
@@ -194,6 +206,8 @@ def process_generated_candidates(
             cutoff_year=settings.cutoff_year,
         )
         if surface_reason is not None:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason="rewrite_guard_rejected",
@@ -202,6 +216,11 @@ def process_generated_candidates(
             )
             continue
 
+        margin_start = perf_counter()
+        _apply_number_reference_margin(candidate)
+        candidate_timings["number_reference_margin_seconds"] = _elapsed(margin_start)
+
+        search_start = perf_counter()
         try:
             search_passed, search_features = run_search_based_longtail_verifier(
                 candidate,
@@ -212,7 +231,12 @@ def process_generated_candidates(
                 max_keyword_hit_rate=settings.search_longtail_max_keyword_hit_rate,
                 max_overall_hit_rate=settings.search_longtail_max_overall_hit_rate,
             )
+            candidate_timings["duckduckgo_search_seconds"] = _elapsed(search_start)
+            search_features["duration_seconds"] = candidate_timings["duckduckgo_search_seconds"]
         except Exception as exc:  # noqa: BLE001
+            candidate_timings["duckduckgo_search_seconds"] = _elapsed(search_start)
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason="search_longtail_verifier_error",
@@ -222,6 +246,8 @@ def process_generated_candidates(
             continue
         candidate.search_verification_features = search_features
         if not search_passed:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason="search_longtail_verifier_rejected",
@@ -230,36 +256,13 @@ def process_generated_candidates(
             )
             continue
 
-        if cheap_model_client is not None:
-            try:
-                cheap_model_passed, cheap_model_features = run_cheap_model_longtail_verifier(
-                    candidate,
-                    cheap_model_client=cheap_model_client,
-                )
-            except Exception as exc:  # noqa: BLE001
-                rejected_records.append(
-                    candidate.to_rejected_record(
-                        reason="cheap_model_longtail_verifier_error",
-                        notes={"error_type": type(exc).__name__, "error_message": str(exc)},
-                    )
-                )
-                continue
-            candidate.cheap_model_verification_features = cheap_model_features
-            if not cheap_model_passed:
-                rejected_records.append(
-                    candidate.to_rejected_record(
-                        reason="cheap_model_longtail_verifier_rejected",
-                        notes={"cheap_model_verification_features": cheap_model_features},
-                    )
-                )
-                continue
-        else:
-            candidate.cheap_model_verification_features = {
-                "enabled": False,
-                "reason": "cheap_model_longtail_disabled_or_unconfigured",
-            }
+        candidate.cheap_model_verification_features = {
+            "enabled": False,
+            "reason": "cheap_model_longtail_rejection_removed_for_simpleqa_verified_alignment",
+        }
 
         if settings.second_stage_grading_enabled and second_stage_model_clients:
+            grading_start = perf_counter()
             try:
                 panel_features = evaluate_model_panel(
                     question=candidate.final_question,
@@ -270,7 +273,12 @@ def process_generated_candidates(
                     model_panel=second_stage_model_clients,
                     grader_client=grading_grader_client,
                 )
+                candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
+                panel_features["duration_seconds"] = candidate_timings["second_stage_grading_seconds"]
             except Exception as exc:  # noqa: BLE001
+                candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
+                candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+                _record_candidate_timings(candidate, candidate_timings)
                 rejected_records.append(
                     candidate.to_rejected_record(
                         reason="second_stage_grading_error",
@@ -282,6 +290,8 @@ def process_generated_candidates(
             candidate.panel_grading_features = panel_features
             panel_runs.append(panel_features)
             if panel_features.get("accuracy", 0.0) > settings.second_stage_grading_accuracy_threshold:
+                candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+                _record_candidate_timings(candidate, candidate_timings)
                 rejected_records.append(
                     candidate.to_rejected_record(
                         reason="second_stage_grading_accuracy_threshold_exceeded",
@@ -301,6 +311,8 @@ def process_generated_candidates(
         )
         candidate.validation = validation
         if not validation_passed:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason="shared_validation_failed",
@@ -312,6 +324,8 @@ def process_generated_candidates(
         subject_resource_key = candidate.subject_resource_key
         final_question = candidate.final_question
         if subject_resource_key and subject_resource_key in seen_subject_resources:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason="duplicate_subject_resource",
@@ -320,6 +334,8 @@ def process_generated_candidates(
             )
             continue
         if final_question in seen_questions:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason="duplicate_question",
@@ -331,6 +347,8 @@ def process_generated_candidates(
         seen_questions.add(final_question)
         if subject_resource_key:
             seen_subject_resources.add(subject_resource_key)
+        candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+        _record_candidate_timings(candidate, candidate_timings)
         example_id = f"simpleqa_candidate_{len(accepted_records) + 1:06d}"
         accepted_records.append(candidate.to_output_record(example_id))
         if len(accepted_records) >= settings.pilot_total:
@@ -341,9 +359,44 @@ def process_generated_candidates(
         rejected=rejected_records,
         telemetry={
             "process_generated_candidates": {
+                "generated": len(generated_candidates),
+                "accepted": len(accepted_records),
+                "rejected": len(rejected_records),
                 "second_stage_grading_summary": summarize_panel_runs(panel_runs),
             }
         },
+    )
+
+
+def _elapsed(start: float) -> float:
+    """Return rounded elapsed seconds from a perf_counter start."""
+    return round(perf_counter() - start, 4)
+
+
+def _record_candidate_timings(candidate: GeneratedCandidate, timings: dict[str, float]) -> None:
+    """Attach per-candidate phase timing and bottleneck metadata."""
+    cleaned = {key: value for key, value in timings.items() if value >= 0.0}
+    candidate.source_metadata["phase_timings_seconds"] = cleaned
+    candidate.source_metadata["bottlenecks"] = _summarize_bottlenecks(cleaned)
+
+
+def _summarize_bottlenecks(timings: dict[str, float]) -> list[dict[str, float | str]]:
+    """Return phase timings ordered from slowest to fastest."""
+    rows = [
+        {"phase": phase, "seconds": seconds}
+        for phase, seconds in timings.items()
+        if not phase.startswith("total") and seconds > 0.0
+    ]
+    return sorted(rows, key=lambda row: float(row["seconds"]), reverse=True)
+
+
+def _apply_number_reference_margin(candidate: GeneratedCandidate) -> None:
+    """Add SimpleQA Verified-style numeric reference metadata before model grading."""
+    if candidate.answer_type != "Number":
+        return
+    candidate.source_metadata[NUMBER_REFERENCE_MARGIN_KEY] = build_number_reference_margin(
+        candidate.answer,
+        candidate.answer_type,
     )
 
 
@@ -484,11 +537,13 @@ def _build_route_rewrite_payload(
 
 
 def _needs_number_snippet_judge(candidate: GeneratedCandidate) -> bool:
-    """Return whether one candidate may need low-integer snippet judging."""
+    """Return whether one candidate has an exact integer answer in [-10, 30]."""
     if candidate.answer_type != "Number":
         return False
     answer = candidate.answer.strip().replace(",", "")
-    return answer.isdigit() and 0 <= int(answer) <= 26
+    if not answer.lstrip("-").isdigit():
+        return False
+    return -10 <= int(answer) <= 30
 
 
 def _default_number_snippet_judge_llm(settings: Settings) -> LLMConfig:

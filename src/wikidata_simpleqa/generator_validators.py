@@ -9,6 +9,7 @@ from typing import Any
 from .cheap_model_qa import parse_json_object
 from .entity_normalization import normalize_name
 from .generation_models import GeneratedCandidate
+from .number_reference import get_number_reference_margin, number_margin_hits
 from .validators import (
     YEAR_PATTERN,
     candidate_is_time_invariant,
@@ -62,7 +63,7 @@ MONTH_INDEX = {
     for index, aliases in enumerate(MONTH_VARIANTS.values(), start=1)
     for alias in aliases
 }
-NUMBER_WORDS = {
+POSITIVE_NUMBER_WORDS = {
     0: "zero",
     1: "one",
     2: "two",
@@ -90,6 +91,18 @@ NUMBER_WORDS = {
     24: "twenty four",
     25: "twenty five",
     26: "twenty six",
+    27: "twenty seven",
+    28: "twenty eight",
+    29: "twenty nine",
+    30: "thirty",
+}
+NUMBER_WORDS = {
+    **POSITIVE_NUMBER_WORDS,
+    **{
+        -number: f"minus {word}"
+        for number, word in POSITIVE_NUMBER_WORDS.items()
+        if 1 <= number <= 20
+    },
 }
 COUNTRY_ALIAS_GROUPS = [
     {"united states", "united states of america", "usa", "us", "u s", "u s a", "america"},
@@ -268,8 +281,10 @@ def run_search_based_longtail_verifier(
         for result in results:
             normalized_title = normalize_name(result.title)
             normalized_snippet = normalize_name(result.snippet)
-            title_hit = _text_contains_answer(result.title, answer_matchers)
-            snippet_hit = _text_contains_answer(result.snippet, answer_matchers)
+            title_number_margin_hits = _answer_number_margin_hits(result.title, answer_matchers)
+            snippet_number_margin_hits = _answer_number_margin_hits(result.snippet, answer_matchers)
+            title_hit = bool(title_number_margin_hits) or _text_contains_answer(result.title, answer_matchers)
+            snippet_hit = bool(snippet_number_margin_hits) or _text_contains_answer(result.snippet, answer_matchers)
             if title_hit:
                 title_hits += 1
             if snippet_hit:
@@ -284,6 +299,8 @@ def run_search_based_longtail_verifier(
                     "snippet": result.snippet,
                     "url": result.url,
                     "answer_hit": bool(title_hit or snippet_hit),
+                    "title_number_margin_hits": title_number_margin_hits,
+                    "snippet_number_margin_hits": snippet_number_margin_hits,
                 }
             )
         features["queries"].append(
@@ -299,15 +316,20 @@ def run_search_based_longtail_verifier(
                 "results": serialized_results,
             }
         )
-        if title_hits > 0:
-            features["triggered_rule"] = f"{query_name}:answer_in_title"
         if exact_question_hit and not features["triggered_rule"]:
             features["passed"] = False
             features["triggered_rule"] = f"{query_name}:exact_question_hit"
             break
     features["category_hit_rates"] = _compute_category_hit_rates(features["queries"])
-    if features["triggered_rule"].endswith(":answer_in_title"):
+    title_rule = _first_title_hit_rate_rule(
+        features["queries"],
+        full_question_threshold=max_full_question_hit_rate,
+        keyword_threshold=max_keyword_hit_rate,
+        overall_threshold=max_overall_hit_rate,
+    )
+    if title_rule is not None:
         features["passed"] = False
+        features["triggered_rule"] = title_rule
         return False, features
     snippet_judge_features = _run_low_integer_snippet_judge(
         candidate,
@@ -336,31 +358,33 @@ def run_search_based_longtail_verifier(
     return bool(features["passed"]), features
 
 
-def run_cheap_model_longtail_verifier(
-    candidate: GeneratedCandidate,
+def _first_title_hit_rate_rule(
+    query_rows: list[dict[str, Any]],
     *,
-    cheap_model_client,
-) -> tuple[bool, dict[str, Any]]:
-    """Run the cheap-model QA second-stage long-tail verification."""
-    predicted_answer = str(cheap_model_client.complete_text(candidate.final_question)).strip()
-    normalized_guess = normalize_name(predicted_answer)
-    accepted_answers = _build_accepted_answer_set(candidate)
-    answered_correctly = bool(
-        normalized_guess
-        and (
-            normalized_guess in accepted_answers
-            or _text_contains_answer(predicted_answer, _build_answer_matchers(candidate))
+    full_question_threshold: float,
+    keyword_threshold: float,
+    overall_threshold: float,
+) -> str | None:
+    """Return the first title-hit threshold violation, if any."""
+    total_title_hits = 0
+    total_results = 0
+    for row in query_rows:
+        result_count = int(row.get("result_count", 0))
+        title_hits = int(row.get("title_hits", 0))
+        total_title_hits += title_hits
+        total_results += result_count
+        if result_count <= 0 or title_hits <= 0:
+            continue
+        threshold = (
+            full_question_threshold
+            if row.get("query_category") == "full_question"
+            else keyword_threshold
         )
-    )
-    features = {
-        "question": candidate.final_question,
-        "predicted_answer": predicted_answer,
-        "accepted_answers": sorted(answer for answer in accepted_answers if answer),
-        "answered_correctly": answered_correctly,
-        "passed": not answered_correctly,
-        "triggered_rule": "cheap_model_answered_correctly" if answered_correctly else "",
-    }
-    return bool(features["passed"]), features
+        if title_hits / result_count > threshold:
+            return f"{row.get('query_name', 'query')}:answer_in_title"
+    if total_results > 0 and total_title_hits / total_results > overall_threshold:
+        return "overall:answer_in_title"
+    return None
 
 
 def _relation_family_allowed(relation_or_claim: str) -> bool:
@@ -445,10 +469,26 @@ def _build_answer_matchers(candidate: GeneratedCandidate) -> dict[str, Any]:
     if candidate.answer_type == "Number" and integer_value is not None:
         normalized_variants.update(_number_variants(integer_value))
         regexes.extend(_number_regexes(integer_value))
+        if integer_value < -10 or integer_value > 30:
+            margin = get_number_reference_margin(candidate.source_metadata)
+            if margin is not None:
+                return {
+                    "normalized_variants": {variant for variant in normalized_variants if variant},
+                    "regexes": regexes,
+                    "number_reference_margin": margin,
+                }
     else:
         for value in raw_answers:
             normalized_variants.update(_country_alias_variants(value))
             normalized_variants.update(_date_variants(value))
+        if candidate.answer_type == "Number":
+            margin = get_number_reference_margin(candidate.source_metadata)
+            if margin is not None:
+                return {
+                    "normalized_variants": {variant for variant in normalized_variants if variant},
+                    "regexes": regexes,
+                    "number_reference_margin": margin,
+                }
     return {
         "normalized_variants": {variant for variant in normalized_variants if variant},
         "regexes": regexes,
@@ -466,6 +506,14 @@ def _text_contains_answer(text: str, answer_matchers: dict[str, Any]) -> bool:
         variant and variant in normalized_text
         for variant in answer_matchers.get("normalized_variants", set())
     )
+
+
+def _answer_number_margin_hits(text: str, answer_matchers: dict[str, Any]) -> list[str]:
+    """Return numeric mentions that match the optional reference margin."""
+    margin = answer_matchers.get("number_reference_margin")
+    if not isinstance(margin, dict) or not margin.get("enabled"):
+        return []
+    return number_margin_hits(text, {"number_reference_margin": margin})
 
 
 def _country_alias_variants(value: str) -> set[str]:
@@ -511,14 +559,14 @@ def _date_variants(value: str) -> set[str]:
 
 
 def _parse_integer_answer(value: str) -> int | None:
-    """Parse an integer answer from digits or simple English words."""
+    """Parse an exact integer answer from digits or simple English words."""
     stripped = value.strip()
     compact = stripped.replace(",", "")
     if INTEGER_PATTERN.fullmatch(compact):
         return int(compact)
     normalized = normalize_name(stripped)
     for number, phrase in NUMBER_WORDS.items():
-        if normalized == phrase:
+        if normalized in {phrase, phrase.replace("minus ", "negative ")}:
             return number
     return None
 
@@ -529,6 +577,8 @@ def _number_variants(value: int) -> set[str]:
     word_form = NUMBER_WORDS.get(value)
     if word_form:
         variants.add(normalize_name(word_form))
+        if word_form.startswith("minus "):
+            variants.add(normalize_name(word_form.replace("minus ", "negative ")))
         if " " in word_form:
             variants.add(normalize_name(word_form.replace(" ", "-")))
     return {variant for variant in variants if variant}
@@ -536,13 +586,16 @@ def _number_variants(value: int) -> set[str]:
 
 def _number_regexes(value: int) -> list[re.Pattern[str]]:
     """Return regexes for matching numeric forms in raw snippets."""
-    patterns = [re.compile(rf"\b{re.escape(str(value))}\b")]
+    patterns = [re.compile(rf"(?<![\w-]){re.escape(str(value))}(?![\w-])")]
     if value >= 1000:
-        patterns.append(re.compile(rf"\b{value:,}\b"))
+        patterns.append(re.compile(rf"(?<![\w-]){value:,}(?![\w-])"))
     word_form = NUMBER_WORDS.get(value)
     if word_form:
         hyphen_form = word_form.replace(" ", "-")
         patterns.append(re.compile(rf"\b{re.escape(word_form)}\b"))
+        if word_form.startswith("minus "):
+            negative_form = word_form.replace("minus ", "negative ")
+            patterns.append(re.compile(rf"\b{re.escape(negative_form)}\b"))
         if hyphen_form != word_form:
             patterns.append(re.compile(rf"\b{re.escape(hyphen_form)}\b"))
     return patterns
@@ -554,9 +607,9 @@ def _run_low_integer_snippet_judge(
     *,
     snippet_judge_client,
 ) -> dict[str, Any] | None:
-    """Judge snippet answer visibility for very small integer answers."""
+    """Judge snippet answer visibility for exact integer answers in [-10, 30]."""
     integer_value = _parse_integer_answer(candidate.answer)
-    if candidate.answer_type != "Number" or integer_value is None or integer_value < 0 or integer_value > 26:
+    if candidate.answer_type != "Number" or integer_value is None or integer_value < -10 or integer_value > 30:
         return None
     snippets = [
         str(result.get("snippet", "")).strip()

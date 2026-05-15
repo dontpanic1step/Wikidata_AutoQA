@@ -14,6 +14,9 @@ multi-hop，semi-structure data（例如排行榜）,
 
 Other source: https://w3id.org/t-rex (triples + Wikipedia abstracts) (This is better, but not needed for template-based rewriting)
 
+我遇到了一个架构设计的问题：SimpleQA Verified在筛选时用到了误差范围。对于答案是数字的题目，在我们的一阶段长尾检查中，我们检查DuckDuckGo检索返回的snippets中是否包含答案。如果一个范围内的数字都可以被接受，那怎么做数字匹配呢？
+金戈答：可以先确定哪些问题需要精确数字匹配、哪些允许误差，然后给后者尝试匹配各种精度下的数字表达（这是个工程问题）
+
 WARNING
 From which university did Naomi C Futhey receive a first degree?
 Answer: University of British Columbia
@@ -26,12 +29,41 @@ Problem:
 ordinal_tournament_winner	Who won the {ordinal} edition of {descriptor}? -> Who won the {ordinal} {descriptor}? Also, "Who won the 10th edition of NCAA Division III football?" The question itself is wrong. There is no "edition" of a tournament. The 10th season of NCAA Division III football is in 1982.
 
 Set a budget for the test run, if a template runs heavy WDQS for more than 60 seconds, just drop the template to heavy bucket and stop.
+Introduce a new Heavy WDQS bucket. If direct WDQS spent more than 60 seconds, stop, use fall-back,  retry(How many times? make it configurable), stop, move the template to this bucket, preserve its previous status like Frozen, and move on to the next template. Heavy WDQS bucket will be rewritten later. It should be treated like frozen.
+分模板规定WDQS设置时间窗口的细度（按天/按月/按年）和最终搜索的数量（这个要先统计目前能满足长尾需求的比例，再用1000倒推）
+
+Faster filters tend to be triple-pattern constraints like:
+
+?item wdt:P31/wdt:P279* wd:Q2424752 .
+?item wdt:P577 ?date .
+?item wdt:P176 ?answer .
+and bounded date filters:
+
+FILTER(?date >= "2026-01-01T00:00:00Z"^^xsd:dateTime)
+FILTER(?date <= "2026-01-31T23:59:59Z"^^xsd:dateTime)
+These reduce the candidate set, especially if you split a broad query into smaller date windows.
+
+Slower filters are often string/label filters, broad optional blocks, negation, complex paths, or filters applied after a huge join, for example:
+
+FILTER(CONTAINS(LCASE(?label), "phone"))
+OPTIONAL { ... }
+FILTER NOT EXISTS { ... }
+For our case, adding more structural constraints like “must have release date and manufacturer” should help. Adding label/text filters or too many broad joins may hurt. The best practical fix is usually: keep the query structurally simple, use date-windowed chunks, LIMIT, and hydrate details later with wbgetentities rather than asking WDQS to do everything.
+
 rerun the sparse unproven bucket.
 
 generate 30 geography/place-centric templates that likely yield long-tail answer.
 generate 30 history templates that likely yield long-tail answer.
 
 select the broad templates from unproven and error bucket, rewrite them to narrow the search space. e.g., adding long-tail limits like "in Africa" "before 1950s" in the query but not the canonical question, or splitting the broad class (paper -> Paleontology paper).
+Good example for "in Africa":
+VALUES ?country { wd:Q1033 wd:Q258 ... } # African countries
+?item wdt:P17 ?country .
+Bad example:
+?item wdt:P131* ?place .
+?place wdt:P30 wd:Q15 .
+I think I will prepare a long-tail-related entity list, including QIDs for African countries, and use it for long-tail rewriting.
+
 
 How many years did it take to construct the xx part of yy cathedral? (stop_year - start_year)
 What's the max capacity of the stadium that will host 2026 FIFA World Cup? (2026 FIFA World Cup -> infobox List of tournament venues -> max capacity) （需要精确到八万/八万多少这样的，但是回答要自然）（参考SimpleQA Verified里面有没有这种问题，它们没有问，我们也不问）

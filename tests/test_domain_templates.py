@@ -7,6 +7,7 @@ import unittest
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.domain_templates import (
     get_active_templates,
+    get_all_templates,
     get_blueprint_templates,
     get_date_answer_pilot_templates,
     get_multi_hop_pilot_templates,
@@ -111,19 +112,46 @@ class DomainTemplateTests(unittest.TestCase):
         date_templates = [template for template in templates if template.answer_format == "date"]
         self.assertTrue(date_templates)
 
-    def test_catalog_includes_twenty_time_related_templates(self) -> None:
-        templates = get_stage5b_templates() + get_blueprint_templates()
+    def test_catalog_includes_canonical_time_related_templates(self) -> None:
+        templates = get_all_templates()
         time_related_templates = [template for template in templates if template.temporal_mode != "atemporal"]
-        self.assertGreaterEqual(len(time_related_templates), 19)
+        self.assertGreaterEqual(len(time_related_templates), 16)
 
-    def test_blueprint_catalog_includes_twenty_number_templates(self) -> None:
-        templates = get_blueprint_templates()
+    def test_full_catalog_includes_twenty_number_templates(self) -> None:
+        templates = get_all_templates()
         number_templates = [
             template
             for template in templates
             if template.answer_type == "Number" or template.answer_format == "number"
         ]
         self.assertGreaterEqual(len(number_templates), 20)
+
+    def test_full_catalog_has_unique_template_keys(self) -> None:
+        templates = get_all_templates()
+        template_keys = [template.template_key for template in templates]
+        self.assertEqual(len(template_keys), len(set(template_keys)))
+
+    def test_full_catalog_has_no_blank_template_keys_or_domains(self) -> None:
+        templates = get_all_templates()
+        self.assertTrue(all(template.template_key.strip() for template in templates))
+        self.assertTrue(all(template.template_domain.strip() for template in templates))
+
+    def test_every_catalog_template_has_explicit_answer_type(self) -> None:
+        allowed_answer_types = {
+            "Date",
+            "Entity",
+            "Language",
+            "Organization",
+            "Person",
+            "Place",
+            "Work",
+            "Number",
+            "Other",
+        }
+        templates = get_all_templates()
+        self.assertTrue(templates)
+        for template in templates:
+            self.assertIn(template.answer_type, allowed_answer_types, template.template_key)
 
     def test_removed_subset_author_count_templates_are_absent(self) -> None:
         templates = get_blueprint_templates()
@@ -158,8 +186,8 @@ class DomainTemplateTests(unittest.TestCase):
         ]
         self.assertTrue(ordinal_templates)
 
-    def test_blueprint_catalog_still_includes_open_ordinal_and_stat_templates(self) -> None:
-        templates = get_blueprint_templates()
+    def test_full_catalog_still_includes_frozen_ordinal_and_stat_templates(self) -> None:
+        templates = get_all_templates()
         domains = {template.domain for template in templates}
         self.assertIn("ordinal_spouse", domains)
         self.assertIn("footballer_goals_in_ordinal_tournament", domains)
@@ -168,6 +196,11 @@ class DomainTemplateTests(unittest.TestCase):
         self.assertIn("ordinal_country_prime_minister", domains)
         self.assertIn("ordinal_religious_leader", domains)
         self.assertIn("ordinal_university_chancellor", domains)
+
+    def test_blueprint_catalog_excludes_frozen_templates(self) -> None:
+        domains = {template.domain for template in get_blueprint_templates()}
+        self.assertNotIn("ordinal_spouse", domains)
+        self.assertNotIn("footballer_goals_in_ordinal_tournament", domains)
 
 
 if __name__ == "__main__":

@@ -7,7 +7,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-NO_ROOM_FOR_REFINEMENT_NO_RESULT_DOMAINS = {
+NO_ROOM_FOR_REFINEMENT_NO_RESULT_TEMPLATE_KEYS = {
     "ordinal_country_prime_minister",
     "footballer_goals_in_ordinal_tournament",
     "acquisition_purchase_price",
@@ -44,17 +44,17 @@ def read_json(path: Path) -> dict[str, Any] | None:
 
 
 def load_review_bundle_proven_map(path: Path) -> dict[str, dict[str, str]]:
-    """Return currently proven domains from the review TSV bundle."""
+    """Return currently proven template keys from the review TSV bundle."""
     if not path.exists():
         return {}
     proven: dict[str, dict[str, str]] = {}
     with path.open(encoding="utf-8") as handle:
         reader = csv.DictReader(handle, delimiter="\t")
         for row in reader:
-            domain = str(row.get("domain", "")).strip()
-            if not domain:
+            template_key = _record_template_key(row)
+            if not template_key:
                 continue
-            proven[domain] = {
+            proven[template_key] = {
                 "question": str(row.get("question", "")).strip(),
                 "answer": str(row.get("answer", "")).strip(),
                 "source_run": str(row.get("source_run", "")).strip(),
@@ -64,32 +64,32 @@ def load_review_bundle_proven_map(path: Path) -> dict[str, dict[str, str]]:
 
 def collect_rejection_reasons(paths: list[Path]) -> dict[str, list[str]]:
     """Return normalized rejection reasons gathered from rejected JSONL files."""
-    reasons_by_domain: dict[str, set[str]] = {}
+    reasons_by_template_key: dict[str, set[str]] = {}
     for path in paths:
         for record in read_jsonl(path):
-            domain = str(record.get("domain", "")).strip()
+            template_key = _record_template_key(record)
             reason = str(record.get("rejection_reason", "")).strip()
-            if not domain or not reason:
+            if not template_key or not reason:
                 continue
-            reasons_by_domain.setdefault(domain, set()).add(reason)
+            reasons_by_template_key.setdefault(template_key, set()).add(reason)
     return {
-        domain: sorted(reasons)
-        for domain, reasons in sorted(reasons_by_domain.items())
+        template_key: sorted(reasons)
+        for template_key, reasons in sorted(reasons_by_template_key.items())
     }
 
 
 def collect_rejection_reasons_by_source(paths: list[Path]) -> dict[str, dict[str, list[str]]]:
-    """Return normalized rejection reasons grouped by artifact source and domain."""
+    """Return normalized rejection reasons grouped by artifact source and template key."""
     reasons_by_source: dict[str, dict[str, set[str]]] = {}
     for path in paths:
         source_name = _artifact_source_name(path, "_rejected.jsonl")
         source_reasons = reasons_by_source.setdefault(source_name, {})
         for record in read_jsonl(path):
-            domain = str(record.get("domain", "")).strip()
+            template_key = _record_template_key(record)
             reason = str(record.get("rejection_reason", "")).strip()
-            if not domain or not reason:
+            if not template_key or not reason:
                 continue
-            source_reasons.setdefault(domain, set()).add(reason)
+            source_reasons.setdefault(template_key, set()).add(reason)
     return {
         source_name: {
             domain: sorted(reasons)
@@ -114,11 +114,11 @@ def collect_latest_run_results(summary_paths: list[Path]) -> dict[str, dict[str,
         for result in template_results:
             if not isinstance(result, dict):
                 continue
-            domain = str(result.get("domain", "")).strip()
-            if not domain:
+            template_key = _record_template_key(result)
+            if not template_key:
                 continue
-            latest[domain] = {
-                "domain": domain,
+            latest[template_key] = {
+                "template_key": template_key,
                 "source_summary": str(path),
                 "status": str(result.get("status", "")).strip(),
                 "accepted": int(result.get("accepted", 0) or 0),
@@ -156,14 +156,14 @@ def collect_run_history(
         for result in template_results:
             if not isinstance(result, dict):
                 continue
-            domain = str(result.get("domain", "")).strip()
-            if not domain:
+            template_key = _record_template_key(result)
+            if not template_key:
                 continue
-            filtered_reasons = accepted_invalid_reasons_by_source.get(source_name, {}).get(domain, [])
-            rejection_reasons = rejected_reasons_by_source.get(source_name, {}).get(domain, [])
+            filtered_reasons = accepted_invalid_reasons_by_source.get(source_name, {}).get(template_key, [])
+            rejection_reasons = rejected_reasons_by_source.get(source_name, {}).get(template_key, [])
             all_reasons = sorted(set(filtered_reasons) | set(rejection_reasons))
             normalized = {
-                "domain": domain,
+                "template_key": template_key,
                 "source_summary": str(path),
                 "source_name": source_name,
                 "status": str(result.get("status", "")).strip(),
@@ -183,7 +183,7 @@ def collect_run_history(
                     filtered_reasons,
                 ),
             }
-            history.setdefault(domain, []).append(normalized)
+            history.setdefault(template_key, []).append(normalized)
     return history
 
 
@@ -210,24 +210,25 @@ def build_template_status_index(
 
     statuses: list[dict[str, Any]] = []
     counts: dict[str, int] = {}
-    for template in _unique_templates_by_domain():
-        latest = latest_results.get(template.domain, {})
-        filtered_reasons = latest_accepted_records.get(template.domain, {}).get(
+    for template in _unique_templates_by_key():
+        template_key = template.template_key
+        latest = latest_results.get(template_key, {})
+        filtered_reasons = latest_accepted_records.get(template_key, {}).get(
             "invalid_reasons",
             [],
         )
         all_rejection_reasons = sorted(
-            set(rejection_reasons.get(template.domain, [])) | set(filtered_reasons)
+            set(rejection_reasons.get(template_key, [])) | set(filtered_reasons)
         )
         latest_live_status = _resolve_template_status(
-            template.domain,
+            template_key,
             proven_map,
             latest,
             filtered_reasons,
             [],
         )
         best_known_semantic_status = _resolve_template_status(
-            template.domain,
+            template_key,
             proven_map,
             latest,
             filtered_reasons,
@@ -240,23 +241,25 @@ def build_template_status_index(
         )
         status = "frozen" if template.status == "frozen" else original_current_status
         reliability = _build_reliability_summary(
-            run_history.get(template.domain, []),
+            run_history.get(template_key, []),
             best_known_semantic_status=best_known_semantic_status,
         )
         counts[status] = counts.get(status, 0) + 1
         statuses.append(
             {
-                "domain": template.domain,
-                "topic": template.topic,
+                "template_key": template_key,
+                "template": template_key,
+                "domain": template.template_domain,
+                "answer_type": template.answer_type,
                 "canonical_question_template": template.canonical_question_template,
                 "question_family": template.question_family,
-                "catalog_status": template.status,
+                "legacy_catalog_bucket": template.status,
                 "current_status": status,
                 "original_current_status": original_current_status,
                 "status_mode": status_mode,
                 "latest_live_status": latest_live_status,
                 "best_known_semantic_status": best_known_semantic_status,
-                "proven_example": proven_map.get(template.domain),
+                "proven_example": proven_map.get(template_key),
                 "latest_run": latest or None,
                 "status_detail": _build_status_detail(status, latest),
                 "rejection_reasons": all_rejection_reasons,
@@ -309,18 +312,18 @@ def render_template_status_markdown(index: dict[str, Any]) -> str:
             continue
         lines.extend(
             [
-                "| Domain | Template | Canonical Question | Status | Successful Generated Question |",
+                "| Domain | Template | Answer Type | Canonical Question | Successful Generated Question |",
                 "|---|---|---|---|---|",
             ]
         )
         for row in bucket_rows:
             example = row.get("proven_example") or {}
             lines.append(
-                "| {topic} | {domain} | {canonical_question} | {status} | {success_question} |".format(
-                    topic=row["topic"],
+                "| {domain} | {template} | {answer_type} | {canonical_question} | {success_question} |".format(
                     domain=row["domain"],
+                    template=row["template_key"],
+                    answer_type=row.get("answer_type", ""),
                     canonical_question=row.get("canonical_question_template", ""),
-                    status=row["current_status"],
                     success_question=example.get("question", ""),
                 )
             )
@@ -328,14 +331,14 @@ def render_template_status_markdown(index: dict[str, Any]) -> str:
 
 
 def _resolve_template_status(
-    domain: str,
+    template_key: str,
     proven_map: dict[str, dict[str, str]],
     latest_result: dict[str, Any],
     filtered_reasons: list[str],
     all_rejection_reasons: list[str] | None = None,
 ) -> str:
     """Resolve one canonical current status for a template."""
-    if domain in proven_map:
+    if template_key in proven_map:
         return "proven"
     status = str(latest_result.get("status", "")).strip()
     if status == "accepted" and filtered_reasons:
@@ -355,7 +358,7 @@ def _resolve_template_status(
 
 def _build_status_detail(status: str, latest_result: dict[str, Any]) -> dict[str, Any]:
     """Return a normalized explanation payload for the current status."""
-    domain = str(latest_result.get("domain", "")).strip()
+    template_key = _record_template_key(latest_result)
     if status != "unproven_no_result":
         return {}
 
@@ -434,7 +437,7 @@ def _build_status_detail(status: str, latest_result: dict[str, Any]) -> dict[str
     if any(kind in DEGRADED_NO_RESULT_PROBLEM_KINDS for kind in problem_kinds):
         sparse_tag = _sparse_answer_tag(latest_result)
         tags = [sparse_tag] if sparse_tag else []
-        if domain in NO_ROOM_FOR_REFINEMENT_NO_RESULT_DOMAINS:
+        if template_key in NO_ROOM_FOR_REFINEMENT_NO_RESULT_TEMPLATE_KEYS:
             tags.append("no_room_for_refinement")
         return {
             "bucket": "degraded_no_result_due_to_query_failure",
@@ -448,7 +451,7 @@ def _build_status_detail(status: str, latest_result: dict[str, Any]) -> dict[str
     if total_requests > 0 or network_requests > 0 or cache_hits > 0 or events:
         sparse_tag = _sparse_answer_tag(latest_result)
         tags = [sparse_tag] if sparse_tag else []
-        if domain in NO_ROOM_FOR_REFINEMENT_NO_RESULT_DOMAINS:
+        if template_key in NO_ROOM_FOR_REFINEMENT_NO_RESULT_TEMPLATE_KEYS:
             tags.append("no_room_for_refinement")
         return {
             "bucket": "implemented_sparse_2026",
@@ -523,20 +526,29 @@ def _sparse_answer_tag(latest_result: dict[str, Any]) -> str:
     return f"sparse_answer_{normalized}"
 
 
-def _unique_templates_by_domain() -> list[Any]:
-    """Return templates deduplicated by domain key, keeping the first catalog entry."""
+def _unique_templates_by_key() -> list[Any]:
+    """Return templates deduplicated by template key, keeping the first catalog entry."""
     unique = []
-    seen_domains: set[str] = set()
+    seen_template_keys: set[str] = set()
     for template in get_all_templates():
-        if template.domain in seen_domains:
+        if template.template_key in seen_template_keys:
             continue
-        seen_domains.add(template.domain)
+        seen_template_keys.add(template.template_key)
         unique.append(template)
     return unique
 
 
+def _record_template_key(record: dict[str, Any]) -> str:
+    """Return a template key from canonical or legacy artifact fields."""
+    for field in ("template_key", "legacy_domain", "domain"):
+        value = str(record.get(field, "")).strip()
+        if value:
+            return value
+    return ""
+
+
 def collect_latest_accepted_records(accepted_paths: list[Path]) -> dict[str, dict[str, Any]]:
-    """Return the latest accepted record per domain with current invalid reasons."""
+    """Return the latest accepted record per template key with current invalid reasons."""
     latest: dict[str, dict[str, Any]] = {}
     for path in accepted_paths:
         records = read_jsonl(path)
@@ -544,10 +556,10 @@ def collect_latest_accepted_records(accepted_paths: list[Path]) -> dict[str, dic
             continue
         invalid_reason_resolver = _load_invalid_reason_resolver()
         for record in records:
-            domain = str(record.get("domain", "")).strip()
-            if not domain:
+            template_key = _record_template_key(record)
+            if not template_key:
                 continue
-            latest[domain] = {
+            latest[template_key] = {
                 "source_path": str(path),
                 "record": record,
                 "invalid_reasons": invalid_reason_resolver(record),
@@ -556,7 +568,7 @@ def collect_latest_accepted_records(accepted_paths: list[Path]) -> dict[str, dic
 
 
 def collect_accepted_invalid_reasons_by_source(paths: list[Path]) -> dict[str, dict[str, list[str]]]:
-    """Return invalid accepted-record reasons grouped by artifact source and domain."""
+    """Return invalid accepted-record reasons grouped by artifact source and template key."""
     invalid_reason_resolver = _load_invalid_reason_resolver()
     grouped: dict[str, dict[str, list[str]]] = {}
     for path in paths:
@@ -566,10 +578,10 @@ def collect_accepted_invalid_reasons_by_source(paths: list[Path]) -> dict[str, d
         if not records:
             continue
         for record in records:
-            domain = str(record.get("domain", "")).strip()
-            if not domain:
+            template_key = _record_template_key(record)
+            if not template_key:
                 continue
-            domain_map[domain] = invalid_reason_resolver(record)
+            domain_map[template_key] = invalid_reason_resolver(record)
     return grouped
 
 

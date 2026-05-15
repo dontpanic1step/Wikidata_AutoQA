@@ -13,7 +13,7 @@ def _default_second_stage_grading_models() -> tuple["LLMConfig", ...]:
     return (
         LLMConfig(
             provider="openrouter",
-            model="openai/gpt-5.4-mini",
+            model="openai/gpt-4.1-mini",
             api_key_env="OPENROUTER_API_KEY",
             base_url="https://openrouter.ai/api/v1",
             temperature=0.0,
@@ -70,8 +70,6 @@ class Settings:
         "route1_wikidata_light",
     )
     duckduckgo_top_k: int = 10
-    cheap_model_longtail_enabled: bool = False
-    cheap_model_longtail_llm: LLMConfig | None = None
     second_stage_grading_enabled: bool = False
     second_stage_grading_models: tuple[LLMConfig, ...] = field(
         default_factory=_default_second_stage_grading_models
@@ -101,6 +99,8 @@ class Settings:
     live_probe_mode: bool = False
     live_probe_harvest_limit: int = 2
     live_probe_max_entity_ids_per_request: int = 10
+    route1_light_fallback_enabled: bool = True
+    route1_subject_seed_window_granularity: str = "year"
     random_seed: int = 42
     cache_dir: Path = Path("cache/wikidata")
     output_path: Path = Path("outputs/pilot_accepted.jsonl")
@@ -115,6 +115,8 @@ class Settings:
         self._validate_target_time()
         if not 0.0 <= self.second_stage_grading_accuracy_threshold <= 1.0:
             raise ValueError("second_stage_grading_accuracy_threshold must be between 0.0 and 1.0")
+        if self.route1_subject_seed_window_granularity not in {"year", "month", "day"}:
+            raise ValueError("route1_subject_seed_window_granularity must be one of: year, month, day")
         if self.live_probe_mode:
             self.harvest_limit_per_template = min(
                 self.harvest_limit_per_template,

@@ -5,10 +5,18 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from .number_reference import normalize_number_answer
+
 
 @dataclass(slots=True)
 class DomainTemplate:
-    """Configuration for one supported domain-property pair."""
+    """Configuration for one supported template.
+
+    The stored ``domain``/``topic`` field names are kept for compatibility with
+    existing artifacts. New code should read ``template_key`` for identifiers
+    like ``film_director`` and ``template_domain`` for broad catalog domains
+    like ``Arts and Media``.
+    """
 
     domain: str
     topic: str
@@ -35,6 +43,16 @@ class DomainTemplate:
     exact_instance_only: bool = False
     retrieval_limit: int = 100
     allow_non_answer_location_descriptor: bool = True
+
+    @property
+    def template_key(self) -> str:
+        """Return the unique template identifier."""
+        return self.domain
+
+    @property
+    def template_domain(self) -> str:
+        """Return the broad human-facing catalog domain."""
+        return self.topic
 
 
 @dataclass(slots=True)
@@ -86,6 +104,19 @@ class CandidateFact:
     subject_resource_key: str = ""
     source_metadata: dict[str, Any] = field(default_factory=dict)
 
+    def __post_init__(self) -> None:
+        """Normalize generated numeric answers once they enter the candidate model."""
+        if self.answer_type != "Number":
+            return
+        self.answer_labels = [
+            normalize_number_answer(label, self.answer_type)
+            for label in self.answer_labels
+        ]
+        self.answer_aliases = [
+            normalize_number_answer(alias, self.answer_type)
+            for alias in self.answer_aliases
+        ]
+
     def to_output_record(self, example_id: str) -> dict[str, Any]:
         """Return the accepted-output representation."""
         question = self.rewritten_question or self.canonical_question
@@ -100,7 +131,9 @@ class CandidateFact:
             "subject_resource_key": self.subject_resource_key,
             "answer_qids": self.answer_qids,
             "property_pid": self.target_property_pid,
-            "domain": self.domain,
+            "template_key": self.domain,
+            "domain": self.topic,
+            "legacy_domain": self.domain,
             "topic": self.topic,
             "answer_type": self.answer_type,
             "question_family": self.question_family,

@@ -8,6 +8,8 @@ The main target is the **question style and evaluation setting**: short, natural
 
 When project documents conflict, this file is the highest-level instruction. Update `design.md` before implementing code if the design still encodes older constraints.
 
+Use `docs/terminology.md` for canonical project terms. In particular, use **template key** for identifiers such as `benchmark_release_date`, and **domain** for broad content areas such as `Architecture and Transportation`. Older code/artifacts may still use `domain` to mean template key; normalize that at compatibility boundaries instead of spreading the legacy wording.
+
 ## Current strategic direction
 
 - Replicate SimpleQA-style questions first; do not optimize prematurely for a particular Wikidata-only pipeline.
@@ -45,13 +47,13 @@ When project documents conflict, this file is the highest-level instruction. Upd
 ## Candidate sources and long-tail validation
 
 - Do not use internal popularity proxies such as sitelink count, claim count, or similar Wikidata-wide indices as first-stage long-tail filters.
-- Use a two-stage long-tail filter built from external retrieval and cheap model probing:
+- Use external retrieval as the hard long-tail leakage filter:
   - Stage 1: DuckDuckGo search-based evidence.
-  - Stage 2: cheap, fast, small-model QA evaluation, such as GPT-4.1-mini or Gemini 3.1 Flash.
+  - Stage 2: SimpleQA Verified-style model grading/difficulty review, when enabled.
 - Prefer search-based evidence as the first long-tail signal.
 - A useful first heuristic: call a search API and inspect the top results. Mark a candidate as more long-tail if the direct answer is absent from the top results or requires nontrivial cross-source lookup.
 - Keep the long-tail heuristic auditable: store query strings, top-result titles/snippets/URLs when allowed, and the rule that accepted or rejected the candidate.
-- The small-model QA stage is a secondary filter, not a source of truth for factuality. It is used only as an auditable difficulty signal after search.
+- Do not use a standalone cheap-model exact-match QA phase as a rejection gate. SimpleQA Verified uses autorated model answers for difficulty/evaluation, so model-based difficulty checks should live in the grading panel instead.
 - Consider more clever search-based signals later, such as exact-title hits, answer-string hits, snippet answer leakage, and whether the answer appears in the first page of results.
 - Use LLMs for rewriting or optional review, not for inventing facts, proving uniqueness, or serving as the primary factuality validator.
 

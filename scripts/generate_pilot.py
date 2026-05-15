@@ -27,16 +27,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
+    parser.add_argument("--disable-route1-light-fallback", action="store_true")
     parser.add_argument("--enable-rewrite", action="store_true")
     parser.add_argument("--rewrite-provider", type=str, default="openrouter")
     parser.add_argument("--rewrite-model", type=str, default="openai/gpt-4.1-mini")
     parser.add_argument("--rewrite-api-key-env", type=str, default="OPENROUTER_API_KEY")
     parser.add_argument("--rewrite-base-url", type=str, default="https://openrouter.ai/api/v1")
-    parser.add_argument("--enable-cheap-model-longtail", action="store_true")
-    parser.add_argument("--cheap-model-provider", type=str, default="openrouter")
-    parser.add_argument("--cheap-model-model", type=str, default="openai/gpt-5.4-mini")
-    parser.add_argument("--cheap-model-api-key-env", type=str, default="OPENROUTER_API_KEY")
-    parser.add_argument("--cheap-model-base-url", type=str, default="https://openrouter.ai/api/v1")
     parser.add_argument("--snippet-judge-provider", type=str, default="openrouter")
     parser.add_argument("--snippet-judge-model", type=str, default="openai/gpt-4.1-mini")
     parser.add_argument("--snippet-judge-api-key-env", type=str, default="OPENROUTER_API_KEY")
@@ -66,15 +62,6 @@ def main() -> int:
             base_url=args.rewrite_base_url,
             proxy=args.proxy,
         )
-    cheap_model_llm = None
-    if args.enable_cheap_model_longtail:
-        cheap_model_llm = LLMConfig(
-            provider=args.cheap_model_provider,
-            model=args.cheap_model_model,
-            api_key_env=args.cheap_model_api_key_env,
-            base_url=args.cheap_model_base_url,
-            proxy=args.proxy,
-        )
     snippet_judge_llm = LLMConfig(
         provider=args.snippet_judge_provider,
         model=args.snippet_judge_model,
@@ -91,8 +78,7 @@ def main() -> int:
         harvest_limit_per_template=args.harvest_limit,
         cutoff_year=args.cutoff_year,
         duckduckgo_top_k=args.duckduckgo_top_k,
-        cheap_model_longtail_enabled=args.enable_cheap_model_longtail,
-        cheap_model_longtail_llm=cheap_model_llm,
+        route1_light_fallback_enabled=not args.disable_route1_light_fallback,
         number_snippet_judge_llm=snippet_judge_llm,
         proxy=args.proxy,
         output_path=args.output,

@@ -1,15 +1,17 @@
-# Design 5-13
+# Design 5-13-restored
 
-This document defines the intended design for branch `5-13`.
+This document defines the current design for branch `5-13-restored`.
 
-It replaces the `5-12` branch direction for new work on this branch, while keeping the same high-level project goal:
+It restores the intended `5-13` work after the incident on `5-13-after-incident`, while keeping the same high-level project goal:
 
 - generate conservative, auditable, SimpleQA-style short factual questions
 - keep the multi-generator architecture
 - keep shared LLM rewriting
 - keep shared long-tail filtering
 
-The main strategic change is that **Route 1 returns to template-led generation**.
+The main strategic change is that **Route 1 returns to template-led generation inside the shared multi-generator pipeline**.
+
+The validated restoration walkthrough is recorded in `docs/walkthroughs/product_manufacturer_walkthrough_5_13_restored.md`.
 
 ## 1. Goals
 
@@ -38,7 +40,7 @@ The following design choices remain:
 
 This branch is therefore not a rollback to the older monolithic template-only architecture. It is a **route reset for Route 1 inside the newer shared-pipeline design**.
 
-## 3. Main Changes on 5-13
+## 3. Main Changes on 5-13-restored
 
 ### 3.1 Route 1 is template-led again
 
@@ -148,22 +150,21 @@ Delete as long-tail gates:
 - claim-count thresholds
 - similar internal index-based popularity filters
 
-New two-stage long-tail filtering:
+New long-tail and difficulty filtering:
 
 1. DuckDuckGo search-based filtering
-2. cheap, fast, small-model QA filtering
-
-Suitable small-model examples include:
-
-- GPT-4.1-mini
-- Gemini 3.1 Flash
+2. optional SimpleQA Verified-style model grading/difficulty review
 
 Design intent:
 
 - search checks whether the answer is exposed too directly in public retrieval
-- small-model QA checks whether the question is still too easy for a cheap general model
+- model grading checks whether configured answer models solve the question too reliably
 
-The cheap-model stage is a difficulty heuristic, not a factuality oracle.
+There is no standalone cheap-model exact-match QA rejection gate. SimpleQA Verified uses autorated model answers for difficulty/evaluation rather than a separate cheap-model long-tail rejection phase, so model-answer judgment belongs in the grading panel.
+
+DuckDuckGo filtering uses normalized answer matching over answer labels and aliases. It normalizes case, punctuation, common number forms, and common country aliases where applicable. Search-result title hits and snippet hits are thresholded evidence signals, not unconditional rejection rules; setting thresholds to `1.0` intentionally lets candidates pass stage 1 for walkthrough/debug runs.
+
+For `Number` templates, normalize the answer during candidate construction for future comparison and SimpleQA Verified-style margin generation. Compute the reference margin before DuckDuckGo filtering. For number answers outside the exact-integer `[-10, 30]` bucket, DuckDuckGo leakage matching extracts Arabic-number and English-number mentions from titles/snippets, normalizes them, and counts them as answer exposure when they fall inside the acceptable range. Exact integers in `[-10, 30]` keep the existing string/word matching plus optional snippet-judge rule instead of using margin matching.
 
 Both stages must remain auditable:
 
@@ -211,9 +212,12 @@ Each route is responsible for:
 
 For Route 1 specifically:
 
-- harvest from Wikidata-backed sources
+- try the heavy WDQS path first where intended
+- fall back to the light Wikibase API path (`wbsearchentities`, `wbgetentities`) when WDQS fails or returns no candidates, unless the light fallback is disabled
 - construct canonical questions from templates
 - pass enough structured metadata downstream for shared rewrite and route-local validation
+
+The light path is a fallback only. It must repair or reject malformed candidates before validation; a candidate with an empty subject label must not proceed to ambiguity search.
 
 ### 4.2 Validator layer
 
@@ -229,6 +233,10 @@ Example split:
   - non-answer leakage checks tied to Wikidata labels/aliases
   - disambiguation against Wikidata competitors
   - time-invariance checks for Wikidata-derived facts
+- Wikidata client hardening:
+  - HTTP-200 API payloads containing `error` are treated as API errors, not successful responses
+  - retryable errors such as `maxlag` can sleep/retry and are recorded in telemetry
+  - blank `wbsearchentities` queries are skipped and recorded instead of sent to the API
 - future route validators:
   - route-specific grounding
   - route-specific ambiguity checks
@@ -248,11 +256,13 @@ Required behavior:
 - produce a short natural question
 - preserve necessary disambiguating information
 - preserve the same answer relation and information scope as the canonical question
+- do not add or change information from the canonical question
 - do not narrow broad relations into more specific unsupported facts
 - avoid answer leakage
+- avoid putting the answer or answer aliases in the rewritten question
 - avoid live-status phrasing
 - respect the temporal policy for question wording
-- generate answer-blind or minimally leaky search queries
+- generate exactly five answer-blind or minimally leaky search queries
 - return useful answer aliases or abbreviations for snippet matching audit
 
 For Route 1, the rewrite layer should generally start from a template-derived canonical question rather than raw source text alone.
@@ -267,16 +277,17 @@ Proposed order:
    - the rewritten question
    - the LLM-generated query set
 2. score answer exposure in search results
-3. run cheap-model QA against the rewritten question
+3. optionally run a SimpleQA Verified-style answer-model panel and autorater
 4. accept or reject using explicit configurable rules
 
 Possible rejection patterns:
 
 - search results expose the answer too directly
-- a cheap model answers correctly too reliably
-- combined search and cheap-model evidence shows the question is not long-tail enough
+- the model panel accuracy exceeds the configured difficulty threshold
 
 The exact thresholds can remain configurable and should be tuned from pilot evidence.
+
+For restored branch validation, the `product_manufacturer` walkthrough used thresholds of `1.0` for both DuckDuckGo stage 1 and model-panel accuracy so the candidate could pass through the full vertical slice while still recording every evidence signal.
 
 ## 5. Route 1 Design
 
@@ -295,14 +306,15 @@ The route may use:
 ### 5.2 Route 1 flow
 
 ```text
-Route 1 harvest
+Route 1 heavy WDQS harvest
+  -> light Wikibase API fallback when enabled and needed
   -> template selection
   -> candidate fact extraction
   -> Route 1 validators before rewrite
   -> canonical template question
   -> shared LLM rewrite + query generation
   -> DuckDuckGo long-tail filter
-  -> cheap-model QA long-tail filter
+  -> optional SimpleQA Verified-style model grading/difficulty review
   -> Route 1 post-rewrite checks
   -> shared recording and output
 ```
@@ -317,6 +329,8 @@ Validators for Route 1 should include:
 - time-invariance validation
 - answer leakage checks
 - deduplication
+- subject-label presence before ambiguity search
+- client-level handling for Wikidata API `error` payloads
 
 Preferred reuse source:
 
@@ -344,7 +358,43 @@ The template layer should make it easier to:
 - preserve answer uniqueness
 - reuse high-precision validator logic
 
-## 6. Non-Wikidata Route Policy
+## 6. Template Catalog And Status Index
+
+Canonical terminology is defined in `docs/terminology.md`. New code and docs should use `template_key` for identifiers such as `benchmark_release_date`, and `domain` for broad content areas such as `Architecture and Transportation`.
+
+The template catalog is a first-class planning artifact, not just a list of prompts. Each template must carry explicit metadata for:
+
+- `template_key`
+- `domain`
+- `answer_type`
+- `answer_format`
+- `composition_style`
+- `reasoning_style`
+- `temporal_mode`
+- `current_status` in reports
+
+`answer_type` is required for every template because downstream validation, number normalization, SimpleQA Verified-style margin handling, and reporting depend on it. Current accepted values are `Person`, `Organization`, `Place`, `Work`, `Date`, `Number`, and `Entity`.
+
+Older code kept template keys in `DomainTemplate.domain` and broad domains in `DomainTemplate.topic`. Those names are compatibility shims only. Future work should prefer `template.template_key` and `template.template_domain`, and artifact readers should accept old JSONL fields only at the boundary.
+
+The old `active` / `blueprint` split came from the small-pilot era and should not drive current behavior. It may survive as a legacy catalog bucket for compatibility, but the human-facing reports should be organized by `current_status`, domain, template key, and answer type.
+
+The `frozen` bucket is an explicit template-key override. If a template key is listed in `FROZEN_TEMPLATE_KEYS`, it should render as `current_status = frozen` even when its original/latest live status was `error`, `unproven_no_result`, or some other run-derived result. The original run-derived status must still be retained as metadata (`original_current_status`, `latest_live_status`, and `best_known_semantic_status`) so we can explain why the template was frozen rather than losing diagnostic history.
+
+The main status buckets are:
+
+- `proven`: a template has a known successful generated question in the review bundle or accepted artifacts.
+- `rejected_only`: runs reached candidate generation but current review rejected the outputs.
+- `error`: runs failed operationally.
+- `unproven_no_result`: a real run produced no candidate, often because the 2026 window was sparse or an executor/probe was missing.
+- `untracked`: the template has no usable current artifact trail.
+- `frozen`: the catalog intentionally preserves the template for future design work while excluding it from normal activation.
+
+The canonical human-readable status report is `docs/template_status_index.md`. The JSON companion may remain in `outputs/template_status_index.json` as a machine artifact.
+
+Status reports are keyed by `template_key`. Every catalog template must have exactly one template key and one broad domain.
+
+## 7. Non-Wikidata Route Policy
 
 Future routes are allowed, but they must not inherit Route 1 assumptions by default.
 
@@ -357,7 +407,7 @@ For a non-Wikidata route:
 
 The framework should share contracts, not forced source assumptions.
 
-## 7. Auditing Requirements
+## 8. Auditing Requirements
 
 Every accepted or rejected candidate should store enough information to reconstruct:
 
@@ -367,14 +417,18 @@ Every accepted or rejected candidate should store enough information to reconstr
 - rewritten question after rewrite
 - search queries used
 - DuckDuckGo evidence
-- cheap-model QA evidence
+- model grading evidence when enabled
 - validator decisions
 - rejection reasons
 - source identifiers and URLs where available
+- phase timings and bottlenecks
+- Wikidata/search/model telemetry and operational failures
+
+Walkthrough-grade runs should also record every DuckDuckGo query, result URL, snippet, string-inclusion result, small-model answer, and grader judgement. The restored branch includes such a walkthrough for the `product_manufacturer` template.
 
 This remains critical because `5-13` is intended to stay conservative and reviewable.
 
-## 8. Migration Guidance from 5-12
+## 9. Migration Guidance from 5-12
 
 When implementing this branch, prefer the following migration logic:
 
@@ -382,21 +436,21 @@ When implementing this branch, prefer the following migration logic:
 2. keep shared rewrite/output contracts
 3. reintroduce templates for Route 1
 4. remove sitelink/claim-count long-tail gating
-5. add the second long-tail stage using a cheap QA model
+5. add SimpleQA Verified-style grading/difficulty review rather than a standalone cheap-model QA rejection gate
 6. separate validator bundles by route
 7. reuse `5-12` disambiguation and deduplication logic where possible
 
-## 9. Summary
+## 10. Summary
 
-Branch `5-13` keeps the newer shared-pipeline worldview from `5-12`, but changes the Route 1 and validator philosophy:
+Branch `5-13-restored` keeps the newer shared-pipeline worldview from `5-12`, but changes the Route 1 and validator philosophy:
 
 - Route 1 is template-led again
 - years and dates are allowed when historically settled and earlier than 2025 by default
 - validators are route-specific, not globally assumed
 - one shared LLM call still produces both question rewrite and search queries
-- long-tail filtering becomes:
+- long-tail and difficulty filtering becomes:
   - DuckDuckGo search
-  - cheap, fast, small-model QA
+  - optional SimpleQA Verified-style model grading
 - existing `5-12` Wikidata validators should be reused where they still fit
 
 This branch should therefore be treated as a **template-restored, route-decoupled evolution of `5-12`**, not as a return to the older all-in-one template architecture.

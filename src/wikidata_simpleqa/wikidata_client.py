@@ -109,6 +109,14 @@ class WikidataClient:
 
     def search_entities(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search for possible label competitors."""
+        query = query.strip()
+        if not query:
+            self.record_problem(
+                "wbsearchentities_blank_query",
+                "Skipped wbsearchentities lookup because the search query was blank.",
+                limit=limit,
+            )
+            return []
         self._log_checkpoint(
             "wbsearchentities_start",
             "Starting wbsearchentities lookup.",
@@ -190,6 +198,33 @@ class WikidataClient:
                 self.request_counters["network_requests"] += 1
                 with urlopen(request, timeout=self.timeout_seconds) as response:
                     payload = json.loads(response.read().decode("utf-8"))
+                if "error" in payload:
+                    error_message = self._api_error_message(payload)
+                    last_error = RuntimeError(error_message)
+                    retryable = self._api_error_is_retryable(payload)
+                    if retryable and attempt < self.max_retries - 1:
+                        self.request_counters["retry_count"] += 1
+                        self._sleep_before_retry(
+                            url=url,
+                            attempt=attempt + 1,
+                            reason=f"api_{self._api_error_code(payload)}",
+                            delay_seconds=self._api_error_retry_delay_seconds(payload, attempt),
+                        )
+                        continue
+                    self.request_counters["errors"] += 1
+                    self.request_events.append(
+                        {
+                            "url": url,
+                            "accept": accept,
+                            "cache_hit": False,
+                            "attempts": attempt + 1,
+                            "duration_ms": int((perf_counter() - started) * 1000),
+                            "status": "error",
+                            "error_type": "WikidataAPIError",
+                            "error_message": error_message,
+                        }
+                    )
+                    raise last_error
                 if cache_path is not None and "error" not in payload:
                     cache_path.write_text(json.dumps(payload), encoding="utf-8")
                 self.request_events.append(
@@ -303,6 +338,49 @@ class WikidataClient:
         if retry_after_header.isdigit():
             return max(float(retry_after_header), self.min_retry_after_seconds)
         if exc.code == 429:
+            return self.min_retry_after_seconds
+        return min(2 ** attempt, 4)
+
+    def _api_error_code(self, payload: dict[str, Any]) -> str:
+        """Return a normalized Wikidata API error code."""
+        error = payload.get("error", {})
+        if not isinstance(error, dict):
+            return "unknown"
+        return str(error.get("code", "unknown")).strip() or "unknown"
+
+    def _api_error_message(self, payload: dict[str, Any]) -> str:
+        """Render a concise message for HTTP-200 Wikidata API errors."""
+        error = payload.get("error", {})
+        if not isinstance(error, dict):
+            return "Wikidata API error: malformed error payload"
+        code = self._api_error_code(payload)
+        info = str(error.get("info", "")).strip()
+        if info:
+            return f"Wikidata API error: {code}: {info}"
+        return f"Wikidata API error: {code}"
+
+    def _api_error_is_retryable(self, payload: dict[str, Any]) -> bool:
+        """Decide whether a JSON-level API error should be retried."""
+        code = self._api_error_code(payload).casefold()
+        return code in {
+            "maxlag",
+            "readonly",
+            "internal_api_error",
+            "ratelimited",
+            "timeout",
+        }
+
+    def _api_error_retry_delay_seconds(self, payload: dict[str, Any], attempt: int) -> float:
+        """Resolve retry delay from Wikidata API error payloads."""
+        error = payload.get("error", {})
+        retry_after = ""
+        if isinstance(error, dict):
+            retry_after = str(error.get("retry-after", "") or error.get("retry_after", "")).strip()
+        try:
+            return max(float(retry_after), self.min_retry_after_seconds)
+        except ValueError:
+            pass
+        if self._api_error_code(payload).casefold() == "maxlag":
             return self.min_retry_after_seconds
         return min(2 ** attempt, 4)
 

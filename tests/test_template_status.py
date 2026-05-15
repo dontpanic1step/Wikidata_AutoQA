@@ -92,7 +92,7 @@ class TemplateStatusTests(unittest.TestCase):
             accepted_paths=[ROOT / "outputs" / "rerun_missing_review_2026_accepted.jsonl"],
             status_mode="latest_live_status",
         )
-        row = next(template for template in index["templates"] if template["domain"] == "dataset_creator_math")
+        row = next(template for template in index["templates"] if template["template_key"] == "dataset_creator_math")
         self.assertEqual(row["current_status"], "unproven_no_result")
         self.assertEqual(row["latest_live_status"], "unproven_no_result")
         self.assertEqual(row["best_known_semantic_status"], "rejected_only")
@@ -105,8 +105,8 @@ class TemplateStatusTests(unittest.TestCase):
             accepted_paths=status_accepted_paths(ROOT),
             status_mode="latest_live_status",
         )
-        row = next(template for template in index["templates"] if template["domain"] == "ordinal_volume_author")
-        self.assertEqual(row["catalog_status"], "frozen")
+        row = next(template for template in index["templates"] if template["template_key"] == "ordinal_volume_author")
+        self.assertEqual(row["legacy_catalog_bucket"], "frozen")
         self.assertEqual(row["current_status"], "frozen")
         self.assertEqual(row["original_current_status"], "error")
         self.assertEqual(row["latest_live_status"], "error")
@@ -120,7 +120,7 @@ class TemplateStatusTests(unittest.TestCase):
             accepted_paths=[ROOT / "outputs" / "rerun_missing_review_2026_accepted.jsonl"],
             status_mode="best_known_semantic_status",
         )
-        row = next(template for template in index["templates"] if template["domain"] == "dataset_creator_math")
+        row = next(template for template in index["templates"] if template["template_key"] == "dataset_creator_math")
         self.assertEqual(row["current_status"], "rejected_only")
         self.assertEqual(row["latest_live_status"], "unproven_no_result")
         self.assertEqual(row["best_known_semantic_status"], "rejected_only")
@@ -203,7 +203,7 @@ class TemplateStatusTests(unittest.TestCase):
                 accepted_paths=[accepted_one, accepted_two],
                 status_mode="best_known_semantic_status",
             )
-            row = next(template for template in index["templates"] if template["domain"] == "dataset_creator_math")
+            row = next(template for template in index["templates"] if template["template_key"] == "dataset_creator_math")
             reliability = row["reliability"]
             self.assertEqual(reliability["total_runs"], 2)
             self.assertEqual(reliability["request_clean_runs"], 1)
@@ -296,7 +296,7 @@ class TemplateStatusTests(unittest.TestCase):
             accepted_paths=[ROOT / "outputs" / "adaptive_retry_8_v3_accepted.jsonl"],
             status_mode="latest_live_status",
         )
-        row = next(template for template in index["templates"] if template["domain"] == "product_manufacturer")
+        row = next(template for template in index["templates"] if template["template_key"] == "product_manufacturer")
         self.assertIn("pass_rate", row["reliability"] or {"pass_rate": 0})
 
     def test_markdown_uses_simple_table_without_error_reasons_or_pass_rate(self) -> None:
@@ -308,8 +308,9 @@ class TemplateStatusTests(unittest.TestCase):
             status_mode="latest_live_status",
         )
         rendered = render_template_status_markdown(index)
-        self.assertIn("| Domain | Template | Canonical Question | Status | Successful Generated Question |", rendered)
+        self.assertIn("| Domain | Template | Answer Type | Canonical Question | Successful Generated Question |", rendered)
         self.assertIn("## Frozen", rendered)
+        self.assertIn("| Language and Literature | ordinal_volume_author | Person |", rendered)
         self.assertNotIn("pass_rate", rendered)
         self.assertNotIn("HTTP Error 429", rendered)
 

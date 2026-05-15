@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .models import CandidateFact
+from .number_reference import normalize_number_answer
 
 
 @dataclass(slots=True)
@@ -59,6 +60,17 @@ class GeneratedCandidate:
     rewritten_question: str | None = None
     source_candidate: CandidateFact | None = field(default=None, repr=False)
 
+    def __post_init__(self) -> None:
+        """Normalize numeric answers at the shared downstream boundary."""
+        if self.answer_type != "Number":
+            return
+        self.answer = normalize_number_answer(self.answer, self.answer_type)
+        self.answer_aliases = [
+            normalize_number_answer(alias, self.answer_type)
+            for alias in self.answer_aliases
+        ]
+        self.answer_entity.name = normalize_number_answer(self.answer_entity.name, self.answer_type)
+
     @property
     def final_question(self) -> str:
         """Return the final surfaced question text."""
@@ -104,6 +116,9 @@ class GeneratedCandidate:
             "rewritten_question": self.rewritten_question,
             "question_family": self.question_family,
             "answer_type": self.answer_type,
+            "template_key": self.source_template_domain,
+            "domain": self.topic,
+            "legacy_domain": self.source_template_domain,
             "topic": self.topic,
             "target_time": self.target_time,
             "search_queries": self.search_queries,

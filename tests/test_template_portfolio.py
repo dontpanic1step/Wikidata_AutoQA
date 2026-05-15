@@ -40,9 +40,10 @@ class TemplatePortfolioTests(unittest.TestCase):
             status_index=index,
             registry=load_salvage_registry(default_salvage_registry_path(ROOT)),
         )
-        row = next(item for item in board["templates"] if item["domain"] == "product_manufacturer")
+        row = next(item for item in board["templates"] if item["template_key"] == "new_nature_reserve_country")
+        self.assertEqual(row["domain"], "Geography")
         self.assertEqual(row["salvage_potential"], "high")
-        self.assertEqual(row["salvage_stage"], "query_rewrite")
+        self.assertEqual(row["salvage_stage"], "family_scope_rewrite")
         self.assertIn("direct_candidate_query_failed", row["top_request_problem_kinds"])
         self.assertEqual(row["workstream"], "A_semantic_rewrite")
 

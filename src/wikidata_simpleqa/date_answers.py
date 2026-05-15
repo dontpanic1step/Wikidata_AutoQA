@@ -22,7 +22,7 @@ MONTH_NAMES = {
 
 def normalize_wikidata_date_literal(value: str) -> str:
     """Normalize a Wikidata date literal to ISO day precision."""
-    return value[:10]
+    return value.lstrip("+")[:10]
 
 
 def format_iso_date_for_answer(value: str) -> str:

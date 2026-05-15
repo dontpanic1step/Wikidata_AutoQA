@@ -1,4 +1,4 @@
-"""Config-driven domain template catalog."""
+"""Config-driven template catalog."""
 
 from __future__ import annotations
 
@@ -41,7 +41,7 @@ RETIRED_TEMPLATE_NOTES: dict[str, str] = {
     ),
 }
 
-FROZEN_TEMPLATE_DOMAINS: set[str] = {
+FROZEN_TEMPLATE_KEYS: set[str] = {
     "wedding_age_gap",
     "ordinal_spouse",
     "ordinal_country_president",
@@ -69,10 +69,13 @@ FROZEN_TEMPLATE_DOMAINS: set[str] = {
     "project_partner_count",
 }
 
+# Backward-compatible alias for older code and notes.
+FROZEN_TEMPLATE_DOMAINS = FROZEN_TEMPLATE_KEYS
+
 
 def _template(
+    template_key: str,
     domain: str,
-    topic: str,
     answer_type: str,
     question_family: str,
     subject_type_qid: str,
@@ -94,21 +97,21 @@ def _template(
     exact_instance_only: bool = False,
     allow_non_answer_location_descriptor: bool = True,
 ) -> DomainTemplate:
-    """Build a domain template with explicit metadata."""
-    if domain in FROZEN_TEMPLATE_DOMAINS and status == "blueprint":
+    """Build a template with explicit metadata."""
+    if template_key in FROZEN_TEMPLATE_KEYS and status == "blueprint":
         status = "frozen"
     normalized_reasoning_style = normalize_reasoning_style(
         reasoning_style or composition_style
     )
     evidence_runs = (
-        PROVEN_TEMPLATE_RUNS.get(domain, [])
+        PROVEN_TEMPLATE_RUNS.get(template_key, [])
         if status in {"active", "multi_hop_pilot", "date_answer_pilot"}
         else []
     )
     evidence_status = "proven_in_runs" if evidence_runs else "not_yet_proven"
     return DomainTemplate(
-        domain=domain,
-        topic=topic,
+        domain=template_key,
+        topic=domain,
         answer_type=answer_type,
         question_family=question_family,
         subject_type_qid=subject_type_qid,
@@ -126,7 +129,7 @@ def _template(
         status=status,
         evidence_status=evidence_status,
         evidence_runs=evidence_runs.copy(),
-        evidence_notes=PENDING_TEMPLATE_NOTES.get(domain, ""),
+        evidence_notes=PENDING_TEMPLATE_NOTES.get(template_key, ""),
         query_tags=(query_tags or []).copy(),
         required_topic_keywords=(required_topic_keywords or []).copy(),
         exact_instance_only=exact_instance_only,
@@ -629,11 +632,13 @@ def get_active_templates() -> list[DomainTemplate]:
 
 
 def get_blueprint_templates() -> list[DomainTemplate]:
-    """Return the large-scale blueprint catalog for future expansion."""
+    """Return legacy blueprint templates that have not been promoted elsewhere."""
     return [
         template
         for template in BLUEPRINT_TEMPLATE_CATALOG
-        if template.domain not in RETIRED_TEMPLATE_NOTES and template.status != "frozen"
+        if template.template_key not in RETIRED_TEMPLATE_NOTES
+        and template.template_key not in PROVEN_TEMPLATE_RUNS
+        and template.status != "frozen"
     ]
 
 
@@ -666,8 +671,8 @@ def get_stage5b_templates() -> list[DomainTemplate]:
 
 
 def get_all_templates() -> list[DomainTemplate]:
-    """Return active, multi-hop pilot, and blueprint templates."""
-    return (
+    """Return one canonical row per template key."""
+    return _dedupe_templates_by_key(
         get_active_templates()
         + get_multi_hop_pilot_templates()
         + get_date_answer_pilot_templates()
@@ -676,12 +681,29 @@ def get_all_templates() -> list[DomainTemplate]:
     )
 
 
-def get_template_by_domain(domain: str) -> DomainTemplate | None:
-    """Return a template by its domain key."""
+def _dedupe_templates_by_key(templates: list[DomainTemplate]) -> list[DomainTemplate]:
+    """Return templates deduplicated by template key, keeping the first entry."""
+    unique: list[DomainTemplate] = []
+    seen_template_keys: set[str] = set()
+    for template in templates:
+        if template.template_key in seen_template_keys:
+            continue
+        seen_template_keys.add(template.template_key)
+        unique.append(template)
+    return unique
+
+
+def get_template_by_key(template_key: str) -> DomainTemplate | None:
+    """Return a template by its unique template key."""
     for template in get_all_templates():
-        if template.domain == domain:
+        if template.template_key == template_key:
             return template
     return None
+
+
+def get_template_by_domain(domain: str) -> DomainTemplate | None:
+    """Return a template by key; kept for older scripts that used this name."""
+    return get_template_by_key(domain)
 
 
 def get_stage1_templates() -> list[DomainTemplate]:
