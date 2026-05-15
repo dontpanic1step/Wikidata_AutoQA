@@ -233,11 +233,12 @@ def build_template_status_index(
             filtered_reasons,
             all_rejection_reasons,
         )
-        status = (
+        original_current_status = (
             best_known_semantic_status
             if status_mode == "best_known_semantic_status"
             else latest_live_status
         )
+        status = "frozen" if template.status == "frozen" else original_current_status
         reliability = _build_reliability_summary(
             run_history.get(template.domain, []),
             best_known_semantic_status=best_known_semantic_status,
@@ -247,9 +248,11 @@ def build_template_status_index(
             {
                 "domain": template.domain,
                 "topic": template.topic,
+                "canonical_question_template": template.canonical_question_template,
                 "question_family": template.question_family,
                 "catalog_status": template.status,
                 "current_status": status,
+                "original_current_status": original_current_status,
                 "status_mode": status_mode,
                 "latest_live_status": latest_live_status,
                 "best_known_semantic_status": best_known_semantic_status,
@@ -287,6 +290,7 @@ def render_template_status_markdown(index: dict[str, Any]) -> str:
 
     for bucket in (
         "proven",
+        "frozen",
         "rejected_only",
         "error",
         "unproven_no_result",
@@ -303,50 +307,23 @@ def render_template_status_markdown(index: dict[str, Any]) -> str:
         if not bucket_rows:
             lines.append("- None")
             continue
+        lines.extend(
+            [
+                "| Domain | Template | Canonical Question | Status | Successful Generated Question |",
+                "|---|---|---|---|---|",
+            ]
+        )
         for row in bucket_rows:
-            domain = row["domain"]
-            if bucket == "proven":
-                example = row.get("proven_example") or {}
-                lines.append(
-                    f"- `{domain}`: `{example.get('question', '')}` -> `{example.get('answer', '')}`"
+            example = row.get("proven_example") or {}
+            lines.append(
+                "| {topic} | {domain} | {canonical_question} | {status} | {success_question} |".format(
+                    topic=row["topic"],
+                    domain=row["domain"],
+                    canonical_question=row.get("canonical_question_template", ""),
+                    status=row["current_status"],
+                    success_question=example.get("question", ""),
                 )
-                continue
-            if bucket == "rejected_only":
-                reasons = row.get("rejection_reasons", [])
-                rendered_reasons = ", ".join(f"`{reason}`" for reason in reasons) or "`unknown`"
-                reliability_text = _render_reliability_detail(row.get("reliability", {}))
-                if reliability_text:
-                    lines.append(f"- `{domain}`: {rendered_reasons}; {reliability_text}")
-                else:
-                    lines.append(f"- `{domain}`: {rendered_reasons}")
-                continue
-            if bucket == "error":
-                latest = row.get("latest_run") or {}
-                status = latest.get("status", "error")
-                message = latest.get("error_message", "") or latest.get("notes", {}).get(
-                    "error_message",
-                    "",
-                )
-                detail = row.get("status_detail") or {}
-                detail_text = _render_status_detail(detail)
-                if detail_text:
-                    lines.append(f"- `{domain}`: `{status}`; `{message}`; {detail_text}")
-                else:
-                    lines.append(f"- `{domain}`: `{status}`; `{message}`")
-                continue
-            latest = row.get("latest_run") or {}
-            status = latest.get("status", "untracked")
-            detail = row.get("status_detail") or {}
-            detail_text = _render_status_detail(detail)
-            reliability_text = _render_reliability_detail(row.get("reliability", {}))
-            if detail_text and reliability_text:
-                lines.append(f"- `{domain}`: `{status}`; {detail_text}; {reliability_text}")
-            elif detail_text:
-                lines.append(f"- `{domain}`: `{status}`; {detail_text}")
-            elif reliability_text:
-                lines.append(f"- `{domain}`: `{status}`; {reliability_text}")
-            else:
-                lines.append(f"- `{domain}`: `{status}`")
+            )
     return "\n".join(lines) + "\n"
 
 

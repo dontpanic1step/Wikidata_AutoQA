@@ -9,7 +9,7 @@ from .canonical_questions import build_canonical_question
 from .candidate_harvester import harvest_candidates
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .models import CandidateFact, DomainTemplate
-from .pipeline import _validate_candidate
+from .route1_validators import validate_route1_candidate
 from .wikipedia_client import WikipediaClient
 
 
@@ -144,7 +144,7 @@ def _prepare_candidate_fact(
     candidate: CandidateFact,
 ) -> CandidateFact | None:
     """Validate one harvested candidate and attach a canonical question."""
-    resolution = _validate_candidate(client, settings, candidate, template)
+    resolution = validate_route1_candidate(client, settings, candidate, template)
     if not hasattr(resolution, "descriptor"):
         return None
     candidate.ambiguity_status = resolution.status

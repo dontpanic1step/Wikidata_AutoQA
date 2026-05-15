@@ -67,6 +67,7 @@ class DisambiguationTests(unittest.TestCase):
                     }
                 }
             },
+            cutoff_year=2025,
         )
         self.assertIsNotNone(resolution)
         assert resolution is not None
@@ -92,6 +93,7 @@ class DisambiguationTests(unittest.TestCase):
                     }
                 }
             },
+            cutoff_year=2025,
         )
         self.assertIsNone(resolution)
 
@@ -142,6 +144,7 @@ class DisambiguationTests(unittest.TestCase):
                     }
                 }
             },
+            cutoff_year=2025,
         )
         self.assertIsNotNone(resolution)
         assert resolution is not None
@@ -162,6 +165,7 @@ class DisambiguationTests(unittest.TestCase):
             target_property_pid="P17",
             target_property_label="country",
             canonical_question_template="In which country is the railway station {descriptor} located?",
+            allow_non_answer_location_descriptor=False,
         )
         candidate = CandidateFact(
             subject_qid="Q-station",
@@ -204,6 +208,79 @@ class DisambiguationTests(unittest.TestCase):
                     }
                 }
             },
+            cutoff_year=2025,
+        )
+        self.assertIsNone(resolution)
+
+    def test_same_medium_collision_can_use_pre_cutoff_year_descriptor(self) -> None:
+        candidate = self.make_candidate()
+        candidate.date_value = "2024-03-01"
+        resolution = resolve_subject_ambiguity(
+            candidate=candidate,
+            template=FILM_DIRECTOR_TEMPLATE,
+            competitor_entities={
+                "Q-other-film": {
+                    "claims": {
+                        "P31": [
+                            {
+                                "mainsnak": {
+                                    "datavalue": {
+                                        "value": {"id": "Q11424"}
+                                    }
+                                }
+                            }
+                        ],
+                        "P577": [
+                            {
+                                "mainsnak": {
+                                    "datavalue": {
+                                        "value": {"time": "+2023-09-01T00:00:00Z"}
+                                    }
+                                }
+                            }
+                        ],
+                    }
+                }
+            },
+            cutoff_year=2025,
+        )
+        self.assertIsNotNone(resolution)
+        assert resolution is not None
+        self.assertEqual(resolution.status, "resolved_by_year_descriptor")
+        self.assertEqual(resolution.descriptor, "Project Hail Mary (2024)")
+        self.assertEqual(resolution.signature, ["2024"])
+
+    def test_same_medium_collision_rejects_cutoff_year_descriptor(self) -> None:
+        candidate = self.make_candidate()
+        candidate.date_value = "2025-03-01"
+        resolution = resolve_subject_ambiguity(
+            candidate=candidate,
+            template=FILM_DIRECTOR_TEMPLATE,
+            competitor_entities={
+                "Q-other-film": {
+                    "claims": {
+                        "P31": [
+                            {
+                                "mainsnak": {
+                                    "datavalue": {
+                                        "value": {"id": "Q11424"}
+                                    }
+                                }
+                            }
+                        ],
+                        "P577": [
+                            {
+                                "mainsnak": {
+                                    "datavalue": {
+                                        "value": {"time": "+2024-09-01T00:00:00Z"}
+                                    }
+                                }
+                            }
+                        ],
+                    }
+                }
+            },
+            cutoff_year=2025,
         )
         self.assertIsNone(resolution)
 

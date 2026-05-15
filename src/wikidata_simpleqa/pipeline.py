@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .ambiguity import resolve_subject_ambiguity
 from .canonical_questions import build_canonical_question
 from .candidate_harvester import harvest_candidates
 from .config import Settings
@@ -12,25 +11,19 @@ from .domain_templates import get_stage1_templates
 from .io import write_jsonl
 from .llm_rewrite import build_rewrite_payload, make_rewrite_client
 from .models import CandidateFact, RejectedCandidate
-from .subject_resources import canonical_subject_resource
+from .route1_validators import (
+    ensure_route1_subject_resource,
+    validate_route1_candidate,
+    validate_route1_rewritten_question,
+)
 from .validators import (
-    answer_is_unique,
-    candidate_matches_topic_constraints,
-    candidate_is_time_invariant,
-    find_exact_name_competitors,
-    has_forbidden_temporal_text,
-    has_year,
-    is_simple_question,
-    ordinal_candidate_is_safe,
-    preserves_required_anchors,
     question_leaks_any_answer,
     question_leaks_answer,
     question_leaks_bridge_entities,
     question_leaks_location_answer_context,
-    reasoning_path_is_connected,
-    reasoning_path_is_temporally_safe,
     reasoning_provenance_is_complete,
     shortcut_check,
+    violates_cutoff_year_policy,
 )
 from .wikidata_client import WikidataClient
 
@@ -62,6 +55,8 @@ def run_pipeline_for_templates(
             user_agent=settings.user_agent,
             proxy=settings.proxy,
             timeout_seconds=settings.timeout_seconds,
+            max_entity_ids_per_request=settings.wikidata_max_entity_ids_per_request,
+            log_checkpoints=settings.wikidata_log_checkpoints,
             cache_dir=settings.cache_dir,
         )
     rewrite_client = None
@@ -87,16 +82,9 @@ def run_pipeline_for_templates(
             candidate.disambiguation_signature = validation.signature
             candidate.competitor_qids = validation.competitor_qids
             candidate.canonical_question = build_canonical_question(candidate, template, validation)
-            enforce_non_temporal_question = _question_must_be_non_temporal(candidate)
-            candidate.validation_flags["no_year"] = (
-                not has_year(candidate.canonical_question)
-                if enforce_non_temporal_question
-                else True
-            )
+            candidate.validation_flags["no_year"] = True
             candidate.validation_flags["no_temporal_expression"] = (
-                not has_forbidden_temporal_text(candidate.canonical_question)
-                if enforce_non_temporal_question
-                else True
+                not violates_cutoff_year_policy(candidate.canonical_question, settings.cutoff_year)
             )
             candidate.validation_flags["answer_unique"] = True
             candidate.validation_flags["subject_unique_under_question"] = True
@@ -132,9 +120,9 @@ def run_pipeline_for_templates(
                 )
                 continue
 
-            _apply_rewrite_if_enabled(candidate, rewrite_client)
+            _apply_rewrite_if_enabled(candidate, rewrite_client, settings)
             final_question = (candidate.rewritten_question or candidate.canonical_question).strip()
-            _ensure_subject_resource(candidate)
+            ensure_route1_subject_resource(candidate)
             if candidate.subject_resource_key in seen_subject_resources:
                 rejected_records.append(
                     RejectedCandidate(
@@ -177,7 +165,7 @@ def run_pipeline_for_templates(
     )
 
 
-def _apply_rewrite_if_enabled(candidate: CandidateFact, rewrite_client) -> None:
+def _apply_rewrite_if_enabled(candidate: CandidateFact, rewrite_client, settings: Settings) -> None:
     candidate.validation_flags["llm_rewrite_used"] = False
     if rewrite_client is None:
         candidate.validation_flags["rewrite_failure_reason"] = "rewrite_disabled"
@@ -186,12 +174,26 @@ def _apply_rewrite_if_enabled(candidate: CandidateFact, rewrite_client) -> None:
     payload = build_rewrite_payload(candidate)
     try:
         rewritten = rewrite_client.rewrite_question(payload)
-        rewritten_question = str(rewritten.get("question", "")).strip()
     except Exception as exc:  # noqa: BLE001
         candidate.validation_flags["rewrite_failure_reason"] = f"rewrite_request_failed:{type(exc).__name__}"
         return
+    discard_reason_value = rewritten.get("discard_reason")
+    discard_reason = ""
+    if discard_reason_value not in {None, ""}:
+        discard_reason = str(discard_reason_value).strip()
+    if discard_reason:
+        candidate.validation_flags["rewrite_failure_reason"] = f"rewrite_discarded:{discard_reason}"
+        return
+    rewritten_question = str(
+        rewritten.get("rewritten_question", rewritten.get("question", ""))
+    ).strip()
 
-    failure_reason = _validate_rewritten_question(candidate, payload["required_anchors"], rewritten_question)
+    failure_reason = validate_route1_rewritten_question(
+        candidate,
+        payload["required_anchors"],
+        rewritten_question,
+        cutoff_year=settings.cutoff_year,
+    )
     if failure_reason is not None:
         candidate.validation_flags["rewrite_failure_reason"] = failure_reason
         return
@@ -206,29 +208,12 @@ def _validate_rewritten_question(
     required_anchors: list[str],
     rewritten_question: str,
 ) -> str | None:
-    if not rewritten_question:
-        return "rewrite_missing_question"
-    if _question_must_be_non_temporal(candidate):
-        if has_year(rewritten_question):
-            return "rewrite_contains_year"
-        if has_forbidden_temporal_text(rewritten_question):
-            return "rewrite_contains_temporal_expression"
-    if not preserves_required_anchors(rewritten_question, required_anchors):
-        return "rewrite_lost_required_anchor"
-    shortcut_results = shortcut_check(candidate, rewritten_question)
-    if not shortcut_results.get("question_requires_all_hops", True):
-        return "rewrite_lost_required_anchor"
-    if question_leaks_any_answer(
+    return validate_route1_rewritten_question(
+        candidate,
+        required_anchors,
         rewritten_question,
-        candidate.answer_labels,
-        candidate.answer_aliases,
-    ):
-        return "rewrite_leaks_answer"
-    if question_leaks_bridge_entities(rewritten_question, candidate):
-        return "rewrite_leaks_answer"
-    if not is_simple_question(rewritten_question):
-        return "rewrite_not_simple_question"
-    return None
+        cutoff_year=2025,
+    )
 
 
 def _validate_candidate(
@@ -237,89 +222,14 @@ def _validate_candidate(
     candidate: CandidateFact,
     template,
 ):
-    if not candidate.subject_label:
-        return RejectedCandidate(reason="no_english_label", candidate=candidate)
-    if not candidate.answer_labels:
-        return RejectedCandidate(reason="no_answer_label", candidate=candidate)
-    if not candidate_matches_topic_constraints(candidate, template):
-        return RejectedCandidate(reason="subject_topic_mismatch", candidate=candidate)
-    if has_year(candidate.subject_label) and not settings.allow_year_in_official_title:
-        return RejectedCandidate(reason="subject_label_contains_year", candidate=candidate)
-    if has_forbidden_temporal_text(candidate.subject_label):
-        return RejectedCandidate(
-            reason="subject_label_contains_temporal_expression",
-            candidate=candidate,
-        )
-    if not candidate_is_time_invariant(candidate, settings.run_date):
-        if candidate.target_property_pid != "P57":
-            return RejectedCandidate(reason="answer_not_time_invariant", candidate=candidate)
-        return RejectedCandidate(reason="future_dated_or_unsettled_fact", candidate=candidate)
-    if not answer_is_unique(candidate):
-        return RejectedCandidate(reason="answer_not_unique", candidate=candidate)
-    if not reasoning_provenance_is_complete(candidate):
-        return RejectedCandidate(
-            reason="provenance_incomplete",
-            candidate=candidate,
-            notes={"reasoning_error": "provenance_incomplete"},
-        )
-    if not reasoning_path_is_temporally_safe(candidate):
-        return RejectedCandidate(
-            reason="same_label_competitor_requires_temporal_disambiguation",
-            candidate=candidate,
-            notes={"reasoning_error": "hop_requires_temporal_disambiguation"},
-        )
-    if not reasoning_path_is_connected(candidate):
-        return RejectedCandidate(
-            reason="reasoning_path_not_connected",
-            candidate=candidate,
-            notes={"reasoning_error": "reasoning_path_not_connected"},
-        )
-    if not ordinal_candidate_is_safe(candidate):
-        return RejectedCandidate(
-            reason="ordinal_derivation_not_safe",
-            candidate=candidate,
-            notes={"reasoning_error": "ordinal_derivation_not_safe"},
-        )
-    if template.composition_style != "single_fact":
-        from .models import AmbiguityResolution
-
-        return AmbiguityResolution(
-            status="resolved_by_non_temporal_descriptor",
-            descriptor=candidate.source_metadata.get("question_format_args", {}).get(
-                "descriptor", candidate.subject_label
-            ),
-            signature=candidate.source_metadata.get("required_reasoning_clues", []),
-            competitor_qids=[],
-        )
-
-    search_results = client.search_entities(candidate.subject_label, limit=10)
-    competitor_qids = find_exact_name_competitors(
-        subject_qid=candidate.subject_qid,
-        subject_label=candidate.subject_label,
-        search_results=search_results,
-    )
-    competitor_entities = client.get_entities(competitor_qids) if competitor_qids else {}
-    resolution = resolve_subject_ambiguity(candidate, template, competitor_entities)
-    if resolution is None:
-        return RejectedCandidate(
-            reason="same_label_competitor_requires_temporal_disambiguation",
-            candidate=candidate,
-            notes={"competitor_qids": competitor_qids},
-        )
-    return resolution
+    return validate_route1_candidate(client, settings, candidate, template)
 
 
 def _question_must_be_non_temporal(candidate: CandidateFact) -> bool:
     """Return whether the question surface must avoid explicit temporal wording."""
-    return candidate.answer_type != "Date"
+    return False
 
 
 def _ensure_subject_resource(candidate: CandidateFact) -> None:
     """Populate a stable subject resource URL/key when missing."""
-    if candidate.subject_resource_url and candidate.subject_resource_key:
-        return
-    subject_resource_url, subject_resource_key = canonical_subject_resource(candidate.subject_qid)
-    if not candidate.subject_resource_url:
-        candidate.subject_resource_url = subject_resource_url
-    if not candidate.subject_resource_key:
-        candidate.subject_resource_key = subject_resource_key
+    ensure_route1_subject_resource(candidate)

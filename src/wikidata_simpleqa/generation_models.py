@@ -51,6 +51,8 @@ class GeneratedCandidate:
     search_queries: list[str] = field(default_factory=list)
     prefilter_longtail_features: dict[str, Any] = field(default_factory=dict)
     search_verification_features: dict[str, Any] = field(default_factory=dict)
+    cheap_model_verification_features: dict[str, Any] = field(default_factory=dict)
+    panel_grading_features: dict[str, Any] = field(default_factory=dict)
     validation: dict[str, Any] = field(default_factory=dict)
     notes: list[str] = field(default_factory=list)
     source_metadata: dict[str, Any] = field(default_factory=dict)
@@ -107,6 +109,8 @@ class GeneratedCandidate:
             "search_queries": self.search_queries,
             "prefilter_longtail_features": self.prefilter_longtail_features,
             "search_verification_features": self.search_verification_features,
+            "cheap_model_verification_features": self.cheap_model_verification_features,
+            "panel_grading_features": self.panel_grading_features,
             "validation": self.validation,
             "notes": self.notes,
             "source_metadata": self.source_metadata,

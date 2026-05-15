@@ -2,19 +2,23 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 
+from .cheap_model_qa import make_cheap_model_qa_client
 from .entity_normalization import normalize_name
 
-from .config import Settings
+from .config import LLMConfig, Settings
 from .domain_templates import get_stage1_templates
 from .generation_models import GeneratedCandidate
 from .generator_validators import (
+    build_removed_prefilter_stub,
     run_fact_level_longtail_prefilter,
+    run_cheap_model_longtail_verifier,
     run_search_based_longtail_verifier,
     validate_generated_candidate,
     validate_question_surface,
 )
+from .grading import ModelPanelMember, evaluate_model_panel, make_grader_client, summarize_panel_runs
 from .generators import WikidataLightGenerator, WikidataWikipediaHybridGenerator
 from .io import write_jsonl
 from .llm_rewrite import make_rewrite_client
@@ -45,6 +49,10 @@ def run_generation_pipeline(
     wikidata_client: WikidataClient | None = None,
     wikipedia_client: WikipediaClient | None = None,
     search_client: DuckDuckGoSearchClient | None = None,
+    cheap_model_client=None,
+    snippet_judge_client=None,
+    second_stage_model_clients: list[ModelPanelMember] | None = None,
+    grading_grader_client=None,
 ) -> GenerationResult:
     """Run the staged multi-generator pipeline and write accepted/rejected outputs."""
     if templates is None:
@@ -58,6 +66,8 @@ def run_generation_pipeline(
             user_agent=settings.user_agent,
             proxy=settings.proxy,
             timeout_seconds=settings.timeout_seconds,
+            max_entity_ids_per_request=settings.wikidata_max_entity_ids_per_request,
+            log_checkpoints=settings.wikidata_log_checkpoints,
             cache_dir=settings.cache_dir,
         )
     if wikipedia_client is None:
@@ -73,6 +83,11 @@ def run_generation_pipeline(
             proxy=settings.proxy,
             timeout_seconds=settings.timeout_seconds,
             cache_dir=settings.cache_dir,
+        )
+    if cheap_model_client is None and settings.cheap_model_longtail_enabled:
+        cheap_model_client = make_cheap_model_qa_client(
+            settings.cheap_model_longtail_llm,
+            settings.timeout_seconds,
         )
     rewrite_client = None
     if settings.rewrite_enabled:
@@ -95,16 +110,22 @@ def run_generation_pipeline(
         all_generated_candidates,
         settings=settings,
         search_client=search_client,
+        cheap_model_client=cheap_model_client,
+        snippet_judge_client=snippet_judge_client,
         rewrite_client=rewrite_client,
+        second_stage_model_clients=second_stage_model_clients,
+        grading_grader_client=grading_grader_client,
     )
     write_jsonl(settings.output_path, result.accepted)
     write_jsonl(settings.rejected_output_path, result.rejected)
+    process_telemetry = result.telemetry.copy()
     telemetry = {
         "wikidata": wikidata_client.stats_snapshot(),
         "wikipedia": wikipedia_client.request_events.copy(),
         "search": search_client.request_events.copy(),
         "enabled_routes": list(settings.enabled_routes),
     }
+    telemetry.update(process_telemetry.get("process_generated_candidates", {}))
     result.telemetry = telemetry
     return result
 
@@ -114,13 +135,26 @@ def process_generated_candidates(
     *,
     settings: Settings,
     search_client,
+    cheap_model_client=None,
+    snippet_judge_client=None,
     rewrite_client=None,
+    second_stage_model_clients: list[ModelPanelMember] | None = None,
+    grading_grader_client=None,
 ) -> GenerationResult:
     """Run shared filtering, rewrite, and dedup over pre-generated candidates."""
     accepted_records: list[dict] = []
     rejected_records: list[dict] = []
     seen_questions: set[str] = set()
     seen_subject_resources: set[str] = set()
+    panel_runs: list[dict[str, object]] = []
+
+    if second_stage_model_clients is None and settings.second_stage_grading_enabled:
+        second_stage_model_clients = _build_second_stage_model_panel(settings)
+    if grading_grader_client is None and settings.second_stage_grading_enabled:
+        grading_grader_client = make_grader_client(
+            _resolve_llm_config(settings.second_stage_grading_grader_llm, settings),
+            settings.timeout_seconds,
+        ) if settings.second_stage_grading_grader_llm is not None else None
 
     for candidate in generated_candidates:
         early_rejection_reason = next(
@@ -136,20 +170,13 @@ def process_generated_candidates(
             )
             continue
 
-        prefilter_passed, prefilter_features = run_fact_level_longtail_prefilter(
-            candidate,
-            max_sitelinks=settings.longtail_prefilter_max_sitelinks,
-            max_claims=settings.longtail_prefilter_max_claims,
-        )
-        candidate.prefilter_longtail_features = prefilter_features
-        if not prefilter_passed:
-            rejected_records.append(
-                candidate.to_rejected_record(
-                    reason="longtail_prefilter_rejected",
-                    notes={"prefilter_longtail_features": prefilter_features},
-                )
+        if snippet_judge_client is None and _needs_number_snippet_judge(candidate):
+            snippet_judge_client = make_cheap_model_qa_client(
+                settings.number_snippet_judge_llm or _default_number_snippet_judge_llm(settings),
+                settings.timeout_seconds,
             )
-            continue
+
+        candidate.prefilter_longtail_features = build_removed_prefilter_stub(candidate)
 
         _apply_rewrite_if_enabled(candidate, rewrite_client, settings)
         llm_discard_reason = str(candidate.source_metadata.get("llm_discard_reason", "")).strip()
@@ -179,6 +206,7 @@ def process_generated_candidates(
             search_passed, search_features = run_search_based_longtail_verifier(
                 candidate,
                 search_client=search_client,
+                snippet_judge_client=snippet_judge_client,
                 top_k=settings.duckduckgo_top_k,
                 max_full_question_hit_rate=settings.search_longtail_max_full_question_hit_rate,
                 max_keyword_hit_rate=settings.search_longtail_max_keyword_hit_rate,
@@ -201,6 +229,71 @@ def process_generated_candidates(
                 )
             )
             continue
+
+        if cheap_model_client is not None:
+            try:
+                cheap_model_passed, cheap_model_features = run_cheap_model_longtail_verifier(
+                    candidate,
+                    cheap_model_client=cheap_model_client,
+                )
+            except Exception as exc:  # noqa: BLE001
+                rejected_records.append(
+                    candidate.to_rejected_record(
+                        reason="cheap_model_longtail_verifier_error",
+                        notes={"error_type": type(exc).__name__, "error_message": str(exc)},
+                    )
+                )
+                continue
+            candidate.cheap_model_verification_features = cheap_model_features
+            if not cheap_model_passed:
+                rejected_records.append(
+                    candidate.to_rejected_record(
+                        reason="cheap_model_longtail_verifier_rejected",
+                        notes={"cheap_model_verification_features": cheap_model_features},
+                    )
+                )
+                continue
+        else:
+            candidate.cheap_model_verification_features = {
+                "enabled": False,
+                "reason": "cheap_model_longtail_disabled_or_unconfigured",
+            }
+
+        if settings.second_stage_grading_enabled and second_stage_model_clients:
+            try:
+                panel_features = evaluate_model_panel(
+                    question=candidate.final_question,
+                    gold_answer=candidate.answer,
+                    gold_aliases=candidate.answer_aliases,
+                    answer_type=candidate.answer_type,
+                    source_metadata=candidate.source_metadata,
+                    model_panel=second_stage_model_clients,
+                    grader_client=grading_grader_client,
+                )
+            except Exception as exc:  # noqa: BLE001
+                rejected_records.append(
+                    candidate.to_rejected_record(
+                        reason="second_stage_grading_error",
+                        notes={"error_type": type(exc).__name__, "error_message": str(exc)},
+                    )
+                )
+                continue
+            panel_features["accuracy_threshold"] = settings.second_stage_grading_accuracy_threshold
+            candidate.panel_grading_features = panel_features
+            panel_runs.append(panel_features)
+            if panel_features.get("accuracy", 0.0) > settings.second_stage_grading_accuracy_threshold:
+                rejected_records.append(
+                    candidate.to_rejected_record(
+                        reason="second_stage_grading_accuracy_threshold_exceeded",
+                        notes={"panel_grading_features": panel_features},
+                    )
+                )
+                continue
+        else:
+            candidate.panel_grading_features = {
+                "enabled": False,
+                "reason": "second_stage_grading_disabled_or_unconfigured",
+            }
 
         validation_passed, validation = validate_generated_candidate(
             candidate,
@@ -246,7 +339,11 @@ def process_generated_candidates(
     return GenerationResult(
         accepted=accepted_records,
         rejected=rejected_records,
-        telemetry={},
+        telemetry={
+            "process_generated_candidates": {
+                "second_stage_grading_summary": summarize_panel_runs(panel_runs),
+            }
+        },
     )
 
 
@@ -256,16 +353,7 @@ def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, set
         candidate.notes.append("rewrite_disabled")
         return
     forbidden_patterns = ["current", "currently", "latest", "most recent", "as of now"]
-    payload = {
-        "canonical_question": candidate.question,
-        "answer_labels": [candidate.answer],
-        "answer_aliases": candidate.answer_aliases,
-        "required_anchors": [candidate.subject_entity.name],
-        "domain": candidate.source_template_domain,
-        "target_property": candidate.relation_or_claim,
-        "cutoff_year": settings.cutoff_year,
-        "forbidden_patterns": forbidden_patterns,
-    }
+    payload = _build_route_rewrite_payload(candidate, settings.cutoff_year, forbidden_patterns)
     if candidate.generation_route == "kelm_bootstrap_half_pipeline":
         payload = {
             "task_type": "kelm_question_and_queries",
@@ -292,6 +380,13 @@ def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, set
     ).strip()
     if rewritten_question:
         candidate.rewritten_question = rewritten_question
+    llm_answer_aliases = _sanitize_rewrite_answer_aliases(
+        rewritten.get("answer_aliases", []),
+        canonical_answer=candidate.answer,
+    )
+    if llm_answer_aliases:
+        candidate.source_metadata["llm_answer_aliases"] = llm_answer_aliases
+        candidate.answer_aliases = _merge_answer_aliases(candidate.answer_aliases, llm_answer_aliases)
     raw_search_queries = rewritten.get("search_queries", [])
     if isinstance(raw_search_queries, list):
         blocked_strings = {
@@ -313,3 +408,120 @@ def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, set
                 for blocked in blocked_strings
             )
         ]
+
+
+def _sanitize_rewrite_answer_aliases(raw_aliases, *, canonical_answer: str) -> list[str]:
+    """Normalize aliases returned by the rewrite model for snippet matching."""
+    if not isinstance(raw_aliases, list):
+        return []
+    canonical_normalized = normalize_name(canonical_answer)
+    aliases: list[str] = []
+    seen: set[str] = set()
+    for value in raw_aliases:
+        alias = str(value).strip()
+        normalized_alias = normalize_name(alias)
+        if not alias or not normalized_alias or normalized_alias == canonical_normalized:
+            continue
+        if normalized_alias in seen:
+            continue
+        seen.add(normalized_alias)
+        aliases.append(alias)
+    return aliases
+
+
+def _merge_answer_aliases(existing_aliases: list[str], new_aliases: list[str]) -> list[str]:
+    """Merge answer aliases while preserving order and normalized uniqueness."""
+    merged: list[str] = []
+    seen: set[str] = set()
+    for value in [*existing_aliases, *new_aliases]:
+        alias = str(value).strip()
+        normalized_alias = normalize_name(alias)
+        if not alias or not normalized_alias or normalized_alias in seen:
+            continue
+        seen.add(normalized_alias)
+        merged.append(alias)
+    return merged
+
+
+def _build_route_rewrite_payload(
+    candidate: GeneratedCandidate,
+    cutoff_year: int,
+    forbidden_patterns: list[str],
+) -> dict[str, object]:
+    """Build a shared rewrite payload with route-specific inputs."""
+    payload: dict[str, object] = {
+        "canonical_question": candidate.question,
+        "answer_labels": [candidate.answer],
+        "answer_aliases": candidate.answer_aliases,
+        "required_anchors": [candidate.subject_entity.name],
+        "domain": candidate.source_template_domain,
+        "target_property": candidate.relation_or_claim,
+        "cutoff_year": cutoff_year,
+        "forbidden_patterns": forbidden_patterns,
+    }
+    source_candidate = candidate.source_candidate
+    if candidate.generation_route == "route1_wikidata_light" and source_candidate is not None:
+        payload.update(
+            {
+                "task_type": "route1_question_and_queries",
+                "wikidata_triplet_text": (
+                    f"{source_candidate.subject_label} -- {source_candidate.target_property_label} -- "
+                    f"{source_candidate.answer_labels[0] if source_candidate.answer_labels else ''}"
+                ).strip(),
+            }
+        )
+        return payload
+    if candidate.generation_route == "route2_wikidata_wikipedia_hybrid":
+        payload.update(
+            {
+                "task_type": "route2_question_and_queries",
+                "evidence_text": candidate.evidence.text,
+            }
+        )
+        return payload
+    payload["task_type"] = "generic_question_and_queries"
+    return payload
+
+
+def _needs_number_snippet_judge(candidate: GeneratedCandidate) -> bool:
+    """Return whether one candidate may need low-integer snippet judging."""
+    if candidate.answer_type != "Number":
+        return False
+    answer = candidate.answer.strip().replace(",", "")
+    return answer.isdigit() and 0 <= int(answer) <= 26
+
+
+def _default_number_snippet_judge_llm(settings: Settings) -> LLMConfig:
+    """Return the default OpenRouter config for low-integer snippet judging."""
+    return LLMConfig(
+        provider="openrouter",
+        model="openai/gpt-4.1-mini",
+        api_key_env="OPENROUTER_API_KEY",
+        base_url="https://openrouter.ai/api/v1",
+        proxy=settings.proxy,
+        temperature=0.0,
+        max_tokens=128,
+    )
+
+
+def _build_second_stage_model_panel(settings: Settings) -> list[ModelPanelMember]:
+    """Construct the configured second-stage answer-model panel."""
+    members: list[ModelPanelMember] = []
+    for config in settings.second_stage_grading_models:
+        resolved = _resolve_llm_config(config, settings)
+        if resolved is None:
+            continue
+        client = make_cheap_model_qa_client(resolved, settings.timeout_seconds)
+        if client is None:
+            continue
+        members.append(ModelPanelMember(name=resolved.model, client=client))
+    return members
+
+
+def _resolve_llm_config(config: LLMConfig | None, settings: Settings) -> LLMConfig | None:
+    """Fill in inherited runtime fields for one LLM config."""
+    if config is None:
+        return None
+    if config.proxy is not None:
+        return config
+    return replace(config, proxy=settings.proxy)

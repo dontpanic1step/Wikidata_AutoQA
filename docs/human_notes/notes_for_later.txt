@@ -1,0 +1,94 @@
+rejected-only: retry canonical_question_failed_validation and duplicate_subject_resource templates under our current new "search-next" mechanism. As for no_english_label, can we set target_language=English and add this constraint to query? As for subject_label_contains_year, can we change the template to ordinal ones, e.g., which country holds the {xth} {tournament}, but mind that this only works for international tournament. (Done?)
+policy_department, documentary_narrator shouldn't be this sparse.
+
+最重要的：复刻simpleqa.目标最重要，方法不重要。
+限制类重大更新：
+问题里面可以出现时间，只要时间不太靠后（比如2024年及以后）就行。我们的目标是：不让模型因为问题中时间在knowledge cut-off date后就拒答。问2006年的冷门问题完全可以。
+建议类：
+怎么验证问题的长尾性：调用search API,前10条结果里没有/找更巧妙的方法，不要直接用小模型验证。
+multi-hop，semi-structure data（例如排行榜）,
+也可以考虑维基百科info card（右边小卡片）的信息
+学习simpleqa 的提问方式，复刻simpleqa（这是目标！），观察里面有多少是可以合成的
+应对WDQS问题：直接调search API就行，不一定要用官方API，wikidata url格式都很标准，可以直接构造。
+问题需要rewrite，例如who developed the software GPT-5.4,其实没有人会把GPT称为software，都是model
+
+Other source: https://w3id.org/t-rex (triples + Wikipedia abstracts) (This is better, but not needed for template-based rewriting)
+
+WARNING
+From which university did Naomi C Futhey receive a first degree?
+Answer: University of British Columbia
+Rewritten question: From which university did Naomi C Futhey earn her Doctor of Medicine degree?
+Problem: 
+1, UBC is not Naomi's first university, McGill is. Need to check Wikidata.
+2, Rewritten question added more information (Doctor of Medicine degree), this is forbidden, modify the rewriting prompt.
+3, UBC is an alias for University of British Columbia. In the rewriting prompt, ask the model to output alias(es) for the answer, and look for both answer and its alias(es) in DuckDuckGo snippets.
+
+ordinal_tournament_winner	Who won the {ordinal} edition of {descriptor}? -> Who won the {ordinal} {descriptor}? Also, "Who won the 10th edition of NCAA Division III football?" The question itself is wrong. There is no "edition" of a tournament. The 10th season of NCAA Division III football is in 1982.
+
+Set a budget for the test run, if a template runs heavy WDQS for more than 60 seconds, just drop the template to heavy bucket and stop.
+rerun the sparse unproven bucket.
+
+generate 30 geography/place-centric templates that likely yield long-tail answer.
+generate 30 history templates that likely yield long-tail answer.
+
+select the broad templates from unproven and error bucket, rewrite them to narrow the search space. e.g., adding long-tail limits like "in Africa" "before 1950s" in the query but not the canonical question, or splitting the broad class (paper -> Paleontology paper).
+
+How many years did it take to construct the xx part of yy cathedral? (stop_year - start_year)
+What's the max capacity of the stadium that will host 2026 FIFA World Cup? (2026 FIFA World Cup -> infobox List of tournament venues -> max capacity) （需要精确到八万/八万多少这样的，但是回答要自然）（参考SimpleQA Verified里面有没有这种问题，它们没有问，我们也不问）
+
+template-generated questions are not long-tail enough.
+
+new_metro_station_country	In which country is the metro station {descriptor} located?	In which country is the metro station Sennaya (metro Nizhny Novgorod) located? (metro Nizhny Novgorod) leaks the answer. （地名重名率很高，不加Novgorod，又容易重名）（采的时候就直接找非歧义实体）（更推荐找到具体实体，再问它的其它信息）
+
+one way to generate choice questions:maybe better for info-boxes?
+
+- find the possitive answer: who are the cast members of {}?
+- Ask LLM to add other entites: Add 3 other real actors/actresses:
+- Final question: which of the following is/are (not) cast member(s) of {}?
+
+不要选择题？只做几个试试看。
+
+Templates do not cover not-so-common events, like a special plot in a film. 这是一个新的类别，先有素材再自由发挥。
+
+Imitate these good questions and make similar templates. If the question is hard to rewrite into our Wikidata-based template, tell me why: (My notes are shown in brackets)
+How many goals did Jihai Sun score in the Premier League? (The footballer needs to have retired)
+Which of these Pokemons are from Gen I: Ariados, Beautifly, Clefable, Crobat, Gyarados, Meganium? (combined question)
+Which of these countries were not member states of NATO before 2008: Belgium, Croatia, Czech, Estonia, Finland, Latvia, Montenegro? (negative question)
+Who won the Turing Award in 1978?
+Who is the composer of "Welcome to China" in Dynasty Warriors 6 OST?
+Who is the youngest male Grand Slam singles winner as of 2023?
+How many Nobel laureates had some degree of association with the City University of New York (CUNY) as of 2021?
+In what year did cartoonists Ken Fletcher and Reed Waller create the amateur press association Vootie, which was dedicated to animal-focused art?
+Which place's hotel was the first furry convention, Confurence 0, held in 1989?
+What is the name of the world's largest underground copper mine?
+In which city was the 19th session of the UNESCO World Heritage Committee held
+In which year was the railway bridge crossing the Malleco River inaugurated?
+Which game is the Game of the Year from TGA 2023?
+Which game end with a poem contains "...and the universe said I love you because you are love"?
+Which year was the science fiction The Wandering Earth first published in English?
+Which band did Herbie Hancock start his career in?
+Who is the trumpet soloist in Hotter Than That?
+In the Sherlock episode "A Study in Pink," what is the occupation of the serial killer?
+In Demon Slayer: Kimetsu no Yaiba , who is the practitioner of Moon Breathing?
+How many Satellite Awards has the TV series Breaking Bad won?
+In the game It Takes Two , what are the names of the two protagonists?
+Which game won the TGA Players' Voice award in 2022?
+In Grand Theft Auto V, in which region did Michael De Santa, Trevor Philips, and Brad Snider plan a heist?
+Which actor provided voice acting and motion capture for Michael De Santa in Grand Theft Auto V?
+In which year was TINKID Studio founded？
+What is the distance from the muzzle within which eighty percent of all firearm incidents occur?
+In which year was beabadoobee born?
+Which is the only Pokémon that has the special ability to devolve?
+Which Pokémon is known for having the ability to change its form based on the weather?
+Which Taylor Swift song begins "State the obvious"?
+Which member of One Direction was the youngest when the band formed?
+What stew was served just before the Triwizard Tournament began in the fourth "Harry Potter" book?
+What is the name of the dog that talks very much in the movie ‘Doraemon in Nobita's Little Space War’?
+What is the name of the basketball player who won the first NBA All-Star Game MVP award?
+Which NBA player beat George Mikan in rebounds the first year the statistic was kept?
+Which kind of contest did Taylor Swift win at 12 years old?
+Taylor Swift's song "Crazier" was on the soundtrack for which 2009 film?
+What is the only U.S. state that does not have a rectangular flag?
+Netflix founder Reed Hastings claimed (possibly falsely) that he thought of the idea for his company after receiving a $40 late fee from Blockbuster. What was the movie he said he failed to return?
+
+先抽几条模板回复检测长尾性

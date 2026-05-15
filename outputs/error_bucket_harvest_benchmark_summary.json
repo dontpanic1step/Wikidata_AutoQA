@@ -1,0 +1,121 @@
+{
+  "rows": [
+    {
+      "domain": "beverage_manufacturer",
+      "heavy_seconds": 94.454,
+      "light_seconds": 74.171,
+      "faster_mode": "light",
+      "speedup_ratio": 1.27,
+      "heavy_candidates": 2,
+      "light_candidates": 1,
+      "heavy_bottleneck": "wbgetentities",
+      "light_bottleneck": "wbgetentities",
+      "heavy_retries": 2,
+      "light_retries": 1
+    },
+    {
+      "domain": "company_that_released_product_founder",
+      "heavy_seconds": 30.466,
+      "light_seconds": 31.088,
+      "faster_mode": "heavy",
+      "speedup_ratio": 1.02,
+      "heavy_candidates": 0,
+      "light_candidates": 0,
+      "heavy_bottleneck": "exception",
+      "light_bottleneck": "exception",
+      "heavy_retries": 0,
+      "light_retries": 0
+    },
+    {
+      "domain": "literary_magazine_country",
+      "heavy_seconds": 1037.996,
+      "light_seconds": 586.225,
+      "faster_mode": "light",
+      "speedup_ratio": 1.77,
+      "heavy_candidates": 0,
+      "light_candidates": 0,
+      "heavy_bottleneck": "wbgetentities",
+      "light_bottleneck": "wbgetentities",
+      "heavy_retries": 1,
+      "light_retries": 8
+    },
+    {
+      "domain": "person_birth_date",
+      "heavy_seconds": 8.107,
+      "light_seconds": 17.834,
+      "faster_mode": "heavy",
+      "speedup_ratio": 2.2,
+      "heavy_candidates": 10,
+      "light_candidates": 10,
+      "heavy_bottleneck": "wbgetentities",
+      "light_bottleneck": "wdqs_query",
+      "heavy_retries": 0,
+      "light_retries": 0
+    },
+    {
+      "domain": "person_death_date",
+      "heavy_seconds": 11.013,
+      "light_seconds": 26.387,
+      "faster_mode": "heavy",
+      "speedup_ratio": 2.4,
+      "heavy_candidates": 10,
+      "light_candidates": 10,
+      "heavy_bottleneck": "wbgetentities",
+      "light_bottleneck": "wbgetentities",
+      "heavy_retries": 0,
+      "light_retries": 1
+    },
+    {
+      "domain": "species_parent_taxon",
+      "heavy_seconds": 41.427,
+      "light_seconds": 37.467,
+      "faster_mode": "light",
+      "speedup_ratio": 1.11,
+      "heavy_candidates": 0,
+      "light_candidates": 10,
+      "heavy_bottleneck": "unknown",
+      "light_bottleneck": "wbgetentities",
+      "heavy_retries": 0,
+      "light_retries": 0
+    },
+    {
+      "domain": "stadium_architect",
+      "heavy_seconds": 3.624,
+      "light_seconds": 58.922,
+      "faster_mode": "heavy",
+      "speedup_ratio": 16.26,
+      "heavy_candidates": 0,
+      "light_candidates": 17,
+      "heavy_bottleneck": "wdqs_query",
+      "light_bottleneck": "wbgetentities",
+      "heavy_retries": 0,
+      "light_retries": 0
+    },
+    {
+      "domain": "tv_series_creator",
+      "heavy_seconds": 101.633,
+      "light_seconds": 91.309,
+      "faster_mode": "light",
+      "speedup_ratio": 1.11,
+      "heavy_candidates": 0,
+      "light_candidates": 0,
+      "heavy_bottleneck": "wbgetentities",
+      "light_bottleneck": "wdqs_query",
+      "heavy_retries": 3,
+      "light_retries": 5
+    },
+    {
+      "domain": "university_country",
+      "heavy_seconds": 98.211,
+      "light_seconds": 1099.066,
+      "faster_mode": "heavy",
+      "speedup_ratio": 11.19,
+      "heavy_candidates": 0,
+      "light_candidates": 10,
+      "heavy_bottleneck": "wdqs_query",
+      "light_bottleneck": "wbgetentities",
+      "heavy_retries": 0,
+      "light_retries": 10
+    }
+  ]
+}

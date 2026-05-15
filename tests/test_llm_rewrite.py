@@ -18,7 +18,7 @@ from wikidata_simpleqa.llm_rewrite import (
 )
 from wikidata_simpleqa.config import LLMConfig
 from wikidata_simpleqa.models import CandidateFact
-from wikidata_simpleqa.pipeline import _validate_rewritten_question
+from wikidata_simpleqa.route1_validators import validate_route1_rewritten_question
 from wikidata_simpleqa.validators import is_simple_question, preserves_required_anchors
 
 
@@ -55,8 +55,27 @@ class LLMRewriteTests(unittest.TestCase):
 
     def test_build_payload_includes_subject_anchor(self) -> None:
         payload = build_rewrite_payload(make_candidate())
+        self.assertEqual(payload["task_type"], "route1_question_and_queries")
         self.assertIn("Project Hail Mary", payload["required_anchors"])
         self.assertIn("film", payload["required_anchors"])
+        self.assertIn("Project Hail Mary -- director --", payload["wikidata_triplet_text"])
+
+    def test_route1_prompt_requests_queries_and_discard_reason(self) -> None:
+        prompt = build_rewrite_prompt(
+            {
+                "task_type": "route1_question_and_queries",
+                "canonical_question": "Who directed the film Project Hail Mary?",
+                "wikidata_triplet_text": "Project Hail Mary -- director -- Phil Lord and Christopher Miller",
+                "forbidden_patterns": ["current", "latest"],
+                "cutoff_year": 2025,
+            }
+        )
+        self.assertIn("Canonical question", prompt)
+        self.assertIn("Wikidata triplet text", prompt)
+        self.assertIn('"search_queries"', prompt)
+        self.assertIn('"answer_aliases"', prompt)
+        self.assertIn('"discard_reason"', prompt)
+        self.assertIn("Do not narrow or specialize it", prompt)
 
     def test_kelm_prompt_requests_queries_and_discard_reason(self) -> None:
         prompt = build_rewrite_prompt(
@@ -71,6 +90,7 @@ class LLMRewriteTests(unittest.TestCase):
         )
         self.assertIn("KELM sentence", prompt)
         self.assertIn('"search_queries"', prompt)
+        self.assertIn('"answer_aliases"', prompt)
         self.assertIn('"discard_reason"', prompt)
         self.assertIn("casing variant", prompt)
         self.assertIn("capitalization variant", prompt)
@@ -95,14 +115,14 @@ class LLMRewriteTests(unittest.TestCase):
                 "choices": [
                     {
                         "message": {
-                            "content": '{"question":"Where was Peter Kelland educated?"}',
+                            "content": '{"rewritten_question":"Where was Peter Kelland educated?","search_queries":[],"discard_reason":null}',
                         }
                     }
                 ]
             }
             client = OpenRouterRewriteClient(config=config, timeout_seconds=30.0)
             result = client.rewrite_question({"canonical_question": "Where did Peter Kelland study?"})
-        self.assertEqual(result["question"], "Where was Peter Kelland educated?")
+        self.assertEqual(result["rewritten_question"], "Where was Peter Kelland educated?")
         request_with_retry.assert_called_once()
 
     def test_anchor_preservation_passes_when_all_anchors_remain(self) -> None:
@@ -122,26 +142,29 @@ class LLMRewriteTests(unittest.TestCase):
         )
 
     def test_rewrite_validation_rejects_temporal_phrase(self) -> None:
-        reason = _validate_rewritten_question(
+        reason = validate_route1_rewritten_question(
             make_candidate(),
             ["film", "Project Hail Mary"],
             "Who directed the recent film Project Hail Mary?",
+            cutoff_year=2025,
         )
         self.assertEqual(reason, "rewrite_contains_temporal_expression")
 
     def test_rewrite_validation_rejects_answer_leakage(self) -> None:
-        reason = _validate_rewritten_question(
+        reason = validate_route1_rewritten_question(
             make_candidate(),
             ["film", "Project Hail Mary"],
             "Which Lord and Miller film is Project Hail Mary?",
+            cutoff_year=2025,
         )
         self.assertEqual(reason, "rewrite_leaks_answer")
 
     def test_rewrite_validation_accepts_valid_rewrite(self) -> None:
-        reason = _validate_rewritten_question(
+        reason = validate_route1_rewritten_question(
             make_candidate(),
             ["film", "Project Hail Mary"],
-            "Who directed the film Project Hail Mary?",
+            "Who directed the 2020 film Project Hail Mary?",
+            cutoff_year=2025,
         )
         self.assertIsNone(reason)
 

@@ -95,7 +95,7 @@ class GeneratorTests(unittest.TestCase):
         )
         with (
             patch("wikidata_simpleqa.generators.harvest_candidates", return_value=[candidate]),
-            patch("wikidata_simpleqa.generators._validate_candidate", return_value=resolution),
+            patch("wikidata_simpleqa.generators.validate_route1_candidate", return_value=resolution),
         ):
             generated = WikidataLightGenerator().generate(
                 templates=[template],
@@ -116,7 +116,7 @@ class GeneratorTests(unittest.TestCase):
         )
         with (
             patch("wikidata_simpleqa.generators.harvest_candidates", return_value=[candidate]),
-            patch("wikidata_simpleqa.generators._validate_candidate", return_value=resolution),
+            patch("wikidata_simpleqa.generators.validate_route1_candidate", return_value=resolution),
         ):
             generated = WikidataWikipediaHybridGenerator(
                 wikipedia_client=FakeWikipediaClient()

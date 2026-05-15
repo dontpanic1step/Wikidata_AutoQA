@@ -41,6 +41,34 @@ RETIRED_TEMPLATE_NOTES: dict[str, str] = {
     ),
 }
 
+FROZEN_TEMPLATE_DOMAINS: set[str] = {
+    "wedding_age_gap",
+    "ordinal_spouse",
+    "ordinal_country_president",
+    "ordinal_religious_leader",
+    "ordinal_university_chancellor",
+    "ordinal_space_mission_commander",
+    "ordinal_volume_author",
+    "biography_birth_place_recent_subject",
+    "biography_native_language_recent_subject",
+    "biography_place_of_death_recent_subject",
+    "biography_occupation_recent_subject",
+    "biography_notable_work_recent_subject",
+    "graduate_before_employer",
+    "sports_event_host_count",
+    "dataset_language_count",
+    "footballer_goals_in_ordinal_tournament",
+    "guideline_author_count",
+    "story_collection_story_count",
+    "spacecraft_crew_count",
+    "spacecraft_payload_count",
+    "rover_wheel_count",
+    "patent_inventor_count",
+    "bridge_span_count",
+    "medicine_ingredient_count",
+    "project_partner_count",
+}
+
 
 def _template(
     domain: str,
@@ -64,8 +92,11 @@ def _template(
     required_topic_keywords: list[str] | None = None,
     status: str = "active",
     exact_instance_only: bool = False,
+    allow_non_answer_location_descriptor: bool = True,
 ) -> DomainTemplate:
     """Build a domain template with explicit metadata."""
+    if domain in FROZEN_TEMPLATE_DOMAINS and status == "blueprint":
+        status = "frozen"
     normalized_reasoning_style = normalize_reasoning_style(
         reasoning_style or composition_style
     )
@@ -99,6 +130,7 @@ def _template(
         query_tags=(query_tags or []).copy(),
         required_topic_keywords=(required_topic_keywords or []).copy(),
         exact_instance_only=exact_instance_only,
+        allow_non_answer_location_descriptor=allow_non_answer_location_descriptor,
     )
 
 
@@ -226,6 +258,7 @@ ACTIVE_TEMPLATE_CATALOG = [
         "country",
         "In which country is the {subject_kind} {descriptor} located?",
         exact_instance_only=True,
+        allow_non_answer_location_descriptor=False,
     ),
     _template(
         "museum_country",
@@ -239,6 +272,7 @@ ACTIVE_TEMPLATE_CATALOG = [
         "country",
         "In which country is the {subject_kind} {descriptor} located?",
         exact_instance_only=True,
+        allow_non_answer_location_descriptor=False,
     ),
     _template(
         "company_founder",
@@ -599,7 +633,16 @@ def get_blueprint_templates() -> list[DomainTemplate]:
     return [
         template
         for template in BLUEPRINT_TEMPLATE_CATALOG
-        if template.domain not in RETIRED_TEMPLATE_NOTES
+        if template.domain not in RETIRED_TEMPLATE_NOTES and template.status != "frozen"
+    ]
+
+
+def get_frozen_templates() -> list[DomainTemplate]:
+    """Return templates parked outside the active blueprint program for now."""
+    return [
+        template
+        for template in BLUEPRINT_TEMPLATE_CATALOG
+        if template.status == "frozen"
     ]
 
 
@@ -629,6 +672,7 @@ def get_all_templates() -> list[DomainTemplate]:
         + get_multi_hop_pilot_templates()
         + get_date_answer_pilot_templates()
         + get_blueprint_templates()
+        + get_frozen_templates()
     )
 
 

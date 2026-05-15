@@ -112,6 +112,13 @@ LOCATION_TOKEN_STOPWORDS = {
     "west",
 }
 
+LIVE_STATUS_TEMPORAL_PATTERN = re.compile(
+    r"\b("
+    r"this year|last year|next year|current|currently|latest|most recent|newest|recent|recently|as of|as of now"
+    r")\b",
+    re.IGNORECASE,
+)
+
 
 def has_forbidden_temporal_text(text: str) -> bool:
     """Return whether text contains forbidden temporal content."""
@@ -125,6 +132,14 @@ def has_forbidden_temporal_text(text: str) -> bool:
 def has_year(text: str) -> bool:
     """Return whether text contains a year token."""
     return bool(YEAR_PATTERN.search(text))
+
+
+def violates_cutoff_year_policy(text: str, cutoff_year: int) -> bool:
+    """Return whether text violates the route-level cutoff-year policy."""
+    if LIVE_STATUS_TEMPORAL_PATTERN.search(text):
+        return True
+    years = [int(match.group(0)) for match in YEAR_PATTERN.finditer(text)]
+    return any(year >= cutoff_year for year in years)
 
 
 def is_settled_by_run_date(date_value: str, run_date: str) -> bool:

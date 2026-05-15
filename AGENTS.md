@@ -13,6 +13,8 @@ When project documents conflict, this file is the highest-level instruction. Upd
 - Replicate SimpleQA-style questions first; do not optimize prematurely for a particular Wikidata-only pipeline.
 - The target matters more than the method. Wikidata, Wikipedia, search APIs, and semi-structured public data are all acceptable inputs if the resulting question is auditable and stable.
 - Use Wikidata when it is convenient, but do not get blocked by WDQS. If WDQS is unreliable or too restrictive, use search APIs and direct Wikidata/Wikipedia URL construction where possible.
+- Keep the current multi-generator architecture with shared LLM rewriting and shared long-tail filtering, but allow route-specific harvesting and route-specific validation layers.
+- Route 1 is again template-led. It should use templates to construct candidate questions before shared rewriting.
 - Prefer a minimal runnable vertical slice that can produce a small manually reviewable pilot batch before scaling.
 - Treat the first pilot as candidate generation, not final verified data.
 
@@ -22,6 +24,7 @@ When project documents conflict, this file is the highest-level instruction. Upd
 - Do not impose a blanket ban on all temporal expressions.
 - Avoid questions whose temporal anchor is too recent or likely to fall after model knowledge cutoffs. As a default conservative threshold, avoid question text that depends on events in **2025 or later**, unless the project config explicitly overrides this.
 - The purpose of the temporal policy is to avoid model refusals caused only by post-cutoff timing, not to remove all historical dates.
+- It is acceptable to use entities from any time period. The time restriction applies to what the question text depends on, not to whether the entity itself is old or recent.
 - Old or obscure facts are welcome. A niche question about a settled event from 2006 is acceptable if it has a unique, auditable answer.
 - Reject questions requiring `current`, `currently`, `latest`, `most recent`, `as of now`, or other live-status framing.
 - Gold answers must be time-invariant. Reject mutable statuses, current roles, relationships, affiliations, and cumulative statistics by default.
@@ -41,24 +44,32 @@ When project documents conflict, this file is the highest-level instruction. Upd
 
 ## Candidate sources and long-tail validation
 
-- Do not use a small LLM as the main judge of long-tail status.
-- Prefer search-based evidence for long-tail validation.
+- Do not use internal popularity proxies such as sitelink count, claim count, or similar Wikidata-wide indices as first-stage long-tail filters.
+- Use a two-stage long-tail filter built from external retrieval and cheap model probing:
+  - Stage 1: DuckDuckGo search-based evidence.
+  - Stage 2: cheap, fast, small-model QA evaluation, such as GPT-4.1-mini or Gemini 3.1 Flash.
+- Prefer search-based evidence as the first long-tail signal.
 - A useful first heuristic: call a search API and inspect the top results. Mark a candidate as more long-tail if the direct answer is absent from the top results or requires nontrivial cross-source lookup.
 - Keep the long-tail heuristic auditable: store query strings, top-result titles/snippets/URLs when allowed, and the rule that accepted or rejected the candidate.
+- The small-model QA stage is a secondary filter, not a source of truth for factuality. It is used only as an auditable difficulty signal after search.
 - Consider more clever search-based signals later, such as exact-title hits, answer-string hits, snippet answer leakage, and whether the answer appears in the first page of results.
-- Use LLMs for rewriting or optional review, not for inventing facts, proving uniqueness, or serving as the primary long-tail validator.
+- Use LLMs for rewriting or optional review, not for inventing facts, proving uniqueness, or serving as the primary factuality validator.
 
 ## Content directions to explore
 
 - Multi-hop questions where the final answer requires composing two or more stable facts.
 - Semi-structured public data, such as rankings, tables, lists, infoboxes, and Wikipedia right-side info cards.
 - Wikipedia and Wikidata metadata when they provide stable, auditable facts.
+- Other data sources besides Wikipedia and Wikidata, such as music websites.
 
 ## Factuality, uniqueness, and grading
 
 - Every accepted example must have exactly one intended gold answer.
 - Store enough metadata to audit and regenerate the example: source URLs or IDs, retrieval method, query strings, entity IDs when available, answer aliases, and rejection reasons.
 - Use deterministic checks where possible for factuality, uniqueness, ambiguity, answer leakage, and time-invariance.
+- Validators must be decoupled from the rest of the pipeline. Do not assume one validator stack applies to every route.
+- Wikidata grounding, Wikidata-based disambiguation, time-invariance checks, and deduplication for Route 1 should be treated as Wikidata-route validators that can be reused by other Wikidata-based generators.
+- Future non-Wikidata routes must define their own validators according to their source format, grounding assumptions, and failure modes.
 - Include an automatic grader inspired by SimpleQA / SimpleQA Verified: `CORRECT`, `INCORRECT`, and `NOT_ATTEMPTED`.
 - Prefer high precision over high recall.
 

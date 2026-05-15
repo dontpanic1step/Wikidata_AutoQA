@@ -12,51 +12,45 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from wikidata_simpleqa.domain_templates import get_all_templates
+from wikidata_simpleqa.template_status import build_template_status_index
+from wikidata_simpleqa.workflow import (
+    status_accepted_paths,
+    status_rejected_paths,
+    status_summary_paths,
+)
 
 
 def _rows() -> list[dict[str, str]]:
+    index = build_template_status_index(
+        review_bundle_path=ROOT / "outputs" / "review_2026_all_generated_qas.tsv",
+        summary_paths=status_summary_paths(ROOT),
+        rejected_paths=status_rejected_paths(ROOT),
+        accepted_paths=status_accepted_paths(ROOT),
+        status_mode="latest_live_status",
+    )
     rows: list[dict[str, str]] = []
-    for template in get_all_templates():
-        reasoning_recipe = template.reasoning_recipe or {}
+    for template in index["templates"]:
+        proven_example = template.get("proven_example") or {}
         rows.append(
             {
-                "domain": template.domain,
-                "activation_status": template.status,
-                "evidence_status": template.evidence_status,
-                "evidence_runs": ",".join(template.evidence_runs),
-                "evidence_notes": template.evidence_notes,
-                "topic": template.topic,
-                "answer_type": template.answer_type,
-                "answer_format": template.answer_format,
-                "temporal_mode": template.temporal_mode,
-                "reasoning_style": template.reasoning_style,
-                "composition_style": template.composition_style,
-                "question_family": template.question_family,
-                "subject_type_qid": template.subject_type_qid,
-                "subject_type_label": template.subject_type_label,
-                "date_property_pid": template.date_property_pid,
-                "target_property_pid": template.target_property_pid,
-                "target_property_label": template.target_property_label,
-                "date_answer_granularity": template.date_answer_granularity or "",
-                "exact_instance_only": str(template.exact_instance_only).lower(),
-                "new_element_slot": str(reasoning_recipe.get("new_element_slot", "")),
-                "new_element_hop": str(reasoning_recipe.get("new_element_hop", "")),
-                "required_reasoning_clues": ",".join(reasoning_recipe.get("required_reasoning_clues", [])),
-                "canonical_question_template": template.canonical_question_template,
+                "domain": str(template.get("topic", "")),
+                "template": str(template.get("domain", "")),
+                "canonical_question": str(template.get("canonical_question_template", "")),
+                "status": str(template.get("current_status", "")),
+                "activation_status": str(template.get("catalog_status", "")),
+                "original_status": str(template.get("original_current_status", "")),
+                "latest_live_status": str(template.get("latest_live_status", "")),
+                "best_known_semantic_status": str(template.get("best_known_semantic_status", "")),
+                "successful_generated_question": str(proven_example.get("question", "")),
             }
         )
+    rows.sort(key=lambda row: (row["domain"], row["template"]))
     return rows
 
 
 def _count_lines(rows: list[dict[str, str]], key: str) -> list[str]:
     counts = Counter(row[key] for row in rows)
     return [f"| {value} | {counts[value]} |" for value in sorted(counts)]
-
-
-def _topic_lines(rows: list[dict[str, str]]) -> list[str]:
-    counts = Counter(row["topic"] for row in rows)
-    return [f"| {topic} | {counts[topic]} |" for topic in sorted(counts)]
 
 
 def export_tsv(path: Path, rows: list[dict[str, str]]) -> None:
@@ -70,71 +64,47 @@ def export_tsv(path: Path, rows: list[dict[str, str]]) -> None:
 
 
 def export_markdown(path: Path, rows: list[dict[str, str]]) -> None:
-    """Write the catalog as Markdown with axis-level stats."""
+    """Write the catalog as Markdown with simple review stats."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    temporal_total = sum(1 for row in rows if row["temporal_mode"] != "atemporal")
-    number_total = sum(1 for row in rows if row["answer_type"] == "Number" or row["answer_format"] == "number")
-    date_total = sum(1 for row in rows if row["answer_format"] == "date")
     lines = [
         "# Template Catalog Review",
-        "",
-        "## Definitions",
-        "",
-        "- `activation_status`: where the template sits in the rollout lifecycle (`active`, `multi_hop_pilot`, `date_answer_pilot`, `blueprint`).",
-        "- `evidence_status`: whether the template has already produced an accepted example in a recorded pilot run.",
-        "- `temporal_mode`: `atemporal` for normal SimpleQA-style questions, `time_related_join` for compositional target-time joins, and `date_answer` for explicit date questions.",
         "",
         "## Headline Stats",
         "",
         f"- Total templates: `{len(rows)}`",
-        f"- Number-answer templates: `{number_total}`",
-        f"- Date-answer templates: `{date_total}`",
-        f"- Time-related templates (including date-answer): `{temporal_total}`",
         "",
         "## Status Axis",
+        "",
+        "| Status | Count |",
+        "|---|---:|",
+        *_count_lines(rows, "status"),
+        "",
+        "## Activation Axis",
         "",
         "| Activation Status | Count |",
         "|---|---:|",
         *_count_lines(rows, "activation_status"),
         "",
-        "## Evidence Axis",
+        "## Original Status Axis",
         "",
-        "| Evidence Status | Count |",
+        "| Original Status | Count |",
         "|---|---:|",
-        *_count_lines(rows, "evidence_status"),
+        *_count_lines(rows, "original_status"),
         "",
         "## Domain Axis",
         "",
-        "| Topic | Count |",
+        "| Domain | Count |",
         "|---|---:|",
-        *_topic_lines(rows),
-        "",
-        "## Answer Type Axis",
-        "",
-        "| Answer Type | Count |",
-        "|---|---:|",
-        *_count_lines(rows, "answer_type"),
-        "",
-        "## Answer Format Axis",
-        "",
-        "| Answer Format | Count |",
-        "|---|---:|",
-        *_count_lines(rows, "answer_format"),
-        "",
-        "## Temporal Axis",
-        "",
-        "| Temporal Mode | Count |",
-        "|---|---:|",
-        *_count_lines(rows, "temporal_mode"),
+        *_count_lines(rows, "domain"),
         "",
         "## Full Catalog",
         "",
-        "| Domain | Activation Status | Evidence Status | Topic | Answer Type | Answer Format | Temporal Mode | Reasoning Style | Subject Type | Date PID | Target PID | Runs | Canonical Template |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "| Domain | Template | Canonical Question | Status | Successful Generated Question |",
+        "|---|---|---|---|---|",
     ]
     for row in rows:
         lines.append(
-            "| {domain} | {activation_status} | {evidence_status} | {topic} | {answer_type} | {answer_format} | {temporal_mode} | {reasoning_style} | {subject_type_label} ({subject_type_qid}) | {date_property_pid} | {target_property_pid} | {evidence_runs} | {canonical_question_template} |".format(
+            "| {domain} | {template} | {canonical_question} | {status} | {successful_generated_question} |".format(
                 **row
             )
         )

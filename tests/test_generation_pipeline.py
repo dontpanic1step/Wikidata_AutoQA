@@ -12,6 +12,7 @@ from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates, run_generation_pipeline
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generator_validators import run_search_based_longtail_verifier
+from wikidata_simpleqa.grading import ModelPanelMember
 from wikidata_simpleqa.models import AmbiguityResolution, CandidateFact, DomainTemplate
 
 
@@ -52,6 +53,26 @@ class ErrorSearchClient:
         raise RuntimeError("search backend unavailable")
 
 
+class FakeCheapModelClient:
+    """Cheap-model QA stub for pipeline tests."""
+
+    def __init__(self, response: str) -> None:
+        self.response = response
+
+    def complete_text(self, prompt: str) -> str:
+        return self.response
+
+
+class FakePanelModelClient:
+    """Answer-model stub for the second-stage grading panel."""
+
+    def __init__(self, response: str) -> None:
+        self.response = response
+
+    def complete_text(self, prompt: str) -> str:
+        return self.response
+
+
 class FakeRewriteClient:
     """Simple rewrite stub that returns one rewritten question."""
 
@@ -65,7 +86,15 @@ class FakeRewriteClient:
                 ],
                 "discard_reason": None,
             }
-        return {"question": f"Who directed Example Film according to rewrite {payload['target_property']}?"}
+        return {
+            "rewritten_question": f"Who directed Example Film according to rewrite {payload['target_property']}?",
+            "search_queries": [
+                f"{payload.get('canonical_question', '')} context",
+                f"{payload['target_property']} Example Film production",
+            ],
+            "answer_aliases": ["J. Doe", "Jane D."],
+            "discard_reason": None,
+        }
 
 
 class FakeWikidataClient:
@@ -152,7 +181,7 @@ class GenerationPipelineTests(unittest.TestCase):
             )
             with (
                 patch("wikidata_simpleqa.generators.harvest_candidates", return_value=[candidate]),
-                patch("wikidata_simpleqa.generators._validate_candidate", return_value=resolution),
+                patch("wikidata_simpleqa.generators.validate_route1_candidate", return_value=resolution),
             ):
                 result = run_generation_pipeline(
                     settings,
@@ -197,7 +226,7 @@ class GenerationPipelineTests(unittest.TestCase):
             )
             with (
                 patch("wikidata_simpleqa.generators.harvest_candidates", return_value=[candidate]),
-                patch("wikidata_simpleqa.generators._validate_candidate", return_value=resolution),
+                patch("wikidata_simpleqa.generators.validate_route1_candidate", return_value=resolution),
             ):
                 result = run_generation_pipeline(
                     settings,
@@ -273,7 +302,171 @@ class GenerationPipelineTests(unittest.TestCase):
             result.accepted[0]["rewritten_question"],
             "Who directed Example Film according to rewrite director?",
         )
+        self.assertEqual(
+            result.accepted[0]["search_queries"],
+            [
+                "Who directed the film Example Film? context",
+                "director Example Film production",
+            ],
+        )
+        self.assertEqual(result.accepted[0]["answer_aliases"], ["J. Doe", "Jane D."])
         self.assertNotIn("rewrite_disabled", result.accepted[0]["notes"])
+
+    def test_route1_rewrite_payload_uses_triplet_text_contract(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="wikidata",
+            generation_route="route1_wikidata_light",
+            question="Who directed the film Example Film?",
+            canonical_question="Who directed the film Example Film?",
+            answer="Jane Doe",
+            answer_aliases=["J. Doe"],
+            subject_entity=EntityReference(
+                name="Example Film",
+                qid="Q1",
+                wikipedia_title="Example_Film",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+            ),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="director",
+            evidence=EvidenceRecord(
+                text="Example Film director Jane Doe",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+                source_title="Example Film",
+                retrieved_at="2026-05-13",
+            ),
+            question_family="who_directed_film",
+            answer_type="Person",
+            topic="Arts and Media",
+            target_time="2020",
+            source_template_domain="film_director",
+            source_metadata={"stable_answer_override": True},
+            source_candidate=source_candidate,
+        )
+        captured_payloads: list[dict] = []
+
+        class CaptureRewriteClient:
+            def rewrite_question(self, payload: dict) -> dict:
+                captured_payloads.append(dict(payload))
+                return {
+                    "rewritten_question": "Who directed Example Film according to rewrite director?",
+                    "search_queries": ["Example Film production history"],
+                    "answer_aliases": [],
+                    "discard_reason": None,
+                }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                rewrite_enabled=True,
+            )
+            process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=FakeSearchClient(
+                    {
+                        "Who directed Example Film according to rewrite director?": [],
+                        "Example Film production history": [],
+                    }
+                ),
+                rewrite_client=CaptureRewriteClient(),
+            )
+        self.assertEqual(captured_payloads[0]["task_type"], "route1_question_and_queries")
+        self.assertEqual(
+            captured_payloads[0]["wikidata_triplet_text"],
+            "Example Film -- director -- Jane Doe",
+        )
+
+    def test_process_generated_candidates_rejects_multi_hop_rewrite_that_drops_required_clue(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        source_candidate.reasoning_style = "multi_hop_join"
+        source_candidate.hop_count = 2
+        source_candidate.reasoning_path = [
+            {
+                "source_qid": "Q1",
+                "source_label": "Naomi C Futhey",
+                "property_pid": "P69",
+                "property_label": "educated at",
+                "target_qid": "Q2",
+                "target_label": "University of British Columbia",
+                "role": "bridge",
+                "qualifiers": {"P512": "Q913404", "P582": "2026-04-01"},
+            },
+            {
+                "source_qid": "Q2",
+                "source_label": "University of British Columbia",
+                "property_pid": "DERIVED_FIRST_DEGREE_SELECTION",
+                "property_label": "first degree selection",
+                "target_qid": "Q2",
+                "target_label": "University of British Columbia",
+                "role": "answer",
+            },
+        ]
+        source_candidate.bridge_entities = [
+            {"qid": "Q2", "label": "University of British Columbia", "role": "university"}
+        ]
+        source_candidate.source_metadata["required_reasoning_clues"] = ["first degree"]
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="From which university did Naomi C Futhey receive a first degree?",
+            canonical_question="From which university did Naomi C Futhey receive a first degree?",
+            answer="University of British Columbia",
+            answer_aliases=[],
+            subject_entity=EntityReference(
+                name="Naomi C Futhey",
+                qid="Q96429409",
+                wikipedia_title="Naomi_C_Futhey",
+                url="https://www.wikidata.org/wiki/Q96429409",
+            ),
+            answer_entity=EntityReference(name="University of British Columbia", qid="Q391028"),
+            relation_or_claim="first degree university",
+            evidence=EvidenceRecord(
+                text="Naomi C Futhey studied medicine at the University of British Columbia.",
+                url="https://example.test/naomi",
+                source_title="Naomi C Futhey",
+                retrieved_at="2026-05-15",
+            ),
+            question_family="which_university_first_degree",
+            answer_type="Organization",
+            topic="People",
+            target_time="2026",
+            source_template_domain="person_first_degree_university",
+            source_metadata={"stable_answer_override": True},
+            source_candidate=source_candidate,
+        )
+
+        class BadRewriteClient:
+            def rewrite_question(self, payload: dict) -> dict:
+                return {
+                    "rewritten_question": "From which university did Naomi C Futhey earn her Doctor of Medicine degree?",
+                    "search_queries": ["Naomi C Futhey medical degree institution"],
+                    "answer_aliases": ["UBC"],
+                    "discard_reason": None,
+                }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2026",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                rewrite_enabled=True,
+            )
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=FakeSearchClient({}),
+                rewrite_client=BadRewriteClient(),
+            )
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+        self.assertEqual(result.rejected[0]["rejection_notes"]["failure_reason"], "lost_required_reasoning_clue")
 
     def test_process_generated_candidates_uses_llm_generated_kelm_queries(self) -> None:
         source_candidate = make_candidate()
@@ -456,6 +649,217 @@ class GenerationPipelineTests(unittest.TestCase):
             )
         self.assertEqual(result.accepted, [])
         self.assertEqual(result.rejected[0]["rejection_reason"], "search_longtail_verifier_error")
+
+    def test_process_generated_candidates_rejects_when_cheap_model_answers_correctly(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="Who directed the film Example Film?",
+            canonical_question="Who directed the film Example Film?",
+            answer="Jane Doe",
+            answer_aliases=["J. Doe"],
+            subject_entity=EntityReference(
+                name="Example Film",
+                qid="Q1",
+                wikipedia_title="Example_Film",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+            ),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="director",
+            evidence=EvidenceRecord(
+                text="Example Film is a 2020 drama film directed by Jane Doe.",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+                source_title="Example Film",
+                retrieved_at="2026-05-13",
+            ),
+            question_family="who_directed_film",
+            answer_type="Person",
+            topic="Arts and Media",
+            target_time="2020",
+            source_template_domain="film_director",
+            source_metadata={
+                "subject_wikipedia_title": "Example_Film",
+                "subject_wikipedia_url": "https://en.wikipedia.org/wiki/Example_Film",
+                "subject_sitelink_count": 12,
+                "subject_claim_count": 44,
+                "stable_answer_override": True,
+            },
+            source_candidate=source_candidate,
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+            )
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=FakeSearchClient(
+                    {
+                        "Who directed the film Example Film?": [],
+                        "Example Film director": [],
+                        "Example Film director Jane Doe": [],
+                    }
+                ),
+                cheap_model_client=FakeCheapModelClient(
+                    "Jane Doe"
+                ),
+                rewrite_client=None,
+            )
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(
+            result.rejected[0]["rejection_reason"],
+            "cheap_model_longtail_verifier_rejected",
+        )
+
+    def test_process_generated_candidates_records_second_stage_panel_accuracy(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="Who directed the film Example Film?",
+            canonical_question="Who directed the film Example Film?",
+            answer="Jane Doe",
+            answer_aliases=["J. Doe"],
+            subject_entity=EntityReference(
+                name="Example Film",
+                qid="Q1",
+                wikipedia_title="Example_Film",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+            ),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="director",
+            evidence=EvidenceRecord(
+                text="Example Film is a 2020 drama film directed by Jane Doe.",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+                source_title="Example Film",
+                retrieved_at="2026-05-13",
+            ),
+            question_family="who_directed_film",
+            answer_type="Person",
+            topic="Arts and Media",
+            target_time="2020",
+            source_template_domain="film_director",
+            source_metadata={
+                "subject_wikipedia_title": "Example_Film",
+                "subject_wikipedia_url": "https://en.wikipedia.org/wiki/Example_Film",
+                "subject_sitelink_count": 12,
+                "subject_claim_count": 44,
+                "stable_answer_override": True,
+            },
+            source_candidate=source_candidate,
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                second_stage_grading_enabled=True,
+                second_stage_grading_accuracy_threshold=0.5,
+                second_stage_grading_grader_llm=None,
+            )
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=FakeSearchClient(
+                    {
+                        "Who directed the film Example Film?": [],
+                        "Example Film director": [],
+                        "Example Film director Jane Doe": [],
+                    }
+                ),
+                second_stage_model_clients=[
+                    ModelPanelMember("openai/gpt-5.4-mini", FakePanelModelClient("Jane Doe")),
+                    ModelPanelMember("google/gemini-3-flash-preview", FakePanelModelClient("John Smith")),
+                ],
+                rewrite_client=None,
+            )
+        self.assertEqual(len(result.accepted), 1)
+        features = result.accepted[0]["panel_grading_features"]
+        self.assertTrue(features["enabled"])
+        self.assertAlmostEqual(features["accuracy"], 0.5)
+        self.assertEqual(features["models"][0]["grade"], "CORRECT")
+        self.assertEqual(features["models"][1]["grade"], "INCORRECT")
+        self.assertAlmostEqual(
+            result.telemetry["process_generated_candidates"]["second_stage_grading_summary"]["per_model"]["openai/gpt-5.4-mini"]["accuracy"],
+            1.0,
+        )
+
+    def test_process_generated_candidates_rejects_when_second_stage_panel_accuracy_exceeds_threshold(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="Who directed the film Example Film?",
+            canonical_question="Who directed the film Example Film?",
+            answer="Jane Doe",
+            answer_aliases=["J. Doe"],
+            subject_entity=EntityReference(
+                name="Example Film",
+                qid="Q1",
+                wikipedia_title="Example_Film",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+            ),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="director",
+            evidence=EvidenceRecord(
+                text="Example Film is a 2020 drama film directed by Jane Doe.",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+                source_title="Example Film",
+                retrieved_at="2026-05-13",
+            ),
+            question_family="who_directed_film",
+            answer_type="Person",
+            topic="Arts and Media",
+            target_time="2020",
+            source_template_domain="film_director",
+            source_metadata={
+                "subject_wikipedia_title": "Example_Film",
+                "subject_wikipedia_url": "https://en.wikipedia.org/wiki/Example_Film",
+                "subject_sitelink_count": 12,
+                "subject_claim_count": 44,
+                "stable_answer_override": True,
+            },
+            source_candidate=source_candidate,
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                second_stage_grading_enabled=True,
+                second_stage_grading_accuracy_threshold=0.5,
+                second_stage_grading_grader_llm=None,
+            )
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=FakeSearchClient(
+                    {
+                        "Who directed the film Example Film?": [],
+                        "Example Film director": [],
+                        "Example Film director Jane Doe": [],
+                    }
+                ),
+                second_stage_model_clients=[
+                    ModelPanelMember("openai/gpt-5.4-mini", FakePanelModelClient("Jane Doe")),
+                    ModelPanelMember("google/gemini-3-flash-preview", FakePanelModelClient("J. Doe")),
+                ],
+                rewrite_client=None,
+            )
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(
+            result.rejected[0]["rejection_reason"],
+            "second_stage_grading_accuracy_threshold_exceeded",
+        )
 
 
 if __name__ == "__main__":

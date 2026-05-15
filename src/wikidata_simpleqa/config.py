@@ -8,6 +8,40 @@ from pathlib import Path
 import re
 
 
+def _default_second_stage_grading_models() -> tuple["LLMConfig", ...]:
+    """Return the default small-model panel for post-filter grading."""
+    return (
+        LLMConfig(
+            provider="openrouter",
+            model="openai/gpt-5.4-mini",
+            api_key_env="OPENROUTER_API_KEY",
+            base_url="https://openrouter.ai/api/v1",
+            temperature=0.0,
+            max_tokens=128,
+        ),
+        LLMConfig(
+            provider="openrouter",
+            model="google/gemini-3-flash-preview",
+            api_key_env="OPENROUTER_API_KEY",
+            base_url="https://openrouter.ai/api/v1",
+            temperature=0.0,
+            max_tokens=128,
+        ),
+    )
+
+
+def _default_second_stage_grading_grader_llm() -> "LLMConfig":
+    """Return the default grader config for post-filter panel scoring."""
+    return LLMConfig(
+        provider="openrouter",
+        model="openai/gpt-4.1-mini",
+        api_key_env="OPENROUTER_API_KEY",
+        base_url="https://openrouter.ai/api/v1",
+        temperature=0.0,
+        max_tokens=128,
+    )
+
+
 @dataclass(slots=True)
 class LLMConfig:
     """Configuration for one-shot rewrite calls."""
@@ -36,6 +70,17 @@ class Settings:
         "route1_wikidata_light",
     )
     duckduckgo_top_k: int = 10
+    cheap_model_longtail_enabled: bool = False
+    cheap_model_longtail_llm: LLMConfig | None = None
+    second_stage_grading_enabled: bool = False
+    second_stage_grading_models: tuple[LLMConfig, ...] = field(
+        default_factory=_default_second_stage_grading_models
+    )
+    second_stage_grading_accuracy_threshold: float = 0.5
+    second_stage_grading_grader_llm: LLMConfig | None = field(
+        default_factory=_default_second_stage_grading_grader_llm
+    )
+    number_snippet_judge_llm: LLMConfig | None = None
     longtail_prefilter_max_sitelinks: int = 80
     longtail_prefilter_max_claims: int = 400
     search_longtail_max_full_question_hit_rate: float = 0.0
@@ -51,6 +96,11 @@ class Settings:
     user_agent: str = "wikidata-simpleqa-generator/0.1"
     proxy: str | None = "socks5://127.0.0.1:7897"
     timeout_seconds: float = 30.0
+    wikidata_max_entity_ids_per_request: int = 50
+    wikidata_log_checkpoints: bool = False
+    live_probe_mode: bool = False
+    live_probe_harvest_limit: int = 2
+    live_probe_max_entity_ids_per_request: int = 10
     random_seed: int = 42
     cache_dir: Path = Path("cache/wikidata")
     output_path: Path = Path("outputs/pilot_accepted.jsonl")
@@ -63,6 +113,18 @@ class Settings:
             self.date_upper_bound = self.run_date
         self.target_time = self.target_time.strip()
         self._validate_target_time()
+        if not 0.0 <= self.second_stage_grading_accuracy_threshold <= 1.0:
+            raise ValueError("second_stage_grading_accuracy_threshold must be between 0.0 and 1.0")
+        if self.live_probe_mode:
+            self.harvest_limit_per_template = min(
+                self.harvest_limit_per_template,
+                self.live_probe_harvest_limit,
+            )
+            self.wikidata_max_entity_ids_per_request = min(
+                self.wikidata_max_entity_ids_per_request,
+                self.live_probe_max_entity_ids_per_request,
+            )
+            self.wikidata_log_checkpoints = True
 
     @property
     def target_start_date(self) -> str:

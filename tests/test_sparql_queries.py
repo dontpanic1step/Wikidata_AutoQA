@@ -41,6 +41,8 @@ class SparqlQueryBuilderTests(unittest.TestCase):
         self.assertNotIn("?itemLabel", query)
         self.assertNotIn("?answerLabel", query)
         self.assertNotIn("SERVICE wikibase:label", query)
+        self.assertNotIn("FILTER(?date >=", query)
+        self.assertNotIn("FILTER(?date <=", query)
 
     def test_build_count_candidate_query_omits_label_service(self) -> None:
         template = DomainTemplate(
@@ -68,6 +70,8 @@ class SparqlQueryBuilderTests(unittest.TestCase):
         self.assertNotIn("?itemLabel", query)
         self.assertNotIn("SERVICE wikibase:label", query)
         self.assertIn("GROUP BY ?item ?date", query)
+        self.assertNotIn("FILTER(?date >=", query)
+        self.assertNotIn("FILTER(?date <=", query)
 
     def test_candidate_query_keeps_direct_path_lightweight_even_with_english_label_tag(self) -> None:
         template = DomainTemplate(
@@ -119,6 +123,9 @@ class SparqlQueryBuilderTests(unittest.TestCase):
 
         self.assertNotIn("?itemEnLabel", query)
         self.assertNotIn("rdfs:label", query)
+        self.assertNotIn("FILTER(?date >=", query)
+        self.assertNotIn("FILTER(?date <=", query)
+        self.assertIn("wdt:P31/wdt:P279* wd:Q2424752", query)
 
 
 if __name__ == "__main__":

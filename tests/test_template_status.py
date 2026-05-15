@@ -8,7 +8,17 @@ import tempfile
 import unittest
 
 from test_support import ROOT  # noqa: F401
-from wikidata_simpleqa.template_status import _build_status_detail, _resolve_template_status, build_template_status_index
+from wikidata_simpleqa.workflow import (
+    status_accepted_paths,
+    status_rejected_paths,
+    status_summary_paths,
+)
+from wikidata_simpleqa.template_status import (
+    _build_status_detail,
+    _resolve_template_status,
+    build_template_status_index,
+    render_template_status_markdown,
+)
 
 
 class TemplateStatusTests(unittest.TestCase):
@@ -86,6 +96,21 @@ class TemplateStatusTests(unittest.TestCase):
         self.assertEqual(row["current_status"], "unproven_no_result")
         self.assertEqual(row["latest_live_status"], "unproven_no_result")
         self.assertEqual(row["best_known_semantic_status"], "rejected_only")
+
+    def test_frozen_template_keeps_original_status_metadata(self) -> None:
+        index = build_template_status_index(
+            review_bundle_path=ROOT / "outputs" / "review_2026_all_generated_qas.tsv",
+            summary_paths=status_summary_paths(ROOT),
+            rejected_paths=status_rejected_paths(ROOT),
+            accepted_paths=status_accepted_paths(ROOT),
+            status_mode="latest_live_status",
+        )
+        row = next(template for template in index["templates"] if template["domain"] == "ordinal_volume_author")
+        self.assertEqual(row["catalog_status"], "frozen")
+        self.assertEqual(row["current_status"], "frozen")
+        self.assertEqual(row["original_current_status"], "error")
+        self.assertEqual(row["latest_live_status"], "error")
+        self.assertIn("error_message", row["latest_run"] or {})
 
     def test_status_mode_can_choose_best_known_semantic_status(self) -> None:
         index = build_template_status_index(
@@ -273,6 +298,20 @@ class TemplateStatusTests(unittest.TestCase):
         )
         row = next(template for template in index["templates"] if template["domain"] == "product_manufacturer")
         self.assertIn("pass_rate", row["reliability"] or {"pass_rate": 0})
+
+    def test_markdown_uses_simple_table_without_error_reasons_or_pass_rate(self) -> None:
+        index = build_template_status_index(
+            review_bundle_path=ROOT / "outputs" / "review_2026_all_generated_qas.tsv",
+            summary_paths=[ROOT / "outputs" / "adaptive_retry_8_v3_summary.json"],
+            rejected_paths=[ROOT / "outputs" / "adaptive_retry_8_v3_rejected.jsonl"],
+            accepted_paths=[ROOT / "outputs" / "adaptive_retry_8_v3_accepted.jsonl"],
+            status_mode="latest_live_status",
+        )
+        rendered = render_template_status_markdown(index)
+        self.assertIn("| Domain | Template | Canonical Question | Status | Successful Generated Question |", rendered)
+        self.assertIn("## Frozen", rendered)
+        self.assertNotIn("pass_rate", rendered)
+        self.assertNotIn("HTTP Error 429", rendered)
 
 if __name__ == "__main__":
     unittest.main()

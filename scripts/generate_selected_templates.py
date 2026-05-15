@@ -25,6 +25,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--harvest-limit", type=int, default=10)
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument(
+        "--live-probe-mode",
+        action="store_true",
+        help="Use smaller harvest and hydration batches plus checkpoint logs for live debugging probes.",
+    )
+    parser.add_argument(
         "--output",
         type=Path,
         default=ROOT / "outputs" / "selected_templates_accepted.jsonl",
@@ -50,6 +55,7 @@ def main() -> int:
         pilot_total=args.pilot_total,
         harvest_limit_per_template=args.harvest_limit,
         proxy=args.proxy,
+        live_probe_mode=args.live_probe_mode,
         output_path=args.output,
         rejected_output_path=args.rejected_output,
     )

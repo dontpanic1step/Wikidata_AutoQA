@@ -38,9 +38,6 @@ SELECT ?item ?answer ?date WHERE {{
   ?item {instance_path};
         wdt:{template.date_property_pid} ?date;
         wdt:{template.target_property_pid} ?answer.
-
-  FILTER(?date >= "{target_start_date}T00:00:00Z"^^xsd:dateTime)
-  FILTER(?date <= "{date_upper_bound}T23:59:59Z"^^xsd:dateTime)
 }}
 LIMIT {max(limit * 5, limit)}
 """.strip()
@@ -52,14 +49,17 @@ def build_subject_seed_query(
     date_upper_bound: str,
     limit: int,
 ) -> str:
-    """Build a cheaper subject-seed query for broad classes."""
+    """Build a cheaper subject-seed query for hydrated local claim extraction."""
+    instance_path = (
+        f"wdt:P31 wd:{template.subject_type_qid}"
+        if template.exact_instance_only
+        else f"wdt:P31/wdt:P279* wd:{template.subject_type_qid}"
+    )
     return f"""
 SELECT DISTINCT ?item ?date WHERE {{
-  ?item wdt:{template.date_property_pid} ?date;
+  ?item {instance_path};
+        wdt:{template.date_property_pid} ?date;
         wdt:{template.target_property_pid} ?seedValue.
-
-  FILTER(?date >= "{target_start_date}T00:00:00Z"^^xsd:dateTime)
-  FILTER(?date <= "{date_upper_bound}T23:59:59Z"^^xsd:dateTime)
 }}
 LIMIT {max(limit * 10, limit)}
 """.strip()
@@ -82,9 +82,6 @@ SELECT ?item ?date (COUNT(DISTINCT ?value) AS ?answerCount) WHERE {{
   ?item {instance_path};
         wdt:{template.date_property_pid} ?date;
         wdt:{template.target_property_pid} ?value.
-
-  FILTER(?date >= "{target_start_date}T00:00:00Z"^^xsd:dateTime)
-  FILTER(?date <= "{date_upper_bound}T23:59:59Z"^^xsd:dateTime)
 }}
 GROUP BY ?item ?date
 LIMIT {max(limit * 5, limit)}

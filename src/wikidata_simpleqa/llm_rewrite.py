@@ -5,7 +5,6 @@ from __future__ import annotations
 import json
 import os
 from abc import ABC, abstractmethod
-from dataclasses import asdict
 from time import sleep
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -83,7 +82,19 @@ class OpenRouterRewriteClient(RewriteClient):
                 try:
                     with urlopen(request, timeout=self.timeout_seconds) as response:
                         return json.loads(response.read().decode("utf-8"))
-                except (HTTPError, URLError) as exc:
+                except HTTPError as exc:
+                    response_body = ""
+                    try:
+                        response_body = exc.read().decode("utf-8", errors="replace")
+                    except Exception:  # noqa: BLE001
+                        response_body = ""
+                    last_error = RuntimeError(
+                        f"{type(exc).__name__}: {exc} body={response_body}"
+                    )
+                    if attempt == 2:
+                        break
+                    sleep(min(2 ** attempt, 4))
+                except URLError as exc:
                     last_error = exc
                     if attempt == 2:
                         break
@@ -116,7 +127,12 @@ def build_rewrite_payload(candidate: CandidateFact) -> dict[str, Any]:
     if candidate.subject_label:
         required_anchors.append(candidate.subject_label)
     return {
+        "task_type": "route1_question_and_queries",
         "canonical_question": candidate.canonical_question,
+        "wikidata_triplet_text": (
+            f"{candidate.subject_label} -- {candidate.target_property_label} -- "
+            f"{candidate.answer_labels[0] if candidate.answer_labels else ''}"
+        ).strip(),
         "answer_labels": candidate.answer_labels,
         "answer_aliases": candidate.answer_aliases,
         "required_anchors": required_anchors,
@@ -139,6 +155,10 @@ def build_rewrite_prompt(payload: dict[str, Any]) -> str:
     """Build the one-shot prompt for question rewriting."""
     if payload.get("task_type") == "kelm_question_and_queries":
         return build_kelm_rewrite_prompt(payload)
+    if payload.get("task_type") == "route1_question_and_queries":
+        return build_route1_rewrite_prompt(payload)
+    if payload.get("task_type") == "route2_question_and_queries":
+        return build_route2_rewrite_prompt(payload)
     serialized = json.dumps(payload, ensure_ascii=False, indent=2)
     forbidden_patterns = payload.get(
         "forbidden_patterns",
@@ -158,18 +178,96 @@ def build_rewrite_prompt(payload: dict[str, Any]) -> str:
     if cutoff_year is not None:
         cutoff_rule = f"- Avoid question wording that depends on events in {cutoff_year} or later.\n"
     return (
-        "Rewrite the canonical question into one concise SimpleQA-style fact-seeking question.\n\n"
+        "Rewrite the question into one concise SimpleQA-style fact-seeking question.\n\n"
         "Rules:\n"
-        '- Return JSON only: {"question": "..."}.\n'
-        "- Do not answer the question.\n"
-        "- Do not add or remove factual constraints.\n"
+        "- Return JSON only.\n"
         "- Preserve all required anchors.\n"
+        "- Preserve the same answer relation and information scope as the canonical question.\n"
+        "- Do not add a more specific degree, award, role, date, or other fact that is not already explicit in the canonical question or required anchors.\n"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"{cutoff_rule}"
         "- Do not include the answer or any answer alias in any casing, capitalization, or normalized variant.\n"
-        "- Do not change the target relation.\n"
-        "- Prefer a short, plain, natural question.\n\n"
-        f"Payload:\n{serialized}"
+        "- Generate 3 to 5 answer-blind search queries.\n\n"
+        f"Payload:\n{serialized}\n\n"
+        "Output valid JSON only:\n"
+        "{\n"
+        '  "rewritten_question": string,\n'
+        '  "search_queries": string[],\n'
+        '  "answer_aliases": string[],\n'
+        '  "discard_reason": string | null\n'
+        "}\n"
+    )
+
+
+def build_route1_rewrite_prompt(payload: dict[str, Any]) -> str:
+    """Build the Route 1 rewrite-and-query prompt."""
+    forbidden_patterns = payload.get("forbidden_patterns", [])
+    forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
+    return (
+        "You are generating a SimpleQA-style factual question and answer-blind search queries for Route 1.\n\n"
+        "Input:\n"
+        f"- Canonical question: {payload.get('canonical_question', '')}\n"
+        f"- Wikidata triplet text: {payload.get('wikidata_triplet_text', '')}\n"
+        f"- Forbidden text: {forbidden_text}\n"
+        f"- Cutoff year: {payload.get('cutoff_year', '')}\n\n"
+        "Task:\n"
+        "1. Rewrite the canonical question into a natural factual question.\n"
+        "2. Preserve the fact expressed by the Wikidata triplet text.\n"
+        "3. Keep all required anchors and disambiguating cues.\n"
+        "4. Do not include the answer or answer aliases in the question.\n"
+        "5. Generate 3 to 5 answer-blind search queries for long-tail verification.\n"
+        "6. Return extra answer aliases or abbreviations that may appear in snippets, using [] if none.\n\n"
+        "Important constraints:\n"
+        "- The search queries must not contain the answer or any answer alias.\n"
+        "- The queries should use only non-answer context from the canonical question or triplet text.\n"
+        "- Preserve the same answer relation as the canonical question. Do not narrow or specialize it.\n"
+        "- If the canonical question says `first degree`, do not rewrite it as a named degree such as `Doctor of Medicine`.\n"
+        "- Do not add any degree name, date, title, role, or other factual detail that is absent from the canonical question unless it is already required for disambiguation.\n"
+        f"- Avoid these forbidden patterns: {forbidden_text}.\n"
+        f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
+        "- The first query will be the rewritten question itself and will be added by code. Do not repeat it in search_queries.\n\n"
+        "Output valid JSON only:\n"
+        "{\n"
+        '  "rewritten_question": string,\n'
+        '  "search_queries": string[],\n'
+        '  "answer_aliases": string[],\n'
+        '  "discard_reason": string | null\n'
+        "}\n"
+    )
+
+
+def build_route2_rewrite_prompt(payload: dict[str, Any]) -> str:
+    """Build the Route 2 rewrite-and-query prompt."""
+    forbidden_patterns = payload.get("forbidden_patterns", [])
+    forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
+    return (
+        "You are generating a SimpleQA-style factual question and answer-blind search queries for Route 2.\n\n"
+        "Input:\n"
+        f"- Canonical question: {payload.get('canonical_question', '')}\n"
+        f"- Evidence text: {payload.get('evidence_text', '')}\n"
+        f"- Forbidden text: {forbidden_text}\n"
+        f"- Cutoff year: {payload.get('cutoff_year', '')}\n\n"
+        "Task:\n"
+        "1. Rewrite the canonical question into a natural factual question.\n"
+        "2. Preserve the fact supported by the evidence text.\n"
+        "3. Keep all required anchors.\n"
+        "4. Do not include the answer or answer aliases in the question.\n"
+        "5. Generate 3 to 5 answer-blind search queries for long-tail verification.\n"
+        "6. Return extra answer aliases or abbreviations that may appear in snippets, using [] if none.\n\n"
+        "Important constraints:\n"
+        "- The search queries must not contain the answer or any answer alias.\n"
+        "- Preserve the same answer relation as the canonical question. Do not narrow or specialize it.\n"
+        "- Do not add a more specific degree, award, role, date, or other factual detail that is absent from the canonical question unless it is already required for disambiguation.\n"
+        f"- Avoid these forbidden patterns: {forbidden_text}.\n"
+        f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
+        "- The first query will be the rewritten question itself and will be added by code. Do not repeat it in search_queries.\n\n"
+        "Output valid JSON only:\n"
+        "{\n"
+        '  "rewritten_question": string,\n'
+        '  "search_queries": string[],\n'
+        '  "answer_aliases": string[],\n'
+        '  "discard_reason": string | null\n'
+        "}\n"
     )
 
 
@@ -194,6 +292,8 @@ def build_kelm_rewrite_prompt(payload: dict[str, Any]) -> str:
         "Important constraints:\n"
         "- The search queries must not contain the answer or any alias, casing variant, capitalization variant, or normalized form of the answer.\n"
         "- The queries should use only information available in the question, KELM sentence, or non-answer parts of the triple.\n"
+        "- Preserve the same answer relation and information scope as the source.\n"
+        "- Do not add a more specific degree, award, role, date, or other factual detail that is not explicit in the source.\n"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
         "- The first query will be the rewritten question itself and will be added by code. Do not include the whole rewritten question in search_queries.\n"
@@ -207,6 +307,7 @@ def build_kelm_rewrite_prompt(payload: dict[str, Any]) -> str:
         "{\n"
         '  "rewritten_question": string,\n'
         '  "search_queries": string[],\n'
+        '  "answer_aliases": string[],\n'
         '  "discard_reason": string | null\n'
         "}\n"
     )

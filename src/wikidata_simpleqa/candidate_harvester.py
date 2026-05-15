@@ -45,42 +45,51 @@ def harvest_candidates(
     if reasoning_style != "single_fact":
         return harvest_composed_candidates(client=client, settings=settings, template=template)
 
-    query = build_candidate_query(
-        template=template,
-        target_start_date=settings.target_start_date,
-        date_upper_bound=settings.date_upper_bound,
-        limit=min(settings.harvest_limit_per_template, template.retrieval_limit),
-    )
-    try:
-        rows = client.sparql_query(query)
-        rows = _filter_unique_rows(rows)
-        return _rows_to_candidates(
-            rows=rows,
+    if _use_staged_seed_strategy(template):
+        client.record_problem(
+            "staged_seed_strategy_used",
+            "Preferred staged subject-seed discovery with local claim extraction as the default single-fact Route 1 harvest path.",
+            domain=template.domain,
+            subject_type_qid=template.subject_type_qid,
+            date_property_pid=template.date_property_pid,
+            target_property_pid=template.target_property_pid,
+        )
+        try:
+            candidates = _harvest_candidates_via_subject_seeds(
+                client=client,
+                settings=settings,
+                template=template,
+            )
+            if candidates:
+                return candidates
+            client.record_problem(
+                "subject_seed_path_returned_no_candidates",
+                "The default light subject-seed path returned no candidates; trying the heavy direct WDQS query as fallback.",
+                domain=template.domain,
+            )
+        except Exception as exc:  # noqa: BLE001
+            client.record_problem(
+                "subject_seed_path_failed",
+                "The default light subject-seed path failed during hydration; trying the heavy direct WDQS query as fallback.",
+                domain=template.domain,
+                error_type=type(exc).__name__,
+                error_message=str(exc),
+            )
+        client.record_problem(
+            "direct_candidate_query_fallback_used",
+            "Falling back to the heavy direct WDQS candidate query after the light subject-seed path failed or returned no candidates.",
+            domain=template.domain,
+            subject_type_qid=template.subject_type_qid,
+            date_property_pid=template.date_property_pid,
+            target_property_pid=template.target_property_pid,
+        )
+        return _harvest_candidates_via_direct_query(
+            client=client,
             settings=settings,
             template=template,
-            query=query,
-            client=client,
         )
-    except Exception as exc:  # noqa: BLE001
-        client.record_problem(
-            "direct_candidate_query_failed",
-            "The direct WDQS candidate query failed before validation could start.",
-            domain=template.domain,
-            error_type=type(exc).__name__,
-            error_message=str(exc),
-        )
-        if not _use_staged_seed_strategy(template):
-            return []
 
-    client.record_problem(
-        "staged_seed_strategy_used",
-        "Used a staged WDQS seed query with local claim extraction for a broad template after a direct query failure.",
-        domain=template.domain,
-        subject_type_qid=template.subject_type_qid,
-        date_property_pid=template.date_property_pid,
-        target_property_pid=template.target_property_pid,
-    )
-    return _harvest_candidates_via_subject_seeds(
+    return _harvest_candidates_via_direct_query(
         client=client,
         settings=settings,
         template=template,
@@ -88,12 +97,8 @@ def harvest_candidates(
 
 
 def _use_staged_seed_strategy(template: DomainTemplate) -> bool:
-    """Return whether this template should avoid a broad WDQS join query."""
-    if template.exact_instance_only:
-        return False
-    if "staged_seed_query" in template.query_tags:
-        return True
-    return template.subject_type_qid in BROAD_STAGE_SUBJECT_TYPE_QIDS
+    """Return whether this template should use hydrated subject-seed harvesting."""
+    return True
 
 
 def _harvest_candidates_via_subject_seeds(
@@ -156,6 +161,39 @@ def _harvest_candidates_via_subject_seeds(
     return candidates
 
 
+def _harvest_candidates_via_direct_query(
+    client: WikidataClient,
+    settings: Settings,
+    template: DomainTemplate,
+) -> list[CandidateFact]:
+    """Harvest candidates through the heavier direct WDQS answer query."""
+    query = build_candidate_query(
+        template=template,
+        target_start_date=settings.target_start_date,
+        date_upper_bound=settings.date_upper_bound,
+        limit=min(settings.harvest_limit_per_template, template.retrieval_limit),
+    )
+    try:
+        rows = client.sparql_query(query)
+        rows = _filter_unique_rows(rows)
+        return _rows_to_candidates(
+            rows=rows,
+            settings=settings,
+            template=template,
+            query=query,
+            client=client,
+        )
+    except Exception as exc:  # noqa: BLE001
+        client.record_problem(
+            "direct_candidate_query_failed",
+            "The direct WDQS candidate query failed before validation could start.",
+            domain=template.domain,
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+        )
+        return []
+
+
 def _rows_to_candidates(
     *,
     rows: list[dict[str, Any]],
@@ -189,55 +227,42 @@ def _run_windowed_subject_seed_queries(
     settings: Settings,
     template: DomainTemplate,
 ) -> tuple[list[dict[str, Any]], str]:
-    """Run staged subject seed queries over smaller date windows."""
+    """Run the default subject-seed query without WDQS date-window filters."""
     limit = min(settings.harvest_limit_per_template, template.retrieval_limit)
     all_rows: list[dict[str, Any]] = []
     seen_pairs: set[tuple[str, str]] = set()
-    queries: list[str] = []
-    window_days = _seed_window_days(template)
-    for window_start, window_end in _iter_month_windows(
-        settings.target_start_date,
-        settings.date_upper_bound,
-        window_days=window_days,
-    ):
-        query = build_subject_seed_query(
-            template=template,
-            target_start_date=window_start,
-            date_upper_bound=window_end,
-            limit=limit,
-        )
-        queries.append(query)
-        try:
-            rows = client.sparql_query(query)
-        except Exception as exc:  # noqa: BLE001
-            client.record_problem(
-                "windowed_subject_seed_query_failed",
-                "One staged WDQS subject-seed query failed; returning any rows collected so far.",
-                domain=template.domain,
-                window_start=window_start,
-                window_end=window_end,
-                error_type=type(exc).__name__,
-                error_message=str(exc),
-                partial_rows=len(all_rows),
-            )
-            break
-        for row in rows:
-            item_qid = row["item"]["value"].rsplit("/", 1)[-1]
-            date_value = normalize_wikidata_date_literal(row["date"]["value"])
-            key = (item_qid, date_value)
-            if key in seen_pairs:
-                continue
-            seen_pairs.add(key)
-            all_rows.append(row)
-        if len(all_rows) >= max(limit * 5, limit):
-            break
-    client.record_problem(
-        "windowed_subject_seed_queries_used",
-        "Split broad subject seed discovery into smaller monthly WDQS windows.",
-        domain=template.domain,
-        query_count=len(queries),
+    query = build_subject_seed_query(
+        template=template,
+        target_start_date=settings.target_start_date,
+        date_upper_bound=settings.date_upper_bound,
+        limit=limit,
     )
-    return all_rows, "\n\n".join(queries)
+    try:
+        rows = client.sparql_query(query)
+    except Exception as exc:  # noqa: BLE001
+        client.record_problem(
+            "subject_seed_query_failed",
+            "The default subject-seed query failed before local claim extraction could start.",
+            domain=template.domain,
+            error_type=type(exc).__name__,
+            error_message=str(exc),
+        )
+        return [], query
+    for row in rows:
+        item_qid = row["item"]["value"].rsplit("/", 1)[-1]
+        date_value = normalize_wikidata_date_literal(row["date"]["value"])
+        key = (item_qid, date_value)
+        if key in seen_pairs:
+            continue
+        seen_pairs.add(key)
+        all_rows.append(row)
+    client.record_problem(
+        "subject_seed_query_used",
+        "Used the default subject-seed WDQS query without date-window filtering.",
+        domain=template.domain,
+        query_count=1,
+    )
+    return all_rows, query
 
 
 def _seed_window_days(template: DomainTemplate) -> int | None:

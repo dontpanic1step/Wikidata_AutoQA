@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from dataclasses import dataclass, field
 from pathlib import Path
 from time import perf_counter, sleep
@@ -24,6 +25,9 @@ class WikidataClient:
     timeout_seconds: float = 30.0
     max_retries: int = 3
     max_entity_ids_per_request: int = 50
+    maxlag_seconds: int = 5
+    min_retry_after_seconds: float = 5.0
+    log_checkpoints: bool = False
     cache_dir: Path | None = None
     request_events: list[dict[str, Any]] = field(init=False, default_factory=list)
     request_counters: dict[str, int] = field(init=False, default_factory=dict)
@@ -45,6 +49,11 @@ class WikidataClient:
 
     def sparql_query(self, query: str) -> list[dict[str, Any]]:
         """Execute a SPARQL query and return binding rows."""
+        self._log_checkpoint(
+            "wdqs_query_start",
+            "Starting WDQS query.",
+            query_preview=" ".join(query.split())[:240],
+        )
         url = "https://query.wikidata.org/sparql?" + urlencode(
             {"query": query, "format": "json"}
         )
@@ -52,19 +61,36 @@ class WikidataClient:
         bindings = payload.get("results", {}).get("bindings")
         if bindings is None:
             raise RuntimeError(f"WDQS response missing results.bindings keys: {sorted(payload.keys())}")
+        self._log_checkpoint(
+            "wdqs_query_done",
+            "Completed WDQS query.",
+            row_count=len(bindings),
+        )
         return bindings
 
     def get_entities(self, ids: list[str]) -> dict[str, Any]:
         """Hydrate Wikidata entities by QID."""
         merged_entities: dict[str, Any] = {}
+        total_chunks = max(1, (len(ids) + self.max_entity_ids_per_request - 1) // self.max_entity_ids_per_request)
         for chunk_start in range(0, len(ids), self.max_entity_ids_per_request):
             chunk = ids[chunk_start : chunk_start + self.max_entity_ids_per_request]
+            chunk_number = (chunk_start // self.max_entity_ids_per_request) + 1
+            self._log_checkpoint(
+                "wbgetentities_chunk_start",
+                "Starting wbgetentities chunk.",
+                chunk_number=chunk_number,
+                total_chunks=total_chunks,
+                chunk_size=len(chunk),
+                first_id=chunk[0] if chunk else "",
+                last_id=chunk[-1] if chunk else "",
+            )
             params = {
                 "action": "wbgetentities",
                 "ids": "|".join(chunk),
                 "props": "labels|aliases|descriptions|claims|sitelinks",
                 "languages": "en",
                 "format": "json",
+                "maxlag": str(self.maxlag_seconds),
             }
             url = "https://www.wikidata.org/w/api.php?" + urlencode(params)
             payload = self._request_json(url)
@@ -72,10 +98,23 @@ class WikidataClient:
             if entities is None:
                 raise RuntimeError(f"wbgetentities response missing entities key: {sorted(payload.keys())}")
             merged_entities.update(entities)
+            self._log_checkpoint(
+                "wbgetentities_chunk_done",
+                "Completed wbgetentities chunk.",
+                chunk_number=chunk_number,
+                total_chunks=total_chunks,
+                entity_count=len(entities),
+            )
         return merged_entities
 
     def search_entities(self, query: str, limit: int = 10) -> list[dict[str, Any]]:
         """Search for possible label competitors."""
+        self._log_checkpoint(
+            "wbsearchentities_start",
+            "Starting wbsearchentities lookup.",
+            query=query,
+            limit=limit,
+        )
         params = {
             "action": "wbsearchentities",
             "search": query,
@@ -83,12 +122,19 @@ class WikidataClient:
             "type": "item",
             "limit": str(limit),
             "format": "json",
+            "maxlag": str(self.maxlag_seconds),
         }
         url = "https://www.wikidata.org/w/api.php?" + urlencode(params)
         payload = self._request_json(url)
         search = payload.get("search")
         if search is None:
             raise RuntimeError(f"wbsearchentities response missing search key: {sorted(payload.keys())}")
+        self._log_checkpoint(
+            "wbsearchentities_done",
+            "Completed wbsearchentities lookup.",
+            query=query,
+            result_count=len(search),
+        )
         return search
 
     def load_text_mapping(self, namespace: str, key: str) -> dict[str, Any] | None:
@@ -176,6 +222,13 @@ class WikidataClient:
                         }
                     )
                     raise
+                self._sleep_before_retry(
+                    url=url,
+                    attempt=attempt + 1,
+                    reason=f"http_{exc.code}",
+                    delay_seconds=self._retry_delay_seconds(exc, attempt),
+                    response_headers=exc.headers,
+                )
             except URLError as exc:
                 last_error = exc
                 if attempt < self.max_retries - 1:
@@ -195,7 +248,12 @@ class WikidataClient:
                         }
                     )
                     raise
-            sleep(min(2 ** attempt, 4))
+                self._sleep_before_retry(
+                    url=url,
+                    attempt=attempt + 1,
+                    reason="url_error",
+                    delay_seconds=min(2 ** attempt, 4),
+                )
         if last_error is not None:
             raise last_error
         raise RuntimeError("Wikidata request failed without an explicit error")
@@ -236,3 +294,69 @@ class WikidataClient:
             return None
         digest = hashlib.sha256(key.encode("utf-8")).hexdigest()
         return self.cache_dir / "text_mappings" / namespace / f"{digest}.json"
+
+    def _retry_delay_seconds(self, exc: HTTPError, attempt: int) -> float:
+        """Resolve retry delay from Retry-After headers or conservative fallback."""
+        retry_after_header = ""
+        if exc.headers is not None:
+            retry_after_header = str(exc.headers.get("Retry-After", "")).strip()
+        if retry_after_header.isdigit():
+            return max(float(retry_after_header), self.min_retry_after_seconds)
+        if exc.code == 429:
+            return self.min_retry_after_seconds
+        return min(2 ** attempt, 4)
+
+    def _sleep_before_retry(
+        self,
+        *,
+        url: str,
+        attempt: int,
+        reason: str,
+        delay_seconds: float,
+        response_headers: Any | None = None,
+    ) -> None:
+        """Sleep before a retry and surface the wait in logs and telemetry."""
+        rounded_delay = max(float(delay_seconds), 0.0)
+        warning = (
+            f"[wikidata] Sleeping {rounded_delay:.1f}s before retry "
+            f"(attempt {attempt}, reason={reason}) for {url}"
+        )
+        print(warning, file=sys.stderr, flush=True)
+        self.record_problem(
+            "rate_limit_sleep",
+            warning,
+            url=url,
+            attempt=attempt,
+            reason=reason,
+            sleep_seconds=rounded_delay,
+            retry_after=(str(response_headers.get("Retry-After", "")).strip() if response_headers else ""),
+        )
+        self.request_events.append(
+            {
+                "url": url,
+                "cache_hit": False,
+                "attempts": attempt,
+                "status": "sleeping_before_retry",
+                "reason": reason,
+                "sleep_seconds": rounded_delay,
+            }
+        )
+        sleep(rounded_delay)
+
+    def _log_checkpoint(self, kind: str, message: str, **context: Any) -> None:
+        """Emit a visible checkpoint log and store it in request events when enabled."""
+        if not self.log_checkpoints:
+            return
+        detail_parts = [f"{key}={value}" for key, value in context.items() if value not in {None, ""}]
+        rendered = f"[wikidata] {message}"
+        if detail_parts:
+            rendered += " " + ", ".join(detail_parts)
+        print(rendered, file=sys.stderr, flush=True)
+        self.request_events.append(
+            {
+                "status": "checkpoint",
+                "kind": kind,
+                "message": message,
+                "context": context,
+            }
+        )

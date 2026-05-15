@@ -7,7 +7,9 @@ import unittest
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generator_validators import (
+    build_removed_prefilter_stub,
     run_fact_level_longtail_prefilter,
+    run_cheap_model_longtail_verifier,
     run_search_based_longtail_verifier,
     validate_question_surface,
 )
@@ -23,6 +25,18 @@ class FakeSearchClient:
     def search(self, query: str, *, max_results: int = 5):
         rows = self.results_by_query.get(query, [])[:max_results]
         return [type("SearchResult", (), row)() for row in rows]
+
+
+class FakeCheapModelClient:
+    """Simple cheap-model QA stub for second-stage verifier tests."""
+
+    def __init__(self, response: str) -> None:
+        self.response = response
+        self.prompts: list[str] = []
+
+    def complete_text(self, prompt: str) -> str:
+        self.prompts.append(prompt)
+        return self.response
 
 
 def make_generated_candidate() -> GeneratedCandidate:
@@ -107,6 +121,15 @@ class GeneratorValidatorTests(unittest.TestCase):
         )
         self.assertTrue(passed)
         self.assertTrue(features["prefilter_passed"])
+
+    def test_removed_prefilter_stub_records_audit_metadata(self) -> None:
+        candidate = make_generated_candidate()
+        features = build_removed_prefilter_stub(candidate)
+        self.assertFalse(features["enabled"])
+        self.assertEqual(
+            features["reason"],
+            "internal_popularity_prefilter_removed_in_5_13",
+        )
 
     def test_question_surface_allows_historical_year_before_cutoff(self) -> None:
         candidate = make_generated_candidate()
@@ -201,6 +224,100 @@ class GeneratorValidatorTests(unittest.TestCase):
         self.assertFalse(passed)
         self.assertEqual(features["triggered_rule"], "keyword_queries:hit_rate_exceeded")
         self.assertGreater(features["category_hit_rates"]["keyword_queries"]["answer_hit_rate"], 0.1)
+
+    def test_search_verifier_matches_country_aliases_in_snippets(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "United States of America"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Place"
+        client = FakeSearchClient(
+            {
+                "Who directed Example Film?": [],
+                "Example Film director": [
+                    {
+                        "title": "Archived record",
+                        "snippet": "The work originated in the USA.",
+                        "url": "https://example.test/4",
+                    }
+                ],
+            }
+        )
+        passed, features = run_search_based_longtail_verifier(
+            candidate,
+            search_client=client,
+            top_k=5,
+            max_full_question_hit_rate=0.0,
+            max_keyword_hit_rate=0.1,
+            max_overall_hit_rate=0.1,
+        )
+        self.assertFalse(passed)
+        self.assertEqual(features["triggered_rule"], "keyword_queries:hit_rate_exceeded")
+
+    def test_search_verifier_runs_low_integer_snippet_judge_for_zero_to_twenty_six(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "12"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Number"
+        snippet_judge = FakeCheapModelClient(
+            '{"found_in_every_snippet": true, "reason": "All snippets explicitly mention twelve."}'
+        )
+        client = FakeSearchClient(
+            {
+                "Who directed Example Film?": [
+                    {
+                        "title": "Archived record",
+                        "snippet": "The list includes twelve items.",
+                        "url": "https://example.test/5",
+                    }
+                ],
+                "Example Film director": [
+                    {
+                        "title": "Another record",
+                        "snippet": "A total of 12 were recorded.",
+                        "url": "https://example.test/6",
+                    }
+                ],
+            }
+        )
+        passed, features = run_search_based_longtail_verifier(
+            candidate,
+            search_client=client,
+            snippet_judge_client=snippet_judge,
+            top_k=5,
+            max_full_question_hit_rate=1.0,
+            max_keyword_hit_rate=1.0,
+            max_overall_hit_rate=1.0,
+        )
+        self.assertFalse(passed)
+        self.assertEqual(
+            features["triggered_rule"],
+            "number_snippet_judge:found_in_every_snippet",
+        )
+        self.assertEqual(features["number_snippet_judge"]["answer_integer"], 12)
+
+    def test_cheap_model_verifier_rejects_when_model_answers_correctly(self) -> None:
+        candidate = make_generated_candidate()
+        client = FakeCheapModelClient("Jane Doe")
+        passed, features = run_cheap_model_longtail_verifier(
+            candidate,
+            cheap_model_client=client,
+        )
+        self.assertFalse(passed)
+        self.assertEqual(features["triggered_rule"], "cheap_model_answered_correctly")
+        self.assertEqual(client.prompts, ["Who directed Example Film?"])
+
+    def test_cheap_model_verifier_passes_on_wrong_answer_or_abstain(self) -> None:
+        candidate = make_generated_candidate()
+        passed_wrong, _ = run_cheap_model_longtail_verifier(
+            candidate,
+            cheap_model_client=FakeCheapModelClient("John Smith"),
+        )
+        passed_abstain, _ = run_cheap_model_longtail_verifier(
+            candidate,
+            cheap_model_client=FakeCheapModelClient(""),
+        )
+        self.assertTrue(passed_wrong)
+        self.assertTrue(passed_abstain)
 
 
 if __name__ == "__main__":

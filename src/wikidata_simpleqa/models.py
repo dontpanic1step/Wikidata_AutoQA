@@ -34,6 +34,7 @@ class DomainTemplate:
     required_topic_keywords: list[str] = field(default_factory=list)
     exact_instance_only: bool = False
     retrieval_limit: int = 100
+    allow_non_answer_location_descriptor: bool = True
 
 
 @dataclass(slots=True)

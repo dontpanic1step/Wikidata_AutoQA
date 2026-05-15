@@ -1,6 +1,6 @@
 # 2026 Generated QA Review
 
-- Review rows: `64`
+- Review rows: `65`
 
 | Domain | Topic | Question Family | Question | Reference Answer | Source Run |
 |---|---|---|---|---|---|
@@ -68,3 +68,4 @@
 | ordinal_tournament_host_city | Sports and Recreation | which_city_hosted_ordinal_tournament | Which city hosted the 80th edition of Copa del Rey de Baloncesto? | Valencia | rerun_focus_templates_2026 |
 | ordinal_film_in_series_director | Arts and Media | who_directed_ordinal_film_in_series | Who directed the 15th film in the series The Strangers? | Renny Harlin | rerun_focus_templates_2026 |
 | ordinal_company_ceo | Economy and Business | who_was_ordinal_company_ceo | Who was the 2nd chief executive officer of SYENSQO? | Mike Radossich | rewrite_probe_focus_v2 |
+| film_based_on | Arts and Media | what_work_film_based_on | What work was the film Cat Soup based on? | Nekojiru Udon | tmp_live_force_uncached_film_based_on_heavy |
