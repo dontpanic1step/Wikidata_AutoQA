@@ -46,6 +46,23 @@ class GradingTests(unittest.TestCase):
         )
         self.assertEqual(result["grade"], "NOT_ATTEMPTED")
 
+    def test_deterministic_grader_requires_complete_list_answer(self) -> None:
+        complete = grade_prediction(
+            question="Which items tied?",
+            gold_answer="Alpha; Beta",
+            predicted_answer="Alpha and Beta",
+            source_metadata={"answer_items": ["Alpha", "Beta"]},
+        )
+        partial = grade_prediction(
+            question="Which items tied?",
+            gold_answer="Alpha; Beta",
+            predicted_answer="Alpha",
+            source_metadata={"answer_items": ["Alpha", "Beta"]},
+        )
+        self.assertEqual(complete["grade"], "CORRECT")
+        self.assertEqual(complete["method"], "deterministic_list_match")
+        self.assertEqual(partial["grade"], "INCORRECT")
+
     def test_llm_grader_parses_json_grade(self) -> None:
         result = grade_prediction(
             question="Who directed Example Film?",
@@ -97,6 +114,18 @@ class GradingTests(unittest.TestCase):
         self.assertIn("Gold aliases: ['one hundred']", grader.prompts[0])
         self.assertNotIn("Gold answer:", grader.prompts[0])
         self.assertNotIn("one hundred are also acceptable", grader.prompts[0])
+
+    def test_llm_grader_prompt_explains_list_answers(self) -> None:
+        grader = FakeClient('{"grade":"INCORRECT","reason":"partial list"}')
+        result = grade_prediction(
+            question="Which items tied?",
+            gold_answer="Alpha; Beta",
+            predicted_answer="Alpha",
+            source_metadata={"answer_items": ["Alpha", "Beta"]},
+            grader_client=grader,
+        )
+        self.assertEqual(result["grade"], "INCORRECT")
+        self.assertIn("If the reference answer is a list", grader.prompts[0])
 
     def test_evaluate_model_panel_records_accuracy(self) -> None:
         result = evaluate_model_panel(

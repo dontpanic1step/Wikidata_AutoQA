@@ -172,6 +172,8 @@ def validate_generated_candidate(
     cutoff_year: int,
 ) -> tuple[bool, dict[str, Any]]:
     """Run shared deterministic validation on one generated candidate."""
+    if candidate.generation_route == "route3_wikipedia_infobox":
+        return _validate_wikipedia_infobox_candidate(candidate, cutoff_year=cutoff_year)
     validation = {
         "stable_answer": False,
         "answer_in_evidence": False,
@@ -198,11 +200,41 @@ def validate_generated_candidate(
     return all(validation.values()), validation
 
 
+def _validate_wikipedia_infobox_candidate(
+    candidate: GeneratedCandidate,
+    *,
+    cutoff_year: int,
+) -> tuple[bool, dict[str, Any]]:
+    """Run the limited shared validation that applies to Wikipedia-only table candidates."""
+    validation = {
+        "stable_answer": True,
+        "answer_in_evidence": evidence_supports_answer(candidate),
+        "question_unambiguous": bool(candidate.subject_entity.url),
+        "rewrite_guard_passed": validate_question_surface(
+            candidate.final_question,
+            candidate,
+            cutoff_year=cutoff_year,
+        ) is None,
+        "route_local_factual_validation": False,
+        "route_validation_policy": "provenance_only_for_wikipedia_infobox_route",
+    }
+    return all(
+        bool(validation[key])
+        for key in ("stable_answer", "answer_in_evidence", "question_unambiguous", "rewrite_guard_passed")
+    ), validation
+
+
 def evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
     """Return whether evidence text contains the answer or one alias."""
     normalized_evidence = normalize_name(candidate.evidence.text)
     if not normalized_evidence:
         return False
+    answer_items = candidate.source_metadata.get("answer_items", [])
+    if isinstance(answer_items, list) and answer_items:
+        return all(
+            normalize_name(str(item)) and normalize_name(str(item)) in normalized_evidence
+            for item in answer_items
+        )
     if normalize_name(candidate.answer) in normalized_evidence:
         return True
     return any(
@@ -220,9 +252,9 @@ def validate_question_surface(
     """Return a failure reason when the final question surface is invalid."""
     if not question.strip():
         return "missing_question"
-    if candidate.subject_entity.name and normalize_name(candidate.subject_entity.name) not in normalize_name(question):
+    if not _question_has_subject_anchor(question, candidate):
         return "lost_subject_anchor"
-    if question_leaks_any_answer(question, [candidate.answer], candidate.answer_aliases):
+    if question_leaks_any_answer(question, _answer_labels_for_leakage(candidate), candidate.answer_aliases):
         return "answer_leakage"
     source_candidate = candidate.source_candidate
     if source_candidate is not None:
@@ -242,6 +274,31 @@ def validate_question_surface(
         if any(year >= cutoff_year for year in years):
             return "cutoff_year_exceeded"
     return None
+
+
+def _question_has_subject_anchor(question: str, candidate: GeneratedCandidate) -> bool:
+    """Return whether one question keeps the route's required subject anchor."""
+    subject_name = normalize_name(candidate.subject_entity.name)
+    normalized_question = normalize_name(question)
+    if not subject_name:
+        return True
+    if subject_name in normalized_question:
+        return True
+    aliases = candidate.source_metadata.get("subject_anchor_aliases", [])
+    if isinstance(aliases, list):
+        return any(
+            normalize_name(str(alias)) and normalize_name(str(alias)) in normalized_question
+            for alias in aliases
+        )
+    return False
+
+
+def _answer_labels_for_leakage(candidate: GeneratedCandidate) -> list[str]:
+    """Return canonical answer labels for question-leakage checks."""
+    answer_items = candidate.source_metadata.get("answer_items", [])
+    if isinstance(answer_items, list) and answer_items:
+        return [str(item) for item in answer_items if str(item).strip()]
+    return [candidate.answer]
 
 
 def run_search_based_longtail_verifier(
@@ -458,19 +515,52 @@ def _build_accepted_answer_set(candidate: GeneratedCandidate) -> set[str]:
 
 def _build_answer_matchers(candidate: GeneratedCandidate) -> dict[str, Any]:
     """Build normalized answer variants and regexes for search matching."""
-    raw_answers = [candidate.answer, *candidate.answer_aliases]
+    answer_items = candidate.source_metadata.get("answer_items", [])
+    if isinstance(answer_items, list) and answer_items:
+        item_matchers = [
+            _build_single_answer_matcher(
+                str(item),
+                [],
+                answer_type=candidate.answer_type,
+                source_metadata=candidate.source_metadata,
+            )
+            for item in answer_items
+            if str(item).strip()
+        ]
+        if item_matchers:
+            return {
+                "answer_items": [str(item).strip() for item in answer_items if str(item).strip()],
+                "item_matchers": item_matchers,
+            }
+    return _build_single_answer_matcher(
+        candidate.answer,
+        candidate.answer_aliases,
+        answer_type=candidate.answer_type,
+        source_metadata=candidate.source_metadata,
+    )
+
+
+def _build_single_answer_matcher(
+    answer: str,
+    answer_aliases: list[str],
+    *,
+    answer_type: str,
+    source_metadata: dict[str, Any],
+) -> dict[str, Any]:
+    """Build normalized variants and regexes for one answer string."""
+    raw_answers = [answer, *answer_aliases]
     normalized_variants = {
         normalize_name(value)
         for value in raw_answers
         if normalize_name(value)
     }
     regexes: list[re.Pattern[str]] = []
-    integer_value = _parse_integer_answer(candidate.answer)
-    if candidate.answer_type == "Number" and integer_value is not None:
+    integer_value = _parse_integer_answer(answer)
+    if answer_type == "Number" and integer_value is not None:
         normalized_variants.update(_number_variants(integer_value))
         regexes.extend(_number_regexes(integer_value))
         if integer_value < -10 or integer_value > 30:
-            margin = get_number_reference_margin(candidate.source_metadata)
+            margin = get_number_reference_margin(source_metadata)
             if margin is not None:
                 return {
                     "normalized_variants": {variant for variant in normalized_variants if variant},
@@ -481,8 +571,8 @@ def _build_answer_matchers(candidate: GeneratedCandidate) -> dict[str, Any]:
         for value in raw_answers:
             normalized_variants.update(_country_alias_variants(value))
             normalized_variants.update(_date_variants(value))
-        if candidate.answer_type == "Number":
-            margin = get_number_reference_margin(candidate.source_metadata)
+        if answer_type == "Number":
+            margin = get_number_reference_margin(source_metadata)
             if margin is not None:
                 return {
                     "normalized_variants": {variant for variant in normalized_variants if variant},
@@ -497,6 +587,14 @@ def _build_answer_matchers(candidate: GeneratedCandidate) -> dict[str, Any]:
 
 def _text_contains_answer(text: str, answer_matchers: dict[str, Any]) -> bool:
     """Return whether one title or snippet contains an answer variant."""
+    item_matchers = answer_matchers.get("item_matchers")
+    if isinstance(item_matchers, list) and item_matchers:
+        return all(_text_contains_single_answer(text, matcher) for matcher in item_matchers)
+    return _text_contains_single_answer(text, answer_matchers)
+
+
+def _text_contains_single_answer(text: str, answer_matchers: dict[str, Any]) -> bool:
+    """Return whether one title or snippet contains one answer variant."""
     lowered = text.lower()
     for pattern in answer_matchers.get("regexes", []):
         if pattern.search(lowered):

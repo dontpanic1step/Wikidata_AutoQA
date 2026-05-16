@@ -13,6 +13,8 @@ env/
 
 cache/
 outputs/
+backup/
+docs/human_notes/
 
 node_modules/
 

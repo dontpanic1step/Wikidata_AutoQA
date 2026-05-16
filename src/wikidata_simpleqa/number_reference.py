@@ -11,6 +11,14 @@ NUMBER_REFERENCE_MARGIN_KEY = "number_reference_margin"
 _NUMBER_TOKEN_PATTERN = re.compile(
     r"(?<![\w.])-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?(?!\w|\.\d)"
 )
+_SCALED_NUMBER_TOKEN_PATTERN = re.compile(
+    r"(?<![\w.])(?P<number>-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)\s+"
+    r"(?P<scale>hundred|thousand|million|billion)\b",
+    flags=re.IGNORECASE,
+)
+_UNIT_ATTACHED_NUMBER_FALLBACK_PATTERN = re.compile(
+    r"(?<![\w.])(?P<number>-?(?:\d{1,3}(?:,\d{3})+|\d+)(?:\.\d+)?)(?=[A-Za-z%°²³/])"
+)
 _WORD_TOKEN_PATTERN = re.compile(r"[a-z]+")
 _SMALL_NUMBER_WORDS = {
     "zero": 0,
@@ -73,11 +81,12 @@ def build_number_reference_margin(answer: str, answer_type: str) -> dict[str, An
             "original_answer": answer,
         }
     is_integer = value == value.to_integral_value()
+    normalized_answer = format_decimal(value)
     margin = _default_margin(value, is_integer=is_integer)
     lower_bound = value - margin
     upper_bound = value + margin
     reference_answer = (
-        f"{answer} (acceptable range: anything between "
+        f"{normalized_answer} (acceptable range: anything between "
         f"{format_decimal(lower_bound)} and {format_decimal(upper_bound)})"
     )
     return {
@@ -180,18 +189,35 @@ def get_number_reference_margin(source_metadata: dict[str, Any] | None) -> dict[
 
 def parse_number_token(value: str) -> Decimal | None:
     """Parse the first Arabic-number token or exact English-number phrase in a string."""
-    match = _NUMBER_TOKEN_PATTERN.search(value.strip())
+    stripped = value.strip()
+    scaled_match = _SCALED_NUMBER_TOKEN_PATTERN.search(stripped)
+    if scaled_match is not None:
+        parsed = _parse_decimal_number(scaled_match.group("number"))
+        if parsed is not None:
+            return parsed * Decimal(_SCALE_NUMBER_WORDS[scaled_match.group("scale").lower()])
+
+    match = _NUMBER_TOKEN_PATTERN.search(stripped)
     if match is not None:
-        compact = match.group(0).replace(",", "")
-        try:
-            return Decimal(compact)
-        except InvalidOperation:
-            return None
+        return _parse_decimal_number(match.group(0))
+
+    fallback_match = _UNIT_ATTACHED_NUMBER_FALLBACK_PATTERN.search(stripped)
+    if fallback_match is not None:
+        return _parse_decimal_number(fallback_match.group("number"))
+
     tokens = _WORD_TOKEN_PATTERN.findall(value.lower().replace("-", " "))
     parsed, end_index = _parse_number_words(tokens, 0)
     if parsed is None or end_index != len(tokens):
         return None
     return parsed
+
+
+def _parse_decimal_number(value: str) -> Decimal | None:
+    """Parse one decimal-like token after stripping comma group separators."""
+    compact = value.replace(",", "")
+    try:
+        return Decimal(compact)
+    except InvalidOperation:
+        return None
 
 
 def format_decimal(value: Decimal) -> str:

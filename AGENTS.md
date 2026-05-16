@@ -43,6 +43,9 @@ Use `docs/terminology.md` for canonical project terms. In particular, use **temp
   - Better: use `model`, `video game`, `dataset`, `benchmark`, `film`, `album`, `article`, `building`, etc. as appropriate.
 - Avoid over-engineered question wording that exposes the pipeline rather than the fact being asked.
 - Do not let disambiguation descriptors leak the answer.
+- If the answer is temporal, the question must specify the requested precision or unit, such as `what year`, `what month`, `what day`, or `how many months`.
+- If the answer is a full calendar date, ask `what day, month, and year ...` so the reference answer can normalize cleanly.
+- If the answer is a number, specify the counted quantity or unit in the question, such as `how many gallons`, and keep the reference answer unit-free.
 
 ## Candidate sources and long-tail validation
 
@@ -83,5 +86,6 @@ Use `docs/terminology.md` for canonical project terms. In particular, use **temp
 - Prefer general solutions over one-off patches.
 - Record query, search, harvesting, and validation failures so they can be reviewed later.
 - All code comments and docstrings must be in English.
-- Ask before installing dependencies or making network-heavy changes.
+- Network runs with batch size <= 10 examples, URLs, or records do not require advance permission; just run them when needed for the task, including Wikipedia, Wikidata, search API, and OpenRouter calls. Ask before network-heavy runs above that size, dependency installs, destructive actions, credential changes, or secret-handling changes.
+- Do not use destructive commands, including `git clean -fd`, unless the user explicitly requests that exact action.
 - Do not modify files under `docs/human_notes/`.

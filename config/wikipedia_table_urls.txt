@@ -1,0 +1,11 @@
+# domain	url
+Film and Television	https://en.wikipedia.org/wiki/23rd_Independent_Spirit_Awards
+Music	https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1978
+Music	https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1979
+Music	https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1981
+Music	https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1982
+Music	https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1983
+Music	https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1980
+Music	https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1982
+Music	https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1983
+Music	https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1984

@@ -84,6 +84,13 @@ def grade_prediction(
             "method": "deterministic_number_margin",
             "grading_duration_seconds": _elapsed(grading_start),
         }
+    if _prediction_matches_list_answer(predicted_answer, source_metadata or {}):
+        return {
+            "grade": "CORRECT",
+            "reason": "prediction_contains_complete_gold_answer_list",
+            "method": "deterministic_list_match",
+            "grading_duration_seconds": _elapsed(grading_start),
+        }
     accepted_answers = _accepted_answers(gold_answer, gold_aliases or [])
     if normalized_prediction in accepted_answers:
         return {
@@ -194,6 +201,20 @@ def _accepted_answers(gold_answer: str, aliases: list[str]) -> set[str]:
     }
 
 
+def _prediction_matches_list_answer(predicted_answer: str, source_metadata: dict[str, Any]) -> bool:
+    """Return whether a prediction includes every required item for a list answer."""
+    answer_items = source_metadata.get("answer_items", [])
+    if not isinstance(answer_items, list) or not answer_items:
+        return False
+    normalized_prediction = normalize_name(predicted_answer)
+    if not normalized_prediction:
+        return False
+    return all(
+        normalize_name(str(item)) and normalize_name(str(item)) in normalized_prediction
+        for item in answer_items
+    )
+
+
 def _elapsed(start: float) -> float:
     """Return rounded elapsed seconds from a perf_counter start."""
     return round(perf_counter() - start, 4)
@@ -223,6 +244,8 @@ def _build_grader_prompt(
         "Allowed grades: CORRECT, INCORRECT, NOT_ATTEMPTED.\n"
         "Use CORRECT only when the prediction gives the same answer as the reference answer or a valid alias, "
         "without adding a contradiction.\n"
+        "If the reference answer is a list, use CORRECT only when the prediction includes every required list "
+        "item or a valid alias for every item; partial lists are INCORRECT.\n"
         "Use NOT_ATTEMPTED only for empty answers, explicit abstentions, or responses that do not attempt the "
         "question.\n"
         "Use INCORRECT for wrong, vague, partial, contradictory, or overbroad answers.\n"

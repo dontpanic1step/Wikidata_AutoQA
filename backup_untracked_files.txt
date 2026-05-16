@@ -1,3 +1,0 @@
-backup_before_selective_revert.patch
-backup_before_selective_revert_status.txt
-backup_untracked_files.txt

@@ -79,6 +79,25 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn("Do not add, remove, narrow, broaden, or change any information", prompt)
         self.assertIn("The rewritten_question must not contain the answer or any answer alias", prompt)
         self.assertIn("Generate exactly 5 answer-blind search queries", prompt)
+        self.assertIn("what day, month, and year", prompt)
+        self.assertIn("specify the counted quantity or unit", prompt)
+        self.assertIn("Do not add units to the reference answer", prompt)
+
+    def test_route2_prompt_includes_time_and_number_normalization_rules(self) -> None:
+        prompt = build_rewrite_prompt(
+            {
+                "task_type": "route2_question_and_queries",
+                "canonical_question": "How much fuel did Example carry?",
+                "evidence_text": "Example carried 5,000 gallons of fuel.",
+                "forbidden_patterns": ["current", "latest"],
+                "cutoff_year": 2025,
+            }
+        )
+        self.assertIn("Evidence text", prompt)
+        self.assertIn("what day, month, and year", prompt)
+        self.assertIn("how many months", prompt)
+        self.assertIn("specify the counted quantity or unit", prompt)
+        self.assertIn("Do not add units to the reference answer", prompt)
 
     def test_kelm_prompt_requests_queries_and_discard_reason(self) -> None:
         prompt = build_rewrite_prompt(
@@ -100,6 +119,9 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn("Do not add, remove, narrow, broaden, or change information", prompt)
         self.assertIn("The rewritten_question must not contain the answer or any alias", prompt)
         self.assertIn("generate exactly 5 answer-blind search queries", prompt)
+        self.assertIn("what day, month, and year", prompt)
+        self.assertIn("Only ask for temporal precision that is actually supported by the source", prompt)
+        self.assertIn("Do not add units to the reference answer", prompt)
 
     def test_openrouter_request_constants_are_defined(self) -> None:
         self.assertTrue(OPENROUTER_REFERER.startswith("https://"))

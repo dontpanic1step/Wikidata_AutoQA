@@ -140,6 +140,8 @@ Shared contract:
 
 Route-specific prompt inputs are allowed as long as the output contract stays shared.
 
+All route rewrite prompts must make answer normalization explicit. If the answer is temporal, the question should specify the requested precision or unit, such as `what year`, `what month`, `what day`, or `how many months`. If the answer is a full calendar date, the prompt should prefer wording like `what day, month, and year ...`. If the answer is numeric, the question must state the counted quantity or unit, while the reference answer and answer aliases should remain unit-free normalized values.
+
 ### 3.5 Long-tail filtering changes
 
 The old first-stage long-tail filter based on internal popularity proxies should be removed.
@@ -186,6 +188,22 @@ More generally:
 
 - if a validator from `5-12` is already cleanly reusable for a Wikidata-backed route, keep it
 - only redesign validators where the old assumptions no longer match the new route boundary
+
+### 3.7 Route 3: Wikipedia infobox and table generation
+
+Route 3 is a Wikipedia-only route for semi-structured public data. It starts from directly supplied English Wikipedia URLs, fetches the page through the MediaWiki API, extracts the page title, first paragraph, and structured infobox/table content, then asks a small model to propose one composition-style question per URL.
+
+Intended Route 3 question types are max/min/sum/ordinal questions over structured rows, for example asking which venue in an event table has the largest capacity. The route may use first-paragraph aliases to avoid unsuitable temporal wording, such as asking about the `23rd FIFA World Cup` instead of using the page title `2026 FIFA World Cup`.
+
+Route 3 may emit complete list answers when a composition operation has a tie. The display `answer` remains a string for shared JSONL compatibility, while `source_metadata.answer_items` stores the individual answer elements. For these list answers, search leakage is counted only when every answer element appears in the same result title or snippet, and SimpleQA-style grading treats partial lists as incorrect.
+
+Before prompting the model, Route 3 ranks extracted tables. Prefer article tables over infoboxes, tables with multiple structured rows, headers that expose comparable values such as capacity/rank/count/date/votes, and row values that are not repeated in non-table prose. Penalize short infobox-style summaries, oversized prose-like tables, placeholder/mutable tables such as live standings, and tables whose row values are already easy to recover from article text. Pass only the top three ranked tables to the small model so it focuses on the most useful evidence. Store the ranking criteria and scores as metadata so table choice can be audited.
+
+The Route 3 small-model prompt follows the shared answer-normalization wording rule: temporal questions must name the requested precision, full-date answers should be requested as day, month, and year, and numeric questions must put the unit or counted quantity in the question rather than in the reference answer.
+
+Route 3 URL discovery should be a separate, auditable step. It may query Wikipedia search across diverse broad domains, score pages by parsed-table quality, and write a reusable URL text file for the generation runner. The URL file should preserve broad domain labels alongside URLs so accepted examples can report both source URL and source domain. The first discovery target is 10 URLs; later runs may scale this target, subject to the project's network-use constraints.
+
+Route 3 does not perform factual validation or uniqueness proof. Its conservative contract is auditability: accepted and rejected outputs must store the source URL, canonical page title, first paragraph, parsed table metadata, model derivation summary, generated search queries, downstream DuckDuckGo evidence, optional grading evidence, and phase timings. Because the route has no Wikidata grounding, shared processing must not require a Wikidata `source_candidate` for Route 3 candidates.
 
 ## 4. Recommended Architecture
 
@@ -404,6 +422,8 @@ For a non-Wikidata route:
 - define its own ambiguity logic
 - define its own temporal checks if the source semantics differ
 - define its own deduplication and provenance rules where needed
+
+For `route3_wikipedia_infobox`, the first implementation intentionally has no route-local factual validator beyond parsing success and model-output shape checks. It stores provenance and parsed source content as metadata, then relies on shared surface checks, DuckDuckGo long-tail filtering, optional model grading, and manual review.
 
 The framework should share contracts, not forced source assumptions.
 

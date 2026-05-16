@@ -472,6 +472,41 @@ class GeneratorValidatorTests(unittest.TestCase):
         self.assertEqual(features["triggered_rule"], "keyword_queries:hit_rate_exceeded")
         self.assertEqual(features["queries"][1]["snippet_hits"], 1)
 
+    def test_search_verifier_requires_every_list_answer_item_in_same_result(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "Alpha; Beta"
+        candidate.answer_aliases = []
+        candidate.source_metadata["answer_items"] = ["Alpha", "Beta"]
+        client = FakeSearchClient(
+            {
+                "Who directed Example Film?": [],
+                "Example Film director": [
+                    {
+                        "title": "Partial record",
+                        "snippet": "Alpha appears here without the other tied answer.",
+                        "url": "https://example.test/partial",
+                    },
+                    {
+                        "title": "Complete record",
+                        "snippet": "The tied answers are Alpha and Beta.",
+                        "url": "https://example.test/complete",
+                    },
+                ],
+            }
+        )
+        passed, features = run_search_based_longtail_verifier(
+            candidate,
+            search_client=client,
+            top_k=5,
+            max_full_question_hit_rate=0.0,
+            max_keyword_hit_rate=0.1,
+            max_overall_hit_rate=0.1,
+        )
+        self.assertFalse(passed)
+        self.assertEqual(features["queries"][1]["snippet_hits"], 1)
+        self.assertFalse(features["queries"][1]["results"][0]["answer_hit"])
+        self.assertTrue(features["queries"][1]["results"][1]["answer_hit"])
+
     def test_search_verifier_runs_low_integer_snippet_judge_for_minus_ten_to_thirty(self) -> None:
         candidate = make_generated_candidate()
         candidate.answer = "-10"

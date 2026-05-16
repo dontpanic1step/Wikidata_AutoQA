@@ -163,10 +163,7 @@ def process_generated_candidates(
     for candidate in generated_candidates:
         candidate_start = perf_counter()
         candidate_timings: dict[str, float] = {}
-        early_rejection_reason = next(
-            (note for note in candidate.notes if note in EARLY_REJECTION_REASONS),
-            "",
-        )
+        early_rejection_reason = _early_rejection_reason(candidate)
         if early_rejection_reason:
             candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
             _record_candidate_timings(candidate, candidate_timings)
@@ -376,8 +373,25 @@ def _elapsed(start: float) -> float:
 def _record_candidate_timings(candidate: GeneratedCandidate, timings: dict[str, float]) -> None:
     """Attach per-candidate phase timing and bottleneck metadata."""
     cleaned = {key: value for key, value in timings.items() if value >= 0.0}
-    candidate.source_metadata["phase_timings_seconds"] = cleaned
-    candidate.source_metadata["bottlenecks"] = _summarize_bottlenecks(cleaned)
+    if "total_processing_seconds" in cleaned:
+        cleaned.setdefault("candidate_processing_seconds", cleaned["total_processing_seconds"])
+    existing = candidate.source_metadata.get("phase_timings_seconds", {})
+    if isinstance(existing, dict):
+        merged = {**existing, **cleaned}
+    else:
+        merged = cleaned
+    candidate.source_metadata["phase_timings_seconds"] = merged
+    candidate.source_metadata["bottlenecks"] = _summarize_bottlenecks(merged)
+
+
+def _early_rejection_reason(candidate: GeneratedCandidate) -> str:
+    """Return a route-local early rejection reason, if the candidate already failed."""
+    for note in candidate.notes:
+        if note in EARLY_REJECTION_REASONS:
+            return note
+        if note.startswith("wikipedia_infobox_"):
+            return note
+    return ""
 
 
 def _summarize_bottlenecks(timings: dict[str, float]) -> list[dict[str, float | str]]:
