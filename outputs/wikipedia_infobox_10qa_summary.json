@@ -1,0 +1,492 @@
+{
+  "attempted_urls": 10,
+  "url_domains": [
+    {
+      "url": "https://en.wikipedia.org/wiki/23rd_Independent_Spirit_Awards",
+      "domain": "Film and Television"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1978",
+      "domain": "Music"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1979",
+      "domain": "Music"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1981",
+      "domain": "Music"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1982",
+      "domain": "Music"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1983",
+      "domain": "Music"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1980",
+      "domain": "Music"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1982",
+      "domain": "Music"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1983",
+      "domain": "Music"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1984",
+      "domain": "Music"
+    }
+  ],
+  "generated": 10,
+  "accepted": 10,
+  "rejected": 0,
+  "output_path": "outputs\\wikipedia_infobox_10qa_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_infobox_10qa_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_infobox_10qa_summary.json",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": true,
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 0.0423,
+    "first_paragraph_fetch_seconds": 0.0152,
+    "table_parse_seconds": 2.324,
+    "llm_question_generation_seconds": 57.9304,
+    "total_generation_seconds": 60.6571,
+    "rewrite_seconds": 0.0,
+    "number_reference_margin_seconds": 0.0,
+    "duckduckgo_search_seconds": 122.1968,
+    "second_stage_grading_seconds": 145.6285,
+    "total_processing_seconds": 267.8826,
+    "candidate_processing_seconds": 267.8826
+  },
+  "telemetry": {
+    "process_generated_candidates": {
+      "generated": 10,
+      "accepted": 10,
+      "rejected": 0,
+      "second_stage_grading_summary": {
+        "run_count": 10,
+        "per_model": {
+          "openai/gpt-4.1-mini": {
+            "runs": 10,
+            "correct": 0,
+            "incorrect": 10,
+            "not_attempted": 0,
+            "accuracy": 0.0
+          },
+          "google/gemini-3-flash-preview": {
+            "runs": 10,
+            "correct": 0,
+            "incorrect": 10,
+            "not_attempted": 0,
+            "accuracy": 0.0
+          }
+        }
+      }
+    },
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=23rd+Independent+Spirit+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/23rd_Independent_Spirit_Awards",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1978&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1978",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1979&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1979",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1981&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1981",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1982&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1982",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1983&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1983",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1980&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1980",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1982&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1982",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1983&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1983",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1984&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1984",
+        "cache_hit": true,
+        "duration_ms": 0
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+film+received+the+highest+number+of+nominations+at+the+23rd+Independent+Spirit+Awards%3F",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=23rd+Independent+Spirit+Awards+film+with+most+nominations",
+        "cache_hit": false,
+        "duration_ms": 2071,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+nominations+23rd+Independent+Spirit+Awards",
+        "cache_hit": false,
+        "duration_ms": 3668,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=23rd+Independent+Spirit+Awards+nominations+by+film",
+        "cache_hit": false,
+        "duration_ms": 3537,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=film+with+max+nominations+23rd+Independent+Spirit+Awards",
+        "cache_hit": false,
+        "duration_ms": 2735,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=23rd+Independent+Spirit+Awards+nomination+counts",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+artist+had+the+most+entries+in+the+UK+top-ten+singles+chart+in+1978%3F",
+        "cache_hit": false,
+        "duration_ms": 2466,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=artist+with+most+UK+top-ten+singles+in+1978",
+        "cache_hit": false,
+        "duration_ms": 1778,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UK+top-ten+singles+chart+1978+entries+by+artist",
+        "cache_hit": false,
+        "duration_ms": 1852,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1978+UK+singles+chart+most+entries+artist",
+        "cache_hit": false,
+        "duration_ms": 2089,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+artist+had+the+highest+number+of+top+10+singles+in+the+UK+top-ten+singles+chart+in+1979%3F",
+        "cache_hit": false,
+        "duration_ms": 1885,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=artist+with+most+top+10+singles+UK+1979",
+        "cache_hit": true,
+        "duration_ms": 63
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UK+top-ten+singles+chart+1979+number+of+top+10s+by+artist",
+        "cache_hit": false,
+        "duration_ms": 2065,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1979+UK+singles+chart+artists+with+most+top+10+hits",
+        "cache_hit": false,
+        "duration_ms": 1924,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=top+artists+by+number+of+top+10+singles+UK+1979",
+        "cache_hit": true,
+        "duration_ms": 22
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UK+top-ten+singles+1979+chart+debuts+most+entries",
+        "cache_hit": false,
+        "duration_ms": 2341,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+artist+had+the+highest+number+of+top+10+singles+debuting+in+the+UK+top-ten+singles+chart+in+1981%3F",
+        "cache_hit": false,
+        "duration_ms": 2571,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=artist+with+most+top+10+singles+debut+UK+1981",
+        "cache_hit": false,
+        "duration_ms": 3009,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UK+top-ten+singles+chart+1981+most+entries+by+artist",
+        "cache_hit": false,
+        "duration_ms": 42512,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1981+UK+singles+chart+debut+artists+number+of+top+10s",
+        "cache_hit": false,
+        "duration_ms": 2211,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UK+top-ten+singles+1981+chart+debuts+by+artist",
+        "cache_hit": false,
+        "duration_ms": 1805,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+artist+had+the+highest+number+of+top+10+singles+in+the+UK+top-ten+singles+chart+in+1982%3F",
+        "cache_hit": false,
+        "duration_ms": 2623,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=artist+with+most+top+10+singles+UK+1982",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UK+top-ten+singles+chart+1982+artists+number+of+top+10s",
+        "cache_hit": false,
+        "duration_ms": 2438,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1982+UK+singles+chart+artists+with+most+top+10+hits",
+        "cache_hit": false,
+        "duration_ms": 2823,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+artist+had+the+highest+number+of+top+10+singles+debuting+in+the+UK+Singles+Chart+in+1983%3F",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UK+top+10+singles+debut+artists+1983",
+        "cache_hit": true,
+        "duration_ms": 51
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=artist+with+most+top+10+singles+in+UK+1983",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1983+UK+Singles+Chart+top+10+debuts+by+artist",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Billboard+Hot+100+top-ten+single+in+1980+had+the+longest+run+in+the+top+ten%3F",
+        "cache_hit": true,
+        "duration_ms": 61
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+top+ten+singles+1980+longest+weeks+in+top+ten",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1980+Billboard+Hot+100+top+ten+singles+weeks+in+top+ten",
+        "cache_hit": true,
+        "duration_ms": 45
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+1980+top+ten+singles+duration",
+        "cache_hit": true,
+        "duration_ms": 55
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Longest+running+Billboard+Hot+100+top+ten+single+1980",
+        "cache_hit": false,
+        "duration_ms": 2454,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+top+ten+singles+1980+weeks+charted",
+        "cache_hit": false,
+        "duration_ms": 2138,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Billboard+Hot+100+top-ten+single+in+1982+spent+the+longest+time+in+the+top+ten%3F",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+top+ten+singles+1982+longest+weeks+in+top+ten",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1982+Billboard+Hot+100+singles+weeks+in+top+ten+max",
+        "cache_hit": false,
+        "duration_ms": 2494,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+1982+top+ten+singles+duration",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+1982+Billboard+Hot+100+top+ten+single+had+most+weeks+in+top+ten",
+        "cache_hit": false,
+        "duration_ms": 2751,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+1982+singles+weeks+in+top+ten+ranking",
+        "cache_hit": false,
+        "duration_ms": 3938,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Billboard+Hot+100+top-ten+single+in+1983+spent+the+longest+time+in+the+top+ten%3F",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+top+ten+singles+1983+longest+weeks+in+top+ten",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1983+Billboard+Hot+100+top+ten+singles+weeks+in+top+ten",
+        "cache_hit": true,
+        "duration_ms": 46
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+1983+top+ten+singles+duration",
+        "cache_hit": true,
+        "duration_ms": 46
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+top+ten+singles+1983+most+weeks",
+        "cache_hit": false,
+        "duration_ms": 3278,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Billboard+Hot+100+top-ten+single+in+1984+spent+the+most+weeks+in+the+top+ten%3F",
+        "cache_hit": false,
+        "duration_ms": 2292,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+top+ten+singles+1984+longest+weeks+in+top+ten",
+        "cache_hit": false,
+        "duration_ms": 2320,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1984+Billboard+Hot+100+top+ten+singles+weeks+in+top+ten+max",
+        "cache_hit": false,
+        "duration_ms": 4044,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+1984+top+ten+singles+weeks+chart+duration",
+        "cache_hit": false,
+        "duration_ms": 1994,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+1984+Billboard+Hot+100+top+ten+single+had+most+weeks+in+top+ten",
+        "cache_hit": false,
+        "duration_ms": 3151,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+1984+top+ten+singles+weeks+in+top+ten+comparison",
+        "cache_hit": false,
+        "duration_ms": 1870,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

@@ -35,6 +35,7 @@ These defaults come from `scripts/run_wikipedia_infobox_pipeline.py`.
 | First paragraph source | parse HTML only | Extracted from the already-fetched parse HTML. |
 | REST summary fallback | `False` | `--enable-rest-summary-fallback` opts in. Missing parse paragraphs should not create another network dependency by default. |
 | Shared rewrite first paragraph | not passed | Route 3 keeps using the generic shared rewrite payload; first paragraph is only in the Route 3 generation prompt and metadata. |
+| Minimum table score | `0.0` | `--min-table-score`. Tables with rank score below this value are dropped before first-paragraph alias/context extraction and before Route 3 generation. If no table survives, the page is rejected before any LLM call. |
 | Wikipedia request attempts per path | `2` | `WIKIPEDIA_REQUEST_ATTEMPTS_PER_PATH`. |
 | Wikipedia retry initial sleep | `0.5` seconds | Exponential backoff base. |
 | Wikipedia retry max sleep | `4.0` seconds | Per retry sleep cap. |
@@ -59,7 +60,16 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | `--stream-search-max-rounds` | `10` | Max query-offset rounds while reserving IDs. |
 | `--stream-random-seed` | `42` | Random page ID sampling seed. |
 | `--stream-batch-size` | `10` | Page IDs reserved per streaming batch. |
+| `--stream-page-workers` | `4` | Concurrent page IDs processed in streaming mode. Runs with `--stream-accepted-target` stay sequential to avoid overshooting the accepted target. |
+| `--wikipedia-concurrency-limit` | `4` | Max concurrent Wikipedia API calls across streaming workers. |
+| `--duckduckgo-concurrency-limit` | `4` | Max concurrent DuckDuckGo searches across streaming workers and per-candidate search query parallelism. |
+| `--openrouter-generation-rewrite-concurrency-limit` | `10` | Max concurrent OpenRouter calls used for Route 3 QA generation and shared rewrite. Can be raised, for example to `20`, when the account/network tolerates it. |
+| `--second-stage-concurrency-limit` | `10` | Max concurrent OpenRouter calls used by second-stage answer models and grader calls. Can be raised, for example to `20`, for larger runs. |
 | `--stream-accepted-target` | `0` | `0` means process `--record-limit` IDs rather than stopping at an accepted count. |
+| `--run-group-id` | empty | When set, summaries update a run-group manifest so resumed segments can be found together without mixing with other runs. |
+| `--run-segment-id` | summary filename stem | Unique invocation label inside a run group. |
+| `--run-artifact-manifest` | `outputs/run_manifests/<run-group-id>.json` | Manifest path used when `--run-group-id` is set. |
+| `--run-artifact-include-summary` | `[]` | Existing segment summaries to backfill into the manifest. Can be repeated. |
 | Rerun pool | enabled | Recovered in-progress IDs and transient generation failures are retried before fresh IDs. |
 | Domain/subdomain policy | optional | Streaming does not reject only because no planned domain/subdomain exists. |
 
@@ -76,9 +86,13 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | Rewrite model | `openai/gpt-4.1-mini` | Used only when rewrite is enabled. |
 | Second-stage grading enabled | `False` | Enable with `--enable-second-stage-grading`. |
 | Second-stage grading accuracy threshold | `0.1` | Route 3 runner override. Shared `Settings` default is `0.5`. |
+| Second-stage answer model execution | parallel | Panel answer models are run concurrently when second-stage grading is enabled. |
+| Second-stage grader execution | batched | The grader scores all executed panel predictions in one JSON call when a grader model is configured. |
+| Second-stage early stop | enabled | If the first panel model is graded correct and that alone exceeds the accuracy threshold, remaining panel answers are skipped. |
 | DuckDuckGo top K | `5` | `--duckduckgo-top-k`. Fast default for initial Route 3 streaming; run slower survivor review separately when needed. |
 | DuckDuckGo parallel queries | `3` | `--duckduckgo-parallel-queries`. |
 | Generated search query count | `2` | Route 3 prompt asks for this many answer-blind queries. Fast default for initial Route 3 streaming; run slower survivor review separately when needed. |
+| Minimum table score | `0.0` | `--min-table-score`. The same cutoff is used for URL and streaming Route 3 runs. |
 | Search full-question hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search keyword hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search overall hit-rate threshold | `0.3` | Reject when above threshold. |

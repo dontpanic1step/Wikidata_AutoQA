@@ -117,6 +117,24 @@ class WikipediaStreamingTests(unittest.TestCase):
         self.assertEqual(second_selected, [13])
         self.assertEqual(reloaded.table_search_offset('insource:"wikitable"'), 50)
 
+    def test_table_search_reservation_normalizes_string_page_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "state.json"
+            state = PageIdStreamState.load(path)
+            first_selected = state.reserve_candidate_ids(
+                ["1069583"],
+                count=1,
+                source="table_search:offset=500",
+            )
+            second_selected = state.reserve_candidate_ids(
+                [1069583, "1069583", "1069584"],
+                count=2,
+                source="table_search:offset=550",
+            )
+
+        self.assertEqual(first_selected, [1069583])
+        self.assertEqual(second_selected, [1069584])
+
     def test_final_selection_dedupes_similar_questions_and_rebalances_domains(self) -> None:
         records = [
             {

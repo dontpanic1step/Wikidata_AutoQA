@@ -1,0 +1,96 @@
+{
+  "attempted_urls": 1,
+  "generated": 1,
+  "accepted": 1,
+  "rejected": 0,
+  "output_path": "outputs\\wikipedia_infobox_fifa_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_infobox_fifa_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_infobox_fifa_summary.json",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": true,
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 0.0087,
+    "first_paragraph_fetch_seconds": 0.0005,
+    "table_parse_seconds": 0.8023,
+    "llm_question_generation_seconds": 4.221,
+    "total_generation_seconds": 5.1309,
+    "rewrite_seconds": 0.0,
+    "number_reference_margin_seconds": 0.0,
+    "duckduckgo_search_seconds": 7.5583,
+    "second_stage_grading_seconds": 17.5911,
+    "total_processing_seconds": 25.1511,
+    "candidate_processing_seconds": 25.1511
+  },
+  "telemetry": {
+    "process_generated_candidates": {
+      "generated": 1,
+      "accepted": 1,
+      "rejected": 0,
+      "second_stage_grading_summary": {
+        "run_count": 1,
+        "per_model": {
+          "openai/gpt-4.1-mini": {
+            "runs": 1,
+            "correct": 0,
+            "incorrect": 1,
+            "not_attempted": 0,
+            "accuracy": 0.0
+          },
+          "google/gemini-3-flash-preview": {
+            "runs": 1,
+            "correct": 0,
+            "incorrect": 1,
+            "not_attempted": 0,
+            "accuracy": 0.0
+          }
+        }
+      }
+    },
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2026+FIFA+World+Cup&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2026_FIFA_World_Cup",
+        "cache_hit": true,
+        "duration_ms": 0
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+tournament+venue+has+the+highest+seating+capacity+for+the+23rd+FIFA+World+Cup%3F",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2026+FIFA+World+Cup+tournament+venues+capacity",
+        "cache_hit": false,
+        "duration_ms": 1990,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+stadium+by+capacity+2026+FIFA+World+Cup",
+        "cache_hit": true,
+        "duration_ms": 46
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=23rd+FIFA+World+Cup+venue+capacities",
+        "cache_hit": false,
+        "duration_ms": 1830,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=FIFA+World+Cup+2026+stadiums+list",
+        "cache_hit": false,
+        "duration_ms": 3640,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

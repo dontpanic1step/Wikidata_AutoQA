@@ -175,7 +175,10 @@ class PageIdStreamState:
         if prefer_rerun_pool:
             selected.extend(self._reserve_from_rerun_pool(count))
         seen_selected = set(selected)
-        for page_id in candidate_ids:
+        for raw_page_id in candidate_ids:
+            if not _is_int_like(raw_page_id):
+                continue
+            page_id = int(raw_page_id)
             if len(selected) >= count:
                 break
             if page_id < 1 or page_id in self.used_ids or page_id in seen_selected:
@@ -311,7 +314,10 @@ class PageIdStreamState:
         selected: list[int] = []
         remaining: list[int] = []
         seen_selected: set[int] = set()
-        for page_id in self.rerun_pool:
+        for raw_page_id in self.rerun_pool:
+            if not _is_int_like(raw_page_id):
+                continue
+            page_id = int(raw_page_id)
             if len(selected) >= count:
                 remaining.append(page_id)
                 continue

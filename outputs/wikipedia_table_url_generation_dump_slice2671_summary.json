@@ -1,0 +1,904 @@
+{
+  "target_count": 40,
+  "domain_limit": 20,
+  "subdomains_per_domain": 2,
+  "dump_url": "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-all-titles-in-ns0.gz",
+  "source_mode": "page-dump",
+  "dump_title_path": "",
+  "page_dump_files": [
+    "tmp\\wiki_recover\\rec00001slice2671.bz2",
+    "tmp\\wiki_recover\\rec00002slice2671.bz2",
+    "tmp\\wiki_recover\\rec00003slice2671.bz2",
+    "tmp\\wiki_recover\\rec00004slice2671.bz2",
+    "tmp\\wiki_recover\\rec00005slice2671.bz2",
+    "tmp\\wiki_recover\\rec00006slice2671.bz2",
+    "tmp\\wiki_recover\\rec00007slice2671.bz2",
+    "tmp\\wiki_recover\\rec00008slice2671.bz2",
+    "tmp\\wiki_recover\\rec00009slice2671.bz2",
+    "tmp\\wiki_recover\\rec00010slice2671.bz2",
+    "tmp\\wiki_recover\\rec00011slice2671.bz2",
+    "tmp\\wiki_recover\\rec00012slice2671.bz2",
+    "tmp\\wiki_recover\\rec00013slice2671.bz2",
+    "tmp\\wiki_recover\\rec00014slice2671.bz2",
+    "tmp\\wiki_recover\\rec00015slice2671.bz2",
+    "tmp\\wiki_recover\\rec00016slice2671.bz2",
+    "tmp\\wiki_recover\\rec00017slice2671.bz2",
+    "tmp\\wiki_recover\\rec00018slice2671.bz2",
+    "tmp\\wiki_recover\\rec00019slice2671.bz2",
+    "tmp\\wiki_recover\\rec00020slice2671.bz2",
+    "tmp\\wiki_recover\\rec00021slice2671.bz2",
+    "tmp\\wiki_recover\\rec00022slice2671.bz2",
+    "tmp\\wiki_recover\\rec00023slice2671.bz2",
+    "tmp\\wiki_recover\\rec00024slice2671.bz2",
+    "tmp\\wiki_recover\\rec00025slice2671.bz2",
+    "tmp\\wiki_recover\\rec00026slice2671.bz2",
+    "tmp\\wiki_recover\\rec00027slice2671.bz2",
+    "tmp\\wiki_recover\\rec00028slice2671.bz2",
+    "tmp\\wiki_recover\\rec00029slice2671.bz2",
+    "tmp\\wiki_recover\\rec00030slice2671.bz2",
+    "tmp\\wiki_recover\\slice2671.bz2"
+  ],
+  "page_dump_stats": {
+    "files_seen": 31,
+    "files_with_errors": [
+      {
+        "path": "tmp\\wiki_recover\\rec00001slice2671.bz2",
+        "error": "Invalid data stream"
+      },
+      {
+        "path": "tmp\\wiki_recover\\slice2671.bz2",
+        "error": "Invalid data stream"
+      }
+    ],
+    "pages_seen": 2141,
+    "article_pages_seen": 2118,
+    "table_like_pages_seen": 1081
+  },
+  "selected_count": 9,
+  "failed_count": 31,
+  "output": "config\\wikipedia_table_urls_dump_slice2671.tsv",
+  "duration_seconds": 74.1284,
+  "candidates": [
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "railway stations",
+      "title": "Bjørnevatn Station",
+      "url": "https://en.wikipedia.org/wiki/Bj%C3%B8rnevatn_Station",
+      "title_score": 2.5,
+      "best_table_score": 0.5,
+      "combined_score": 1.375,
+      "best_table_caption": "",
+      "best_table_section": "",
+      "reasons": [
+        "required_terms",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "infobox_penalty",
+        "multi_row",
+        "no_comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "airports",
+      "title": "Valle Airport",
+      "url": "https://en.wikipedia.org/wiki/Valle_Airport",
+      "title_score": 2.5,
+      "best_table_score": 0.65,
+      "combined_score": 1.525,
+      "best_table_caption": "",
+      "best_table_section": "",
+      "reasons": [
+        "required_terms",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "infobox_penalty",
+        "multi_row",
+        "no_comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Arts and Media",
+      "subdomain": "music charts",
+      "title": "APRA Music Awards of 2009",
+      "url": "https://en.wikipedia.org/wiki/APRA_Music_Awards_of_2009",
+      "title_score": 7.3,
+      "best_table_score": 4.8,
+      "combined_score": 7.355,
+      "best_table_caption": "",
+      "best_table_section": "Awards",
+      "reasons": [
+        "required_terms",
+        "historical_year",
+        "specific_length",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "no_comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "banks",
+      "title": "First National State Bank Building",
+      "url": "https://en.wikipedia.org/wiki/First_National_State_Bank_Building",
+      "title_score": 3.5,
+      "best_table_score": 1.1,
+      "combined_score": 2.325,
+      "best_table_caption": "",
+      "best_table_section": "",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "infobox_penalty",
+        "multi_row",
+        "numeric_values",
+        "no_comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Education",
+      "subdomain": "schools",
+      "title": "School Gyrls (album)",
+      "url": "https://en.wikipedia.org/wiki/School_Gyrls_(album)",
+      "title_score": 9.1,
+      "best_table_score": 5.0,
+      "combined_score": 8.185,
+      "best_table_caption": "",
+      "best_table_section": "Release history",
+      "reasons": [
+        "required_terms",
+        "disambiguated_title",
+        "wikitext_tables:2",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "too_few_rows",
+        "has_headers",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "islands",
+      "title": "Siau Tagulandang Biaro Islands Regency",
+      "url": "https://en.wikipedia.org/wiki/Siau_Tagulandang_Biaro_Islands_Regency",
+      "title_score": 7.3,
+      "best_table_score": 11.65,
+      "combined_score": 14.205,
+      "best_table_caption": "",
+      "best_table_section": "Administrative districts",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "People",
+      "subdomain": "award records",
+      "title": "List of Melbourne City FC records and statistics",
+      "url": "https://en.wikipedia.org/wiki/List_of_Melbourne_City_FC_records_and_statistics",
+      "title_score": 12.6,
+      "best_table_score": 11.8,
+      "combined_score": 16.21,
+      "best_table_caption": "",
+      "best_table_section": "Most appearances",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "wikitext_tables:2",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Physical Sciences",
+      "subdomain": "stars",
+      "title": "Nouvelle Star season 6",
+      "url": "https://en.wikipedia.org/wiki/Nouvelle_Star_season_6",
+      "title_score": 9.2,
+      "best_table_score": 5.8,
+      "combined_score": 9.02,
+      "best_table_caption": "",
+      "best_table_section": "Candidates",
+      "reasons": [
+        "required_terms",
+        "wikitext_tables:4",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:2",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "no_comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Politics and Law",
+      "subdomain": "elections",
+      "title": "2010 Belgian federal election",
+      "url": "https://en.wikipedia.org/wiki/2010_Belgian_federal_election",
+      "title_score": 11.2,
+      "best_table_score": 11.8,
+      "combined_score": 15.72,
+      "best_table_caption": "",
+      "best_table_section": "Chamber of Representatives",
+      "reasons": [
+        "required_terms",
+        "historical_year",
+        "wikitext_tables:4",
+        "wikitable_marker",
+        "infobox_marker:4",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    }
+  ],
+  "failed_subdomains": [
+    {
+      "domain": "Arts and Media",
+      "subdomain": "film awards",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Computer Science and AI",
+      "subdomain": "programming languages",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Computer Science and AI",
+      "subdomain": "computing benchmarks",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "observatories",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "impact structures",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Deadly Impact"
+      ]
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "companies",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Sears, Roebuck and Company Department Store (Miami, Florida)",
+        "Bloch (company)"
+      ]
+    },
+    {
+      "domain": "Education",
+      "subdomain": "universities",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Faculty of Philosophy, University of Belgrade",
+        "Magnitogorsk State University"
+      ]
+    },
+    {
+      "domain": "Engineering and Technology",
+      "subdomain": "bridges",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Twin Bridges (Philadelphia)"
+      ]
+    },
+    {
+      "domain": "Engineering and Technology",
+      "subdomain": "dams",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "crop production",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "wine regions",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "lakes",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Colliford Lake",
+        "Toolibin Lake"
+      ]
+    },
+    {
+      "domain": "Language and Literature",
+      "subdomain": "literary awards",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Language and Literature",
+      "subdomain": "books",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Life Sciences",
+      "subdomain": "birds",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Life Sciences",
+      "subdomain": "mammals",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Mathematics",
+      "subdomain": "polyhedra",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Mathematics",
+      "subdomain": "mathematical constants",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Medicine and Health",
+      "subdomain": "hospitals",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Medicine and Health",
+      "subdomain": "epidemics",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "People",
+      "subdomain": "laureates",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Philosophy and Religion",
+      "subdomain": "popes",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Philosophy and Religion",
+      "subdomain": "religion demographics",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Physical Sciences",
+      "subdomain": "chemical elements",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Politics and Law",
+      "subdomain": "court cases",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Society and Culture",
+      "subdomain": "museums",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "El Pueblo History Museum"
+      ]
+    },
+    {
+      "domain": "Society and Culture",
+      "subdomain": "public art",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Sports and Recreation",
+      "subdomain": "championship results",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "2010 IBSA World Blind Football Championship",
+        "2011 South American U-20 Championship",
+        "1987 UEFA European Under-16 Championship qualifying",
+        "2010 Asian Men's Club Volleyball Championship",
+        "2003 AFF U-18 Youth Championship",
+        "United Asian Debating Championships"
+      ]
+    },
+    {
+      "domain": "Sports and Recreation",
+      "subdomain": "stadiums",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Sardar Vallabhbhai Patel Stadium, Navrangpura",
+        "Eagle Stadium (Allen, Texas)",
+        "Sea Foam Stadium"
+      ]
+    },
+    {
+      "domain": "History",
+      "subdomain": "battles",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Battle of the Centaurs (Michelangelo)"
+      ]
+    },
+    {
+      "domain": "History",
+      "subdomain": "empires",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "SS Empire Cobbett"
+      ]
+    }
+  ],
+  "title_candidate_counts": {
+    "Architecture and Transportation / railway stations": 14,
+    "Architecture and Transportation / airports": 2,
+    "Arts and Media / film awards": 0,
+    "Arts and Media / music charts": 1,
+    "Computer Science and AI / programming languages": 0,
+    "Computer Science and AI / computing benchmarks": 0,
+    "Earth, Environment, and Space / observatories": 0,
+    "Earth, Environment, and Space / impact structures": 1,
+    "Economy and Business / companies": 2,
+    "Economy and Business / banks": 1,
+    "Education / universities": 2,
+    "Education / schools": 11,
+    "Engineering and Technology / bridges": 1,
+    "Engineering and Technology / dams": 0,
+    "Food, Agriculture, and Daily Life / crop production": 0,
+    "Food, Agriculture, and Daily Life / wine regions": 0,
+    "Geography / lakes": 2,
+    "Geography / islands": 3,
+    "Language and Literature / literary awards": 0,
+    "Language and Literature / books": 0,
+    "Life Sciences / birds": 0,
+    "Life Sciences / mammals": 0,
+    "Mathematics / polyhedra": 0,
+    "Mathematics / mathematical constants": 0,
+    "Medicine and Health / hospitals": 0,
+    "Medicine and Health / epidemics": 0,
+    "People / laureates": 0,
+    "People / award records": 3,
+    "Philosophy and Religion / popes": 0,
+    "Philosophy and Religion / religion demographics": 0,
+    "Physical Sciences / chemical elements": 0,
+    "Physical Sciences / stars": 2,
+    "Politics and Law / elections": 3,
+    "Politics and Law / court cases": 0,
+    "Society and Culture / museums": 1,
+    "Society and Culture / public art": 0,
+    "Sports and Recreation / championship results": 7,
+    "Sports and Recreation / stadiums": 3,
+    "History / battles": 1,
+    "History / empires": 1
+  },
+  "wikipedia_events": [
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bely+Rast+High+Voltage+Research+Station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bely_Rast_High_Voltage_Research_Station",
+      "cache_hit": true,
+      "duration_ms": 19
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=New+Milford+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/New_Milford_station",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bj%C3%B8rnevatn+Station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bj%C3%B8rnevatn_Station",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Brevik+Station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Brevik_Station",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Kirkenes+Station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 11
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Kirkenes_Station",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Point+Aconi+Generating+Station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Point_Aconi_Generating_Station",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Valle+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Valle_Airport",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Saint-Yan+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Saint-Yan_Airport",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=APRA+Music+Awards+of+2009&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/APRA_Music_Awards_of_2009",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Deadly+Impact&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 10
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Deadly_Impact",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Sears%2C+Roebuck+and+Company+Department+Store+%28Miami%2C+Florida%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 11
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Sears%2C_Roebuck_and_Company_Department_Store_(Miami%2C_Florida)",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bloch+%28company%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bloch_(company)",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=First+National+State+Bank+Building&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2335
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/First_National_State_Bank_Building",
+      "cache_hit": false,
+      "duration_ms": 1157
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Magnitogorsk+State+University&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1745
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Magnitogorsk_State_University",
+      "cache_hit": false,
+      "duration_ms": 994
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=School+Gyrls+%28album%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1600
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/School_Gyrls_(album)",
+      "cache_hit": false,
+      "duration_ms": 1382
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Kenowa+Hills+Public+Schools&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2539
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Kenowa_Hills_Public_Schools",
+      "cache_hit": false,
+      "duration_ms": 957
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Elmezzi+Graduate+School+of+Molecular+Medicine&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1515
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Elmezzi_Graduate_School_of_Molecular_Medicine",
+      "cache_hit": false,
+      "duration_ms": 1175
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lincoln-Way+West+High+School&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1787
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Lincoln-Way_West_High_School",
+      "cache_hit": false,
+      "duration_ms": 1117
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=El+Zahrat+Language+School&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2627
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/El_Zahrat_Language_School",
+      "cache_hit": false,
+      "duration_ms": 1116
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Grape+Creek+High+School&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2473
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Grape_Creek_High_School",
+      "cache_hit": false,
+      "duration_ms": 1182
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Twin+Bridges+%28Philadelphia%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1590
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Twin_Bridges_(Philadelphia)",
+      "cache_hit": false,
+      "duration_ms": 945
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Colliford+Lake&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1549
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Colliford_Lake",
+      "cache_hit": false,
+      "duration_ms": 1236
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Toolibin+Lake&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1527
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Toolibin_Lake",
+      "cache_hit": false,
+      "duration_ms": 1217
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Siau+Tagulandang+Biaro+Islands+Regency&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1497
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Siau_Tagulandang_Biaro_Islands_Regency",
+      "cache_hit": false,
+      "duration_ms": 1077
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Kilifarevo+Island&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1349
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Kilifarevo_Island",
+      "cache_hit": false,
+      "duration_ms": 890
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Riksa+Islands&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1888
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Riksa_Islands",
+      "cache_hit": false,
+      "duration_ms": 1230
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Melbourne+City+FC+records+and+statistics&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 35
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Melbourne_City_FC_records_and_statistics",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Live+at+The+Record+Exchange+EP&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 11
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Live_at_The_Record_Exchange_EP",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Stone+Records&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Stone_Records",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Nouvelle+Star+season+6&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Nouvelle_Star_season_6",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Susan+Leigh+Star&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Susan_Leigh_Star",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2010+Belgian+federal+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2010_Belgian_federal_election",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1830%E2%80%9331+United+States+Senate+elections&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/1830%E2%80%9331_United_States_Senate_elections",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1828%E2%80%9329+United+States+Senate+elections&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2693
+    }
+  ]
+}

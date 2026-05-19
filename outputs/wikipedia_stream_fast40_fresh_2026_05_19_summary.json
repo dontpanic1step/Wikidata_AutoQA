@@ -1,0 +1,1185 @@
+{
+  "start_stage": "generate",
+  "start_from_endpoint": false,
+  "endpoint_resume": {
+    "enabled": false,
+    "accepted_records_loaded": 0,
+    "rejected_records_loaded": 0,
+    "final_decisions_loaded": 0,
+    "skipped_malformed_lines": 0,
+    "skipped_line_details": [],
+    "accepted_ids_synced": 0,
+    "rejected_ids_synced": 0
+  },
+  "streaming_mode": "page_id_stream",
+  "stream_page_source": "table-search",
+  "stream_search_queries": [
+    "insource:\"wikitable\""
+  ],
+  "stream_broad_table_search_enabled": false,
+  "stream_search_offsets": {
+    "insource:\"wikitable\"": 200
+  },
+  "run_date": "2026-05-19",
+  "stream_state": "outputs\\wikipedia_stream_fast40_fresh_2026_05_19_state.json",
+  "stream_state_stats": {
+    "used": 40,
+    "in_progress": 0,
+    "accepted": 5,
+    "rejected": 35,
+    "rerun_pool": 0,
+    "table_search_queries": 1
+  },
+  "rerun_pool_ids_after_run": [],
+  "rerun_pool_failure_reasons_after_run": {},
+  "recovered_stale_in_progress_ids": [],
+  "page_id_bounds": {
+    "min": 1,
+    "max": 80000000
+  },
+  "random_seed": 42,
+  "record_limit": 40,
+  "record_limit_remaining_at_start": 40,
+  "stream_batch_size": 10,
+  "stream_accepted_target": 0,
+  "stream_accepted_target_remaining_at_start": 0,
+  "attempted_page_ids": 40,
+  "page_ids": [
+    32611,
+    17416221,
+    9316,
+    22093,
+    5489,
+    738,
+    13277,
+    14849,
+    19261,
+    11857,
+    199445,
+    21355232,
+    31740,
+    8083,
+    292259,
+    40010153,
+    39776,
+    5488,
+    1640,
+    151603,
+    66958,
+    41853326,
+    60382764,
+    45367389,
+    105908,
+    217231,
+    34411,
+    12186,
+    5643,
+    19653842,
+    22948,
+    55440889,
+    84952,
+    235916,
+    2924002,
+    30292,
+    33094374,
+    260996,
+    235959,
+    91195
+  ],
+  "accepted": 5,
+  "accepted_total": 5,
+  "rejected": 35,
+  "rejected_total": 35,
+  "rerun": 0,
+  "wall_clock_seconds": 832.168,
+  "output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_stream_fast40_fresh_2026_05_19_summary.json",
+  "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_fast40_fresh_2026_05_19.md",
+  "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "rest_summary_fallback_enabled": false,
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": true,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_top_k": 5,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 2,
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "entered": 40,
+      "failed": 0,
+      "survived": 40,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "entered": 40,
+      "failed": 0,
+      "survived": 40,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Page extraction, table grading, and QA generation",
+      "entered": 40,
+      "failed": 0,
+      "survived": 40,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "entered": 40,
+      "failed": 5,
+      "survived": 35,
+      "survival_rate_from_layer_input": 0.875,
+      "cumulative_survival_rate": 0.875
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "entered": 35,
+      "failed": 16,
+      "survived": 19,
+      "survival_rate_from_layer_input": 0.5429,
+      "cumulative_survival_rate": 0.475
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "entered": 19,
+      "failed": 14,
+      "survived": 5,
+      "survival_rate_from_layer_input": 0.2632,
+      "cumulative_survival_rate": 0.125
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared route-aware validation",
+      "entered": 5,
+      "failed": 0,
+      "survived": 5,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.125
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "entered": 5,
+      "failed": 0,
+      "survived": 5,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.125
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "entered": 5,
+      "failed": 0,
+      "survived": 5,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.125
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+      "count": 12
+    },
+    {
+      "stage": "second_stage_grading",
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+      "count": 7
+    },
+    {
+      "stage": "second_stage_grading",
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+      "count": 7
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded",
+      "count": 4
+    },
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
+      "count": 3
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "rewrite_guard_rejected:answer_leakage",
+      "count": 1
+    },
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
+      "count": 1
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 40,
+      "total": 544.3788,
+      "average": 13.6095,
+      "max": 35.9131
+    },
+    "duckduckgo_search_seconds": {
+      "count": 35,
+      "total": 125.3265,
+      "average": 3.5808,
+      "max": 7.0719
+    },
+    "first_paragraph_extract_seconds": {
+      "count": 40,
+      "total": 7.3794,
+      "average": 0.1845,
+      "max": 0.3653
+    },
+    "llm_question_generation_seconds": {
+      "count": 40,
+      "total": 174.826,
+      "average": 4.3706,
+      "max": 7.9092
+    },
+    "number_reference_margin_seconds": {
+      "count": 35,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "page_fetch_seconds": {
+      "count": 40,
+      "total": 90.1757,
+      "average": 2.2544,
+      "max": 8.6836
+    },
+    "rewrite_seconds": {
+      "count": 40,
+      "total": 150.1641,
+      "average": 3.7541,
+      "max": 33.2139
+    },
+    "second_stage_grading_seconds": {
+      "count": 19,
+      "total": 268.8414,
+      "average": 14.1495,
+      "max": 23.4871
+    },
+    "table_parse_seconds": {
+      "count": 40,
+      "total": 12.9148,
+      "average": 0.3229,
+      "max": 0.7539
+    },
+    "total_generation_seconds": {
+      "count": 40,
+      "total": 287.0777,
+      "average": 7.1769,
+      "max": 12.703
+    },
+    "total_processing_seconds": {
+      "count": 40,
+      "total": 544.3788,
+      "average": 13.6095,
+      "max": 35.9131
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 90.1757,
+    "first_paragraph_extract_seconds": 7.3794,
+    "table_parse_seconds": 12.9148,
+    "llm_question_generation_seconds": 174.826,
+    "total_generation_seconds": 287.0777,
+    "rewrite_seconds": 150.1641,
+    "number_reference_margin_seconds": 0.0,
+    "duckduckgo_search_seconds": 125.3265,
+    "second_stage_grading_seconds": 268.8414,
+    "total_processing_seconds": 544.3788,
+    "candidate_processing_seconds": 544.3788
+  },
+  "telemetry": {
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=0&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 26
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=32611",
+        "cache_hit": true,
+        "duration_ms": 42
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=17416221",
+        "cache_hit": true,
+        "duration_ms": 155
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=9316",
+        "cache_hit": true,
+        "duration_ms": 153
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=22093",
+        "cache_hit": true,
+        "duration_ms": 58
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=5489",
+        "cache_hit": true,
+        "duration_ms": 136
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=738",
+        "cache_hit": false,
+        "duration_ms": 5510,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=13277",
+        "cache_hit": true,
+        "duration_ms": 128
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=14849",
+        "cache_hit": false,
+        "duration_ms": 6111,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=19261",
+        "cache_hit": true,
+        "duration_ms": 113
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=11857",
+        "cache_hit": false,
+        "duration_ms": 6471,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=50&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 40
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=199445",
+        "cache_hit": true,
+        "duration_ms": 142
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=21355232",
+        "cache_hit": true,
+        "duration_ms": 27
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=31740",
+        "cache_hit": true,
+        "duration_ms": 136
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=8083",
+        "cache_hit": true,
+        "duration_ms": 66
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=292259",
+        "cache_hit": true,
+        "duration_ms": 28
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=40010153",
+        "cache_hit": false,
+        "duration_ms": 4069,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=39776",
+        "cache_hit": false,
+        "duration_ms": 3980,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=5488",
+        "cache_hit": false,
+        "duration_ms": 4392,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=1640",
+        "cache_hit": false,
+        "duration_ms": 4282,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=151603",
+        "cache_hit": false,
+        "duration_ms": 3883,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=100&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 46
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=66958",
+        "cache_hit": true,
+        "duration_ms": 79
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=41853326",
+        "cache_hit": true,
+        "duration_ms": 58
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=60382764",
+        "cache_hit": true,
+        "duration_ms": 60
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=45367389",
+        "cache_hit": true,
+        "duration_ms": 68
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=105908",
+        "cache_hit": true,
+        "duration_ms": 74
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=217231",
+        "cache_hit": false,
+        "duration_ms": 3718,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=34411",
+        "cache_hit": false,
+        "duration_ms": 4374,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=12186",
+        "cache_hit": false,
+        "duration_ms": 8681,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=5643",
+        "cache_hit": false,
+        "duration_ms": 4602,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=19653842",
+        "cache_hit": false,
+        "duration_ms": 5237,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=150&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 37
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=22948",
+        "cache_hit": true,
+        "duration_ms": 56
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=55440889",
+        "cache_hit": true,
+        "duration_ms": 20
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=84952",
+        "cache_hit": true,
+        "duration_ms": 44
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=235916",
+        "cache_hit": true,
+        "duration_ms": 72
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=2924002",
+        "cache_hit": true,
+        "duration_ms": 80
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=30292",
+        "cache_hit": false,
+        "duration_ms": 4960,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=33094374",
+        "cache_hit": false,
+        "duration_ms": 4771,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=260996",
+        "cache_hit": false,
+        "duration_ms": 4615,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=235959",
+        "cache_hit": false,
+        "duration_ms": 3998,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=91195",
+        "cache_hit": false,
+        "duration_ms": 4653,
+        "attempts": 1,
+        "used_direct_fallback": false
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=South+Vietnam+military+deaths+by+year+Vietnam+War",
+        "cache_hit": true,
+        "duration_ms": 98
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+saw+the+highest+number+of+military+deaths+for+South+Vietnam+during+the+Vietnam+War+from+1955+to+1975%3F",
+        "cache_hit": true,
+        "duration_ms": 105
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+with+most+South+Vietnam+military+deaths+Vietnam+War+1955-1975",
+        "cache_hit": false,
+        "duration_ms": 2708,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=South+Africa+province+population+2022",
+        "cache_hit": true,
+        "duration_ms": 75
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+population+province+in+South+Africa+2022",
+        "cache_hit": false,
+        "duration_ms": 2159,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+province+in+South+Africa+had+the+largest+population+in+2022%3F",
+        "cache_hit": false,
+        "duration_ms": 2253,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=second+most+spoken+native+language+in+England",
+        "cache_hit": true,
+        "duration_ms": 64
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=languages+by+number+of+native+speakers+in+England",
+        "cache_hit": true,
+        "duration_ms": 26
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+language+has+the+second+highest+number+of+native+speakers+in+England%3F",
+        "cache_hit": false,
+        "duration_ms": 2677,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=NBA+team+with+largest+arena+capacity",
+        "cache_hit": true,
+        "duration_ms": 36
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+National+Basketball+Association+team+has+the+arena+with+the+largest+seating+capacity%3F",
+        "cache_hit": true,
+        "duration_ms": 40
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=National+Basketball+Association+arena+seating+capacity+by+team",
+        "cache_hit": false,
+        "duration_ms": 2222,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Chile+regions+population+statistics",
+        "cache_hit": false,
+        "duration_ms": 2151,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+administrative+region+of+Chile+has+the+largest+population%3F",
+        "cache_hit": false,
+        "duration_ms": 3169,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=population+by+administrative+region+in+Chile",
+        "cache_hit": false,
+        "duration_ms": 5028,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Albania+county+population+2023",
+        "cache_hit": false,
+        "duration_ms": 2474,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+population+county+in+Albania+2023",
+        "cache_hit": false,
+        "duration_ms": 2413,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+county+in+Albania+had+the+largest+population+in+2023%3F",
+        "cache_hit": false,
+        "duration_ms": 3424,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+population+state+in+Holy+Roman+Empire+early+17th+century+Imperial+Italy",
+        "cache_hit": false,
+        "duration_ms": 2371,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=most+populous+state+in+Imperial+Italy+under+Holy+Roman+Empire+early+1600s",
+        "cache_hit": false,
+        "duration_ms": 2454,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+state+had+the+largest+population+in+the+Holy+Roman+Empire+during+early+17th+century+Imperial+Italy%3F",
+        "cache_hit": false,
+        "duration_ms": 3890,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+ancestry+group+had+the+largest+population+alone+or+in+any+combination+in+Illinois+in+2022%3F",
+        "cache_hit": false,
+        "duration_ms": 2569,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Illinois+ancestry+groups+population+numbers+2022",
+        "cache_hit": false,
+        "duration_ms": 2664,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+ancestry+group+population+in+Illinois+2022",
+        "cache_hit": false,
+        "duration_ms": 4234,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+ward+in+Monaco+has+the+largest+area+measured+in+hectares%3F",
+        "cache_hit": true,
+        "duration_ms": 154
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=wards+of+Monaco+by+area+in+hectares",
+        "cache_hit": false,
+        "duration_ms": 2535,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+ward+in+Monaco+by+area",
+        "cache_hit": false,
+        "duration_ms": 3149,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1977+feature+film+directed+by+George+Lucas",
+        "cache_hit": false,
+        "duration_ms": 1923,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+title+of+the+1977+feature+film+directed+by+George+Lucas%3F",
+        "cache_hit": false,
+        "duration_ms": 2459,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=George+Lucas+films+released+in+1977",
+        "cache_hit": false,
+        "duration_ms": 6945,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=During+which+season+did+Wayne+Rooney+score+the+highest+number+of+total+goals+for+Manchester+United%3F",
+        "cache_hit": false,
+        "duration_ms": 3515,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wayne+Rooney+most+goals+scored+in+a+single+season+for+Manchester+United",
+        "cache_hit": false,
+        "duration_ms": 3478,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wayne+Rooney+highest+total+goals+season+Manchester+United",
+        "cache_hit": false,
+        "duration_ms": 4635,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+U.S.+state+has+the+greatest+number+of+national+parks+according+to+the+List+of+national+parks+of+the+United+States%3F",
+        "cache_hit": true,
+        "duration_ms": 40
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+national+parks+of+the+United+States+by+state+count",
+        "cache_hit": false,
+        "duration_ms": 2154,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=U.S.+state+with+the+highest+number+of+national+parks",
+        "cache_hit": false,
+        "duration_ms": 2421,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Dr.+Dre+Grammy+Award+Best+Rap+Solo+Performance+work",
+        "cache_hit": true,
+        "duration_ms": 76
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Dr.+Dre+Grammy+win+for+Best+Rap+Solo+Performance",
+        "cache_hit": true,
+        "duration_ms": 69
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+work+earned+Dr.+Dre+the+Grammy+Award+for+Best+Rap+Solo+Performance%3F",
+        "cache_hit": false,
+        "duration_ms": 3513,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+language+started+broadcasting+on+Deutsche+Welle+in+1953%3F",
+        "cache_hit": false,
+        "duration_ms": 2492,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Deutsche+Welle+first+language+broadcast+1953",
+        "cache_hit": false,
+        "duration_ms": 2582,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=language+broadcast+started+Deutsche+Welle+1953",
+        "cache_hit": false,
+        "duration_ms": 3154,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+saw+the+highest+number+of+tourist+arrivals+in+Goa%3F",
+        "cache_hit": false,
+        "duration_ms": 2654,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Goa+tourist+arrivals+by+year",
+        "cache_hit": false,
+        "duration_ms": 3006,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+with+maximum+tourist+arrivals+in+Goa",
+        "cache_hit": false,
+        "duration_ms": 3321,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UDP-based+amplification+denial-of-service+attack+protocols+with+maximum+amplification+factor",
+        "cache_hit": false,
+        "duration_ms": 2433,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+protocol+has+the+maximum+amplification+factor+in+UDP-based+amplification+denial-of-service+attacks%3F",
+        "cache_hit": false,
+        "duration_ms": 3133,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=protocol+with+highest+amplification+factor+in+UDP+amplification+denial-of-service+attacks",
+        "cache_hit": false,
+        "duration_ms": 3210,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=province+population+Chad+1+July+2023",
+        "cache_hit": false,
+        "duration_ms": 2444,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+province+of+Chad+had+the+highest+population+on+1+July+2023%3F",
+        "cache_hit": false,
+        "duration_ms": 2533,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+population+province+Chad+July+2023",
+        "cache_hit": false,
+        "duration_ms": 2554,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Alfred+the+Great+date+of+death",
+        "cache_hit": false,
+        "duration_ms": 2392,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=On+what+day%2C+month%2C+and+year+did+Alfred+the+Great+die%3F",
+        "cache_hit": false,
+        "duration_ms": 2580,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=When+did+Alfred+the+Great+die",
+        "cache_hit": false,
+        "duration_ms": 2882,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=TV+shows+with+most+Dean+Martin+appearances",
+        "cache_hit": false,
+        "duration_ms": 2036,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Dean+Martin+television+programs+episode+count",
+        "cache_hit": false,
+        "duration_ms": 2546,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+television+program+had+the+highest+number+of+episodes+featuring+Dean+Martin%3F",
+        "cache_hit": false,
+        "duration_ms": 2691,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+is+Reiwa+5+in+the+Japanese+calendar%3F",
+        "cache_hit": false,
+        "duration_ms": 2467,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+Gregorian+year+is+Reiwa+5",
+        "cache_hit": false,
+        "duration_ms": 2824,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Reiwa+5+year+in+Japanese+calendar",
+        "cache_hit": false,
+        "duration_ms": 2928,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=second+largest+country+of+birth+population+in+Greater+London+2021+Census",
+        "cache_hit": true,
+        "duration_ms": 130
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Greater+London+population+by+country+of+birth+2021+UK+Census",
+        "cache_hit": false,
+        "duration_ms": 2533,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+country+of+birth+had+the+second+largest+population+in+Greater+London+according+to+the+2021+United+Kingdom+Census%3F",
+        "cache_hit": false,
+        "duration_ms": 5905,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Ford+Mustang+highest+US+sales+1970s+model+year",
+        "cache_hit": true,
+        "duration_ms": 118
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Ford+Mustang+best+selling+model+year+in+1970s+US",
+        "cache_hit": false,
+        "duration_ms": 2643,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+model+year+of+the+Ford+Mustang+had+the+highest+US+sales+during+the+1970s%3F",
+        "cache_hit": false,
+        "duration_ms": 2802,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Curb+Your+Enthusiasm+seasons+with+100%25+Rotten+Tomatoes+rating",
+        "cache_hit": false,
+        "duration_ms": 2264,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+seasons+of+Curb+Your+Enthusiasm+have+a+100%25+rating+on+Rotten+Tomatoes%3F",
+        "cache_hit": false,
+        "duration_ms": 2435,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Rotten+Tomatoes+ratings+for+Curb+Your+Enthusiasm+seasons",
+        "cache_hit": false,
+        "duration_ms": 2517,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+Latin+name+of+the+zodiac+sign+whose+ecliptic+longitude+begins+at+150%C2%B0%3F",
+        "cache_hit": false,
+        "duration_ms": 2453,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=zodiac+sign+with+ecliptic+longitude+starting+at+150+degrees+Latin+name",
+        "cache_hit": false,
+        "duration_ms": 2721,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=name+of+zodiac+sign+beginning+at+150+degrees+ecliptic+longitude",
+        "cache_hit": false,
+        "duration_ms": 2848,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+island+in+the+Channel+Islands+has+the+greatest+population%3F",
+        "cache_hit": false,
+        "duration_ms": 2270,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Channel+Islands+island+with+highest+population",
+        "cache_hit": false,
+        "duration_ms": 2296,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+population+island+in+the+Channel+Islands",
+        "cache_hit": false,
+        "duration_ms": 5964,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=biological+organisation+level+Swarming+protistan+example",
+        "cache_hit": false,
+        "duration_ms": 2345,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+example+is+provided+for+the+biological+organisation+level+called+%27Swarming+protistan%27%3F",
+        "cache_hit": false,
+        "duration_ms": 3187,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Swarming+protistan+example+organism",
+        "cache_hit": false,
+        "duration_ms": 5291,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=child+of+Poseidon+with+Amphitrite+as+mother",
+        "cache_hit": false,
+        "duration_ms": 2054,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+child+of+Poseidon+has+Amphitrite+as+their+mother%3F",
+        "cache_hit": false,
+        "duration_ms": 2220,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=offspring+of+Poseidon+and+Amphitrite",
+        "cache_hit": false,
+        "duration_ms": 2196,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Pixel+2+cellular+network+generation+LTE-FDD",
+        "cache_hit": true,
+        "duration_ms": 20
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+cellular+network+generation+supported+by+Pixel+2+uses+the+LTE-FDD+standard%3F",
+        "cache_hit": true,
+        "duration_ms": 22
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Pixel+2+network+technology+LTE-FDD+standard",
+        "cache_hit": true,
+        "duration_ms": 23
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Marvelous+Marvin+Hagler+final+professional+boxing+match+opponent",
+        "cache_hit": false,
+        "duration_ms": 2632,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Marvelous+Marvin+Hagler+last+boxing+match+opponent",
+        "cache_hit": false,
+        "duration_ms": 2709,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+was+Marvelous+Marvin+Hagler%27s+opponent+in+his+final+professional+boxing+match%3F",
+        "cache_hit": false,
+        "duration_ms": 5607,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=movies+featuring+Jada+Pinkett+Smith+as+Gloria",
+        "cache_hit": true,
+        "duration_ms": 72
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+which+films+did+Jada+Pinkett+Smith+voice+the+character+Gloria%3F",
+        "cache_hit": true,
+        "duration_ms": 84
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Jada+Pinkett+Smith+voice+role+Gloria+films",
+        "cache_hit": false,
+        "duration_ms": 2257,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=starting+location+of+the+quest+in+The+Hobbit",
+        "cache_hit": false,
+        "duration_ms": 2625,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+name+of+the+place+where+the+quest+begins+in+The+Hobbit%3F",
+        "cache_hit": false,
+        "duration_ms": 2644,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=where+does+the+quest+start+in+The+Hobbit",
+        "cache_hit": false,
+        "duration_ms": 5111,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=top+selling+telecommunications+equipment+2008",
+        "cache_hit": false,
+        "duration_ms": 2292,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=equipment+with+highest+worldwide+sales+2008",
+        "cache_hit": false,
+        "duration_ms": 2372,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+equipment+had+the+highest+worldwide+sales+in+the+year+2008%3F",
+        "cache_hit": false,
+        "duration_ms": 7055,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+Christian+Slater+act+in+the+stage+play+Macbeth%3F",
+        "cache_hit": false,
+        "duration_ms": 2115,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Christian+Slater+performed+in+Macbeth",
+        "cache_hit": false,
+        "duration_ms": 2509,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Christian+Slater+Macbeth+stage+play+year",
+        "cache_hit": false,
+        "duration_ms": 3457,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=During+which+years+did+Farrah+Fawcett+play+Jill+Munroe+in+the+television+series+%22Charlie%27s+Angels%22%3F",
+        "cache_hit": false,
+        "duration_ms": 2165,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Farrah+Fawcett+acting+period+in+Charlie%27s+Angels",
+        "cache_hit": false,
+        "duration_ms": 2119,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Farrah+Fawcett+Jill+Munroe+Charlie%27s+Angels+years",
+        "cache_hit": false,
+        "duration_ms": 2239,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=oldest+singles+champion+Wimbledon+Championships",
+        "cache_hit": false,
+        "duration_ms": 2615,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wimbledon+Championships+oldest+singles+winner+age",
+        "cache_hit": false,
+        "duration_ms": 2907,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+holds+the+record+as+the+oldest+singles+champion+at+the+Wimbledon+Championships+and+what+was+their+age+at+the+time%3F",
+        "cache_hit": false,
+        "duration_ms": 3270,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

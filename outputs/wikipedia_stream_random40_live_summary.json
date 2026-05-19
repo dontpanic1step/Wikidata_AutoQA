@@ -1,0 +1,682 @@
+{
+  "start_stage": "generate",
+  "streaming_mode": "random_page_ids",
+  "run_date": "2026-05-19",
+  "stream_state": "outputs\\wikipedia_stream_random40_live_state.json",
+  "stream_state_stats": {
+    "used": 40,
+    "in_progress": 0,
+    "accepted": 4,
+    "rejected": 36,
+    "rerun_pool": 0
+  },
+  "recovered_stale_in_progress_ids": [],
+  "page_id_bounds": {
+    "min": 1,
+    "max": 80000000
+  },
+  "random_seed": 20260519,
+  "record_limit": 40,
+  "stream_batch_size": 5,
+  "stream_accepted_target": 0,
+  "attempted_page_ids": 40,
+  "page_ids": [
+    22978779,
+    45727649,
+    73448318,
+    79171450,
+    62659710,
+    59651956,
+    30479038,
+    16853067,
+    43920070,
+    51481392,
+    34704627,
+    74262329,
+    71931420,
+    75905861,
+    6997931,
+    22060856,
+    34612076,
+    5968844,
+    69456847,
+    58767698,
+    2942266,
+    79642122,
+    54727528,
+    16516792,
+    9940679,
+    67492275,
+    39407085,
+    9942806,
+    71529407,
+    66010827,
+    66635972,
+    71491929,
+    37166529,
+    75630307,
+    25975405,
+    37732663,
+    59352406,
+    3736228,
+    8179036,
+    5839157
+  ],
+  "accepted": 4,
+  "rejected": 36,
+  "rerun": 0,
+  "output_path": "outputs\\wikipedia_stream_random40_live_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_stream_random40_live_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_stream_random40_live_summary.json",
+  "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_random40_live_2026_05_19.md",
+  "domain_policy": "domain_and_subdomain_optional_for_random_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": true,
+  "second_stage_grading_enabled": false,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "entered": 40,
+      "failed": 0,
+      "survived": 40,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "entered": 40,
+      "failed": 0,
+      "survived": 40,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Page extraction, table grading, and QA generation",
+      "entered": 40,
+      "failed": 34,
+      "survived": 6,
+      "survival_rate_from_layer_input": 0.15,
+      "cumulative_survival_rate": 0.15
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "entered": 6,
+      "failed": 2,
+      "survived": 4,
+      "survival_rate_from_layer_input": 0.6667,
+      "cumulative_survival_rate": 0.1
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "entered": 4,
+      "failed": 0,
+      "survived": 4,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.1
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "entered": 4,
+      "failed": 0,
+      "survived": 4,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.1
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared route-aware validation",
+      "entered": 4,
+      "failed": 0,
+      "survived": 4,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.1
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "entered": 4,
+      "failed": 0,
+      "survived": 4,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.1
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "entered": 4,
+      "failed": 0,
+      "survived": 4,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.1
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_no_tables",
+      "count": 29
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+      "count": 5
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "rewrite_guard_rejected:answer_leakage",
+      "count": 1
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded",
+      "count": 1
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 40,
+      "total": 55.836,
+      "average": 1.3959,
+      "max": 14.3028
+    },
+    "duckduckgo_search_seconds": {
+      "count": 4,
+      "total": 27.4402,
+      "average": 6.8601,
+      "max": 9.346
+    },
+    "first_paragraph_fetch_seconds": {
+      "count": 35,
+      "total": 89.9753,
+      "average": 2.5707,
+      "max": 7.4035
+    },
+    "llm_question_generation_seconds": {
+      "count": 6,
+      "total": 63.1817,
+      "average": 10.5303,
+      "max": 23.0904
+    },
+    "number_reference_margin_seconds": {
+      "count": 4,
+      "total": 0.0001,
+      "average": 0.0,
+      "max": 0.0001
+    },
+    "page_fetch_seconds": {
+      "count": 38,
+      "total": 148.1528,
+      "average": 3.8988,
+      "max": 13.8241
+    },
+    "rewrite_seconds": {
+      "count": 6,
+      "total": 28.3843,
+      "average": 4.7307,
+      "max": 7.492
+    },
+    "table_parse_seconds": {
+      "count": 35,
+      "total": 1.3517,
+      "average": 0.0386,
+      "max": 0.6908
+    },
+    "total_generation_seconds": {
+      "count": 40,
+      "total": 328.4581,
+      "average": 8.2115,
+      "max": 30.4189
+    },
+    "total_processing_seconds": {
+      "count": 40,
+      "total": 55.836,
+      "average": 1.3959,
+      "max": 14.3028
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 148.1528,
+    "first_paragraph_fetch_seconds": 89.9753,
+    "table_parse_seconds": 1.3517,
+    "llm_question_generation_seconds": 63.1817,
+    "total_generation_seconds": 328.4581,
+    "rewrite_seconds": 28.3843,
+    "number_reference_margin_seconds": 0.0001,
+    "duckduckgo_search_seconds": 27.4402,
+    "total_processing_seconds": 55.836,
+    "candidate_processing_seconds": 55.836
+  },
+  "telemetry": {
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=22978779",
+        "cache_hit": false,
+        "duration_ms": 2553
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/User_talk:199.44.92.66",
+        "cache_hit": false,
+        "duration_ms": 3540
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=45727649",
+        "cache_hit": false,
+        "duration_ms": 1097
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/User_talk:Adrianofrazao~enwiki",
+        "cache_hit": false,
+        "duration_ms": 3774
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=73448318",
+        "cache_hit": false,
+        "duration_ms": 1653
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=79171450",
+        "cache_hit": false,
+        "duration_ms": 4519
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Talk:James_Ponder_(disambiguation)",
+        "cache_hit": false,
+        "duration_ms": 3095
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=62659710",
+        "cache_hit": false,
+        "duration_ms": 2907
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/User_talk:2A02:C7D:81F8:8C00:4582:D38:D284:F149",
+        "cache_hit": false,
+        "duration_ms": 2371
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=59651956",
+        "cache_hit": false,
+        "duration_ms": 1332
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=30479038",
+        "cache_hit": false,
+        "duration_ms": 2809
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Category_talk:English_women_writers",
+        "cache_hit": false,
+        "duration_ms": 2251
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=16853067",
+        "cache_hit": false,
+        "duration_ms": 1863
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=43920070",
+        "cache_hit": false,
+        "duration_ms": 6575
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Torkil_%C3%85mland",
+        "cache_hit": false,
+        "duration_ms": 1792
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=51481392",
+        "cache_hit": false,
+        "duration_ms": 2718
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Module_talk:Location_map%2Fdata%2FUnited_Kingdom_London_Newham",
+        "cache_hit": false,
+        "duration_ms": 2573
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=34704627",
+        "cache_hit": false,
+        "duration_ms": 3124
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Ernst-Meister-Preis_f%C3%BCr_Lyrik",
+        "cache_hit": false,
+        "duration_ms": 4081
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=74262329",
+        "cache_hit": false,
+        "duration_ms": 3730
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=71931420",
+        "cache_hit": false,
+        "duration_ms": 4828
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=75905861",
+        "cache_hit": false,
+        "duration_ms": 5693
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=6997931",
+        "cache_hit": false,
+        "duration_ms": 6529
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/User_talk:Junkieperfectionist",
+        "cache_hit": false,
+        "duration_ms": 3895
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=22060856",
+        "cache_hit": false,
+        "duration_ms": 4390
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=34612076",
+        "cache_hit": false,
+        "duration_ms": 3285
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Talk:Saint_Patrick%27s_Day_in_the_United_States",
+        "cache_hit": false,
+        "duration_ms": 2416
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=5968844",
+        "cache_hit": false,
+        "duration_ms": 3706
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Talk:Coral_Gold_Cup",
+        "cache_hit": false,
+        "duration_ms": 1842
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=58767698",
+        "cache_hit": false,
+        "duration_ms": 3588
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Wu_Zhaohui",
+        "cache_hit": false,
+        "duration_ms": 2593
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=2942266",
+        "cache_hit": false,
+        "duration_ms": 2668
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Larceveau-Arros-Cibits",
+        "cache_hit": false,
+        "duration_ms": 2504
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=79642122",
+        "cache_hit": false,
+        "duration_ms": 1691
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/User:ClueBot_III%2FDetailed_Indices%2FUser_talk:Theredproject%2FArchives%2F2025_1",
+        "cache_hit": false,
+        "duration_ms": 5610
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=54727528",
+        "cache_hit": false,
+        "duration_ms": 13822
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Wikipedia:Articles_for_deletion%2FLog%2F2017_August_6",
+        "cache_hit": false,
+        "duration_ms": 6480
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=16516792",
+        "cache_hit": false,
+        "duration_ms": 3889
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bel%C3%A9m_Palace",
+        "cache_hit": false,
+        "duration_ms": 6374
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=9940679",
+        "cache_hit": false,
+        "duration_ms": 2895
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Florence_L._Barclay",
+        "cache_hit": false,
+        "duration_ms": 1256
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=67492275",
+        "cache_hit": false,
+        "duration_ms": 1686
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Talk:Sciaphilus",
+        "cache_hit": false,
+        "duration_ms": 5356
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=39407085",
+        "cache_hit": false,
+        "duration_ms": 3391
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=9942806",
+        "cache_hit": false,
+        "duration_ms": 1156
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=71529407",
+        "cache_hit": false,
+        "duration_ms": 2094
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=66010827",
+        "cache_hit": false,
+        "duration_ms": 3373
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/User_talk:35.134.198.206",
+        "cache_hit": false,
+        "duration_ms": 1507
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=66635972",
+        "cache_hit": false,
+        "duration_ms": 1194
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=71491929",
+        "cache_hit": false,
+        "duration_ms": 2572
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Talk:NAF_British_Guiana",
+        "cache_hit": false,
+        "duration_ms": 2920
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=37166529",
+        "cache_hit": false,
+        "duration_ms": 3146
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/WLMD_(FM)",
+        "cache_hit": false,
+        "duration_ms": 1992
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=75630307",
+        "cache_hit": false,
+        "duration_ms": 8177
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=25975405",
+        "cache_hit": false,
+        "duration_ms": 5118
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Focal_subgroup_theorem",
+        "cache_hit": false,
+        "duration_ms": 6335
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=37732663",
+        "cache_hit": false,
+        "duration_ms": 3365
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Category:Algerian_designers",
+        "cache_hit": false,
+        "duration_ms": 2148
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=59352406",
+        "cache_hit": false,
+        "duration_ms": 3094
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/User_talk:41.222.181.65",
+        "cache_hit": false,
+        "duration_ms": 2251
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=8179036",
+        "cache_hit": false,
+        "duration_ms": 11843
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/User_talk:Joeykry",
+        "cache_hit": false,
+        "duration_ms": 7403
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1&pageid=5839157",
+        "cache_hit": false,
+        "duration_ms": 6032
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/User_talk:Radiotycoon",
+        "cache_hit": false,
+        "duration_ms": 3590
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+was+the+President+of+Zhejiang+University+before+Wu+Zhaohui%3F",
+        "cache_hit": false,
+        "duration_ms": 1962,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Predecessor+of+Wu+Zhaohui+as+Zhejiang+University+President",
+        "cache_hit": false,
+        "duration_ms": 2280,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=President+of+Zhejiang+University+before+Wu+Zhaohui",
+        "cache_hit": false,
+        "duration_ms": 4119,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+led+Zhejiang+University+prior+to+Wu+Zhaohui",
+        "cache_hit": false,
+        "duration_ms": 3321,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Larceveau-Arros-Cibits+highest+elevation",
+        "cache_hit": false,
+        "duration_ms": 2504,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+maximum+elevation+in+metres+of+Larceveau-Arros-Cibits%3F",
+        "cache_hit": false,
+        "duration_ms": 2859,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=maximum+elevation+of+Larceveau-Arros-Cibits+in+metres",
+        "cache_hit": false,
+        "duration_ms": 4161,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=elevation+max+value+Larceveau-Arros-Cibits",
+        "cache_hit": false,
+        "duration_ms": 4189,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=who+designed+Bel%C3%A9m+Palace",
+        "cache_hit": false,
+        "duration_ms": 5107,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+was+the+architect+of+Bel%C3%A9m+Palace%3F",
+        "cache_hit": false,
+        "duration_ms": 5854,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=architect+of+Bel%C3%A9m+Palace",
+        "cache_hit": false,
+        "duration_ms": 6181,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Bel%C3%A9m+Palace+architect+name",
+        "cache_hit": false,
+        "duration_ms": 4207,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=WLMD+%28FM%29+effective+radiated+power",
+        "cache_hit": false,
+        "duration_ms": 2495,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=WLMD+%28FM%29+maximum+effective+radiated+power",
+        "cache_hit": false,
+        "duration_ms": 2134,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+highest+effective+radiated+power+in+watts+of+WLMD+%28FM%29%3F",
+        "cache_hit": false,
+        "duration_ms": 5566,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=WLMD+%28FM%29+ERP+watts",
+        "cache_hit": false,
+        "duration_ms": 5926,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

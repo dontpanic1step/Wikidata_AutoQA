@@ -1,0 +1,200 @@
+{
+  "start_stage": "generate",
+  "streaming_mode": "random_page_ids",
+  "run_date": "2026-05-19",
+  "stream_state": "outputs\\wikipedia_stream_random40_state.json",
+  "stream_state_stats": {
+    "used": 40,
+    "in_progress": 0,
+    "accepted": 0,
+    "rejected": 40,
+    "rerun_pool": 0
+  },
+  "recovered_stale_in_progress_ids": [],
+  "page_id_bounds": {
+    "min": 1,
+    "max": 80000000
+  },
+  "random_seed": 20260519,
+  "record_limit": 40,
+  "stream_batch_size": 5,
+  "stream_accepted_target": 0,
+  "attempted_page_ids": 40,
+  "page_ids": [
+    22978779,
+    45727649,
+    73448318,
+    79171450,
+    62659710,
+    59651956,
+    30479038,
+    16853067,
+    43920070,
+    51481392,
+    34704627,
+    74262329,
+    71931420,
+    75905861,
+    6997931,
+    22060856,
+    34612076,
+    5968844,
+    69456847,
+    58767698,
+    2942266,
+    79642122,
+    54727528,
+    16516792,
+    9940679,
+    67492275,
+    39407085,
+    9942806,
+    71529407,
+    66010827,
+    66635972,
+    71491929,
+    37166529,
+    75630307,
+    25975405,
+    37732663,
+    59352406,
+    3736228,
+    8179036,
+    5839157
+  ],
+  "accepted": 0,
+  "rejected": 40,
+  "rerun": 0,
+  "output_path": "outputs\\wikipedia_stream_random40_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_stream_random40_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_stream_random40_summary.json",
+  "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_random40_2026_05_19.md",
+  "domain_policy": "domain_and_subdomain_optional_for_random_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": true,
+  "second_stage_grading_enabled": false,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "entered": 40,
+      "failed": 0,
+      "survived": 40,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "entered": 40,
+      "failed": 0,
+      "survived": 40,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Page extraction, table grading, and QA generation",
+      "entered": 40,
+      "failed": 40,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared route-aware validation",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [WinError 10013] 以一种访问权限不允许的方式做了一个访问套接字的尝试。>",
+      "count": 40
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 40,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "total_generation_seconds": {
+      "count": 40,
+      "total": 1.4469,
+      "average": 0.0362,
+      "max": 0.0776
+    },
+    "total_processing_seconds": {
+      "count": 40,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "total_generation_seconds": 1.4469,
+    "total_processing_seconds": 0.0,
+    "candidate_processing_seconds": 0.0
+  },
+  "telemetry": {
+    "wikipedia": [],
+    "search": []
+  }
+}

@@ -1,0 +1,1077 @@
+{
+  "attempted_urls": 40,
+  "url_domains": [
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_tallest_buildings_in_Fort_Wayne",
+      "domain": "Architecture and Transportation",
+      "subdomain": "tall buildings"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_busiest_airports_by_passenger_traffic",
+      "domain": "Architecture and Transportation",
+      "subdomain": "airports"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/23rd_Independent_Spirit_Awards",
+      "domain": "Arts and Media",
+      "subdomain": "film awards"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1984",
+      "domain": "Arts and Media",
+      "subdomain": "music chart"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/TOP500",
+      "domain": "Computer Science and AI",
+      "subdomain": "supercomputers"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Comparison_of_programming_languages",
+      "domain": "Computer Science and AI",
+      "subdomain": "programming languages"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_impact_structures_in_Europe",
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "impact structures"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_astronomical_observatories",
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "observatories"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_largest_banks",
+      "domain": "Economy and Business",
+      "subdomain": "banks"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_largest_companies_by_revenue",
+      "domain": "Economy and Business",
+      "subdomain": "companies"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_colleges_and_universities_in_Maine",
+      "domain": "Education",
+      "subdomain": "colleges"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Academic_Ranking_of_World_Universities",
+      "domain": "Education",
+      "subdomain": "university rankings"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_longest_suspension_bridge_spans",
+      "domain": "Engineering and Technology",
+      "subdomain": "bridges"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_largest_dams",
+      "domain": "Engineering and Technology",
+      "subdomain": "dams"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_countries_by_cereal_production",
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "cereal production"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_wine-producing_regions",
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "wine production"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_lakes_of_Minnesota",
+      "domain": "Geography",
+      "subdomain": "lakes"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_islands_by_area",
+      "domain": "Geography",
+      "subdomain": "islands"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Cybils_Award",
+      "domain": "Language and Literature",
+      "subdomain": "literary awards"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_winners_of_the_National_Book_Award",
+      "domain": "Language and Literature",
+      "subdomain": "book awards"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_birds_by_population",
+      "domain": "Life Sciences",
+      "subdomain": "bird populations"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Cephalopod_size",
+      "domain": "Life Sciences",
+      "subdomain": "cephalopod size"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_mathematical_constants",
+      "domain": "Mathematics",
+      "subdomain": "mathematical constants"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_uniform_polyhedra",
+      "domain": "Mathematics",
+      "subdomain": "polyhedra"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_hospitals_in_Russia",
+      "domain": "Medicine and Health",
+      "subdomain": "hospitals"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_epidemics_and_pandemics",
+      "domain": "Medicine and Health",
+      "subdomain": "epidemics"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates",
+      "domain": "People",
+      "subdomain": "nobel laureates"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_Academy_Award_records",
+      "domain": "People",
+      "subdomain": "award records"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_popes",
+      "domain": "Philosophy and Religion",
+      "subdomain": "popes"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Religion_in_the_United_States",
+      "domain": "Philosophy and Religion",
+      "subdomain": "religion demographics"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_chemical_elements",
+      "domain": "Physical Sciences",
+      "subdomain": "chemical elements"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_nearest_stars",
+      "domain": "Physical Sciences",
+      "subdomain": "nearby stars"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2019_Chicago_aldermanic_election",
+      "domain": "Politics and Law",
+      "subdomain": "municipal elections"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/United_States_Reports,_volume_1",
+      "domain": "Politics and Law",
+      "subdomain": "court cases"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_museums_in_Kentucky",
+      "domain": "Society and Culture",
+      "subdomain": "museums"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_public_art_in_Indianapolis",
+      "domain": "Society and Culture",
+      "subdomain": "public art"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup",
+      "domain": "Sports and Recreation",
+      "subdomain": "tournament venues"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2014_World_Junior_Championships_in_Athletics",
+      "domain": "Sports and Recreation",
+      "subdomain": "athletics results"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_battles_by_casualties",
+      "domain": "History",
+      "subdomain": "battles"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_largest_empires",
+      "domain": "History",
+      "subdomain": "empires"
+    }
+  ],
+  "generated": 40,
+  "accepted": 4,
+  "rejected": 36,
+  "output_path": "outputs\\wikipedia_infobox_pilot40_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_infobox_pilot40_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_infobox_pilot40_summary.json",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 0.5173,
+    "first_paragraph_fetch_seconds": 0.0749,
+    "table_parse_seconds": 33.4318,
+    "llm_question_generation_seconds": 217.7359,
+    "total_generation_seconds": 256.9487,
+    "rewrite_seconds": 0.0,
+    "number_reference_margin_seconds": 0.0,
+    "duckduckgo_search_seconds": 52.3389,
+    "second_stage_grading_seconds": 185.4559,
+    "total_processing_seconds": 237.8838,
+    "candidate_processing_seconds": 237.8838
+  },
+  "telemetry": {
+    "process_generated_candidates": {
+      "generated": 40,
+      "accepted": 4,
+      "rejected": 36,
+      "second_stage_grading_summary": {
+        "run_count": 11,
+        "per_model": {
+          "openai/gpt-4.1-mini": {
+            "runs": 11,
+            "correct": 6,
+            "incorrect": 5,
+            "not_attempted": 0,
+            "accuracy": 0.5454545454545454
+          },
+          "google/gemini-3-flash-preview": {
+            "runs": 11,
+            "correct": 5,
+            "incorrect": 6,
+            "not_attempted": 0,
+            "accuracy": 0.45454545454545453
+          }
+        }
+      }
+    },
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+tallest+buildings+in+Fort+Wayne&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 5
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_tallest_buildings_in_Fort_Wayne",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+airports+by+passenger+traffic&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 16
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_airports_by_passenger_traffic",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=23rd+Independent+Spirit+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/23rd_Independent_Spirit_Awards",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1984&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1984",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=TOP500&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 15
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/TOP500",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Comparison+of+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Comparison_of_programming_languages",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+impact+structures+in+Europe&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_impact_structures_in_Europe",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+astronomical+observatories&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_astronomical_observatories",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+largest+banks&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_largest_banks",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+largest+companies+by+revenue&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 5
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_largest_companies_by_revenue",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+colleges+and+universities+in+Maine&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_colleges_and_universities_in_Maine",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Academic+Ranking+of+World+Universities&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 5
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Academic_Ranking_of_World_Universities",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+longest+suspension+bridge+spans&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 15
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_longest_suspension_bridge_spans",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+largest+dams&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_largest_dams",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+countries+by+cereal+production&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_countries_by_cereal_production",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+wine-producing+regions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 9
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_wine-producing_regions",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+lakes+of+Minnesota&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 25
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_lakes_of_Minnesota",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+islands+by+area&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_islands_by_area",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Cybils+Award&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 18
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Cybils_Award",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+winners+of+the+National+Book+Award&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 17
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_winners_of_the_National_Book_Award",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+birds+by+population&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_birds_by_population",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Cephalopod+size&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 17
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Cephalopod_size",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+mathematical+constants&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 24
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_mathematical_constants",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+uniform+polyhedra&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_uniform_polyhedra",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+hospitals+in+Russia&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_hospitals_in_Russia",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+epidemics+and+pandemics&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 20
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_epidemics_and_pandemics",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Nobel+laureates&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Nobel_laureates",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Academy+Award+records&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Academy_Award_records",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+popes&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 17
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_popes",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Religion+in+the+United+States&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 31
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Religion_in_the_United_States",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+chemical+elements&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_chemical_elements",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+nearest+stars&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_nearest_stars",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2019+Chicago+aldermanic+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 33
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2019_Chicago_aldermanic_election",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=United+States+Reports%2C+volume+1&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/United_States_Reports%2C_volume_1",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+museums+in+Kentucky&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_museums_in_Kentucky",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+public+art+in+Indianapolis&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_public_art_in_Indianapolis",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2026+FIFA+World+Cup&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 29
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2026_FIFA_World_Cup",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+World+Junior+Championships+in+Athletics&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 8
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_World_Junior_Championships_in_Athletics",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+battles+by+casualties&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_battles_by_casualties",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+largest+empires&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 9
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_largest_empires",
+        "cache_hit": true,
+        "duration_ms": 0
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Billboard+Hot+100+top-ten+single+in+1984+spent+the+most+weeks+in+the+top+ten%3F",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+singles+1984+top+ten+duration",
+        "cache_hit": false,
+        "duration_ms": 1901,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1984+Billboard+Hot+100+longest+weeks+in+top+ten",
+        "cache_hit": false,
+        "duration_ms": 2275,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Billboard+Hot+100+top+ten+singles+1984+weeks+in+top+ten",
+        "cache_hit": false,
+        "duration_ms": 3429,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+diameter+confirmed+impact+structure+in+Europe",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+confirmed+impact+structure+in+Europe+has+the+largest+diameter+in+kilometres%3F",
+        "cache_hit": true,
+        "duration_ms": 90
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+impact+structures+in+Europe+largest+crater",
+        "cache_hit": true,
+        "duration_ms": 96
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=oldest+astronomical+observatory+in+List+of+astronomical+observatories",
+        "cache_hit": true,
+        "duration_ms": 57
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+astronomical+observatory+was+established+earliest+according+to+the+List+of+astronomical+observatories%3F",
+        "cache_hit": true,
+        "duration_ms": 68
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=earliest+established+astronomical+observatory",
+        "cache_hit": true,
+        "duration_ms": 76
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=first+established+observatory+in+List+of+astronomical+observatories",
+        "cache_hit": false,
+        "duration_ms": 2388,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=dam+with+highest+installed+capacity+MW",
+        "cache_hit": true,
+        "duration_ms": 78
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+dams+installed+capacity+max",
+        "cache_hit": true,
+        "duration_ms": 90
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+dam+has+the+maximum+installed+capacity+in+megawatts+among+the+largest+dams%3F",
+        "cache_hit": true,
+        "duration_ms": 101
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+dams+power+capacity+comparison",
+        "cache_hit": false,
+        "duration_ms": 3189,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+cereal+production+country+2023",
+        "cache_hit": true,
+        "duration_ms": 59
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=top+cereal+producing+country+by+thousands+of+tons",
+        "cache_hit": true,
+        "duration_ms": 68
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+country+had+the+highest+cereal+production+in+thousands+of+tons+according+to+the+List+of+countries+by+cereal+production%3F",
+        "cache_hit": true,
+        "duration_ms": 80
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+countries+by+cereal+production+highest+production",
+        "cache_hit": true,
+        "duration_ms": 61
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+country+had+the+highest+wine+production+in+tonnes+in+2021+according+to+the+List+of+wine-producing+regions%3F",
+        "cache_hit": true,
+        "duration_ms": 59
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+wine+production+by+country+2021",
+        "cache_hit": true,
+        "duration_ms": 136
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=wine+production+tonnes+by+country+2021",
+        "cache_hit": true,
+        "duration_ms": 137
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+wine-producing+regions+wine+production+2021",
+        "cache_hit": false,
+        "duration_ms": 2989,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+lake+by+area+in+Minnesota",
+        "cache_hit": true,
+        "duration_ms": 74
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Minnesota+lakes+area+comparison",
+        "cache_hit": true,
+        "duration_ms": 143
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+lakes+of+Minnesota+by+area",
+        "cache_hit": false,
+        "duration_ms": 1840,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+lake+in+the+list+of+lakes+of+Minnesota+has+the+largest+area+in+acres%3F",
+        "cache_hit": false,
+        "duration_ms": 3529,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+island+by+area",
+        "cache_hit": true,
+        "duration_ms": 54
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+islands+by+area+largest",
+        "cache_hit": true,
+        "duration_ms": 63
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+island+has+the+largest+area+in+the+List+of+islands+by+area%3F",
+        "cache_hit": true,
+        "duration_ms": 72
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+author+won+the+Cybils+Award+for+Picture+book+in+2009%3F",
+        "cache_hit": true,
+        "duration_ms": 132
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Cybils+Award+Picture+book+winners+2009",
+        "cache_hit": false,
+        "duration_ms": 2209,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2009+Cybils+Award+Picture+book+winner+author",
+        "cache_hit": false,
+        "duration_ms": 3384,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+birds+by+population+largest+population+order",
+        "cache_hit": false,
+        "duration_ms": 1743,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=bird+taxonomic+order+highest+population",
+        "cache_hit": false,
+        "duration_ms": 2020,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+bird+taxonomic+order+has+the+highest+estimated+population+in+the+List+of+birds+by+population%3F",
+        "cache_hit": false,
+        "duration_ms": 3475,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=bird+orders+population+comparison",
+        "cache_hit": false,
+        "duration_ms": 4227,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+cephalopod+species+has+the+maximum+recorded+mantle+length+in+the+Cephalopod+size+table%3F",
+        "cache_hit": true,
+        "duration_ms": 108
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=cephalopod+mantle+length+comparison",
+        "cache_hit": true,
+        "duration_ms": 112
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+mantle+length+cephalopod+species",
+        "cache_hit": false,
+        "duration_ms": 2330,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+uniform+polyhedra+vertex+counts",
+        "cache_hit": true,
+        "duration_ms": 75
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+uniform+star+polyhedron+has+the+greatest+number+of+vertices+in+the+List+of+uniform+polyhedra%3F",
+        "cache_hit": true,
+        "duration_ms": 81
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=uniform+star+polyhedra+vertices",
+        "cache_hit": false,
+        "duration_ms": 2346,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=uniform+star+polyhedron+with+most+vertices",
+        "cache_hit": false,
+        "duration_ms": 2268,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=earliest+established+hospital+in+Russia",
+        "cache_hit": true,
+        "duration_ms": 62
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+hospital+in+the+list+of+hospitals+in+Russia+was+established+earliest%3F",
+        "cache_hit": false,
+        "duration_ms": 1898,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=oldest+hospital+in+Russia+list",
+        "cache_hit": false,
+        "duration_ms": 3183,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=oldest+nominee+Academy+Awards+List+of+Academy+Award+records",
+        "cache_hit": true,
+        "duration_ms": 50
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+was+the+oldest+nominee+at+the+Academy+Awards+according+to+the+List+of+Academy+Award+records%3F",
+        "cache_hit": true,
+        "duration_ms": 50
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Academy+Award+records+oldest+nominee",
+        "cache_hit": false,
+        "duration_ms": 2845,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=chemical+element+with+highest+density",
+        "cache_hit": true,
+        "duration_ms": 54
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+chemical+elements+density+max",
+        "cache_hit": true,
+        "duration_ms": 125
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+chemical+element+has+the+highest+density+according+to+the+List+of+chemical+elements%3F",
+        "cache_hit": true,
+        "duration_ms": 130
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=densest+element+in+List+of+chemical+elements",
+        "cache_hit": false,
+        "duration_ms": 2194,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2019+Chicago+aldermanic+election+47th+Ward+General+election+highest+votes",
+        "cache_hit": true,
+        "duration_ms": 89
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+received+the+highest+number+of+votes+in+the+47th+Ward+General+election+in+the+2019+Chicago+aldermanic+election%3F",
+        "cache_hit": true,
+        "duration_ms": 99
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=47th+Ward+aldermanic+election+2019+top+vote+getter",
+        "cache_hit": false,
+        "duration_ms": 3930,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+case+in+United+States+Reports%2C+volume+1+was+decided+in+the+earliest+year%3F",
+        "cache_hit": true,
+        "duration_ms": 124
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=earliest+case+in+United+States+Reports+volume+1",
+        "cache_hit": true,
+        "duration_ms": 155
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=cases+in+United+States+Reports+volume+1+by+year",
+        "cache_hit": false,
+        "duration_ms": 2585,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=first+decided+case+in+United+States+Reports+volume+1",
+        "cache_hit": false,
+        "duration_ms": 2547,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+county+in+Kentucky+has+the+most+museums+listed+in+the+List+of+museums+in+Kentucky%3F",
+        "cache_hit": true,
+        "duration_ms": 154
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Kentucky+museums+count+by+county",
+        "cache_hit": false,
+        "duration_ms": 2072,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=most+museums+in+Kentucky+county",
+        "cache_hit": false,
+        "duration_ms": 2765,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+museums+in+Kentucky+museums+by+county",
+        "cache_hit": false,
+        "duration_ms": 3104,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=23rd+FIFA+World+Cup+stadium+capacities",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+stadium+by+capacity+23rd+FIFA+World+Cup",
+        "cache_hit": true,
+        "duration_ms": 73
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+stadium+has+the+highest+seating+capacity+among+the+venues+for+the+23rd+FIFA+World+Cup%3F",
+        "cache_hit": true,
+        "duration_ms": 92
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=23rd+FIFA+World+Cup+venues+seating+capacity",
+        "cache_hit": true,
+        "duration_ms": 93
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+nation+won+the+most+gold+medals+at+the+2014+World+Junior+Championships+in+Athletics%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014+World+Junior+Championships+in+Athletics+medal+table",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=nation+with+most+gold+medals+2014+World+Junior+Championships+in+Athletics",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014+World+Junior+Championships+in+Athletics+gold+medal+count+by+country",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+siege+in+the+List+of+battles+by+casualties+had+the+highest+estimated+casualties%3F",
+        "cache_hit": true,
+        "duration_ms": 156
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=siege+with+maximum+casualties+in+List+of+battles+by+casualties",
+        "cache_hit": false,
+        "duration_ms": 1880,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=siege+casualties+comparison+List+of+battles+by+casualties",
+        "cache_hit": false,
+        "duration_ms": 2120,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+battles+by+casualties+siege+with+highest+casualties",
+        "cache_hit": false,
+        "duration_ms": 3692,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

@@ -2,22 +2,30 @@
 
 ## Stats
 
+- Run group ID: `wikipedia_stream_fast40_2026_05_19`
+- Run segment ID: `wikipedia_stream_fast40_incremental2_2026_05_19`
+- Artifact manifest: `outputs\run_manifests\wikipedia_stream_fast40_2026_05_19.json`
 - Mode: `page_id_stream`
 - Page source: `table-search`
 - Table-search queries: `insource:"wikitable"`
-- Endpoint resume: 4 accepted and 36 rejected records loaded
-- Existing accepted QAs before run: 4
-- Existing rejected QAs/pages before run: 36
+- Endpoint resume: 15 accepted and 65 rejected records loaded
+- Existing accepted QAs before run: 15
+- Existing rejected QAs/pages before run: 65
 - Attempted page IDs: 40
-- Accepted QAs: 11
-- Accepted QAs after resume: 15
-- Rejected QAs/pages: 29
-- Rejected QAs/pages after resume: 65
-- Returned to rerun pool without final decision: 0
-- Wall-clock runtime: 993.1934s
+- Accepted QAs: 6
+- Accepted QAs after resume: 21
+- Rejected QAs/pages: 33
+- Rejected QAs/pages after resume: 98
+- Returned to rerun pool without final decision: 1
+- Wall-clock runtime: 406.7004s
 - DuckDuckGo top K: 5
 - Generated search queries per QA: 2
 - DuckDuckGo parallel queries: 3
+- Stream page workers: 4
+- Wikipedia concurrency limit: 4
+- DuckDuckGo service concurrency limit: 4
+- OpenRouter generation/rewrite concurrency limit: 10
+- Second-stage concurrency limit: 10
 - Page-id bounds: 1 to 80000000
 - Stream state: `outputs\wikipedia_stream_fast40_fresh_2026_05_19_state.json`
 - Accepted output: `outputs\wikipedia_stream_fast40_2026_05_19_accepted.jsonl`
@@ -29,36 +37,40 @@
 
 | Scope | Page IDs/records | Accepted | Rejected | Rerun | Accepted/page rate |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Existing endpoint records | 40 | 4 | 36 | 0 | 10.0% |
-| Incremental run | 40 | 11 | 29 | 0 | 27.5% |
-| Overall displayed | 80 | 15 | 65 | 0 | 18.8% |
+| Existing endpoint records | 80 | 15 | 65 | 0 | 18.8% |
+| Incremental run | 40 | 6 | 33 | 1 | 15.0% |
+| Overall displayed | 120 | 21 | 98 | 1 | 17.5% |
 
 ### Survival By Layer
 
 | Layer | Entered | Failed | Survived | Layer survival | Cumulative survival |
 | --- | ---: | ---: | ---: | ---: | ---: |
 | Page-id reservation | 40 | 0 | 40 | 100.0% | 100.0% |
-| Unresolved or returned to rerun pool | 40 | 0 | 40 | 100.0% | 100.0% |
-| Page extraction, table grading, and QA generation | 40 | 0 | 40 | 100.0% | 100.0% |
-| Rewrite and surface validation | 40 | 1 | 39 | 97.5% | 97.5% |
-| DuckDuckGo long-tail filtering | 39 | 10 | 29 | 74.4% | 72.5% |
-| Second-stage model grading | 29 | 18 | 11 | 37.9% | 27.5% |
-| Shared route-aware validation | 11 | 0 | 11 | 100.0% | 27.5% |
-| Deduplication | 11 | 0 | 11 | 100.0% | 27.5% |
-| Other rejection | 11 | 0 | 11 | 100.0% | 27.5% |
+| Unresolved or returned to rerun pool | 40 | 1 | 39 | 97.5% | 97.5% |
+| Page extraction, table grading, and QA generation | 39 | 1 | 38 | 97.4% | 95.0% |
+| Rewrite and surface validation | 38 | 2 | 36 | 94.7% | 90.0% |
+| DuckDuckGo long-tail filtering | 36 | 12 | 24 | 66.7% | 60.0% |
+| Second-stage model grading | 24 | 15 | 9 | 37.5% | 22.5% |
+| Shared route-aware validation | 9 | 0 | 9 | 100.0% | 22.5% |
+| Deduplication | 9 | 0 | 9 | 100.0% | 22.5% |
+| Other rejection | 9 | 3 | 6 | 66.7% | 15.0% |
 
 ### Failure Reasons
 
 | Stage | Exact reason | Count |
 | --- | --- | ---: |
-| `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1` | 10 |
-| `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | 8 |
-| `search_longtail` | `search_longtail_verifier_rejected:keyword_query_1:answer_in_title` | 3 |
-| `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | 2 |
+| `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | 15 |
+| `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | 8 |
 | `search_longtail` | `search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded` | 2 |
-| `search_longtail` | `search_longtail_verifier_rejected:keyword_query_2:answer_in_title` | 2 |
+| `other` | `manual_review_rejected:manual_ambiguous_current_list_scope` | 1 |
+| `other` | `manual_review_rejected:manual_answer_form_scope_issue` | 1 |
+| `other` | `manual_review_rejected:manual_missing_nearby_intro_scope` | 1 |
 | `rewrite_surface` | `rewrite_guard_rejected:answer_leakage` | 1 |
-| `search_longtail` | `search_longtail_verifier_rejected:full_question:answer_in_title` | 1 |
+| `rewrite_surface` | `rewrite_guard_rejected:forbidden_temporal_phrase` | 1 |
+| `route_generation` | `wikipedia_infobox_generation_error:HTTPError:HTTP Error 429: Too Many Requests` | 1 |
+| `search_longtail` | `search_longtail_verifier_error` | 1 |
+| `search_longtail` | `search_longtail_verifier_rejected:keyword_query_2:answer_in_title` | 1 |
+| `unresolved_rerun` | `wikipedia_infobox_generation_error:RemoteDisconnected:Remote end closed connection without response` | 1 |
 
 ### Rerun Pool After Run
 
@@ -89,40 +101,40 @@ For incremental walkthroughs, `Incremental run` means only the current segment. 
 
 | Scope | Wall-clock seconds | Page IDs/records | Final decision records | Total generation seconds | Avg generation seconds | Total processing seconds | Avg processing seconds | Total second-stage seconds | Avg second-stage seconds |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Incremental run | 993.1934 | 40 | 40 | 301.8117 | 7.5453 | 688.9588 | 17.2240 | 425.1218 | 14.6594 |
-| Total displayed run | 1825.3614 | 80 | 80 | 588.8894 | 7.3611 | 1233.3376 | 15.4167 | 693.9632 | 14.4576 |
+| Incremental run | 406.7004 | 40 | 39 | 439.1343 | 11.2599 | 792.2454 | 20.3140 | 387.9110 | 16.1630 |
+| Total displayed run | 2232.0618 | 120 | 119 | 1028.0237 | 8.6389 | 2025.5830 | 17.0217 | 1081.8742 | 15.0260 |
 
 #### Incremental Run Phase Timings
 
 | Phase | Count | Total seconds | Average seconds | Max seconds |
 | --- | ---: | ---: | ---: | ---: |
-| `candidate_processing_seconds` | 40 | 688.9588 | 17.2240 | 32.3885 |
-| `duckduckgo_search_seconds` | 39 | 141.1315 | 3.6188 | 5.8355 |
-| `first_paragraph_extract_seconds` | 40 | 6.2919 | 0.1573 | 0.3826 |
-| `llm_question_generation_seconds` | 40 | 163.8106 | 4.0953 | 8.0484 |
-| `number_reference_margin_seconds` | 39 | 0.0011 | 0.0000 | 0.0004 |
-| `page_fetch_seconds` | 40 | 120.5422 | 3.0136 | 8.3306 |
-| `rewrite_seconds` | 40 | 122.6139 | 3.0653 | 6.2217 |
-| `second_stage_grading_seconds` | 29 | 425.1218 | 14.6594 | 25.7056 |
-| `table_parse_seconds` | 40 | 9.6904 | 0.2423 | 0.8560 |
-| `total_generation_seconds` | 40 | 301.8117 | 7.5453 | 14.1057 |
-| `total_processing_seconds` | 40 | 688.9588 | 17.2240 | 32.3885 |
+| `candidate_processing_seconds` | 39 | 792.2454 | 20.3140 | 56.3197 |
+| `duckduckgo_search_seconds` | 36 | 219.0191 | 6.0839 | 49.9401 |
+| `first_paragraph_extract_seconds` | 38 | 13.1999 | 0.3474 | 1.3109 |
+| `llm_question_generation_seconds` | 38 | 236.2038 | 6.2159 | 16.5706 |
+| `number_reference_margin_seconds` | 36 | 0.0002 | 0.0000 | 0.0002 |
+| `page_fetch_seconds` | 38 | 153.4879 | 4.0392 | 9.1768 |
+| `rewrite_seconds` | 38 | 185.2487 | 4.8750 | 14.1418 |
+| `second_stage_grading_seconds` | 24 | 387.9110 | 16.1630 | 40.3561 |
+| `table_parse_seconds` | 38 | 28.9855 | 0.7628 | 2.3210 |
+| `total_generation_seconds` | 39 | 439.1343 | 11.2599 | 23.4883 |
+| `total_processing_seconds` | 39 | 792.2454 | 20.3140 | 56.3197 |
 
 #### Total Displayed Run Phase Timings
 
 | Phase | Count | Total seconds | Average seconds | Max seconds |
 | --- | ---: | ---: | ---: | ---: |
-| `candidate_processing_seconds` | 80 | 1233.3376 | 15.4167 | 35.9131 |
-| `duckduckgo_search_seconds` | 74 | 266.4580 | 3.6008 | 7.0719 |
-| `first_paragraph_extract_seconds` | 80 | 13.6713 | 0.1709 | 0.3826 |
-| `llm_question_generation_seconds` | 80 | 338.6366 | 4.2330 | 8.0484 |
-| `number_reference_margin_seconds` | 74 | 0.0011 | 0.0000 | 0.0004 |
-| `page_fetch_seconds` | 80 | 210.7179 | 2.6340 | 8.6836 |
-| `rewrite_seconds` | 80 | 272.7780 | 3.4097 | 33.2139 |
-| `second_stage_grading_seconds` | 48 | 693.9632 | 14.4576 | 25.7056 |
-| `table_parse_seconds` | 80 | 22.6052 | 0.2826 | 0.8560 |
-| `total_generation_seconds` | 80 | 588.8894 | 7.3611 | 14.1057 |
-| `total_processing_seconds` | 80 | 1233.3376 | 15.4167 | 35.9131 |
+| `candidate_processing_seconds` | 119 | 2025.5830 | 17.0217 | 56.3197 |
+| `duckduckgo_search_seconds` | 110 | 485.4771 | 4.4134 | 49.9401 |
+| `first_paragraph_extract_seconds` | 118 | 26.8712 | 0.2277 | 1.3109 |
+| `llm_question_generation_seconds` | 118 | 574.8404 | 4.8715 | 16.5706 |
+| `number_reference_margin_seconds` | 110 | 0.0013 | 0.0000 | 0.0004 |
+| `page_fetch_seconds` | 118 | 364.2058 | 3.0865 | 9.1768 |
+| `rewrite_seconds` | 118 | 458.0267 | 3.8816 | 33.2139 |
+| `second_stage_grading_seconds` | 72 | 1081.8742 | 15.0260 | 40.3561 |
+| `table_parse_seconds` | 118 | 51.5907 | 0.4372 | 2.3210 |
+| `total_generation_seconds` | 119 | 1028.0237 | 8.6389 | 23.4883 |
+| `total_processing_seconds` | 119 | 2025.5830 | 17.0217 | 56.3197 |
 
 ## Accepted Candidates
 
@@ -136,11 +148,6 @@ Existing endpoint records are shown first; incremental records are the records a
 | 39776 | Which protocol has the maximum amplification factor in UDP-based amplification denial-of-service attacks? | Mitel MiCollab | https://en.wikipedia.org/wiki/Denial-of-service_attack |
 | 217231 | Which seasons of Curb Your Enthusiasm have a 100% rating on Rotten Tomatoes? | 2; 3; 5 | https://en.wikipedia.org/wiki/Curb_Your_Enthusiasm |
 | 235916 | In which films did Jada Pinkett Smith voice the character Gloria? | Madagascar; Madagascar: Escape 2 Africa; Madagascar 3: Europe's Most Wanted; Penguins of Madagascar | https://en.wikipedia.org/wiki/Jada_Pinkett_Smith |
-
-### Incremental Records
-
-| Page ID | Question | Answer | Source |
-| ---: | --- | --- | --- |
 | 569459 | How many subspecies does the white-tailed deer have? | 38 | https://en.wikipedia.org/wiki/White-tailed_deer |
 | 105391 | Which studio had the longest average film length among B movies in the 1930s? | MGM | https://en.wikipedia.org/wiki/B_movie |
 | 342334 | Which stroke finding can persist for the longest duration according to autopsy? | Mononuclear inflammatory cells; Macrophages | https://en.wikipedia.org/wiki/Autopsy |
@@ -152,6 +159,17 @@ Existing endpoint records are shown first; incremental records are the records a
 | 57905 | What year saw the highest number of live births in the Sakha Republic according to vital statistics? | 1985 | https://en.wikipedia.org/wiki/Sakha_Republic |
 | 67923 | What was the gross value added in East Sussex in million pounds in 2023? | 11576 | https://en.wikipedia.org/wiki/East_Sussex |
 | 1161220 | What percentage of votes did Khushbu Sundar receive in the 2021 Tamil Nadu assembly election for the Thousand Lights constituency? | 28.99 | https://en.wikipedia.org/wiki/Khushbu_Sundar |
+
+### Incremental Records
+
+| Page ID | Question | Answer | Source |
+| ---: | --- | --- | --- |
+| 2056103 | For which film did Gemini Ganesan receive the Tamil Nadu State Film Award for Best Actor in 1970? | Kaaviya Thalaivi | https://en.wikipedia.org/wiki/Gemini_Ganesan |
+| 250230 | Which Mazda RX-7 Series 8 model produces the highest maximum power? | Type R | https://en.wikipedia.org/wiki/Mazda_RX-7 |
+| 18938412 | What year marks Richard Marx's first appearance in a film or show according to his filmography? | 1980 | https://en.wikipedia.org/wiki/Richard_Marx |
+| 67436 | Among pseudoephedrine and related agents, which compound has the lowest EC50 for releasing norepinephrine? | Dextroamphetamine | https://en.wikipedia.org/wiki/Pseudoephedrine |
+| 32551521 | Which FIFA national teams represent the legal nationality of the United Kingdom according to FIFA eligibility rules? | Great Britain; England; Northern Ireland; Scotland; Wales; Anguilla; Bermuda; British Virgin Islands; Cayman Islands; Gibraltar; Montserrat; Turks and Caicos Islands | https://en.wikipedia.org/wiki/FIFA_eligibility_rules |
+| 31940 | Which breadth claim had the greatest number of states claiming territorial waters in 1960 according to the United Nations Convention on the Law of the Sea? | 12-mile limit | https://en.wikipedia.org/wiki/United_Nations_Convention_on_the_Law_of_the_Sea |
 
 ## Second-Stage Filtering Responses
 
@@ -165,6 +183,17 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 39776 | Which protocol has the maximum amplification factor in UDP-based amplification denial-of-service attacks? | Mitel MiCollab | INCORRECT; predicted_answer: The **Memcached** protocol has the maximum amplification factor in UDP-based amplification denial-of-service (DDoS) attacks. Memcached amplification can reach factors of up to 50,000 times, far exceeding other protocols like DNS or NTP. | INCORRECT; predicted_answer: **Memcached** has the maximum amplification factor, with a potential ratio of up to **51,000:1**. |
 | 217231 | Which seasons of Curb Your Enthusiasm have a 100% rating on Rotten Tomatoes? | 2; 3; 5 | INCORRECT; predicted_answer: The seasons of *Curb Your Enthusiasm* with a 100% rating on Rotten Tomatoes are Seasons 1, 3, 4, 5, 7, 8, 9, and 11. | INCORRECT; predicted_answer: Seasons **3, 5, 7, and 10** of *Curb Your Enthusiasm* have a 100% rating on Rotten Tomatoes. |
 | 235916 | In which films did Jada Pinkett Smith voice the character Gloria? | Madagascar; Madagascar: Escape 2 Africa; Madagascar 3: Europe's Most Wanted; Penguins of Madagascar | INCORRECT; predicted_answer: Jada Pinkett Smith voiced the character Gloria in the following films:  1. **Madagascar** (2005)   2. **Madagascar: Escape 2 Africa** (2008)   3. **Madagascar 3: Europe's Most Wanted** (2012) | INCORRECT; predicted_answer: Jada Pinkett Smith voiced Gloria the hippopotamus in the following films:  *   **Madagascar** (2005) *   **Madagascar: Escape 2 Africa** (2008) *   **Madagascar 3: Europe's Most Wanted** (2012) *   **Merry Madagascar** (2009) – TV Special *   **Madly Madagascar** (2013) – Short film/Special |
+| 569459 | How many subspecies does the white-tailed deer have? | 38 (acceptable range: anything between 37 and 39) | INCORRECT; predicted_answer: The white-tailed deer (Odocoileus virginianus) has about 26 recognized subspecies. | INCORRECT; predicted_answer: There are currently **30 to 38** recognized subspecies of white-tailed deer, depending on the taxonomic authority. Of these, 17 occur in North America. |
+| 105391 | Which studio had the longest average film length among B movies in the 1930s? | MGM | INCORRECT; predicted_answer: The studio with the longest average film length among B movies in the 1930s was Columbia Pictures. | INCORRECT; predicted_answer: **Republic Pictures** generally held the longest average film length among B-movie studios in the 1930s, with many of its features and Westerns averaging between **54 and 60 minutes**, often exceeding the shorter 45-to-50-minute runtimes of competitors like Monogram or PRC. |
+| 342334 | Which stroke finding can persist for the longest duration according to autopsy? | Mononuclear inflammatory cells; Macrophages | INCORRECT; predicted_answer: The stroke finding that can persist for the longest duration according to autopsy is **hemosiderin-laden macrophages**. These macrophages indicate old hemorrhage and can remain in brain tissue for months to years after the stroke event. | INCORRECT; predicted_answer: According to autopsy findings, the **cystic cavity** (or encephalomalacia) is the stroke finding that persists for the longest duration, often remaining for the rest of the individual's life.  Following a cerebral infarction, the necrotic brain tissue is cleared by macrophages, leaving behind a fluid-filled space surrounded by a glial scar (gliosis). This permanent structural change serves as a "pathological scar" indicating a remote stroke. |
+| 68761 | Which country published the greatest total number of titles in 2022? | Turkey | INCORRECT; predicted_answer: To determine which country published the greatest total number of titles in 2022, I need to see the relevant data or image. Please provide the data or image showing the number of titles published by country in 2022. | INCORRECT; predicted_answer: **China** published the greatest total number of titles in 2022. |
+| 246920 | What year did Visa Inc. record its highest net income in million US dollars according to the Finance table? | 2024 | INCORRECT; predicted_answer: Visa Inc. recorded its highest net income in the year 2022 according to the Finance table. | INCORRECT; predicted_answer: Visa Inc. recorded its highest net income in **2023**, with a total of **$17,273 million**. |
+| 2114995 | At which site does dextromethorphan (DXM) exhibit the lowest K i binding value range in rats? | SERT Tooltip Serotonin transporter | INCORRECT; predicted_answer: Dextromethorphan (DXM) exhibits the lowest K_i binding value range in rats at the **sigma-1 receptor** site. | INCORRECT; predicted_answer: In rats, dextromethorphan (DXM) exhibits its lowest $K_i$ binding value range at the **sigma-1 ($\sigma_1$) receptor**. Typical reported values range from approximately **40 to 200 nM**. |
+| 96875 | What year did the Great Western Railway carry the greatest number of passengers according to passenger services data? | 1924 | INCORRECT; predicted_answer: Please provide the passenger services data or an image of it so I can determine the year the Great Western Railway carried the greatest number of passengers. | INCORRECT; predicted_answer: The Great Western Railway carried its greatest number of passengers in **1923**, with a total of **140,540,000** passengers. |
+| 1625048 | Which district had the highest population in the Kingdom of Bohemia according to the 1910 language distribution by district? | Budweis | INCORRECT; predicted_answer: According to the 1910 language distribution by district in the Kingdom of Bohemia, the district with the highest population was Prague. | INCORRECT; predicted_answer: According to the 1910 census, the district with the highest population in the Kingdom of Bohemia was **Prague** (Prag), which had a population of **223,741**. |
+| 57905 | What year saw the highest number of live births in the Sakha Republic according to vital statistics? | 1985 | INCORRECT; predicted_answer: The year 2014 saw the highest number of live births in the Sakha Republic according to the vital statistics. | INCORRECT; predicted_answer: According to vital statistics, the year with the highest number of live births in the Sakha Republic (Yakutia) was **1986**, with **25,545** births. |
+| 67923 | What was the gross value added in East Sussex in million pounds in 2023? | 11576 (acceptable range: anything between 11460 and 11692) | INCORRECT; predicted_answer: The gross value added (GVA) in East Sussex in 2023 was £12,000 million. | INCORRECT; predicted_answer: Official Gross Value Added (GVA) data for 2023 has not yet been released by the Office for National Statistics (ONS). The most recent available data is for **2022**, in which the GVA for East Sussex was **£11,444 million**. |
+| 1161220 | What percentage of votes did Khushbu Sundar receive in the 2021 Tamil Nadu assembly election for the Thousand Lights constituency? | 28.99 (acceptable range: anything between 28.7001 and 29.2799) | INCORRECT; predicted_answer: Khushbu Sundar received 39.98% of the votes in the 2021 Tamil Nadu assembly election for the Thousand Lights constituency. | INCORRECT; predicted_answer: Khushbu Sundar received **22.72%** of the votes in the 2021 Tamil Nadu assembly election for the Thousand Lights constituency. |
 | 32611 | What year saw the highest number of military deaths for South Vietnam during the Vietnam War from 1955 to 1975? | 1972 | INCORRECT; predicted_answer: The year with the highest number of military deaths for South Vietnam during the Vietnam War was 1968. | CORRECT; predicted_answer: The year with the highest number of military deaths for South Vietnam (ARVN) was **1972**, during which approximately 39,587 soldiers were killed, largely due to the North Vietnamese Easter Offensive. |
 | 17416221 | Which province in South Africa had the largest population in 2022? | Gauteng | not run | not run |
 | 9316 | What language has the second highest number of native speakers in England? | Polish | not run | not run |
@@ -200,23 +229,6 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 260996 | What year did Christian Slater act in the stage play Macbeth? | 1982 | not run | not run |
 | 235959 | During which years did Farrah Fawcett play Jill Munroe in the television series "Charlie's Angels"? | 1976-1980 | INCORRECT; predicted_answer: Farrah Fawcett played Jill Munroe in "Charlie's Angels" from 1976 to 1977. | CORRECT; predicted_answer: Farrah Fawcett played Jill Munroe as a series regular from **1976 to 1977** (Season 1). She later returned for guest appearances between **1978 and 1980**. |
 | 91195 | Who holds the record as the oldest singles champion at the Wimbledon Championships and what was their age at the time? | Arthur Gore | not run | not run |
-| 33094374 | Which equipment had the highest worldwide sales in the year 2008? | Cell phones | NOT_ATTEMPTED; predicted_answer: To provide an accurate answer, I need to see the data or image related to worldwide equipment sales in 2008. Could you please upload the relevant chart, table, or document? | INCORRECT; predicted_answer: The **Nintendo Wii** was the highest-selling piece of equipment (specifically consumer electronics/gaming hardware) in 2008, selling approximately 24.19 million units that year. |
-
-### Incremental Records
-
-| Page ID | Question | Reference answer | openai/gpt-4.1-mini | google/gemini-3-flash-preview |
-| ---: | --- | --- | --- | --- |
-| 569459 | How many subspecies does the white-tailed deer have? | 38 (acceptable range: anything between 37 and 39) | INCORRECT; predicted_answer: The white-tailed deer (Odocoileus virginianus) has about 26 recognized subspecies. | INCORRECT; predicted_answer: There are currently **30 to 38** recognized subspecies of white-tailed deer, depending on the taxonomic authority. Of these, 17 occur in North America. |
-| 105391 | Which studio had the longest average film length among B movies in the 1930s? | MGM | INCORRECT; predicted_answer: The studio with the longest average film length among B movies in the 1930s was Columbia Pictures. | INCORRECT; predicted_answer: **Republic Pictures** generally held the longest average film length among B-movie studios in the 1930s, with many of its features and Westerns averaging between **54 and 60 minutes**, often exceeding the shorter 45-to-50-minute runtimes of competitors like Monogram or PRC. |
-| 342334 | Which stroke finding can persist for the longest duration according to autopsy? | Mononuclear inflammatory cells; Macrophages | INCORRECT; predicted_answer: The stroke finding that can persist for the longest duration according to autopsy is **hemosiderin-laden macrophages**. These macrophages indicate old hemorrhage and can remain in brain tissue for months to years after the stroke event. | INCORRECT; predicted_answer: According to autopsy findings, the **cystic cavity** (or encephalomalacia) is the stroke finding that persists for the longest duration, often remaining for the rest of the individual's life.  Following a cerebral infarction, the necrotic brain tissue is cleared by macrophages, leaving behind a fluid-filled space surrounded by a glial scar (gliosis). This permanent structural change serves as a "pathological scar" indicating a remote stroke. |
-| 68761 | Which country published the greatest total number of titles in 2022? | Turkey | INCORRECT; predicted_answer: To determine which country published the greatest total number of titles in 2022, I need to see the relevant data or image. Please provide the data or image showing the number of titles published by country in 2022. | INCORRECT; predicted_answer: **China** published the greatest total number of titles in 2022. |
-| 246920 | What year did Visa Inc. record its highest net income in million US dollars according to the Finance table? | 2024 | INCORRECT; predicted_answer: Visa Inc. recorded its highest net income in the year 2022 according to the Finance table. | INCORRECT; predicted_answer: Visa Inc. recorded its highest net income in **2023**, with a total of **$17,273 million**. |
-| 2114995 | At which site does dextromethorphan (DXM) exhibit the lowest K i binding value range in rats? | SERT Tooltip Serotonin transporter | INCORRECT; predicted_answer: Dextromethorphan (DXM) exhibits the lowest K_i binding value range in rats at the **sigma-1 receptor** site. | INCORRECT; predicted_answer: In rats, dextromethorphan (DXM) exhibits its lowest $K_i$ binding value range at the **sigma-1 ($\sigma_1$) receptor**. Typical reported values range from approximately **40 to 200 nM**. |
-| 96875 | What year did the Great Western Railway carry the greatest number of passengers according to passenger services data? | 1924 | INCORRECT; predicted_answer: Please provide the passenger services data or an image of it so I can determine the year the Great Western Railway carried the greatest number of passengers. | INCORRECT; predicted_answer: The Great Western Railway carried its greatest number of passengers in **1923**, with a total of **140,540,000** passengers. |
-| 1625048 | Which district had the highest population in the Kingdom of Bohemia according to the 1910 language distribution by district? | Budweis | INCORRECT; predicted_answer: According to the 1910 language distribution by district in the Kingdom of Bohemia, the district with the highest population was Prague. | INCORRECT; predicted_answer: According to the 1910 census, the district with the highest population in the Kingdom of Bohemia was **Prague** (Prag), which had a population of **223,741**. |
-| 57905 | What year saw the highest number of live births in the Sakha Republic according to vital statistics? | 1985 | INCORRECT; predicted_answer: The year 2014 saw the highest number of live births in the Sakha Republic according to the vital statistics. | INCORRECT; predicted_answer: According to vital statistics, the year with the highest number of live births in the Sakha Republic (Yakutia) was **1986**, with **25,545** births. |
-| 67923 | What was the gross value added in East Sussex in million pounds in 2023? | 11576 (acceptable range: anything between 11460 and 11692) | INCORRECT; predicted_answer: The gross value added (GVA) in East Sussex in 2023 was £12,000 million. | INCORRECT; predicted_answer: Official Gross Value Added (GVA) data for 2023 has not yet been released by the Office for National Statistics (ONS). The most recent available data is for **2022**, in which the GVA for East Sussex was **£11,444 million**. |
-| 1161220 | What percentage of votes did Khushbu Sundar receive in the 2021 Tamil Nadu assembly election for the Thousand Lights constituency? | 28.99 (acceptable range: anything between 28.7001 and 29.2799) | INCORRECT; predicted_answer: Khushbu Sundar received 39.98% of the votes in the 2021 Tamil Nadu assembly election for the Thousand Lights constituency. | INCORRECT; predicted_answer: Khushbu Sundar received **22.72%** of the votes in the 2021 Tamil Nadu assembly election for the Thousand Lights constituency. |
 | 17278765 | Which school has the highest number of College football national championships in NCAA Division I FBS during the poll era from 1936 to present? | Alabama | CORRECT; predicted_answer: The University of Alabama has the highest number of College football national championships in NCAA Division I FBS during the poll era from 1936 to present. | CORRECT; predicted_answer: The **University of Alabama** holds the record for the most national championships in the poll era (1936–present) with **13** titles. |
 | 229275 | Which country produced the most lamb and mutton in 2012? | China | CORRECT; predicted_answer: In 2012, China produced the most lamb and mutton. | CORRECT; predicted_answer: **China** produced the most lamb and mutton in 2012. |
 | 156745 | Who won the Golden Globe Award for Best Actress in a Motion Picture – Musical or Comedy for Pretty Woman? | Julia Roberts | not run | not run |
@@ -246,7 +258,54 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 47498 | What English phrase from the 1991 version of Zero Wing became an internet meme? | All your base are belong to us | not run | not run |
 | 113933 | Which employer had the largest number of employees in Iowa City according to the top employers list? | University of Iowa Hospitals & Clinics | INCORRECT; predicted_answer: The University of Iowa had the largest number of employees in Iowa City according to the top employers list. | CORRECT; predicted_answer: The **University of Iowa** (including the University of Iowa Hospitals & Clinics) is the largest employer in Iowa City. |
 | 22461 | Which WHO category has the highest rate of hip fractures per 1000 person-years? | Osteoporosis | not run | not run |
+| 33094374 | Which equipment had the highest worldwide sales in the year 2008? | Cell phones | NOT_ATTEMPTED; predicted_answer: To provide an accurate answer, I need to see the data or image related to worldwide equipment sales in 2008. Could you please upload the relevant chart, table, or document? | INCORRECT; predicted_answer: The **Nintendo Wii** was the highest-selling piece of equipment (specifically consumer electronics/gaming hardware) in 2008, selling approximately 24.19 million units that year. |
 
+### Incremental Records
+
+| Page ID | Question | Reference answer | openai/gpt-4.1-mini | google/gemini-3-flash-preview |
+| ---: | --- | --- | --- | --- |
+| 2056103 | For which film did Gemini Ganesan receive the Tamil Nadu State Film Award for Best Actor in 1970? | Kaaviya Thalaivi | INCORRECT; predicted_answer: Gemini Ganesan received the Tamil Nadu State Film Award for Best Actor in 1970 for the film **"Kandan Karunai."** | INCORRECT; predicted_answer: Gemini Ganesan received the Tamil Nadu State Film Award for Best Actor in 1970 for the film **Kaaviya Thalaivan**. |
+| 250230 | Which Mazda RX-7 Series 8 model produces the highest maximum power? | Type R | INCORRECT; predicted_answer: The Mazda RX-7 Series 8 model with the highest maximum power is the RX-7 Spirit R Type A, producing up to 276 hp. | INCORRECT; predicted_answer: The **Mazda RX-7 Type RS** and **Type RZ** produce the highest maximum power of the Series 8 models, rated at **280 PS (276 hp / 206 kW)**. |
+| 18938412 | What year marks Richard Marx's first appearance in a film or show according to his filmography? | 1980 | INCORRECT; predicted_answer: Richard Marx's first appearance in a film or show according to his filmography is in 1984. | INCORRECT; predicted_answer: According to his filmography, Richard Marx's first appearance was in **1982** in the television film ***Sister, Sister***, where he played the role of a singer. |
+| 67436 | Among pseudoephedrine and related agents, which compound has the lowest EC50 for releasing norepinephrine? | Dextroamphetamine | INCORRECT; predicted_answer: Among pseudoephedrine and related agents, **ephedrine** typically has the lowest EC50 for releasing norepinephrine, indicating it is the most potent at inducing norepinephrine release. | INCORRECT; predicted_answer: Among pseudoephedrine and its related phenethylamine stereoisomers, **(+)-ephedrine** (the (1S, 2R) isomer) typically exhibits the lowest EC50 for releasing norepinephrine.  While all four isomers (pseudoephedrine and ephedrine enantiomers) act as norepinephrine releasing agents, (+)-ephedrine is the most potent, followed by (-)-ephedrine. Pseudoephedrine isomers are significantly less potent in their norepinephrine-releasing capacity. |
+| 32551521 | Which FIFA national teams represent the legal nationality of the United Kingdom according to FIFA eligibility rules? | Great Britain; England; Northern Ireland; Scotland; Wales; Anguilla; Bermuda; British Virgin Islands; Cayman Islands; Gibraltar; Montserrat; Turks and Caicos Islands | INCORRECT; predicted_answer: The FIFA national teams that represent the legal nationality of the United Kingdom according to FIFA eligibility rules are:  - England - Scotland - Wales - Northern Ireland  Each of these teams represents one of the four constituent countries of the UK, and players eligible for the UK can represent any of these teams based on their specific eligibility criteria. | INCORRECT; predicted_answer: According to FIFA eligibility rules, there is no single "United Kingdom" national team. Instead, the legal nationality of the United Kingdom is represented by four distinct national teams:  1.  **England** (The Football Association) 2.  **Scotland** (Scottish Football Association) 3.  **Wales** (Football Association of Wales) 4.  **Northern Ireland** (Irish Football Association)  Under the **Home Nations agreement**, a player holding British nationality is eligible to represent any of these four associations if they (or a parent or grandparent) were born in the relevant territory, or if |
+| 31940 | Which breadth claim had the greatest number of states claiming territorial waters in 1960 according to the United Nations Convention on the Law of the Sea? | 12-mile limit | INCORRECT; predicted_answer: In 1960, the breadth claim of **3 nautical miles** had the greatest number of states claiming territorial waters according to the United Nations Convention on the Law of the Sea. | INCORRECT; predicted_answer: In 1960, the **3-nautical-mile** limit was the breadth claim held by the greatest number of states. |
+| 57951 | Which province of the European Netherlands had the largest population on 1 January 2023? | South Holland | not run | not run |
+| 261671 | What was the magnitude of the largest aftershock following the 1989 Loma Prieta earthquake? | 5.4 (acceptable range: anything between 5.346 and 5.454) | INCORRECT; predicted_answer: The largest aftershock following the 1989 Loma Prieta earthquake had a magnitude of 6.5. | CORRECT; predicted_answer: The largest aftershock following the 1989 Loma Prieta earthquake had a magnitude of **5.4**. It occurred 37 minutes after the main shock. |
+| 15240 | Who is recognized as the first imam and successor of Muhammad in Shia Islam according to Twelver doctrine? | Ali ibn Abi Talib | CORRECT; predicted_answer: According to Twelver Shia Islam, Ali ibn Abi Talib is recognized as the first imam and the rightful successor of Muhammad. | not run |
+| 695780 | Who won the Golden Globe Award for Best Actress in a Motion Picture – Drama for Casino (1995 film)? | Sharon Stone | INCORRECT; predicted_answer: Sharon Stone was nominated for the Golden Globe Award for Best Actress in a Motion Picture – Drama for Casino (1995), but she did not win. The winner that year (1996 ceremony) was Emma Thompson for "Sense and Sensibility." | CORRECT; predicted_answer: **Sharon Stone** won the Golden Globe Award for Best Actress in a Motion Picture – Drama for her role in *Casino*. |
+| 38657800 | What was the first Google Pixel phone model announced? | Pixel / XL | CORRECT; predicted_answer: The first Google Pixel phone model announced was the Google Pixel, unveiled in October 2016. | not run |
+| 200129 | Which gene is linked to the LAH2 type of hair loss? | LIPH | not run | not run |
+| 479109 | What race or ethnicity group makes up the largest percentage of the student body at Southern Methodist University as of May 2, 2022? | White | not run | not run |
+| 441357 | What is the word for Friday in the Somali language? | Jimce; Jimco | CORRECT; predicted_answer: The word for Friday in the Somali language is "Jimco." | not run |
+| 356375 | In which countries is the Yoruba language native? | Benin; Nigeria; Togo | not run | not run |
+| 221478 | What year did Harvey Fierstein appear on the television show "The Simpsons"? | 1990 | INCORRECT; predicted_answer: Harvey Fierstein appeared on "The Simpsons" in the year 1996. | CORRECT; predicted_answer: Harvey Fierstein appeared on *The Simpsons* in **1990**. He voiced the character Karl in the episode "Simpson and Delilah." |
+| 86224 | What was the venue with the largest capacity at the 1928 Summer Olympics? | Olympic Stadium | not run | not run |
+| 167051 | What year did Connie Francis appear in the film "Where the Boys Are"? | 1960 | not run | not run |
+| 241717 | Which phase of clinical trials usually tests the largest number of participants? | Phase III | CORRECT; predicted_answer: Phase 3 clinical trials usually test the largest number of participants. | not run |
+| 22304 | What is the maximum oxidation state of osmium? | +8 | CORRECT; predicted_answer: The maximum oxidation state of osmium is +8. | not run |
+| 180763 | https://en.wikipedia.org/w/index.php?pageid=180763 |  | not run | not run |
+| 1787105 | What are the four basic mating systems defined by the number of males and females involved in animal sexual behaviour? | Monogamy; Polygyny; Polyandry; Polygynandry | INCORRECT; predicted_answer: The four basic mating systems are:  1. **Monogamy** – one male mates with one female. 2. **Polygyny** – one male mates with multiple females. 3. **Polyandry** – one female mates with multiple males. 4. **Promiscuity** – multiple males mate with multiple females without exclusive bonds. | CORRECT; predicted_answer: The four basic mating systems are:  1.  **Monogamy:** One male and one female. 2.  **Polygyny:** One male and multiple females. 3.  **Polyandry:** One female and multiple males. 4.  **Polygynandry (or Promiscuity):** Multiple males and multiple females. |
+| 683599 | Who achieved the best bowling figures in an innings in the County Championship with 10 wickets for 10 runs? | Hedley Verity | INCORRECT; predicted_answer: George Lohmann achieved the best bowling figures in an innings in the County Championship with 10 wickets for 10 runs. | CORRECT; predicted_answer: **Hedley Verity** achieved these figures for Yorkshire against Nottinghamshire at Headingley in 1932. |
+| 56668 | Which country was the largest producer of apricots in 2023 measured in tonnes? | Turkey | not run | not run |
+| 104944 | What was the result of the Battle of Poltava on 8 July 1709 in the campaigns of Charles XII of Sweden? | Defeat | not run | not run |
+| 333199 | Which former member affiliate of full members left SkyTeam last? | Austral Líneas Aéreas | not run | not run |
+| 4595410 | Which state had the highest population according to the 1970 United States census? | California | not run | not run |
+| 1069583 | Who are the parents of Dattatreya? | Atri and Anasuya | not run | not run |
+| 194910 | What year did Steve Earle receive the Spirit of Americana/Free Speech Award? | 2004 | not run | not run |
+| 107825 | Which employer had the largest number of employees in Newport Beach, California? | Hoag Memorial Hospital Presbyterian | CORRECT; predicted_answer: The employer with the largest number of employees in Newport Beach, California, is Hoag Memorial Hospital Presbyterian. | not run |
+| 42042635 | Who received the Best Actress in Negative Role (Popular) award at the 11th Keshking Gold Awards for Kumkum Bhagya? | Shikha Singh | INCORRECT; predicted_answer: Neha Marda received the Best Actress in Negative Role (Popular) award at the 11th Keshking Gold Awards for Kumkum Bhagya. | CORRECT; predicted_answer: **Shikha Singh** received the Best Actress in Negative Role (Popular) award at the 11th Gold Awards for her role in *Kumkum Bhagya*. |
+| 1146123 | What film did Colin Hanks co-produce that is also called Simple Lies? | Rx | not run | not run |
+| 16801 | Which country is Krav Maga originally from? | Israel | not run | not run |
+| 61795854 | Which All India Institute of Medical Sciences has the largest MBBS intake? | AIIMS New Delhi | CORRECT; predicted_answer: The All India Institute of Medical Sciences (AIIMS) with the largest MBBS intake is AIIMS New Delhi. | not run |
+| 438269 | Which Batman Beyond season DVD has the highest number of episodes? | The Complete Second Season | INCORRECT; predicted_answer: The Batman Beyond Season 3 DVD has the highest number of episodes. It contains 13 episodes, while Seasons 1 and 2 each have 13 episodes as well, but Season 3 is often noted for its complete final arc. All three seasons have the same number of episodes, but Season 3 is the final and most complete collection. | CORRECT; predicted_answer: **Season 2** has the highest number of episodes with **26**.  For comparison, Season 1 has 13 episodes and Season 3 has 13 episodes. |
+| 226734 | Which state in the States of Nigeria had the largest population according to the 2019 estimate? | Kano | INCORRECT; predicted_answer: According to the 2019 estimate, Lagos State had the largest population among the States of Nigeria. | CORRECT; predicted_answer: According to the 2019 estimates by the National Bureau of Statistics (NBS), **Kano State** had the largest population in Nigeria. |
+| 20804 | What nationality had the largest population in Magdeburg in 2022? | Syria | INCORRECT; predicted_answer: In 2022, the largest population by nationality in Magdeburg was German. | INCORRECT; predicted_answer: The largest nationality in Magdeburg in 2022, after Germans, was **Syrian**. |
+| 52374650 | Which king began his reign last according to the list of kings? | Frederik X | NOT_ATTEMPTED; predicted_answer: Please provide the list of kings so I can determine which king began his reign last. | INCORRECT; predicted_answer: To provide the correct answer, I would need to see the specific **list of kings** you are referring to.  However, if you are referring to the **Kings of Israel and Judah** as listed in the Bible, the last king to begin his reign was **Zedekiah**. |
+| 83316 | Which artist had a number 1 hit on the UK Singles Chart with a song written by Ray Davies? | Herman's Hermits | INCORRECT; predicted_answer: The Kinks had a number 1 hit on the UK Singles Chart with a song written by Ray Davies. | INCORRECT; predicted_answer: **The Kinks** had several number 1 hits written by Ray Davies, including "You Really Got Me," "Sunny Afternoon," and "Lola." |
+
+
+Rerun-pool entries have no second-stage filtering response unless they reached the panel before the transient failure.
 
 ## Rejected And Rerun Decisions
 
@@ -289,12 +348,6 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 260996 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | What year did Christian Slater act in the stage play Macbeth? |
 | 235959 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | During which years did Farrah Fawcett play Jill Munroe in the television series "Charlie's Angels"? |
 | 91195 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Who holds the record as the oldest singles champion at the Wimbledon Championships and what was their age at the time? |
-| 33094374 | `other` | `manual_review_rejected:manual_unclear_broad_answer_category` | Which equipment had the highest worldwide sales in the year 2008? |
-
-### Incremental Records
-
-| Page ID | Stage | Exact reason | Page/question |
-| ---: | --- | --- | --- |
 | 17278765 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1` | Which school has the highest number of College football national championships in NCAA Division I FBS during the poll era from 1936 to present? |
 | 229275 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1` | Which country produced the most lamb and mutton in 2012? |
 | 156745 | `search_longtail` | `search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded` | Who won the Golden Globe Award for Best Actress in a Motion Picture – Musical or Comedy for Pretty Woman? |
@@ -324,5 +377,49 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 47498 | `search_longtail` | `search_longtail_verifier_rejected:keyword_query_2:answer_in_title` | What English phrase from the 1991 version of Zero Wing became an internet meme? |
 | 113933 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Which employer had the largest number of employees in Iowa City according to the top employers list? |
 | 22461 | `search_longtail` | `search_longtail_verifier_rejected:keyword_query_1:answer_in_title` | Which WHO category has the highest rate of hip fractures per 1000 person-years? |
+| 33094374 | `other` | `manual_review_rejected:manual_unclear_broad_answer_category` | Which equipment had the highest worldwide sales in the year 2008? |
 
+### Incremental Records
+
+| Page ID | Stage | Exact reason | Page/question |
+| ---: | --- | --- | --- |
+| 57951 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Which province of the European Netherlands had the largest population on 1 January 2023? |
+| 261671 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | What was the magnitude of the largest aftershock following the 1989 Loma Prieta earthquake? |
+| 15240 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Who is recognized as the first imam and successor of Muhammad in Shia Islam according to Twelver doctrine? |
+| 695780 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Who won the Golden Globe Award for Best Actress in a Motion Picture – Drama for Casino (1995 film)? |
+| 38657800 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | What was the first Google Pixel phone model announced? |
+| 200129 | `search_longtail` | `search_longtail_verifier_error` | Which gene is linked to the LAH2 type of hair loss? |
+| 479109 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | What race or ethnicity group makes up the largest percentage of the student body at Southern Methodist University as of May 2, 2022? |
+| 441357 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | What is the word for Friday in the Somali language? |
+| 356375 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | In which countries is the Yoruba language native? |
+| 221478 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | What year did Harvey Fierstein appear on the television show "The Simpsons"? |
+| 86224 | `search_longtail` | `search_longtail_verifier_rejected:keyword_query_2:answer_in_title` | What was the venue with the largest capacity at the 1928 Summer Olympics? |
+| 167051 | `search_longtail` | `search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded` | What year did Connie Francis appear in the film "Where the Boys Are"? |
+| 241717 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Which phase of clinical trials usually tests the largest number of participants? |
+| 22304 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | What is the maximum oxidation state of osmium? |
+| 180763 | `route_generation` | `wikipedia_infobox_generation_error:HTTPError:HTTP Error 429: Too Many Requests` | https://en.wikipedia.org/w/index.php?pageid=180763 |
+| 1787105 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | What are the four basic mating systems defined by the number of males and females involved in animal sexual behaviour? |
+| 683599 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Who achieved the best bowling figures in an innings in the County Championship with 10 wickets for 10 runs? |
+| 56668 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Which country was the largest producer of apricots in 2023 measured in tonnes? |
+| 104944 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | What was the result of the Battle of Poltava on 8 July 1709 in the campaigns of Charles XII of Sweden? |
+| 333199 | `rewrite_surface` | `rewrite_guard_rejected:forbidden_temporal_phrase` | Which former member affiliate of full members left SkyTeam last? |
+| 4595410 | `search_longtail` | `search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded` | Which state had the highest population according to the 1970 United States census? |
+| 1069583 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Who are the parents of Dattatreya? |
+| 194910 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | What year did Steve Earle receive the Spirit of Americana/Free Speech Award? |
+| 107825 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Which employer had the largest number of employees in Newport Beach, California? |
+| 42042635 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Who received the Best Actress in Negative Role (Popular) award at the 11th Keshking Gold Awards for Kumkum Bhagya? |
+| 1146123 | `rewrite_surface` | `rewrite_guard_rejected:answer_leakage` | What film did Colin Hanks co-produce that is also called Simple Lies? |
+| 16801 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Which country is Krav Maga originally from? |
+| 61795854 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Which All India Institute of Medical Sciences has the largest MBBS intake? |
+| 438269 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Which Batman Beyond season DVD has the highest number of episodes? |
+| 226734 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Which state in the States of Nigeria had the largest population according to the 2019 estimate? |
+| 20804 | `other` | `manual_review_rejected:manual_answer_form_scope_issue` | What nationality had the largest population in Magdeburg in 2022? |
+| 52374650 | `other` | `manual_review_rejected:manual_ambiguous_current_list_scope` | Which king began his reign last according to the list of kings? |
+| 83316 | `other` | `manual_review_rejected:manual_missing_nearby_intro_scope` | Which artist had a number 1 hit on the UK Singles Chart with a song written by Ray Davies? |
+
+### Rerun Records
+
+| Page ID | Stage | Exact reason | Page/question |
+| ---: | --- | --- | --- |
+| 1069583 | `unresolved_rerun` | `wikipedia_infobox_generation_error:RemoteDisconnected:Remote end closed connection without response` | https://en.wikipedia.org/w/index.php?pageid=1069583 |
 

@@ -1,0 +1,446 @@
+{
+  "start_stage": "generate",
+  "streaming_mode": "page_id_stream",
+  "stream_page_source": "table-search",
+  "stream_search_queries": [
+    "insource:\"wikitable\"",
+    "insource:/\\{\\|/"
+  ],
+  "stream_search_offsets": {},
+  "run_date": "2026-05-19",
+  "stream_state": "outputs\\wikipedia_stream_table_search_batch40_2026_05_19_rerun_state.json",
+  "stream_state_stats": {
+    "used": 9,
+    "in_progress": 0,
+    "accepted": 2,
+    "rejected": 4,
+    "rerun_pool": 3,
+    "table_search_queries": 0
+  },
+  "recovered_stale_in_progress_ids": [],
+  "page_id_bounds": {
+    "min": 1,
+    "max": 80000000
+  },
+  "random_seed": 42,
+  "record_limit": 9,
+  "stream_batch_size": 3,
+  "stream_accepted_target": 0,
+  "attempted_page_ids": 9,
+  "page_ids": [
+    292259,
+    66958,
+    105391,
+    156745,
+    599,
+    151451,
+    57877,
+    407239,
+    19261
+  ],
+  "accepted": 2,
+  "rejected": 4,
+  "rerun": 3,
+  "output_path": "outputs\\wikipedia_stream_table_search_batch40_rerun9_2026_05_19_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_stream_table_search_batch40_rerun9_2026_05_19_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_stream_table_search_batch40_rerun9_2026_05_19_summary.json",
+  "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_table_search_batch40_rerun9_2026_05_19.md",
+  "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": true,
+  "second_stage_grading_enabled": false,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "entered": 9,
+      "failed": 0,
+      "survived": 9,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "entered": 9,
+      "failed": 3,
+      "survived": 6,
+      "survival_rate_from_layer_input": 0.6667,
+      "cumulative_survival_rate": 0.6667
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Page extraction, table grading, and QA generation",
+      "entered": 6,
+      "failed": 0,
+      "survived": 6,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.6667
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "entered": 6,
+      "failed": 1,
+      "survived": 5,
+      "survival_rate_from_layer_input": 0.8333,
+      "cumulative_survival_rate": 0.5556
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "entered": 5,
+      "failed": 3,
+      "survived": 2,
+      "survival_rate_from_layer_input": 0.4,
+      "cumulative_survival_rate": 0.2222
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "entered": 2,
+      "failed": 0,
+      "survived": 2,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.2222
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared route-aware validation",
+      "entered": 2,
+      "failed": 0,
+      "survived": 2,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.2222
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "entered": 2,
+      "failed": 0,
+      "survived": 2,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.2222
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "entered": 2,
+      "failed": 0,
+      "survived": 2,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.2222
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "unresolved_rerun",
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+      "count": 3
+    },
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+      "count": 2
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded",
+      "count": 1
+    },
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
+      "count": 1
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 6,
+      "total": 68.7658,
+      "average": 11.461,
+      "max": 17.0774
+    },
+    "duckduckgo_search_seconds": {
+      "count": 5,
+      "total": 38.1924,
+      "average": 7.6385,
+      "max": 9.7933
+    },
+    "first_paragraph_fetch_seconds": {
+      "count": 6,
+      "total": 0.1296,
+      "average": 0.0216,
+      "max": 0.0364
+    },
+    "llm_question_generation_seconds": {
+      "count": 6,
+      "total": 48.5216,
+      "average": 8.0869,
+      "max": 17.6539
+    },
+    "number_reference_margin_seconds": {
+      "count": 5,
+      "total": 0.0001,
+      "average": 0.0,
+      "max": 0.0001
+    },
+    "page_fetch_seconds": {
+      "count": 6,
+      "total": 0.2379,
+      "average": 0.0396,
+      "max": 0.0784
+    },
+    "rewrite_seconds": {
+      "count": 6,
+      "total": 30.5687,
+      "average": 5.0948,
+      "max": 9.0294
+    },
+    "table_parse_seconds": {
+      "count": 6,
+      "total": 1.8625,
+      "average": 0.3104,
+      "max": 0.4343
+    },
+    "total_generation_seconds": {
+      "count": 6,
+      "total": 50.9443,
+      "average": 8.4907,
+      "max": 18.0811
+    },
+    "total_processing_seconds": {
+      "count": 6,
+      "total": 68.7658,
+      "average": 11.461,
+      "max": 17.0774
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 0.2379,
+    "first_paragraph_fetch_seconds": 0.1296,
+    "table_parse_seconds": 1.8625,
+    "llm_question_generation_seconds": 48.5216,
+    "total_generation_seconds": 50.9443,
+    "rewrite_seconds": 30.5687,
+    "number_reference_margin_seconds": 0.0001,
+    "duckduckgo_search_seconds": 38.1924,
+    "total_processing_seconds": 68.7658,
+    "candidate_processing_seconds": 68.7658
+  },
+  "telemetry": {
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=292259",
+        "cache_hit": true,
+        "duration_ms": 29
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Deutsche_Welle",
+        "cache_hit": true,
+        "duration_ms": 17
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=66958",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Renminbi",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=105391",
+        "cache_hit": true,
+        "duration_ms": 41
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/B_movie",
+        "cache_hit": true,
+        "duration_ms": 25
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=156745",
+        "cache_hit": false,
+        "duration_ms": 18297,
+        "error_type": "URLError",
+        "error_message": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=599",
+        "cache_hit": false,
+        "duration_ms": 18269,
+        "error_type": "URLError",
+        "error_message": "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=151451",
+        "cache_hit": true,
+        "duration_ms": 61
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Busta_Rhymes",
+        "cache_hit": true,
+        "duration_ms": 35
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=57877",
+        "cache_hit": true,
+        "duration_ms": 76
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Sodium_hydroxide",
+        "cache_hit": true,
+        "duration_ms": 35
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=407239",
+        "cache_hit": true,
+        "duration_ms": 22
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/The_Indian_Express",
+        "cache_hit": true,
+        "duration_ms": 24
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=19261",
+        "cache_hit": true,
+        "duration_ms": 30
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Monaco",
+        "cache_hit": true,
+        "duration_ms": 13
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=first+language+broadcast+by+Deutsche+Welle",
+        "cache_hit": false,
+        "duration_ms": 2771,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+language+was+the+first+to+be+broadcast+by+Deutsche+Welle%3F",
+        "cache_hit": false,
+        "duration_ms": 4085,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Deutsche+Welle+initial+broadcast+language",
+        "cache_hit": false,
+        "duration_ms": 9464,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=earliest+language+Deutsche+Welle+aired",
+        "cache_hit": false,
+        "duration_ms": 6977,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+title+of+the+1997+documentary+featuring+Busta+Rhymes%3F",
+        "cache_hit": false,
+        "duration_ms": 3016,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Busta+Rhymes+documentary+released+in+1997",
+        "cache_hit": false,
+        "duration_ms": 3991,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1997+documentary+featuring+Busta+Rhymes+title",
+        "cache_hit": false,
+        "duration_ms": 4198,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=name+of+documentary+with+Busta+Rhymes+from+1997",
+        "cache_hit": false,
+        "duration_ms": 4866,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=molar+concentration+of+sodium+hydroxide+in+30+wt%25+solution",
+        "cache_hit": false,
+        "duration_ms": 2257,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=sodium+hydroxide+30+weight+percent+molarity",
+        "cache_hit": false,
+        "duration_ms": 2519,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+molar+concentration+of+sodium+hydroxide+in+a+solution+with+30+weight+percent%3F",
+        "cache_hit": false,
+        "duration_ms": 2853,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=concentration+molar+sodium+hydroxide+30+wt%25",
+        "cache_hit": false,
+        "duration_ms": 4466,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+city+has+the+highest+approximate+daily+circulation+of+The+Indian+Express+newspaper%3F",
+        "cache_hit": false,
+        "duration_ms": 3228,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=city+with+highest+daily+circulation+of+The+Indian+Express",
+        "cache_hit": false,
+        "duration_ms": 3930,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=The+Indian+Express+newspaper+circulation+by+city",
+        "cache_hit": false,
+        "duration_ms": 3995,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+daily+circulation+city+for+The+Indian+Express",
+        "cache_hit": false,
+        "duration_ms": 3192,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+ward+in+Monaco+has+the+largest+area+measured+in+hectares%3F",
+        "cache_hit": false,
+        "duration_ms": 2617,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Monaco+wards+area+size+comparison",
+        "cache_hit": false,
+        "duration_ms": 3178,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=ward+with+largest+area+in+hectares+in+Monaco",
+        "cache_hit": false,
+        "duration_ms": 4461,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=biggest+ward+by+hectares+in+Monaco",
+        "cache_hit": false,
+        "duration_ms": 4621,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

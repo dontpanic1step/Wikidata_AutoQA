@@ -154,12 +154,9 @@ def process_generated_candidates(
     panel_runs: list[dict[str, object]] = []
 
     if second_stage_model_clients is None and settings.second_stage_grading_enabled:
-        second_stage_model_clients = _build_second_stage_model_panel(settings)
+        second_stage_model_clients = build_second_stage_model_panel(settings)
     if grading_grader_client is None and settings.second_stage_grading_enabled:
-        grading_grader_client = make_grader_client(
-            _resolve_llm_config(settings.second_stage_grading_grader_llm, settings),
-            settings.timeout_seconds,
-        ) if settings.second_stage_grading_grader_llm is not None else None
+        grading_grader_client = build_second_stage_grader_client(settings)
 
     for candidate in generated_candidates:
         candidate_start = perf_counter()
@@ -279,6 +276,10 @@ def process_generated_candidates(
                     source_metadata=candidate.source_metadata,
                     model_panel=second_stage_model_clients,
                     grader_client=grading_grader_client,
+                    accuracy_threshold=settings.second_stage_grading_accuracy_threshold,
+                    early_stop_on_threshold=True,
+                    parallel_answers=True,
+                    batch_grader=True,
                 )
                 candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
                 panel_features["duration_seconds"] = candidate_timings["second_stage_grading_seconds"]
@@ -607,7 +608,7 @@ def _default_number_snippet_judge_llm(settings: Settings) -> LLMConfig:
     )
 
 
-def _build_second_stage_model_panel(settings: Settings) -> list[ModelPanelMember]:
+def build_second_stage_model_panel(settings: Settings) -> list[ModelPanelMember]:
     """Construct the configured second-stage answer-model panel."""
     members: list[ModelPanelMember] = []
     for config in settings.second_stage_grading_models:
@@ -619,6 +620,19 @@ def _build_second_stage_model_panel(settings: Settings) -> list[ModelPanelMember
             continue
         members.append(ModelPanelMember(name=resolved.model, client=client))
     return members
+
+
+def build_second_stage_grader_client(settings: Settings):
+    """Construct the configured second-stage grader client."""
+    return make_grader_client(
+        _resolve_llm_config(settings.second_stage_grading_grader_llm, settings),
+        settings.timeout_seconds,
+    ) if settings.second_stage_grading_grader_llm is not None else None
+
+
+def _build_second_stage_model_panel(settings: Settings) -> list[ModelPanelMember]:
+    """Backward-compatible alias for the public panel builder."""
+    return build_second_stage_model_panel(settings)
 
 
 def _resolve_llm_config(config: LLMConfig | None, settings: Settings) -> LLMConfig | None:

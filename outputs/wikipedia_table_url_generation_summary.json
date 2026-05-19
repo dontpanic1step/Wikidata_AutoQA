@@ -1,0 +1,275 @@
+{
+  "target_count": 10,
+  "selected_count": 10,
+  "output": "config\\wikipedia_table_urls.txt",
+  "duration_seconds": 6.3994,
+  "candidates": [
+    {
+      "domain": "Film and Television",
+      "title": "23rd Independent Spirit Awards",
+      "url": "https://en.wikipedia.org/wiki/23rd_Independent_Spirit_Awards",
+      "best_table_score": 4.1,
+      "best_table_caption": "Films that received multiple nominations",
+      "best_table_section": "Films with multiple nominations and awards",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "no_comparable_headers"
+      ],
+      "discovered_by": "fallback_seed"
+    },
+    {
+      "domain": "Music",
+      "title": "List of UK top-ten singles in 1978",
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1978",
+      "best_table_score": 9.8,
+      "best_table_caption": "",
+      "best_table_section": "Chart debuts",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "fallback_seed"
+    },
+    {
+      "domain": "Music",
+      "title": "List of UK top-ten singles in 1979",
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1979",
+      "best_table_score": 9.8,
+      "best_table_caption": "",
+      "best_table_section": "Chart debuts",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "fallback_seed"
+    },
+    {
+      "domain": "Music",
+      "title": "List of UK top-ten singles in 1981",
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1981",
+      "best_table_score": 9.8,
+      "best_table_caption": "",
+      "best_table_section": "Chart debuts",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "fallback_seed"
+    },
+    {
+      "domain": "Music",
+      "title": "List of UK top-ten singles in 1982",
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1982",
+      "best_table_score": 9.8,
+      "best_table_caption": "",
+      "best_table_section": "Chart debuts",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "fallback_seed"
+    },
+    {
+      "domain": "Music",
+      "title": "List of UK top-ten singles in 1983",
+      "url": "https://en.wikipedia.org/wiki/List_of_UK_top-ten_singles_in_1983",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "Chart debuts",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "fallback_seed"
+    },
+    {
+      "domain": "Music",
+      "title": "List of Billboard Hot 100 top-ten singles in 1980",
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1980",
+      "best_table_score": 11.8,
+      "best_table_caption": "List of Billboard Hot 100 top ten singles which peaked in 1980",
+      "best_table_section": "Top-ten singles",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "fallback_seed"
+    },
+    {
+      "domain": "Music",
+      "title": "List of Billboard Hot 100 top-ten singles in 1982",
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1982",
+      "best_table_score": 11.8,
+      "best_table_caption": "List of Billboard Hot 100 top ten singles which peaked in 1982",
+      "best_table_section": "Top-ten singles",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "fallback_seed"
+    },
+    {
+      "domain": "Music",
+      "title": "List of Billboard Hot 100 top-ten singles in 1983",
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1983",
+      "best_table_score": 11.8,
+      "best_table_caption": "List of Billboard Hot 100 top ten singles which peaked in 1983",
+      "best_table_section": "Top-ten singles",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "fallback_seed"
+    },
+    {
+      "domain": "Music",
+      "title": "List of Billboard Hot 100 top-ten singles in 1984",
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1984",
+      "best_table_score": 11.8,
+      "best_table_caption": "List of Billboard Hot 100 top ten singles which peaked in 1984",
+      "best_table_section": "Top-ten singles",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "fallback_seed"
+    }
+  ],
+  "wikipedia_events": [
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=23rd+Independent+Spirit+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/23rd_Independent_Spirit_Awards",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1978&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1978",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1979&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 3
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1979",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1981&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 3
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1981",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1982&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 5
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1982",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+UK+top-ten+singles+in+1983&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 4
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_UK_top-ten_singles_in_1983",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1980&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1980",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1982&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1982",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1983&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1983",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1984&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2325
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1984",
+      "cache_hit": false,
+      "duration_ms": 1018
+    }
+  ]
+}

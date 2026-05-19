@@ -1,0 +1,2450 @@
+{
+  "target_count": 40,
+  "domain_limit": 20,
+  "subdomains_per_domain": 1,
+  "urls_per_subdomain": 2,
+  "dump_url": "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-all-titles-in-ns0.gz",
+  "source_mode": "page-dump",
+  "dump_title_path": "",
+  "page_dump_files": [],
+  "page_jsonl_files": [
+    "cache\\wikipedia_1percent_dumps\\raw_pages_all.jsonl"
+  ],
+  "page_dump_stats": {
+    "files_seen": 0,
+    "jsonl_files_seen": 1,
+    "files_with_errors": [],
+    "pages_seen": 39218,
+    "article_pages_seen": 38548,
+    "table_like_pages_seen": 26010
+  },
+  "selected_count": 21,
+  "failed_count": 8,
+  "output": "config\\wikipedia_table_urls_dump_20domain_1sub_2url.tsv",
+  "duration_seconds": 746.275,
+  "candidates": [
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "railway stations",
+      "title": "List of busiest railway stations in West Yorkshire",
+      "url": "https://en.wikipedia.org/wiki/List_of_busiest_railway_stations_in_West_Yorkshire",
+      "title_score": 16.5,
+      "best_table_score": 9.5,
+      "combined_score": 15.275,
+      "best_table_caption": "",
+      "best_table_section": "2021–2022 statistics",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "wikitext_tables:11",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "railway stations",
+      "title": "Bishops Lydeard railway station",
+      "url": "https://en.wikipedia.org/wiki/Bishops_Lydeard_railway_station",
+      "title_score": 2.5,
+      "best_table_score": 6.6,
+      "combined_score": 7.475,
+      "best_table_caption": "",
+      "best_table_section": "Services",
+      "reasons": [
+        "required_terms",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Arts and Media",
+      "subdomain": "film awards",
+      "title": "Filmfare Award for Best Film – Telugu",
+      "url": "https://en.wikipedia.org/wiki/Filmfare_Award_for_Best_Film_%E2%80%93_Telugu",
+      "title_score": 12.0,
+      "best_table_score": 11.6,
+      "combined_score": 15.8,
+      "best_table_caption": "",
+      "best_table_section": "2010s",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "wikitext_tables:10",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Arts and Media",
+      "subdomain": "film awards",
+      "title": "Nandi Award for Best Feature Film",
+      "url": "https://en.wikipedia.org/wiki/Nandi_Award_for_Best_Feature_Film",
+      "title_score": 9.9,
+      "best_table_score": 11.8,
+      "combined_score": 15.265,
+      "best_table_caption": "",
+      "best_table_section": "Best Feature Film - Gold",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "wikitext_tables:3",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "companies",
+      "title": "List of ships built by Hall, Russell & Company (601–700)",
+      "url": "https://en.wikipedia.org/wiki/List_of_ships_built_by_Hall,_Russell_%26_Company_(601%E2%80%93700)",
+      "title_score": 12.3,
+      "best_table_score": 10.8,
+      "combined_score": 15.105,
+      "best_table_caption": "List of Hall, Russell & Company built ships (601–700)",
+      "best_table_section": "",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "disambiguated_title",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "companies",
+      "title": "List of American Broadcasting Company television affiliates",
+      "url": "https://en.wikipedia.org/wiki/List_of_American_Broadcasting_Company_television_affiliates",
+      "title_score": 12.6,
+      "best_table_score": 8.8,
+      "combined_score": 13.21,
+      "best_table_caption": "ABC television network affiliates [ 1 ] [ 2 ] [ 3 ]",
+      "best_table_section": "Affiliate stations",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "wikitext_tables:2",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "large_table_penalty"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Education",
+      "subdomain": "universities",
+      "title": "Presidents of Leipzig University",
+      "url": "https://en.wikipedia.org/wiki/Presidents_of_Leipzig_University",
+      "title_score": 10.0,
+      "best_table_score": 11.8,
+      "combined_score": 15.3,
+      "best_table_caption": "",
+      "best_table_section": "20th century",
+      "reasons": [
+        "required_terms",
+        "scoped_title",
+        "wikitext_tables:27",
+        "wikitable_marker",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Education",
+      "subdomain": "universities",
+      "title": "2014–15 Boston University Terriers men's ice hockey season",
+      "url": "https://en.wikipedia.org/wiki/2014%E2%80%9315_Boston_University_Terriers_men%27s_ice_hockey_season",
+      "title_score": 7.6,
+      "best_table_score": 11.8,
+      "combined_score": 14.46,
+      "best_table_caption": "",
+      "best_table_section": "Schedule",
+      "reasons": [
+        "required_terms",
+        "historical_year",
+        "specific_length",
+        "wikitext_tables:2",
+        "wikitable_marker",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Engineering and Technology",
+      "subdomain": "bridges",
+      "title": "List of pontoon bridges",
+      "url": "https://en.wikipedia.org/wiki/List_of_pontoon_bridges",
+      "title_score": 12.3,
+      "best_table_score": 6.25,
+      "combined_score": 10.555,
+      "best_table_caption": "",
+      "best_table_section": "Longest",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "high_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "lakes",
+      "title": "Lake Independence (Belize House constituency)",
+      "url": "https://en.wikipedia.org/wiki/Lake_Independence_(Belize_House_constituency)",
+      "title_score": 8.3,
+      "best_table_score": 11.8,
+      "combined_score": 14.705,
+      "best_table_caption": "",
+      "best_table_section": "Elections",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "disambiguated_title",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "lakes",
+      "title": "Carlisle Lake District Airport",
+      "url": "https://en.wikipedia.org/wiki/Carlisle_Lake_District_Airport",
+      "title_score": 6.3,
+      "best_table_score": 11.8,
+      "combined_score": 14.005,
+      "best_table_caption": "Traffic statistics at Carlisle Lake District Airport",
+      "best_table_section": "Passenger movements",
+      "reasons": [
+        "required_terms",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Life Sciences",
+      "subdomain": "birds",
+      "title": "Angry Birds Stella (TV series)",
+      "url": "https://en.wikipedia.org/wiki/Angry_Birds_Stella_(TV_series)",
+      "title_score": 4.0,
+      "best_table_score": 6.85,
+      "combined_score": 8.25,
+      "best_table_caption": "",
+      "best_table_section": "Episodes",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "disambiguated_title",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Medicine and Health",
+      "subdomain": "hospitals",
+      "title": "List of NHS regional hospital boards (1947–1974)",
+      "url": "https://en.wikipedia.org/wiki/List_of_NHS_regional_hospital_boards_(1947%E2%80%931974)",
+      "title_score": 13.1,
+      "best_table_score": 9.8,
+      "combined_score": 14.385,
+      "best_table_caption": "",
+      "best_table_section": "List of NHS Regional Hospital Boards in England, 1947-1974",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "historical_year",
+        "specific_length",
+        "disambiguated_title",
+        "wikitext_tables:2",
+        "wikitable_marker",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Politics and Law",
+      "subdomain": "elections",
+      "title": "2017 Japanese general election",
+      "url": "https://en.wikipedia.org/wiki/2017_Japanese_general_election",
+      "title_score": 13.0,
+      "best_table_score": 11.8,
+      "combined_score": 16.35,
+      "best_table_caption": "",
+      "best_table_section": "By prefecture",
+      "reasons": [
+        "required_terms",
+        "bonus:general",
+        "historical_year",
+        "wikitext_tables:12",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Politics and Law",
+      "subdomain": "elections",
+      "title": "2018 Massachusetts gubernatorial election",
+      "url": "https://en.wikipedia.org/wiki/2018_Massachusetts_gubernatorial_election",
+      "title_score": 12.0,
+      "best_table_score": 11.8,
+      "combined_score": 16.0,
+      "best_table_caption": "",
+      "best_table_section": "Polling",
+      "reasons": [
+        "required_terms",
+        "historical_year",
+        "wikitext_tables:14",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Society and Culture",
+      "subdomain": "museums",
+      "title": "Leeds Industrial Museum at Armley Mills",
+      "url": "https://en.wikipedia.org/wiki/Leeds_Industrial_Museum_at_Armley_Mills",
+      "title_score": 7.3,
+      "best_table_score": 10.2,
+      "combined_score": 12.755,
+      "best_table_caption": "",
+      "best_table_section": "Locomotives",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Society and Culture",
+      "subdomain": "museums",
+      "title": "National Commission for Museums and Monuments",
+      "url": "https://en.wikipedia.org/wiki/National_Commission_for_Museums_and_Monuments",
+      "title_score": 6.3,
+      "best_table_score": 5.9,
+      "combined_score": 8.105,
+      "best_table_caption": "",
+      "best_table_section": "Listed National Monuments and Heritage Sites",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "no_comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Sports and Recreation",
+      "subdomain": "championship results",
+      "title": "2014 World Junior Championships in Athletics – Women's heptathlon",
+      "url": "https://en.wikipedia.org/wiki/2014_World_Junior_Championships_in_Athletics_%E2%80%93_Women%27s_heptathlon",
+      "title_score": 14.0,
+      "best_table_score": 11.8,
+      "combined_score": 16.7,
+      "best_table_caption": "",
+      "best_table_section": "Shot put",
+      "reasons": [
+        "required_terms",
+        "bonus:athletics",
+        "scoped_title",
+        "historical_year",
+        "specific_length",
+        "wikitext_tables:12",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Sports and Recreation",
+      "subdomain": "championship results",
+      "title": "2014 FINA World Swimming Championships (25 m) – Women's 100 metre breaststroke",
+      "url": "https://en.wikipedia.org/wiki/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Women%27s_100_metre_breaststroke",
+      "title_score": 13.5,
+      "best_table_score": 11.8,
+      "combined_score": 16.525,
+      "best_table_caption": "",
+      "best_table_section": "Heats",
+      "reasons": [
+        "required_terms",
+        "historical_year",
+        "specific_length",
+        "disambiguated_title",
+        "wikitext_tables:7",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "History",
+      "subdomain": "battles",
+      "title": "Battle Royale (manga)",
+      "url": "https://en.wikipedia.org/wiki/Battle_Royale_(manga)",
+      "title_score": 4.0,
+      "best_table_score": 10.8,
+      "combined_score": 12.2,
+      "best_table_caption": "",
+      "best_table_section": "Chapters",
+      "reasons": [
+        "required_terms",
+        "disambiguated_title",
+        "infobox_marker:6",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "History",
+      "subdomain": "battles",
+      "title": "Battle of Bassignana (1799)",
+      "url": "https://en.wikipedia.org/wiki/Battle_of_Bassignana_(1799)",
+      "title_score": 9.1,
+      "best_table_score": 6.75,
+      "combined_score": 9.935,
+      "best_table_caption": "Andrei Grigorevich Rosenberg's forces at Bassignana [ 11 ]",
+      "best_table_section": "Austro-Russian order of battle",
+      "reasons": [
+        "required_terms",
+        "scoped_title",
+        "historical_year",
+        "disambiguated_title",
+        "wikitext_tables:2",
+        "wikitable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "no_comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    }
+  ],
+  "failed_subdomains": [
+    {
+      "domain": "Computer Science and AI",
+      "subdomain": "programming languages",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "TXL (programming language)"
+      ]
+    },
+    {
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "observatories",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Former Tainan Weather Observatory",
+        "Manastash Ridge Observatory",
+        "Observatory, Cape Town",
+        "Seagrave Memorial Observatory",
+        "Smith Observatory",
+        "Thompson Observatory",
+        "Darling's Observatory"
+      ]
+    },
+    {
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "crop production",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "It's a Laugh Productions",
+        "Quick Off The Mark Productions",
+        "Rajshri Productions",
+        "Suresh Productions",
+        "Plautus Productions",
+        "Travis Scott production discography",
+        "Production (album)",
+        "The Runners (production duo)",
+        "Barry & Enright Productions",
+        "Corymore Productions",
+        "PTT Exploration and Production"
+      ]
+    },
+    {
+      "domain": "Language and Literature",
+      "subdomain": "literary awards",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Mathematics",
+      "subdomain": "polyhedra",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "People",
+      "subdomain": "laureates",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Philosophy and Religion",
+      "subdomain": "popes",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "E. Pope Bassett"
+      ]
+    },
+    {
+      "domain": "Physical Sciences",
+      "subdomain": "chemical elements",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    }
+  ],
+  "title_candidate_counts": {
+    "Architecture and Transportation / railway stations": 73,
+    "Arts and Media / film awards": 12,
+    "Computer Science and AI / programming languages": 1,
+    "Earth, Environment, and Space / observatories": 7,
+    "Economy and Business / companies": 54,
+    "Education / universities": 92,
+    "Engineering and Technology / bridges": 47,
+    "Food, Agriculture, and Daily Life / crop production": 11,
+    "Geography / lakes": 84,
+    "Language and Literature / literary awards": 0,
+    "Life Sciences / birds": 10,
+    "Mathematics / polyhedra": 0,
+    "Medicine and Health / hospitals": 65,
+    "People / laureates": 0,
+    "Philosophy and Religion / popes": 1,
+    "Physical Sciences / chemical elements": 0,
+    "Politics and Law / elections": 140,
+    "Society and Culture / museums": 35,
+    "Sports and Recreation / championship results": 160,
+    "History / battles": 50
+  },
+  "wikipedia_events": [
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+West+Yorkshire&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_West_Yorkshire",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Miraj+Junction+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3514
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bournville+%28Mon%29+Halt+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3088
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Ebbw+Vale+%28High+Level%29+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4595
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Marshes+Turnpike+Gate+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 59
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Marshes_Turnpike_Gate_railway_station",
+      "cache_hit": false,
+      "duration_ms": 5773
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Six+Bells+Halt+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 76
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Six_Bells_Halt_railway_station",
+      "cache_hit": true,
+      "duration_ms": 44
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Chennai+Fort+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3726
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Chennai_Fort_railway_station",
+      "cache_hit": false,
+      "duration_ms": 4156
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Dhaka+Airport+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2209
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Dhaka_Airport_railway_station",
+      "cache_hit": false,
+      "duration_ms": 1388
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Singleton+railway+station+%28Lancashire%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1693
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Singleton_railway_station_(Lancashire)",
+      "cache_hit": false,
+      "duration_ms": 2153
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Agnes+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2266
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Agnes_railway_station",
+      "cache_hit": false,
+      "duration_ms": 1812
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Alberton+railway+station%2C+Victoria&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1531
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Alberton_railway_station%2C_Victoria",
+      "cache_hit": false,
+      "duration_ms": 1094
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Ans+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 52
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Ans_railway_station",
+      "cache_hit": false,
+      "duration_ms": 2449
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Arklow+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2327
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Arklow_railway_station",
+      "cache_hit": false,
+      "duration_ms": 902
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Athlone+railway+station%2C+Victoria&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1819
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Athlone_railway_station%2C_Victoria",
+      "cache_hit": false,
+      "duration_ms": 1436
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bayles+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2013
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bayles_railway_station",
+      "cache_hit": false,
+      "duration_ms": 991
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bennison+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2750
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bennison_railway_station",
+      "cache_hit": false,
+      "duration_ms": 1888
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bishops+Lydeard+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2707
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bishops_Lydeard_railway_station",
+      "cache_hit": false,
+      "duration_ms": 2101
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Filmfare+Award+for+Best+Film+%E2%80%93+Telugu&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 5983
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Filmfare_Award_for_Best_Film_%E2%80%93_Telugu",
+      "cache_hit": false,
+      "duration_ms": 1598
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Nandi+Award+for+Best+Feature+Film&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1861
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Nandi_Award_for_Best_Feature_Film",
+      "cache_hit": false,
+      "duration_ms": 1737
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Houston+Film+Critics+Society+Awards+2014&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1809
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Chicago+Film+Critics+Association+Awards+2014&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1701
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Dallas%E2%80%93Fort+Worth+Film+Critics+Association+Awards+2014&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 64
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Dallas%E2%80%93Fort_Worth_Film_Critics_Association_Awards_2014",
+      "cache_hit": true,
+      "duration_ms": 53
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Toronto+Film+Critics+Association+Awards+2014&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 39
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lumi%C3%A8re+Award+for+Best+French-Language+Film&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 26
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+Los+Angeles+Film+Critics+Association+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4817
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_Los_Angeles_Film_Critics_Association_Awards",
+      "cache_hit": false,
+      "duration_ms": 1141
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+Rialto+Channel+New+Zealand+Film+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 53
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_Rialto_Channel_New_Zealand_Film_Awards",
+      "cache_hit": false,
+      "duration_ms": 1112
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Santosham+Best+Film+Award&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4602
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=15th+Hollywood+Film+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2562
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/15th_Hollywood_Film_Awards",
+      "cache_hit": false,
+      "duration_ms": 1686
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=TXL+%28programming+language%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2007
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/TXL_(programming_language)",
+      "cache_hit": false,
+      "duration_ms": 1255
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Former+Tainan+Weather+Observatory&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Former_Tainan_Weather_Observatory",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Manastash+Ridge+Observatory&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4531
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Manastash_Ridge_Observatory",
+      "cache_hit": false,
+      "duration_ms": 3453
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Observatory%2C+Cape+Town&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2108
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Observatory%2C_Cape_Town",
+      "cache_hit": false,
+      "duration_ms": 1459
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Seagrave+Memorial+Observatory&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Seagrave_Memorial_Observatory",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Smith+Observatory&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1386
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Smith_Observatory",
+      "cache_hit": false,
+      "duration_ms": 1230
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Thompson+Observatory&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1447
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Thompson_Observatory",
+      "cache_hit": false,
+      "duration_ms": 6485
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Darling%27s+Observatory&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1260
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Darling%27s_Observatory",
+      "cache_hit": false,
+      "duration_ms": 1050
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+American+Broadcasting+Company+television+affiliates&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1676
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_American_Broadcasting_Company_television_affiliates",
+      "cache_hit": false,
+      "duration_ms": 947
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+ships+built+by+Hall%2C+Russell+%26+Company+%28601%E2%80%93700%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 5
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_ships_built_by_Hall%2C_Russell_%26_Company_(601%E2%80%93700)",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+films+produced+by+American+Broadcasting+Company&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 60
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_films_produced_by_American_Broadcasting_Company",
+      "cache_hit": true,
+      "duration_ms": 67
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Fullbright+%28company%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Fullbright_(company)",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Inkle+%28company%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Inkle_(company)",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=New+York+Motion+Picture+Company&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/New_York_Motion_Picture_Company",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Pearson+Candy+Company%2C+Inc.&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Pearson_Candy_Company%2C_Inc.",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Gulf+Oil+Company+Service+Station+%28Paragould%2C+Arkansas%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Gulf_Oil_Company_Service_Station_(Paragould%2C_Arkansas)",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Sears%2C+Roebuck+and+Company+Department+Store+%28Miami%2C+Florida%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Sears%2C_Roebuck_and_Company_Department_Store_(Miami%2C_Florida)",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Poinsett+Lumber+and+Manufacturing+Company+Manager%27s+House&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Poinsett_Lumber_and_Manufacturing_Company_Manager%27s_House",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Baylor+University+people&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2866
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Baylor_University_people",
+      "cache_hit": false,
+      "duration_ms": 1288
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+faculty+and+alumni+of+Emory+University&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1980
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_faculty_and_alumni_of_Emory_University",
+      "cache_hit": false,
+      "duration_ms": 1002
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Presidents+of+Leipzig+University&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 36
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Presidents_of_Leipzig_University",
+      "cache_hit": false,
+      "duration_ms": 1883
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=American+University+of+Nigeria&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2749
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/American_University_of_Nigeria",
+      "cache_hit": false,
+      "duration_ms": 1656
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=University+of+Oregon+rowing+team&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3205
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/University_of_Oregon_rowing_team",
+      "cache_hit": false,
+      "duration_ms": 1962
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Academic+dress+of+University+of+Melbourne&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1804
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Academic_dress_of_University_of_Melbourne",
+      "cache_hit": false,
+      "duration_ms": 963
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Niigata+University+of+Health+and+Welfare+LSC&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2174
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Niigata_University_of_Health_and_Welfare_LSC",
+      "cache_hit": false,
+      "duration_ms": 2906
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=University+of+Science+and+Technology%2C+Meghalaya&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3340
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/University_of_Science_and_Technology%2C_Meghalaya",
+      "cache_hit": false,
+      "duration_ms": 1430
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014%E2%80%9315+Boston+University+Terriers+men%27s+ice+hockey+season&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2795
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014%E2%80%9315_Boston_University_Terriers_men%27s_ice_hockey_season",
+      "cache_hit": false,
+      "duration_ms": 2340
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Harcourt+Butler+Technical+University&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4700
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Harcourt_Butler_Technical_University",
+      "cache_hit": false,
+      "duration_ms": 1334
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Georgetown+University+Rugby+Football+Club&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1448
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Davos+University+Conferences&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 31
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1905%E2%80%9306+University+of+Virginia+men%27s+basketball+team&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/1905%E2%80%9306_University_of_Virginia_men%27s_basketball_team",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1906%E2%80%9307+University+of+Virginia+men%27s+basketball+team&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/1906%E2%80%9307_University_of_Virginia_men%27s_basketball_team",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+pontoon+bridges&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_pontoon_bridges",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=South+Dakota+Dept.+of+Transportation+Bridge+No.+30-257-400&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 39
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/South_Dakota_Dept._of_Transportation_Bridge_No._30-257-400",
+      "cache_hit": false,
+      "duration_ms": 2617
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Monroe+Street+Bridge+%28Spokane%2C+Washington%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2677
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Monroe_Street_Bridge_(Spokane%2C_Washington)",
+      "cache_hit": false,
+      "duration_ms": 1231
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Meadow+Bridge&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2040
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Meadow_Bridge",
+      "cache_hit": false,
+      "duration_ms": 999
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=St.+Francis+River+Bridge+%28Lake+City%2C+Arkansas%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/St._Francis_River_Bridge_(Lake_City%2C_Arkansas)",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bloomfield-Nulhegan+River+Route+102+Bridge&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 41
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bloomfield-Nulhegan_River_Route_102_Bridge",
+      "cache_hit": true,
+      "duration_ms": 41
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bridge+City+Independent+School+District&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1585
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bridge_City_Independent_School_District",
+      "cache_hit": false,
+      "duration_ms": 4043
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Craighead+County+Road+513C+Bridge&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1976
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Craighead_County_Road_513C_Bridge",
+      "cache_hit": false,
+      "duration_ms": 1517
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Crowley%27s+Ridge+State+Park+Bridge&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1990
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Crowley%27s_Ridge_State_Park_Bridge",
+      "cache_hit": false,
+      "duration_ms": 1607
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lamoille+River+Route+15-A+Bridge&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 36
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Lamoille_River_Route_15-A_Bridge",
+      "cache_hit": false,
+      "duration_ms": 999
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Seven+Bridges+Road&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3290
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Seven_Bridges_Road",
+      "cache_hit": false,
+      "duration_ms": 1207
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Skew+Bridge+Commonwealth+War+Graves+Commission+Cemetery&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2785
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Skew_Bridge_Commonwealth_War_Graves_Commission_Cemetery",
+      "cache_hit": false,
+      "duration_ms": 911
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=CPR+Bridge+%28Saskatoon%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1383
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/CPR_Bridge_(Saskatoon)",
+      "cache_hit": false,
+      "duration_ms": 829
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Garratt+Road+Bridge&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1701
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Honeymoon+Bridge+%28New+Hampshire%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1835
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Twin+Bridges+%28Philadelphia%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 55
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Twin_Bridges_(Philadelphia)",
+      "cache_hit": true,
+      "duration_ms": 74
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Plautus+Productions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 43
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Plautus_Productions",
+      "cache_hit": true,
+      "duration_ms": 43
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=PTT+Exploration+and+Production&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 44
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/PTT_Exploration_and_Production",
+      "cache_hit": false,
+      "duration_ms": 3297
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Prehistoric+pile+dwellings+around+Lake+Zurich&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 44
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Prehistoric_pile_dwellings_around_Lake_Zurich",
+      "cache_hit": true,
+      "duration_ms": 36
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lake+Independence+%28Belize+House+constituency%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2641
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Lake_Independence_(Belize_House_constituency)",
+      "cache_hit": false,
+      "duration_ms": 2829
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=EA+Salt+Lake&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2653
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/EA_Salt_Lake",
+      "cache_hit": false,
+      "duration_ms": 1190
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Carlisle+Lake+District+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3594
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Carlisle_Lake_District_Airport",
+      "cache_hit": false,
+      "duration_ms": 2201
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Southern+Lakes+%28electoral+district%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1687
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Southern_Lakes_(electoral_district)",
+      "cache_hit": false,
+      "duration_ms": 1631
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lake+Evesham&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2332
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Lake_Evesham",
+      "cache_hit": false,
+      "duration_ms": 2955
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lake+Waikaremoana+Great+Walk&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1672
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Lake_Waikaremoana_Great_Walk",
+      "cache_hit": false,
+      "duration_ms": 2348
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lake+Mary+Chamber+of+Commerce+Building&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3102
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Lake_Mary_Chamber_of_Commerce_Building",
+      "cache_hit": false,
+      "duration_ms": 1217
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Moon+Lake+State+Forest+Recreation+Area&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 25
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Moon_Lake_State_Forest_Recreation_Area",
+      "cache_hit": true,
+      "duration_ms": 22
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Sangchris+Lake+State+Recreation+Area&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2419
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Sangchris_Lake_State_Recreation_Area",
+      "cache_hit": false,
+      "duration_ms": 966
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bunny+Lake+Is+Missing+%28novel%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2250
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bunny_Lake_Is_Missing_(novel)",
+      "cache_hit": false,
+      "duration_ms": 1400
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Gibson+Lake+%28Thunder+Bay+District%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1237
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Crystal+Lake%2C+Washington+County%2C+Florida&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Crystal_Lake%2C_Washington_County%2C_Florida",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Ray+Roberts+Lake+State+Park&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 49
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Ray_Roberts_Lake_State_Park",
+      "cache_hit": true,
+      "duration_ms": 41
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Angry+Birds+Stella+%28TV+series%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 34
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Angry_Birds_Stella_(TV_series)",
+      "cache_hit": true,
+      "duration_ms": 50
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Birds+of+Exile&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 33
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Birds_of_Exile",
+      "cache_hit": true,
+      "duration_ms": 37
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Adelaide+International+Bird+Sanctuary+National+Park&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 34
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Adelaide_International_Bird_Sanctuary_National_Park",
+      "cache_hit": true,
+      "duration_ms": 45
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Michael+Bird+%28theologian%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 35
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Michael_Bird_(theologian)",
+      "cache_hit": true,
+      "duration_ms": 36
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Worry+Bird&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 33
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Worry_Bird",
+      "cache_hit": true,
+      "duration_ms": 58
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+NHS+regional+hospital+boards+%281947%E2%80%931974%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4199
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_NHS_regional_hospital_boards_(1947%E2%80%931974)",
+      "cache_hit": false,
+      "duration_ms": 1288
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Children%27s+Hospital+of+The+King%27s+Daughters&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2698
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Children%27s_Hospital_of_The_King%27s_Daughters",
+      "cache_hit": false,
+      "duration_ms": 1486
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Institute+of+the+Pennsylvania+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2013
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Institute_of_the_Pennsylvania_Hospital",
+      "cache_hit": false,
+      "duration_ms": 1331
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Our+Lady+of+Maryknoll+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3030
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Our_Lady_of_Maryknoll_Hospital",
+      "cache_hit": false,
+      "duration_ms": 3400
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=The+Duchess+of+Kent+Children%27s+Hospital+at+Sandy+Bay&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 5563
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/The_Duchess_of_Kent_Children%27s_Hospital_at_Sandy_Bay",
+      "cache_hit": false,
+      "duration_ms": 1713
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Tung+Wah+Group+of+Hospitals+Fung+Yiu+King+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1650
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Tung_Wah_Group_of_Hospitals_Fung_Yiu_King_Hospital",
+      "cache_hit": false,
+      "duration_ms": 1007
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Tung+Wah+Group+of+Hospitals+Wong+Tai+Sin+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1193
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Tung_Wah_Group_of_Hospitals_Wong_Tai_Sin_Hospital",
+      "cache_hit": false,
+      "duration_ms": 1583
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Alice+Ho+Miu+Ling+Nethersole+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2053
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Alice_Ho_Miu_Ling_Nethersole_Hospital",
+      "cache_hit": false,
+      "duration_ms": 2036
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Conde+S.+Janu%C3%A1rio+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1856
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Conde_S._Janu%C3%A1rio_Hospital",
+      "cache_hit": false,
+      "duration_ms": 1636
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=City+Hospital-Gaston+Memorial+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/City_Hospital-Gaston_Memorial_Hospital",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=F%C3%B8rde+Heliport%2C+Central+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/F%C3%B8rde_Heliport%2C_Central_Hospital",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Miami+City+Hospital%2C+Building+No.+1&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2042
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Miami_City_Hospital%2C_Building_No._1",
+      "cache_hit": false,
+      "duration_ms": 1228
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=St+David%27s+Hospital%2C+Cardiff&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/St_David%27s_Hospital%2C_Cardiff",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=St+David%27s+Hospital%2C+Carmarthen&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/St_David%27s_Hospital%2C_Carmarthen",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2016+United+States+House+of+Representatives+elections+in+Maine&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 61
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2016+United+States+House+of+Representatives+elections+in+Utah&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 52
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+MPs+elected+in+the+1768+British+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2209
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_MPs_elected_in_the_1768_British_general_election",
+      "cache_hit": false,
+      "duration_ms": 921
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+MPs+elected+in+the+1754+British+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2579
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_MPs_elected_in_the_1754_British_general_election",
+      "cache_hit": false,
+      "duration_ms": 1773
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2017+Japanese+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 7
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2017_Japanese_general_election",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2006+Arizona%27s+8th+congressional+district+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3433
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2006_Arizona%27s_8th_congressional_district_election",
+      "cache_hit": false,
+      "duration_ms": 1514
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2006+Minnesota%27s+5th+congressional+district+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4903
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2006_Minnesota%27s_5th_congressional_district_election",
+      "cache_hit": false,
+      "duration_ms": 3215
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2018+Massachusetts+gubernatorial+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 5
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2018_Massachusetts_gubernatorial_election",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Opinion+polling+for+the+2017+United+Kingdom+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 3
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Opinion_polling_for_the_2017_United_Kingdom_general_election",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2015+Democratic+Party+of+Japan+leadership+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2015_Democratic_Party_of_Japan_leadership_election",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2005+United+Kingdom+general+election+in+Edinburgh&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1720
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2005_United_Kingdom_general_election_in_Edinburgh",
+      "cache_hit": false,
+      "duration_ms": 2630
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2019+Danish+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 10648
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2019_Danish_general_election",
+      "cache_hit": false,
+      "duration_ms": 1259
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2010+Belgian+federal+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2010_Belgian_federal_election",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2006+Illinois+House+of+Representatives+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4907
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2006_Illinois_House_of_Representatives_election",
+      "cache_hit": false,
+      "duration_ms": 3328
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1830%E2%80%9331+United+States+Senate+elections&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 4
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/1830%E2%80%9331_United_States_Senate_elections",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2020+United+States+Senate+elections&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4402
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2020_United_States_Senate_elections",
+      "cache_hit": false,
+      "duration_ms": 1924
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Opinion+polling+for+the+2016+Spanish+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4228
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Opinion_polling_for_the_2016_Spanish_general_election",
+      "cache_hit": false,
+      "duration_ms": 5192
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Leeds+Industrial+Museum+at+Armley+Mills&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2120
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Leeds_Industrial_Museum_at_Armley_Mills",
+      "cache_hit": false,
+      "duration_ms": 1713
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Museum+of+Southwestern+Biology&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 32
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Museum_of_Southwestern_Biology",
+      "cache_hit": false,
+      "duration_ms": 1232
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=National+Commission+for+Museums+and+Monuments&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3599
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/National_Commission_for_Museums_and_Monuments",
+      "cache_hit": false,
+      "duration_ms": 3224
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Frederick+R.+Weisman+Museum+of+Art+%28California%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2469
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Frederick_R._Weisman_Museum_of_Art_(California)",
+      "cache_hit": false,
+      "duration_ms": 1292
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Gonz%C3%A1lez+Mart%C3%AD+National+Museum+of+Ceramics+and+Decorative+Arts&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Gonz%C3%A1lez_Mart%C3%AD_National_Museum_of_Ceramics_and_Decorative_Arts",
+      "cache_hit": true,
+      "duration_ms": 19
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Museum+of+Arts+and+Design&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3269
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Museum_of_Arts_and_Design",
+      "cache_hit": false,
+      "duration_ms": 989
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Museum+of+Dinosaurs+and+Ancient+Cultures&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1320
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Museum_of_Dinosaurs_and_Ancient_Cultures",
+      "cache_hit": false,
+      "duration_ms": 1742
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=National+Museum+of+Villa+Guinigi&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1328
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/National_Museum_of_Villa_Guinigi",
+      "cache_hit": false,
+      "duration_ms": 2158
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=The+Horror+in+the+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1468
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/The_Horror_in_the_Museum",
+      "cache_hit": false,
+      "duration_ms": 1193
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Official+Museums+of+Amsterdam&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 26
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Official_Museums_of_Amsterdam",
+      "cache_hit": true,
+      "duration_ms": 33
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=National+Museum+of+Eritrea&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3422
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/National_Museum_of_Eritrea",
+      "cache_hit": false,
+      "duration_ms": 1237
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lane+County+History+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3040
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=El+Pueblo+History+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 58
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Shanghai+Jewish+Refugees+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 44
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Shanghai_Jewish_Refugees_Museum",
+      "cache_hit": true,
+      "duration_ms": 42
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Abbe+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1724
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Abbe_Museum",
+      "cache_hit": false,
+      "duration_ms": 950
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Alampur+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3721
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Alampur_Museum",
+      "cache_hit": false,
+      "duration_ms": 909
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Amathole+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1284
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Amathole_Museum",
+      "cache_hit": false,
+      "duration_ms": 1025
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=BnF+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1394
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/BnF_Museum",
+      "cache_hit": false,
+      "duration_ms": 2122
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+South+American+Youth+Championships+in+Athletics&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2565
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_South_American_Youth_Championships_in_Athletics",
+      "cache_hit": false,
+      "duration_ms": 937
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+World+Junior+Championships+in+Athletics+%E2%80%93+Women%27s+heptathlon&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 27
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_World_Junior_Championships_in_Athletics_%E2%80%93_Women%27s_heptathlon",
+      "cache_hit": false,
+      "duration_ms": 1835
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Women%27s+100+metre+breaststroke&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3787
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Women%27s_100_metre_breaststroke",
+      "cache_hit": false,
+      "duration_ms": 3039
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1982+NCAA+Division+I+men%27s+basketball+championship+game&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 34
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/1982_NCAA_Division_I_men%27s_basketball_championship_game",
+      "cache_hit": false,
+      "duration_ms": 2086
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2006+FIVB+Women%27s+Volleyball+World+Championship&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4438
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2006_FIVB_Women%27s_Volleyball_World_Championship",
+      "cache_hit": false,
+      "duration_ms": 1657
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2015+Canadian+Figure+Skating+Championships&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 28
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2015_Canadian_Figure_Skating_Championships",
+      "cache_hit": false,
+      "duration_ms": 3614
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2015+Four+Nationals+Figure+Skating+Championships&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3123
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2015+Russian+Figure+Skating+Championships&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1996
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2016+Men%27s+European+Water+Polo+Championship&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 4
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2016_Men%27s_European_Water_Polo_Championship",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Greece+at+the+World+Athletics+Indoor+Championships&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Greece_at_the_World_Athletics_Indoor_Championships",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Men%27s+100+metre+backstroke&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Men%27s_100_metre_backstroke",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Men%27s+100+metre+breaststroke&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3246
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Men%27s+50+metre+butterfly&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 5447
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Men%27s_50_metre_butterfly",
+      "cache_hit": false,
+      "duration_ms": 3857
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Men%27s+50+metre+freestyle&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4316
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Men%27s_50_metre_freestyle",
+      "cache_hit": false,
+      "duration_ms": 5402
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Women%27s+100+metre+backstroke&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3721
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Women%27s_100_metre_backstroke",
+      "cache_hit": false,
+      "duration_ms": 5216
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Women%27s+100+metre+butterfly&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3522
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Women%27s_100_metre_butterfly",
+      "cache_hit": false,
+      "duration_ms": 4262
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Bassignana+%281799%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1922
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Bassignana_(1799)",
+      "cache_hit": false,
+      "duration_ms": 1387
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Grand+Port&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4093
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Grand_Port",
+      "cache_hit": false,
+      "duration_ms": 2289
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Ostro%C5%82%C4%99ka+%281920%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2407
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Ostro%C5%82%C4%99ka_(1920)",
+      "cache_hit": false,
+      "duration_ms": 1125
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Arras+%281915%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 49
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Arras_(1915)",
+      "cache_hit": true,
+      "duration_ms": 42
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Bobruysk+%281918%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1773
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Bobruysk_(1918)",
+      "cache_hit": false,
+      "duration_ms": 1209
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Kut+%282003%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 46
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Kut_(2003)",
+      "cache_hit": false,
+      "duration_ms": 1465
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Shusha+%281992%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2086
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Shusha_(1992)",
+      "cache_hit": false,
+      "duration_ms": 2473
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+the+Centaurs+%28Michelangelo%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 25
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_the_Centaurs_(Michelangelo)",
+      "cache_hit": false,
+      "duration_ms": 1898
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Baghdad+International+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Baghdad_International_Airport",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Laski+and+Anielin&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 27
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Laski_and_Anielin",
+      "cache_hit": false,
+      "duration_ms": 1372
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Mang+Yang+Pass&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2819
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Mang_Yang_Pass",
+      "cache_hit": false,
+      "duration_ms": 1694
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+the+Argenta+Gap&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3263
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_the_Argenta_Gap",
+      "cache_hit": false,
+      "duration_ms": 909
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle-Pieces+and+Aspects+of+the+War&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3815
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle-Pieces_and_Aspects_of_the_War",
+      "cache_hit": false,
+      "duration_ms": 2530
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Second+Battle+of+the+Hook&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3211
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Second_Battle_of_the_Hook",
+      "cache_hit": false,
+      "duration_ms": 1612
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+Royale+%28manga%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3177
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_Royale_(manga)",
+      "cache_hit": false,
+      "duration_ms": 2128
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Ankokuji&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3184
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Ankokuji",
+      "cache_hit": false,
+      "duration_ms": 1705
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Ballantyne+Pier&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1971
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Ballantyne_Pier",
+      "cache_hit": false,
+      "duration_ms": 1440
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Borodzianka&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4112
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Borodzianka",
+      "cache_hit": false,
+      "duration_ms": 1126
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Bruderholz&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4991
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Calven&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2068
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "input_files": [
+    "cache\\wikipedia_1percent_dumps\\enwiki-latest-pages-articles11.xml-p6899367p7054859.bz2",
+    "cache\\wikipedia_1percent_dumps\\enwiki-latest-pages-articles18.xml-p26716198p27121850.bz2",
+    "cache\\wikipedia_1percent_dumps\\enwiki-latest-pages-articles22.xml-p44496246p44788941.bz2"
+  ],
+  "files_seen": 3,
+  "files_recovered": 1,
+  "files_failed": [],
+  "pages_written": 39218,
+  "table_like_pages_written": 26222,
+  "output": "cache\\wikipedia_1percent_dumps\\raw_pages_all.jsonl",
+  "duration_seconds": 201.424
+}

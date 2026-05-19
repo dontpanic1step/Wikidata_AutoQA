@@ -1,0 +1,1091 @@
+{
+  "start_stage": "generate",
+  "candidate_input_paths": [],
+  "attempted_urls": 30,
+  "url_domains": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Visakhapatnam_Airport",
+      "domain": "Architecture and Transportation",
+      "subdomain": "airports"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Carlisle_Lake_District_Airport",
+      "domain": "Architecture and Transportation",
+      "subdomain": "airports"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Filmfare_Award_for_Best_Film_%E2%80%93_Telugu",
+      "domain": "Arts and Media",
+      "subdomain": "film awards"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Nandi_Award_for_Best_Feature_Film",
+      "domain": "Arts and Media",
+      "subdomain": "film awards"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_banks_in_Ukraine",
+      "domain": "Economy and Business",
+      "subdomain": "banks"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_banks_in_Malaysia",
+      "domain": "Economy and Business",
+      "subdomain": "banks"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Presidents_of_Leipzig_University",
+      "domain": "Education",
+      "subdomain": "universities"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2014%E2%80%9315_Boston_University_Terriers_men%27s_ice_hockey_season",
+      "domain": "Education",
+      "subdomain": "universities"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_pontoon_bridges",
+      "domain": "Engineering and Technology",
+      "subdomain": "bridges"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Travis_Scott_production_discography",
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "crop production"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_lighthouses_in_the_Canary_Islands",
+      "domain": "Geography",
+      "subdomain": "islands"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Siau_Tagulandang_Biaro_Islands_Regency",
+      "domain": "Geography",
+      "subdomain": "islands"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/The_Great_Controversy_(book)",
+      "domain": "Language and Literature",
+      "subdomain": "books"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Sixty-Six_Books",
+      "domain": "Language and Literature",
+      "subdomain": "books"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Picus_(bird)",
+      "domain": "Life Sciences",
+      "subdomain": "birds"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Tangara_(bird)",
+      "domain": "Life Sciences",
+      "subdomain": "birds"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Constant-weight_code",
+      "domain": "Mathematics",
+      "subdomain": "mathematical constants"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Ebullioscopic_constant",
+      "domain": "Mathematics",
+      "subdomain": "mathematical constants"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_NHS_regional_hospital_boards_(1947%E2%80%931974)",
+      "domain": "Medicine and Health",
+      "subdomain": "hospitals"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Religion_in_Scotland",
+      "domain": "Philosophy and Religion",
+      "subdomain": "religion demographics"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Bad_Religion_discography",
+      "domain": "Philosophy and Religion",
+      "subdomain": "religion demographics"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/BSA_Gold_Star",
+      "domain": "Physical Sciences",
+      "subdomain": "stars"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Lego_Star_Wars",
+      "domain": "Physical Sciences",
+      "subdomain": "stars"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2016_United_States_House_of_Representatives_elections_in_Arizona",
+      "domain": "Politics and Law",
+      "subdomain": "elections"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2017_Japanese_general_election",
+      "domain": "Politics and Law",
+      "subdomain": "elections"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Leeds_Industrial_Museum_at_Armley_Mills",
+      "domain": "Society and Culture",
+      "subdomain": "museums"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/National_Commission_for_Museums_and_Monuments",
+      "domain": "Society and Culture",
+      "subdomain": "museums"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_football_stadiums_in_Algeria",
+      "domain": "Sports and Recreation",
+      "subdomain": "stadiums"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Wibawa_Mukti_Stadium",
+      "domain": "Sports and Recreation",
+      "subdomain": "stadiums"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Battle_of_Bassignana_(1799)",
+      "domain": "History",
+      "subdomain": "battles"
+    }
+  ],
+  "generated": 30,
+  "accepted": 14,
+  "rejected": 16,
+  "output_path": "outputs\\wikipedia_infobox_rawdump_best20x2_rewrite_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_infobox_rawdump_best20x2_rewrite_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_infobox_rawdump_best20x2_rewrite_summary.json",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 1.8985,
+    "first_paragraph_fetch_seconds": 1.0311,
+    "table_parse_seconds": 11.762,
+    "llm_question_generation_seconds": 209.1803,
+    "total_generation_seconds": 279.3436,
+    "rewrite_seconds": 0.0,
+    "number_reference_margin_seconds": 0.0,
+    "duckduckgo_search_seconds": 138.6079,
+    "second_stage_grading_seconds": 446.4301,
+    "total_processing_seconds": 585.3624,
+    "candidate_processing_seconds": 585.3624
+  },
+  "telemetry": {
+    "process_generated_candidates": {
+      "generated": 30,
+      "accepted": 14,
+      "rejected": 16,
+      "second_stage_grading_summary": {
+        "run_count": 22,
+        "per_model": {
+          "openai/gpt-4.1-mini": {
+            "runs": 22,
+            "correct": 6,
+            "incorrect": 16,
+            "not_attempted": 0,
+            "accuracy": 0.2727272727272727
+          },
+          "google/gemini-3-flash-preview": {
+            "runs": 22,
+            "correct": 6,
+            "incorrect": 16,
+            "not_attempted": 0,
+            "accuracy": 0.2727272727272727
+          }
+        }
+      }
+    },
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Visakhapatnam+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 78
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Visakhapatnam_Airport",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Carlisle+Lake+District+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 56
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Carlisle_Lake_District_Airport",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Filmfare+Award+for+Best+Film+%E2%80%93+Telugu&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 81
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Filmfare_Award_for_Best_Film_%E2%80%93_Telugu",
+        "cache_hit": true,
+        "duration_ms": 64
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Nandi+Award+for+Best+Feature+Film&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 51
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Nandi_Award_for_Best_Feature_Film",
+        "cache_hit": true,
+        "duration_ms": 46
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+banks+in+Ukraine&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 55
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_banks_in_Ukraine",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+banks+in+Malaysia&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 66
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_banks_in_Malaysia",
+        "cache_hit": true,
+        "duration_ms": 5
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Presidents+of+Leipzig+University&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 86
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Presidents_of_Leipzig_University",
+        "cache_hit": true,
+        "duration_ms": 48
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014%E2%80%9315+Boston+University+Terriers+men%27s+ice+hockey+season&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 64
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014%E2%80%9315_Boston_University_Terriers_men%27s_ice_hockey_season",
+        "cache_hit": true,
+        "duration_ms": 60
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+pontoon+bridges&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 51
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_pontoon_bridges",
+        "cache_hit": true,
+        "duration_ms": 51
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Travis+Scott+production+discography&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 61
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Travis_Scott_production_discography",
+        "cache_hit": true,
+        "duration_ms": 62
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+lighthouses+in+the+Canary+Islands&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 52
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_lighthouses_in_the_Canary_Islands",
+        "cache_hit": true,
+        "duration_ms": 43
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Siau+Tagulandang+Biaro+Islands+Regency&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 54
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Siau_Tagulandang_Biaro_Islands_Regency",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=The+Great+Controversy+%28book%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 39
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/The_Great_Controversy_(book)",
+        "cache_hit": true,
+        "duration_ms": 46
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Sixty-Six+Books&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 42
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Sixty-Six_Books",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Picus+%28bird%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 68
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Picus_(bird)",
+        "cache_hit": true,
+        "duration_ms": 88
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Tangara+%28bird%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 51
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Tangara_(bird)",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Constant-weight+code&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 64
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Constant-weight_code",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Ebullioscopic+constant&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 75
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Ebullioscopic_constant",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+NHS+regional+hospital+boards+%281947%E2%80%931974%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 39
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_NHS_regional_hospital_boards_(1947%E2%80%931974)",
+        "cache_hit": true,
+        "duration_ms": 46
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Religion+in+Scotland&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 44
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Religion_in_Scotland",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bad+Religion+discography&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 59
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bad_Religion_discography",
+        "cache_hit": true,
+        "duration_ms": 47
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=BSA+Gold+Star&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 49
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/BSA_Gold_Star",
+        "cache_hit": true,
+        "duration_ms": 48
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lego+Star+Wars&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 81
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Lego_Star_Wars",
+        "cache_hit": true,
+        "duration_ms": 47
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2016+United+States+House+of+Representatives+elections+in+Arizona&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 87
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2016_United_States_House_of_Representatives_elections_in_Arizona",
+        "cache_hit": true,
+        "duration_ms": 45
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2017+Japanese+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 92
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2017_Japanese_general_election",
+        "cache_hit": true,
+        "duration_ms": 59
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Leeds+Industrial+Museum+at+Armley+Mills&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 57
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Leeds_Industrial_Museum_at_Armley_Mills",
+        "cache_hit": true,
+        "duration_ms": 55
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=National+Commission+for+Museums+and+Monuments&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 66
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/National_Commission_for_Museums_and_Monuments",
+        "cache_hit": true,
+        "duration_ms": 54
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+football+stadiums+in+Algeria&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 69
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_football_stadiums_in_Algeria",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Wibawa+Mukti+Stadium&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 56
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Wibawa_Mukti_Stadium",
+        "cache_hit": true,
+        "duration_ms": 5
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Bassignana+%281799%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 49
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Bassignana_(1799)",
+        "cache_hit": true,
+        "duration_ms": 5
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+year+had+the+highest+passenger+traffic+at+Visakhapatnam+Airport%3F",
+        "cache_hit": true,
+        "duration_ms": 51
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Visakhapatnam+Airport+annual+passenger+traffic+by+year",
+        "cache_hit": true,
+        "duration_ms": 78
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Visakhapatnam+Airport+busiest+year+by+passengers",
+        "cache_hit": false,
+        "duration_ms": 3166,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Visakhapatnam+Airport+passenger+traffic+statistics",
+        "cache_hit": false,
+        "duration_ms": 5072,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Carlisle+Lake+District+Airport+passenger+numbers+by+year",
+        "cache_hit": false,
+        "duration_ms": 1821,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Carlisle+Lake+District+Airport+traffic+statistics",
+        "cache_hit": true,
+        "duration_ms": 8
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+with+most+passengers+at+Carlisle+Lake+District+Airport",
+        "cache_hit": false,
+        "duration_ms": 2202,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+did+Carlisle+Lake+District+Airport+handle+the+highest+number+of+passengers%3F",
+        "cache_hit": false,
+        "duration_ms": 2400,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+producer%28s%29+won+the+Filmfare+Award+for+Best+Film+%E2%80%93+Telugu+the+most+times+in+the+2010s%3F",
+        "cache_hit": true,
+        "duration_ms": 117
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Filmfare+Award+for+Best+Film+Telugu+2010s+most+awarded+producer",
+        "cache_hit": false,
+        "duration_ms": 2008,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Telugu+Filmfare+Best+Film+award+winners+2010s+producer+count",
+        "cache_hit": false,
+        "duration_ms": 2035,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+producer+won+most+Filmfare+Best+Film+Telugu+2010s",
+        "cache_hit": false,
+        "duration_ms": 2682,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+director+has+won+the+most+Nandi+Award+for+Best+Feature+Film+-+Gold%3F",
+        "cache_hit": true,
+        "duration_ms": 132
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Nandi+Award+Best+Feature+Film+Gold+winners+by+director+count",
+        "cache_hit": false,
+        "duration_ms": 1944,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Nandi+Award+Best+Feature+Film+Gold+most+wins+director",
+        "cache_hit": false,
+        "duration_ms": 2303,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=director+with+most+Nandi+Award+Best+Feature+Film+Gold",
+        "cache_hit": false,
+        "duration_ms": 2762,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+Malaysian+bank+by+total+assets+2023",
+        "cache_hit": false,
+        "duration_ms": 3063,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+bank+had+the+highest+total+assets+in+Malaysia+as+of+31+December+2023%3F",
+        "cache_hit": false,
+        "duration_ms": 3197,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=top+Malaysian+banks+by+assets+December+2023",
+        "cache_hit": false,
+        "duration_ms": 5060,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+president+of+Leipzig+University+served+in+the+year+1918+and+resigned%3F",
+        "cache_hit": false,
+        "duration_ms": 2096,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Leipzig+University+president+1918+resigned",
+        "cache_hit": false,
+        "duration_ms": 2100,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Leipzig+University+presidents+20th+century+resignation",
+        "cache_hit": false,
+        "duration_ms": 2195,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+opponent+had+the+highest+attendance+at+a+Boston+University+Terriers+home+game+during+the+2014%E2%80%9315+season%3F",
+        "cache_hit": false,
+        "duration_ms": 1954,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014%E2%80%9315+Boston+University+Terriers+highest+home+game+attendance+opponent",
+        "cache_hit": false,
+        "duration_ms": 2067,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Boston+University+Terriers+2014%E2%80%9315+season+attendance+by+opponent",
+        "cache_hit": false,
+        "duration_ms": 2326,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Boston+University+Terriers+2014%E2%80%9315+home+game+attendance+records",
+        "cache_hit": false,
+        "duration_ms": 2260,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=longest+pontoon+bridge",
+        "cache_hit": true,
+        "duration_ms": 71
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+floating+bridge+by+length",
+        "cache_hit": false,
+        "duration_ms": 1785,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+pontoon+bridge+is+the+longest+in+length%3F",
+        "cache_hit": false,
+        "duration_ms": 2105,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=pontoon+bridge+length+comparison",
+        "cache_hit": false,
+        "duration_ms": 3779,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+single+produced+by+Travis+Scott+had+the+highest+peak+chart+position+in+the+US%3F",
+        "cache_hit": true,
+        "duration_ms": 78
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Top+charting+singles+produced+by+Travis+Scott+in+US",
+        "cache_hit": false,
+        "duration_ms": 1817,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Travis+Scott+production+discography+US+chart+peak",
+        "cache_hit": false,
+        "duration_ms": 2225,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Travis+Scott+singles+highest+US+chart+position",
+        "cache_hit": false,
+        "duration_ms": 3046,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+lighthouse+in+the+Canary+Islands+has+the+tallest+tower+height%3F",
+        "cache_hit": true,
+        "duration_ms": 88
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=tallest+lighthouse+tower+height+Canary+Islands",
+        "cache_hit": true,
+        "duration_ms": 96
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Canary+Islands+lighthouse+tower+height+comparison",
+        "cache_hit": false,
+        "duration_ms": 2703,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=lighthouse+with+maximum+tower+height+in+Canary+Islands",
+        "cache_hit": false,
+        "duration_ms": 6464,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+district+by+area+in+Siau+Tagulandang+Biaro+Islands+Regency",
+        "cache_hit": true,
+        "duration_ms": 9
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+district+in+Siau+Tagulandang+Biaro+Islands+Regency+has+the+largest+area+in+square+kilometers%3F",
+        "cache_hit": true,
+        "duration_ms": 19
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Siau+Tagulandang+Biaro+Islands+Regency+district+areas",
+        "cache_hit": true,
+        "duration_ms": 24
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=which+district+has+the+biggest+area+in+Siau+Tagulandang+Biaro+Islands+Regency",
+        "cache_hit": false,
+        "duration_ms": 10627,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+word+count+edition+of+The+Great+Controversy",
+        "cache_hit": false,
+        "duration_ms": 2132,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+book+edition+of+The+Great+Controversy+has+the+highest+word+count%3F",
+        "cache_hit": false,
+        "duration_ms": 2230,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=The+Great+Controversy+book+editions+word+count+comparison",
+        "cache_hit": false,
+        "duration_ms": 2351,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=The+Great+Controversy+publishing+and+distribution+word+counts",
+        "cache_hit": false,
+        "duration_ms": 2820,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Sixty-Six+Books+list+of+plays+by+author+gender",
+        "cache_hit": false,
+        "duration_ms": 2379,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+books+of+the+Protestant+Bible+have+plays+authored+by+women+in+the+Sixty-Six+Books+collection%3F",
+        "cache_hit": false,
+        "duration_ms": 2522,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Sixty-Six+Books+plays+female+authors",
+        "cache_hit": false,
+        "duration_ms": 2529,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Sixty-Six+Books+Bible+books+with+women+playwrights",
+        "cache_hit": false,
+        "duration_ms": 29750,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Picus+bird+species+range+size",
+        "cache_hit": false,
+        "duration_ms": 2187,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Picus+species+has+the+widest+geographic+distribution%3F",
+        "cache_hit": false,
+        "duration_ms": 2435,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Picus+species+geographic+distribution+comparison",
+        "cache_hit": false,
+        "duration_ms": 2844,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=widest+distribution+Picus+woodpecker+species",
+        "cache_hit": false,
+        "duration_ms": 2052,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Tangara+species+distribution+range+comparison",
+        "cache_hit": true,
+        "duration_ms": 61
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Tangara+species+country+range+list",
+        "cache_hit": false,
+        "duration_ms": 2016,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Tangara+species+has+the+widest+distribution+across+countries%3F",
+        "cache_hit": false,
+        "duration_ms": 2240,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Tangara+bird+species+with+largest+geographic+distribution",
+        "cache_hit": false,
+        "duration_ms": 4398,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=3-of-6+code+original+data+bits+with+most+appended+bits+set+to+1",
+        "cache_hit": true,
+        "duration_ms": 67
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+original+3+data+bits+have+the+maximum+number+of+appended+bits+set+to+1+in+the+3-of-6+code%3F",
+        "cache_hit": false,
+        "duration_ms": 2052,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=original+3+data+bits+with+highest+appended+bits+count+3-of-6+code",
+        "cache_hit": false,
+        "duration_ms": 2037,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=maximum+appended+bits+in+3-of-6+code",
+        "cache_hit": false,
+        "duration_ms": 3184,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+solvent+has+the+highest+ebullioscopic+constant+Kb+in+K%E2%8B%85kg%2Fmol%3F",
+        "cache_hit": true,
+        "duration_ms": 33
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=maximum+Kb+value+for+solvents",
+        "cache_hit": false,
+        "duration_ms": 2278,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=which+solvent+has+largest+boiling+point+elevation+constant",
+        "cache_hit": false,
+        "duration_ms": 2219,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=solvent+with+highest+ebullioscopic+constant",
+        "cache_hit": false,
+        "duration_ms": 2410,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+NHS+regional+hospital+board+in+England+had+the+greatest+number+of+county+boroughs+between+1947+and+1974%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=NHS+regional+hospital+boards+county+boroughs+count",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+number+of+county+boroughs+NHS+regional+hospital+board+England",
+        "cache_hit": false,
+        "duration_ms": 3211,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+ethnic+group+had+the+highest+percentage+reporting+no+religion+in+2022+in+Scotland%3F",
+        "cache_hit": false,
+        "duration_ms": 2250,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=ethnic+group+highest+no+religion+percentage+Scotland+2022",
+        "cache_hit": false,
+        "duration_ms": 2373,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Scotland+irreligious+by+ethnic+group+2022",
+        "cache_hit": false,
+        "duration_ms": 2934,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=percentage+no+religion+by+ethnicity+Scotland+census+2022",
+        "cache_hit": false,
+        "duration_ms": 2140,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Bad+Religion+single+reached+the+highest+peak+position+on+the+US+Alternative+chart%3F",
+        "cache_hit": false,
+        "duration_ms": 1788,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Bad+Religion+singles+highest+US+Alternative+chart+position",
+        "cache_hit": false,
+        "duration_ms": 2154,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Bad+Religion+singles+chart+positions+US+Alternative",
+        "cache_hit": false,
+        "duration_ms": 2204,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+achieved+the+highest+speed+in+miles+per+hour+in+the+Isle+of+Man+TT+races+listed%3F",
+        "cache_hit": false,
+        "duration_ms": 2016,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=fastest+winner+Isle+of+Man+TT+Clubmans+races",
+        "cache_hit": false,
+        "duration_ms": 2142,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Isle+of+Man+TT+highest+speed+winner",
+        "cache_hit": false,
+        "duration_ms": 2228,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Ultimate+Collector+Series+Lego+Star+Wars+set+with+most+pieces",
+        "cache_hit": false,
+        "duration_ms": 2424,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+UCS+Lego+Star+Wars+set+by+piece+count",
+        "cache_hit": false,
+        "duration_ms": 2806,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Ultimate+Collector+Series+Lego+Star+Wars+set+has+the+highest+number+of+pieces%3F",
+        "cache_hit": false,
+        "duration_ms": 3360,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Lego+Star+Wars+UCS+set+highest+number+of+pieces",
+        "cache_hit": false,
+        "duration_ms": 3264,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2016+Arizona+House+elections+total+votes+by+district",
+        "cache_hit": false,
+        "duration_ms": 2022,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Arizona+congressional+district+had+the+highest+total+number+of+votes+in+the+2016+House+elections%3F",
+        "cache_hit": false,
+        "duration_ms": 2330,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Arizona+congressional+districts+2016+election+vote+counts",
+        "cache_hit": false,
+        "duration_ms": 3211,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+voter+turnout+Arizona+2016+House+districts",
+        "cache_hit": false,
+        "duration_ms": 2270,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Nigerian+state+has+the+most+listed+National+Monuments+and+Heritage+Sites%3F",
+        "cache_hit": false,
+        "duration_ms": 2091,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Nigerian+states+with+most+National+Monuments",
+        "cache_hit": false,
+        "duration_ms": 2399,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=number+of+National+Monuments+in+each+Nigerian+state",
+        "cache_hit": false,
+        "duration_ms": 3049,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=count+of+heritage+sites+by+Nigerian+state",
+        "cache_hit": false,
+        "duration_ms": 3675,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+team+scored+the+most+goals+in+a+single+match+at+the+2018+Asian+Games+Men%27s+Football+held+at+Wibawa+Mukti+Stadium%3F",
+        "cache_hit": false,
+        "duration_ms": 2079,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=team+with+most+goals+in+one+match+2018+Asian+Games+football",
+        "cache_hit": false,
+        "duration_ms": 2495,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2018+Asian+Games+Men%27s+Football+highest+single+match+goals",
+        "cache_hit": false,
+        "duration_ms": 4041,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wibawa+Mukti+Stadium+2018+Asian+Games+football+top+scoring+team",
+        "cache_hit": false,
+        "duration_ms": 2435,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+strength+brigade+Andrei+Grigorevich+Rosenberg+forces+Bassignana",
+        "cache_hit": false,
+        "duration_ms": 2520,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+brigade+had+the+largest+strength+in+Andrei+Grigorevich+Rosenberg%27s+forces+at+Bassignana%3F",
+        "cache_hit": false,
+        "duration_ms": 3094,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Andrei+Grigorevich+Rosenberg+forces+strength+comparison+Bassignana",
+        "cache_hit": false,
+        "duration_ms": 3063,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=brigade+with+max+strength+Rosenberg+Bassignana+battle",
+        "cache_hit": false,
+        "duration_ms": 2388,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

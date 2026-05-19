@@ -1,0 +1,505 @@
+{
+  "used_ids": [
+    2942266,
+    3736228,
+    5839157,
+    5968844,
+    6997931,
+    8179036,
+    9940679,
+    9942806,
+    16516792,
+    16853067,
+    22060856,
+    22978779,
+    25975405,
+    30479038,
+    34612076,
+    34704627,
+    37166529,
+    37732663,
+    39407085,
+    43920070,
+    45727649,
+    51481392,
+    54727528,
+    58767698,
+    59352406,
+    59651956,
+    62659710,
+    66010827,
+    66635972,
+    67492275,
+    69456847,
+    71491929,
+    71529407,
+    71931420,
+    73448318,
+    74262329,
+    75630307,
+    75905861,
+    79171450,
+    79642122
+  ],
+  "in_progress_ids": [],
+  "accepted_ids": [
+    2942266,
+    16516792,
+    37166529,
+    58767698
+  ],
+  "rejected_ids": [
+    3736228,
+    5839157,
+    5968844,
+    6997931,
+    8179036,
+    9940679,
+    9942806,
+    16853067,
+    22060856,
+    22978779,
+    25975405,
+    30479038,
+    34612076,
+    34704627,
+    37732663,
+    39407085,
+    43920070,
+    45727649,
+    51481392,
+    54727528,
+    59352406,
+    59651956,
+    62659710,
+    66010827,
+    66635972,
+    67492275,
+    69456847,
+    71491929,
+    71529407,
+    71931420,
+    73448318,
+    74262329,
+    75630307,
+    75905861,
+    79171450,
+    79642122
+  ],
+  "rerun_pool": [],
+  "failure_reasons": {
+    "3736228": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+    "5839157": "wikipedia_infobox_no_tables",
+    "5968844": "wikipedia_infobox_no_tables",
+    "6997931": "wikipedia_infobox_no_tables",
+    "8179036": "wikipedia_infobox_no_tables",
+    "9940679": "rewrite_guard_rejected:answer_leakage",
+    "9942806": "wikipedia_infobox_no_tables",
+    "16853067": "wikipedia_infobox_no_tables",
+    "22060856": "wikipedia_infobox_no_tables",
+    "22978779": "wikipedia_infobox_no_tables",
+    "25975405": "wikipedia_infobox_no_tables",
+    "30479038": "wikipedia_infobox_no_tables",
+    "34612076": "wikipedia_infobox_no_tables",
+    "34704627": "wikipedia_infobox_no_tables",
+    "37732663": "wikipedia_infobox_no_tables",
+    "39407085": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+    "43920070": "wikipedia_infobox_no_tables",
+    "45727649": "wikipedia_infobox_no_tables",
+    "51481392": "wikipedia_infobox_no_tables",
+    "54727528": "wikipedia_infobox_no_tables",
+    "59352406": "wikipedia_infobox_no_tables",
+    "59651956": "wikipedia_infobox_no_tables",
+    "62659710": "wikipedia_infobox_no_tables",
+    "66010827": "wikipedia_infobox_no_tables",
+    "66635972": "wikipedia_infobox_no_tables",
+    "67492275": "wikipedia_infobox_no_tables",
+    "69456847": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+    "71491929": "wikipedia_infobox_no_tables",
+    "71529407": "wikipedia_infobox_no_tables",
+    "71931420": "wikipedia_infobox_no_tables",
+    "73448318": "wikipedia_infobox_no_tables",
+    "74262329": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+    "75630307": "wikipedia_infobox_no_tables",
+    "75905861": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+    "79171450": "wikipedia_infobox_no_tables",
+    "79642122": "rewrite_guard_rejected:cutoff_year_exceeded"
+  },
+  "events": [
+    {
+      "event": "reserve_ids",
+      "page_ids": [
+        22978779,
+        45727649,
+        73448318,
+        79171450,
+        62659710
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        22978779
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        45727649
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        73448318
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        79171450
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        62659710
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "reserve_ids",
+      "page_ids": [
+        59651956,
+        30479038,
+        16853067,
+        43920070,
+        51481392
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        59651956
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        30479038
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        16853067
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        43920070
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        51481392
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "reserve_ids",
+      "page_ids": [
+        34704627,
+        74262329,
+        71931420,
+        75905861,
+        6997931
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        34704627
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        74262329
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        71931420
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        75905861
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        6997931
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "reserve_ids",
+      "page_ids": [
+        22060856,
+        34612076,
+        5968844,
+        69456847,
+        58767698
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        22060856
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        34612076
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        5968844
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        69456847
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        58767698
+      ],
+      "reason": ""
+    },
+    {
+      "event": "reserve_ids",
+      "page_ids": [
+        2942266,
+        79642122,
+        54727528,
+        16516792,
+        9940679
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        2942266
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        79642122
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        54727528
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        16516792
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        9940679
+      ],
+      "reason": "rewrite_guard_rejected:answer_leakage"
+    },
+    {
+      "event": "reserve_ids",
+      "page_ids": [
+        67492275,
+        39407085,
+        9942806,
+        71529407,
+        66010827
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        67492275
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        39407085
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        9942806
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        71529407
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        66010827
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "reserve_ids",
+      "page_ids": [
+        66635972,
+        71491929,
+        37166529,
+        75630307,
+        25975405
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        66635972
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        71491929
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        37166529
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        75630307
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        25975405
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "reserve_ids",
+      "page_ids": [
+        37732663,
+        59352406,
+        3736228,
+        8179036,
+        5839157
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        37732663
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        59352406
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        3736228
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        8179036
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        5839157
+      ],
+      "reason": "wikipedia_infobox_no_tables"
+    }
+  ],
+  "stats": {
+    "used": 40,
+    "in_progress": 0,
+    "accepted": 4,
+    "rejected": 36,
+    "rerun_pool": 0
+  }
+}

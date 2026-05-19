@@ -1,0 +1,763 @@
+{
+  "attempted_urls": 26,
+  "url_domains": [
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_busiest_railway_stations_in_West_Yorkshire",
+      "domain": "Architecture and Transportation",
+      "subdomain": "railway stations"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Caesarea%E2%80%93Pardes_Hanna_railway_station",
+      "domain": "Architecture and Transportation",
+      "subdomain": "railway stations"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Filmfare_Award_for_Best_Film_%E2%80%93_Telugu",
+      "domain": "Arts and Media",
+      "subdomain": "film awards"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Nandi_Award_for_Best_Feature_Film",
+      "domain": "Arts and Media",
+      "subdomain": "film awards"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_open-source_programming_languages",
+      "domain": "Computer Science and AI",
+      "subdomain": "programming languages"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Java_(programming_language)",
+      "domain": "Computer Science and AI",
+      "subdomain": "programming languages"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Royal_Observatory_of_Belgium",
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "observatories"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_ships_built_by_Hall,_Russell_%26_Company_(601%E2%80%93700)",
+      "domain": "Economy and Business",
+      "subdomain": "companies"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_ships_built_by_Hall,_Russell_%26_Company_(801%E2%80%93900)",
+      "domain": "Economy and Business",
+      "subdomain": "companies"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Presidents_of_Leipzig_University",
+      "domain": "Education",
+      "subdomain": "universities"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2014%E2%80%9315_Boston_University_Terriers_men%27s_ice_hockey_season",
+      "domain": "Education",
+      "subdomain": "universities"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_pontoon_bridges",
+      "domain": "Engineering and Technology",
+      "subdomain": "bridges"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_countries_by_cereal_production",
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "crop production"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Travis_Scott_production_discography",
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "crop production"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Prehistoric_pile_dwellings_around_Lake_Zurich",
+      "domain": "Geography",
+      "subdomain": "lakes"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/EA_Salt_Lake",
+      "domain": "Geography",
+      "subdomain": "lakes"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Picus_(bird)",
+      "domain": "Life Sciences",
+      "subdomain": "birds"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Tangara_(bird)",
+      "domain": "Life Sciences",
+      "subdomain": "birds"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_NHS_regional_hospital_boards_(1947%E2%80%931974)",
+      "domain": "Medicine and Health",
+      "subdomain": "hospitals"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2016_United_States_House_of_Representatives_elections_in_Arizona",
+      "domain": "Politics and Law",
+      "subdomain": "elections"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2017_Japanese_general_election",
+      "domain": "Politics and Law",
+      "subdomain": "elections"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Leeds_Industrial_Museum_at_Armley_Mills",
+      "domain": "Society and Culture",
+      "subdomain": "museums"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/National_Commission_for_Museums_and_Monuments",
+      "domain": "Society and Culture",
+      "subdomain": "museums"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2014_World_Junior_Championships_in_Athletics_%E2%80%93_Women%27s_heptathlon",
+      "domain": "Sports and Recreation",
+      "subdomain": "championship results"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Women%27s_100_metre_breaststroke",
+      "domain": "Sports and Recreation",
+      "subdomain": "championship results"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Battle_of_Bassignana_(1799)",
+      "domain": "History",
+      "subdomain": "battles"
+    }
+  ],
+  "generated": 26,
+  "accepted": 6,
+  "rejected": 20,
+  "output_path": "outputs\\wikipedia_infobox_rawdump_20x1x2_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_infobox_rawdump_20x1x2_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_infobox_rawdump_20x1x2_summary.json",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 0.1741,
+    "first_paragraph_fetch_seconds": 0.0501,
+    "table_parse_seconds": 9.6252,
+    "llm_question_generation_seconds": 147.2594,
+    "total_generation_seconds": 234.5538,
+    "rewrite_seconds": 0.0,
+    "number_reference_margin_seconds": 0.0,
+    "duckduckgo_search_seconds": 168.0659,
+    "second_stage_grading_seconds": 247.3142,
+    "total_processing_seconds": 415.441,
+    "candidate_processing_seconds": 415.441
+  },
+  "telemetry": {
+    "process_generated_candidates": {
+      "generated": 26,
+      "accepted": 6,
+      "rejected": 20,
+      "second_stage_grading_summary": {
+        "run_count": 8,
+        "per_model": {
+          "openai/gpt-4.1-mini": {
+            "runs": 8,
+            "correct": 1,
+            "incorrect": 7,
+            "not_attempted": 0,
+            "accuracy": 0.125
+          },
+          "google/gemini-3-flash-preview": {
+            "runs": 8,
+            "correct": 2,
+            "incorrect": 6,
+            "not_attempted": 0,
+            "accuracy": 0.25
+          }
+        }
+      }
+    },
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+West+Yorkshire&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_West_Yorkshire",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Caesarea%E2%80%93Pardes+Hanna+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Caesarea%E2%80%93Pardes_Hanna_railway_station",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Filmfare+Award+for+Best+Film+%E2%80%93+Telugu&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Filmfare_Award_for_Best_Film_%E2%80%93_Telugu",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Nandi+Award+for+Best+Feature+Film&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Nandi_Award_for_Best_Feature_Film",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+open-source+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_open-source_programming_languages",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Java+%28programming+language%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 18
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Java_(programming_language)",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Royal+Observatory+of+Belgium&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Royal_Observatory_of_Belgium",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+ships+built+by+Hall%2C+Russell+%26+Company+%28601%E2%80%93700%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_ships_built_by_Hall%2C_Russell_%26_Company_(601%E2%80%93700)",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+ships+built+by+Hall%2C+Russell+%26+Company+%28801%E2%80%93900%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_ships_built_by_Hall%2C_Russell_%26_Company_(801%E2%80%93900)",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Presidents+of+Leipzig+University&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Presidents_of_Leipzig_University",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014%E2%80%9315+Boston+University+Terriers+men%27s+ice+hockey+season&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014%E2%80%9315_Boston_University_Terriers_men%27s_ice_hockey_season",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+pontoon+bridges&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_pontoon_bridges",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+countries+by+cereal+production&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_countries_by_cereal_production",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Travis+Scott+production+discography&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Travis_Scott_production_discography",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Prehistoric+pile+dwellings+around+Lake+Zurich&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Prehistoric_pile_dwellings_around_Lake_Zurich",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=EA+Salt+Lake&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/EA_Salt_Lake",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Picus+%28bird%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Picus_(bird)",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Tangara+%28bird%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 5
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Tangara_(bird)",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+NHS+regional+hospital+boards+%281947%E2%80%931974%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_NHS_regional_hospital_boards_(1947%E2%80%931974)",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2016+United+States+House+of+Representatives+elections+in+Arizona&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 28
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2016_United_States_House_of_Representatives_elections_in_Arizona",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2017+Japanese+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2017_Japanese_general_election",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Leeds+Industrial+Museum+at+Armley+Mills&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Leeds_Industrial_Museum_at_Armley_Mills",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=National+Commission+for+Museums+and+Monuments&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/National_Commission_for_Museums_and_Monuments",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+World+Junior+Championships+in+Athletics+%E2%80%93+Women%27s+heptathlon&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_World_Junior_Championships_in_Athletics_%E2%80%93_Women%27s_heptathlon",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Women%27s+100+metre+breaststroke&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 5
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Women%27s_100_metre_breaststroke",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Bassignana+%281799%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Bassignana_(1799)",
+        "cache_hit": true,
+        "duration_ms": 0
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2022%E2%80%932023+busiest+railway+stations+West+Yorkshire+passenger+usage",
+        "cache_hit": false,
+        "duration_ms": 1711,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=West+Yorkshire+railway+stations+2022%E2%80%932023+passenger+numbers",
+        "cache_hit": false,
+        "duration_ms": 2344,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+railway+station+had+the+highest+passenger+usage+in+the+2022%E2%80%932023+statistics+for+busiest+railway+stations+in+West+Yorkshire%3F",
+        "cache_hit": false,
+        "duration_ms": 20811,
+        "used_direct_fallback": true
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Caesarea%E2%80%93Pardes+Hanna+railway+station+passenger+numbers+by+year",
+        "cache_hit": false,
+        "duration_ms": 3295,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+which+year+did+Caesarea%E2%80%93Pardes+Hanna+railway+station+have+the+highest+number+of+passengers+boarding+and+disembarking%3F",
+        "cache_hit": false,
+        "duration_ms": 8845,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Caesarea%E2%80%93Pardes+Hanna+railway+station+ridership+statistics",
+        "cache_hit": false,
+        "duration_ms": 9716,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+with+max+passengers+at+Caesarea%E2%80%93Pardes+Hanna+railway+station",
+        "cache_hit": false,
+        "duration_ms": 8414,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+film+producer%28s%29+won+the+Filmfare+Award+for+Best+Film+%E2%80%93+Telugu+the+most+times+in+the+2010s%3F",
+        "cache_hit": false,
+        "duration_ms": 3521,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Filmfare+Best+Film+Telugu+producers+2010s",
+        "cache_hit": false,
+        "duration_ms": 2918,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Filmfare+Award+for+Best+Film+Telugu+2010s+winners",
+        "cache_hit": false,
+        "duration_ms": 8570,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=most+awarded+producer+Filmfare+Best+Film+Telugu+2010s",
+        "cache_hit": false,
+        "duration_ms": 26691,
+        "used_direct_fallback": true
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Nandi+Award+for+Best+Feature+Film+Gold+earliest+winner",
+        "cache_hit": false,
+        "duration_ms": 22014,
+        "used_direct_fallback": true
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=first+winner+of+Nandi+Award+for+Best+Feature+Film+Gold",
+        "cache_hit": false,
+        "duration_ms": 22757,
+        "used_direct_fallback": true
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+movie+won+the+Nandi+Award+for+Best+Feature+Film+-+Gold+in+the+earliest+year+listed+in+the+table%3F",
+        "cache_hit": false,
+        "duration_ms": 34011,
+        "used_direct_fallback": true
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Nandi+Award+Best+Feature+Film+Gold+1978+winner",
+        "cache_hit": false,
+        "duration_ms": 28436,
+        "used_direct_fallback": true
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+open-source+programming+license+is+used+by+the+most+programming+languages+in+the+List+of+open-source+programming+languages%3F",
+        "cache_hit": false,
+        "duration_ms": 8662,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=most+common+license+in+open-source+programming+languages+list",
+        "cache_hit": false,
+        "duration_ms": 15230,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=open-source+programming+languages+licenses+count",
+        "cache_hit": false,
+        "duration_ms": 16057,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+open-source+programming+languages+license+frequency",
+        "cache_hit": false,
+        "duration_ms": 10484,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Java+programming+language+version+history",
+        "cache_hit": false,
+        "duration_ms": 2145,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+earliest+released+version+of+Java+%28programming+language%29+listed+in+the+Versions+table%3F",
+        "cache_hit": false,
+        "duration_ms": 2263,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=earliest+Java+version+release",
+        "cache_hit": false,
+        "duration_ms": 3091,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=first+Java+version+release+date",
+        "cache_hit": false,
+        "duration_ms": 1784,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+minor+planet+discovered+by+the+Royal+Observatory+of+Belgium+has+the+earliest+discovery+date%3F",
+        "cache_hit": false,
+        "duration_ms": 2300,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Royal+Observatory+of+Belgium+minor+planets+discovery+dates",
+        "cache_hit": false,
+        "duration_ms": 2391,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=minor+planets+discovered+by+Royal+Observatory+of+Belgium+with+dates",
+        "cache_hit": false,
+        "duration_ms": 1715,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=earliest+discovered+minor+planet+by+Royal+Observatory+of+Belgium",
+        "cache_hit": false,
+        "duration_ms": 4187,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+opponent+had+the+highest+attendance+at+a+home+game+during+the+2014%E2%80%9315+Boston+University+Terriers+men%27s+ice+hockey+season%3F",
+        "cache_hit": false,
+        "duration_ms": 2042,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014%E2%80%9315+Boston+University+Terriers+men%27s+ice+hockey+season+highest+home+game+attendance",
+        "cache_hit": false,
+        "duration_ms": 2297,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Boston+University+Terriers+2014%E2%80%9315+ice+hockey+attendance+by+opponent",
+        "cache_hit": false,
+        "duration_ms": 2426,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014%E2%80%9315+Boston+University+Terriers+home+game+attendance+records",
+        "cache_hit": false,
+        "duration_ms": 1547,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=longest+pontoon+bridge",
+        "cache_hit": false,
+        "duration_ms": 2001,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+pontoon+bridges+longest",
+        "cache_hit": false,
+        "duration_ms": 2804,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+pontoon+bridge+listed+in+the+List+of+pontoon+bridges+is+the+longest+in+length%3F",
+        "cache_hit": false,
+        "duration_ms": 3344,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+country+had+the+highest+cereal+production+in+thousands+of+tons+according+to+the+List+of+countries+by+cereal+production%3F",
+        "cache_hit": true,
+        "duration_ms": 185
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=top+cereal+producing+country",
+        "cache_hit": false,
+        "duration_ms": 2263,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+cereal+production+by+country",
+        "cache_hit": false,
+        "duration_ms": 3065,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Tangara+bird+species+with+widest+geographic+distribution",
+        "cache_hit": false,
+        "duration_ms": 1707,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Tangara+bird+species+distribution+range",
+        "cache_hit": false,
+        "duration_ms": 2802,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Tangara+%28bird%29+species+has+the+widest+distribution+across+countries%3F",
+        "cache_hit": false,
+        "duration_ms": 3168,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Tangara+species+country+distribution+comparison",
+        "cache_hit": false,
+        "duration_ms": 2437,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014+World+Junior+Championships+in+Athletics+Women%27s+heptathlon+shot+put+results",
+        "cache_hit": false,
+        "duration_ms": 1607,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+achieved+the+longest+shot+put+result+at+the+2014+World+Junior+Championships+in+Athletics+%E2%80%93+Women%27s+heptathlon%3F",
+        "cache_hit": false,
+        "duration_ms": 1978,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=longest+shot+put+throw+2014+World+Junior+Championships+Women%27s+heptathlon",
+        "cache_hit": false,
+        "duration_ms": 3068,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014+FINA+World+Swimming+Championships+25m+Women%27s+100m+breaststroke+heat+results",
+        "cache_hit": false,
+        "duration_ms": 1682,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014+FINA+World+Swimming+Championships+Women%27s+100m+breaststroke+heats+fastest+time",
+        "cache_hit": false,
+        "duration_ms": 2124,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+had+the+fastest+time+in+the+heats+of+the+2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Women%27s+100+metre+breaststroke%3F",
+        "cache_hit": false,
+        "duration_ms": 2139,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=fastest+swimmer+in+heats+2014+FINA+Women%27s+100m+breaststroke",
+        "cache_hit": false,
+        "duration_ms": 1755,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+brigade+had+the+maximum+strength+in+Andrei+Grigorevich+Rosenberg%27s+forces+at+the+Battle+of+Bassignana+%281799%29%3F",
+        "cache_hit": false,
+        "duration_ms": 3566,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=max+strength+unit+Battle+of+Bassignana+1799",
+        "cache_hit": false,
+        "duration_ms": 3512,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=brigade+with+largest+strength+Rosenberg+Battle+of+Bassignana",
+        "cache_hit": false,
+        "duration_ms": 9046,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Andrei+Grigorevich+Rosenberg+forces+strength+Battle+of+Bassignana+1799",
+        "cache_hit": false,
+        "duration_ms": 9674,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

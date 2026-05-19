@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -45,8 +46,10 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _load_url_entries,
     _load_urls,
     _remaining_after_endpoint,
+    _run_artifact_summary,
     _should_rerun_stream_rejection,
     _stream_search_queries,
+    _write_summary_and_manifest,
     _write_stream_walkthrough,
     UrlEntry,
 )
@@ -262,6 +265,11 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     "accepted": 1,
                     "rejected": 0,
                     "rerun": 0,
+                    "stream_page_workers": 4,
+                    "wikipedia_concurrency_limit": 4,
+                    "duckduckgo_concurrency_limit": 4,
+                    "openrouter_generation_rewrite_concurrency_limit": 10,
+                    "second_stage_concurrency_limit": 10,
                 },
                 accepted_records=[accepted_record],
                 rejected_records=[],
@@ -273,26 +281,51 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("| Page ID | Question | Reference answer | openai/gpt-4.1-mini | google/gemini-3-flash-preview |", text)
         self.assertIn("CORRECT; predicted_answer: Jane Doe", text)
         self.assertIn("INCORRECT; predicted_answer: John Smith", text)
-        self.assertIn("## Route 3 Generation Responses", text)
-        self.assertIn("Route 3 generation response", text)
+        self.assertIn("Stream page workers: 4", text)
+        self.assertIn("Second-stage concurrency limit: 10", text)
+        self.assertNotIn("## Route 3 Generation Responses", text)
+        self.assertNotIn("Route 3 generation response", text)
 
     def test_walkthrough_splits_endpoint_and_incremental_records(self) -> None:
         existing_accepted = {
             "question": "Who directed the existing film?",
             "answer": "Jane Doe",
-            "source_metadata": {"page_id": 111, "stream_source_url": "https://en.wikipedia.org/w/index.php?curid=111"},
+            "source_metadata": {
+                "page_id": 111,
+                "stream_source_url": "https://en.wikipedia.org/w/index.php?curid=111",
+                "phase_timings_seconds": {
+                    "total_generation_seconds": 1.0,
+                    "total_processing_seconds": 2.0,
+                    "second_stage_grading_seconds": 0.5,
+                },
+            },
         }
         existing_rejected = {
             "question": "What leaked answer appears in the old question?",
             "answer": "Leak",
             "rejection_reason": "rewrite_guard_rejected",
             "rejection_rule": "answer_leakage",
-            "source_metadata": {"page_id": 112},
+            "source_metadata": {
+                "page_id": 112,
+                "phase_timings_seconds": {
+                    "total_generation_seconds": 3.0,
+                    "total_processing_seconds": 4.0,
+                    "second_stage_grading_seconds": 1.0,
+                },
+            },
         }
         incremental_accepted = {
             "question": "Who directed the incremental film?",
             "answer": "Alex Roe",
-            "source_metadata": {"page_id": 211, "stream_source_url": "https://en.wikipedia.org/w/index.php?curid=211"},
+            "source_metadata": {
+                "page_id": 211,
+                "stream_source_url": "https://en.wikipedia.org/w/index.php?curid=211",
+                "phase_timings_seconds": {
+                    "total_generation_seconds": 5.0,
+                    "total_processing_seconds": 6.0,
+                    "second_stage_grading_seconds": 1.5,
+                },
+            },
         }
         incremental_rejected = {
             "question": "Who directed the rejected incremental film?",
@@ -301,16 +334,38 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             "rejection_notes": {
                 "search_verification_features": {"triggered_rule": "full_question:hit_rate_exceeded"}
             },
-            "source_metadata": {"page_id": 212},
+            "source_metadata": {
+                "page_id": 212,
+                "phase_timings_seconds": {
+                    "total_generation_seconds": 7.0,
+                    "total_processing_seconds": 8.0,
+                    "second_stage_grading_seconds": 2.5,
+                },
+            },
         }
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "walkthrough.md"
+            manifest_path = Path(tmpdir) / "manifest.json"
+            summary_output = "outputs\\incremental_summary.json"
+            manifest_path.write_text(
+                json.dumps(
+                    {
+                        "segments": [
+                            {"summary_output": "outputs\\fresh_summary.json", "wall_clock_seconds": 7.5},
+                            {"summary_output": summary_output, "wall_clock_seconds": 12.5},
+                        ]
+                    }
+                ),
+                encoding="utf-8",
+            )
             _write_stream_walkthrough(
                 path=path,
                 summary={
                     "run_date": "2026-05-19",
                     "streaming_mode": "page_id_stream",
                     "stream_page_source": "table-search",
+                    "run_artifact_manifest": str(manifest_path),
+                    "summary_output": summary_output,
                     "endpoint_resume": {
                         "enabled": True,
                         "accepted_records_loaded": 1,
@@ -322,6 +377,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     "rejected": 1,
                     "rejected_total": 2,
                     "rerun": 0,
+                    "wall_clock_seconds": 12.5,
                 },
                 accepted_records=[incremental_accepted],
                 rejected_records=[incremental_rejected],
@@ -337,6 +393,11 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("| Existing endpoint records | 2 | 1 | 1 | 0 | 50.0% |", text)
         self.assertIn("| Incremental run | 2 | 1 | 1 | 0 | 50.0% |", text)
         self.assertIn("| Overall displayed | 4 | 2 | 2 | 0 | 50.0% |", text)
+        self.assertIn("#### Time Stats By Scope", text)
+        self.assertIn("| Incremental run | 12.5000 | 2 | 2 | 12.0000 | 6.0000 | 14.0000 | 7.0000 | 4.0000 | 2.0000 |", text)
+        self.assertIn("| Total displayed run | 20.0000 | 4 | 4 | 16.0000 | 4.0000 | 20.0000 | 5.0000 | 5.5000 | 1.3750 |", text)
+        self.assertIn("#### Incremental Run Phase Timings", text)
+        self.assertIn("#### Total Displayed Run Phase Timings", text)
         self.assertIn("### Existing Endpoint Records", text)
         self.assertIn("### Incremental Records", text)
         self.assertIn("Who directed the existing film?", text)
@@ -458,6 +519,71 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(skipped, ["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"])
         self.assertEqual(_remaining_after_endpoint(40, endpoint.final_decision_count), 39)
 
+    def test_run_group_manifest_indexes_resumed_segments(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            manifest = root / "manifest.json"
+            prior_summary = root / "fresh_summary.json"
+            prior_summary.write_text(
+                json.dumps(
+                    {
+                        "start_from_endpoint": False,
+                        "start_stage": "generate",
+                        "streaming_mode": "page_id_stream",
+                        "record_limit": 40,
+                        "attempted_page_ids": 40,
+                        "accepted": 9,
+                        "rejected": 31,
+                        "summary_output": str(prior_summary),
+                        "walkthrough_output": str(root / "fresh.md"),
+                        "output_path": str(root / "accepted.jsonl"),
+                        "rejected_output_path": str(root / "rejected.jsonl"),
+                        "stream_state": str(root / "state.json"),
+                    }
+                ),
+                encoding="utf-8",
+            )
+            args = SimpleNamespace(
+                run_group_id="fast40",
+                run_segment_id="incremental",
+                run_artifact_manifest=manifest,
+                run_artifact_include_summary=[prior_summary],
+                summary_output=root / "incremental_summary.json",
+            )
+            summary = {
+                **_run_artifact_summary(args),
+                "start_from_endpoint": True,
+                "start_stage": "generate",
+                "streaming_mode": "page_id_stream",
+                "record_limit": 80,
+                "attempted_page_ids": 40,
+                "accepted": 10,
+                "accepted_total": 19,
+                "rejected": 30,
+                "rejected_total": 61,
+                "rerun": 0,
+                "summary_output": str(args.summary_output),
+                "walkthrough_output": str(root / "incremental.md"),
+                "output_path": str(root / "accepted.jsonl"),
+                "rejected_output_path": str(root / "rejected.jsonl"),
+                "stream_state": str(root / "state.json"),
+            }
+
+            _write_summary_and_manifest(args, summary)
+
+            payload = json.loads(manifest.read_text(encoding="utf-8"))
+            self.assertEqual(payload["run_group_id"], "fast40")
+            self.assertEqual([row["segment_id"] for row in payload["segments"]], ["fresh_summary", "incremental"])
+            self.assertEqual(payload["artifact_index"]["accepted_jsonl"], [str(root / "accepted.jsonl")])
+            self.assertEqual(
+                payload["artifact_index"]["summary_json"],
+                [str(prior_summary), str(args.summary_output)],
+            )
+            self.assertEqual(
+                payload["artifact_index"]["walkthrough_md"],
+                [str(root / "fresh.md"), str(root / "incremental.md")],
+            )
+
     def test_table_extraction_preserves_infobox_and_wikitable_rows(self) -> None:
         tables = extract_wikipedia_tables(FIXTURE_HTML)
         self.assertEqual(len(tables), 2)
@@ -466,6 +592,26 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(tables[1].caption, "List of tournament venues")
         self.assertEqual(tables[1].section_heading, "Venues")
         self.assertEqual(tables[1].row_dicts[0]["Venue"], "AT&T Stadium")
+
+    def test_table_extraction_captures_nearby_intro_paragraph(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <h2><span class="mw-headline" id="Songs">Songs</span></h2>
+        <p>The following songs are covers recorded by artists other than the original band.</p>
+        <table class="wikitable">
+        <tr><th>Song</th><th>Artist</th></tr>
+        <tr><td>Dandy</td><td>Herman's Hermits</td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+
+        self.assertEqual(
+            table.nearby_intro,
+            "The following songs are covers recorded by artists other than the original band.",
+        )
+        self.assertIn("nearby_intro", table.to_metadata())
 
     def test_table_ranking_prefers_structured_low_prose_leakage_tables(self) -> None:
         tables = extract_wikipedia_tables(FIXTURE_HTML)
@@ -478,6 +624,62 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(ranked[0]["table_index"], 2)
         self.assertIn("comparable_headers", ranked[0]["reasons"])
         self.assertIn("low_prose_leakage", ranked[0]["reasons"])
+
+    def test_current_scope_tables_are_rejected_before_llm_generation(self) -> None:
+        class CurrentOnlyWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "King",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>King is a royal title.</p>
+                        <h2><span class="mw-headline" id="Current_kings">Current kings</span></h2>
+                        <table class="wikitable">
+                        <tr><th>King</th><th>Since</th></tr>
+                        <tr><td>Frederik X</td><td>14 January 2024</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/King"],
+            wikipedia_client=CurrentOnlyWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+
+        candidate = generator.generate(run_date="2026-05-19", cutoff_year=2025)[0]
+
+        self.assertIn("wikipedia_infobox_live_table_scope", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertEqual(
+            candidate.source_metadata["discard_reason"],
+            "live_table_scope:section_heading:current",
+        )
+
+    def test_min_table_score_rejects_before_first_paragraph_context(self) -> None:
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            min_table_score=999.0,
+        )
+
+        candidate = generator.generate(run_date="2026-05-19", cutoff_year=2025)[0]
+
+        self.assertIn("wikipedia_infobox_table_score_below_minimum", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertEqual(candidate.source_metadata["first_paragraph"], "")
+        self.assertNotIn("first_paragraph_extract_seconds", candidate.source_metadata["phase_timings_seconds"])
+        self.assertEqual(candidate.source_metadata["min_table_score"], 999.0)
+        self.assertTrue(all(row["below_min_table_score"] for row in candidate.source_metadata["table_selection"]))
+        self.assertIn("table_score_below_minimum:min_table_score=999.0000", candidate.source_metadata["discard_reason"])
 
     def test_fifa_fixture_generates_expected_candidate(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
@@ -535,6 +737,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeSingleFactLLMClient(),
             record_limit=1,
+            min_table_score=-999.0,
         )
         candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
         self.assertEqual(len(candidates), 1)
@@ -582,6 +785,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     table_type="wikitable",
                     section_heading="Longest",
                     caption="",
+                    nearby_intro="",
                     headers=["Bridge", "Length"],
                     rows=[],
                     row_dicts=[],
@@ -602,6 +806,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             table_type="wikitable",
             section_heading="Films with multiple nominations and awards",
             caption="Films that received multiple nominations",
+            nearby_intro="",
             headers=["Nominations", "Film"],
             rows=[
                 ["Nominations", "Film"],

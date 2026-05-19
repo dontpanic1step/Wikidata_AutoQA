@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import threading
 import unittest
 
 from test_support import ROOT  # noqa: F401
@@ -141,6 +142,91 @@ class GradingTests(unittest.TestCase):
         )
         self.assertEqual(result["correct_count"], 1)
         self.assertAlmostEqual(result["accuracy"], 0.5)
+
+    def test_evaluate_model_panel_uses_one_batch_grader_call(self) -> None:
+        grader = FakeClient(
+            '{"grades": ['
+            '{"index": 0, "grade": "CORRECT", "reason": "same"},'
+            '{"index": 1, "grade": "INCORRECT", "reason": "wrong"}'
+            "]}"
+        )
+        result = evaluate_model_panel(
+            question="Who directed Example Film?",
+            gold_answer="Jane Doe",
+            gold_aliases=["J. Doe"],
+            answer_type="Person",
+            source_metadata={},
+            model_panel=[
+                ModelPanelMember("correct-model", FakeClient("Jane Doe")),
+                ModelPanelMember("wrong-model", FakeClient("John Smith")),
+            ],
+            grader_client=grader,
+            batch_grader=True,
+        )
+
+        self.assertEqual(len(grader.prompts), 1)
+        self.assertEqual(result["models"][0]["method"], "llm_grader_batch")
+        self.assertEqual(result["models"][1]["method"], "llm_grader_batch")
+        self.assertAlmostEqual(result["accuracy"], 0.5)
+
+    def test_evaluate_model_panel_answers_in_parallel(self) -> None:
+        class BarrierClient:
+            def __init__(self, response: str, barrier: threading.Barrier) -> None:
+                self.response = response
+                self.barrier = barrier
+                self.prompts: list[str] = []
+
+            def complete_text(self, prompt: str) -> str:
+                self.prompts.append(prompt)
+                self.barrier.wait(timeout=1.0)
+                return self.response
+
+        barrier = threading.Barrier(2)
+        result = evaluate_model_panel(
+            question="Who directed Example Film?",
+            gold_answer="Jane Doe",
+            gold_aliases=[],
+            answer_type="Person",
+            source_metadata={},
+            model_panel=[
+                ModelPanelMember("correct-model", BarrierClient("Jane Doe", barrier)),
+                ModelPanelMember("wrong-model", BarrierClient("John Smith", barrier)),
+            ],
+            parallel_answers=True,
+        )
+
+        self.assertEqual(result["executed_model_count"], 2)
+        self.assertAlmostEqual(result["accuracy"], 0.5)
+
+    def test_evaluate_model_panel_early_stops_when_first_model_exceeds_threshold(self) -> None:
+        first_model = FakeClient("Jane Doe")
+        second_model = FakeClient("John Smith")
+        grader = FakeClient('{"grades": [{"index": 0, "grade": "CORRECT", "reason": "same"}]}')
+
+        result = evaluate_model_panel(
+            question="Who directed Example Film?",
+            gold_answer="Jane Doe",
+            gold_aliases=[],
+            answer_type="Person",
+            source_metadata={},
+            model_panel=[
+                ModelPanelMember("first-model", first_model),
+                ModelPanelMember("second-model", second_model),
+            ],
+            grader_client=grader,
+            accuracy_threshold=0.1,
+            early_stop_on_threshold=True,
+            batch_grader=True,
+        )
+
+        self.assertTrue(result["early_stopped"])
+        self.assertEqual(result["early_stop_reason"], "first_model_correct_exceeds_accuracy_threshold")
+        self.assertEqual(result["configured_model_count"], 2)
+        self.assertEqual(result["executed_model_count"], 1)
+        self.assertAlmostEqual(result["accuracy"], 0.5)
+        self.assertEqual(len(first_model.prompts), 1)
+        self.assertEqual(second_model.prompts, [])
+        self.assertEqual(len(grader.prompts), 1)
 
     def test_summarize_panel_runs_by_model(self) -> None:
         summary = summarize_panel_runs(

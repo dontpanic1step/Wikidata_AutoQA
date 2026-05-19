@@ -1,0 +1,1994 @@
+{
+  "target_count": 40,
+  "domain_limit": 20,
+  "subdomains_per_domain": 2,
+  "dump_url": "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-all-titles-in-ns0.gz",
+  "source_mode": "page-dump",
+  "dump_title_path": "",
+  "page_dump_files": [
+    "cache\\wikipedia_1percent_dumps\\enwiki-latest-pages-articles22.xml-p44496246p44788941.bz2",
+    "tmp\\wiki_recover\\rec00001slice2671.bz2",
+    "tmp\\wiki_recover\\rec00002slice2671.bz2",
+    "tmp\\wiki_recover\\rec00003slice2671.bz2",
+    "tmp\\wiki_recover\\rec00004slice2671.bz2",
+    "tmp\\wiki_recover\\rec00005slice2671.bz2",
+    "tmp\\wiki_recover\\rec00006slice2671.bz2",
+    "tmp\\wiki_recover\\rec00007slice2671.bz2",
+    "tmp\\wiki_recover\\rec00008slice2671.bz2",
+    "tmp\\wiki_recover\\rec00009slice2671.bz2",
+    "tmp\\wiki_recover\\rec00010slice2671.bz2",
+    "tmp\\wiki_recover\\rec00011slice2671.bz2",
+    "tmp\\wiki_recover\\rec00012slice2671.bz2",
+    "tmp\\wiki_recover\\rec00013slice2671.bz2",
+    "tmp\\wiki_recover\\rec00014slice2671.bz2",
+    "tmp\\wiki_recover\\rec00015slice2671.bz2",
+    "tmp\\wiki_recover\\rec00016slice2671.bz2",
+    "tmp\\wiki_recover\\rec00017slice2671.bz2",
+    "tmp\\wiki_recover\\rec00018slice2671.bz2",
+    "tmp\\wiki_recover\\rec00019slice2671.bz2",
+    "tmp\\wiki_recover\\rec00020slice2671.bz2",
+    "tmp\\wiki_recover\\rec00021slice2671.bz2",
+    "tmp\\wiki_recover\\rec00022slice2671.bz2",
+    "tmp\\wiki_recover\\rec00023slice2671.bz2",
+    "tmp\\wiki_recover\\rec00024slice2671.bz2",
+    "tmp\\wiki_recover\\rec00025slice2671.bz2",
+    "tmp\\wiki_recover\\rec00026slice2671.bz2",
+    "tmp\\wiki_recover\\rec00027slice2671.bz2",
+    "tmp\\wiki_recover\\rec00028slice2671.bz2",
+    "tmp\\wiki_recover\\rec00029slice2671.bz2",
+    "tmp\\wiki_recover\\rec00030slice2671.bz2",
+    "tmp\\wiki_recover\\slice2671.bz2"
+  ],
+  "page_dump_stats": {
+    "files_seen": 32,
+    "files_with_errors": [
+      {
+        "path": "tmp\\wiki_recover\\rec00001slice2671.bz2",
+        "error": "Invalid data stream"
+      },
+      {
+        "path": "tmp\\wiki_recover\\slice2671.bz2",
+        "error": "Invalid data stream"
+      }
+    ],
+    "pages_seen": 23283,
+    "article_pages_seen": 22952,
+    "table_like_pages_seen": 15073
+  },
+  "selected_count": 16,
+  "failed_count": 24,
+  "output": "config\\wikipedia_table_urls_dump40.tsv",
+  "duration_seconds": 777.4012,
+  "candidates": [
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "railway stations",
+      "title": "List of busiest railway stations in West Yorkshire",
+      "url": "https://en.wikipedia.org/wiki/List_of_busiest_railway_stations_in_West_Yorkshire",
+      "title_score": 16.5,
+      "best_table_score": 9.5,
+      "combined_score": 15.275,
+      "best_table_caption": "",
+      "best_table_section": "2021–2022 statistics",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "wikitext_tables:11",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "airports",
+      "title": "Visakhapatnam Airport",
+      "url": "https://en.wikipedia.org/wiki/Visakhapatnam_Airport",
+      "title_score": 8.6,
+      "best_table_score": 11.8,
+      "combined_score": 14.81,
+      "best_table_caption": "Annual passenger traffic and aircraft movement",
+      "best_table_section": "Statistics",
+      "reasons": [
+        "required_terms",
+        "wikitext_tables:2",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Arts and Media",
+      "subdomain": "film awards",
+      "title": "Dallas–Fort Worth Film Critics Association Awards 2014",
+      "url": "https://en.wikipedia.org/wiki/Dallas%E2%80%93Fort_Worth_Film_Critics_Association_Awards_2014",
+      "title_score": 7.3,
+      "best_table_score": 5.65,
+      "combined_score": 8.205,
+      "best_table_caption": "",
+      "best_table_section": "Category awards",
+      "reasons": [
+        "required_terms",
+        "historical_year",
+        "specific_length",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "comparable_headers",
+        "high_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Arts and Media",
+      "subdomain": "music charts",
+      "title": "Billboard Music Award for Top Latin Artist",
+      "url": "https://en.wikipedia.org/wiki/Billboard_Music_Award_for_Top_Latin_Artist",
+      "title_score": 9.8,
+      "best_table_score": 9.8,
+      "combined_score": 13.23,
+      "best_table_caption": "",
+      "best_table_section": "Winners and nominees",
+      "reasons": [
+        "required_terms",
+        "bonus:billboard",
+        "specific_length",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "companies",
+      "title": "List of ships built by Hall, Russell & Company (601–700)",
+      "url": "https://en.wikipedia.org/wiki/List_of_ships_built_by_Hall,_Russell_%26_Company_(601%E2%80%93700)",
+      "title_score": 12.3,
+      "best_table_score": 10.8,
+      "combined_score": 15.105,
+      "best_table_caption": "List of Hall, Russell & Company built ships (601–700)",
+      "best_table_section": "",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "disambiguated_title",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "banks",
+      "title": "List of banks in Ukraine",
+      "url": "https://en.wikipedia.org/wiki/List_of_banks_in_Ukraine",
+      "title_score": 12.6,
+      "best_table_score": 11.8,
+      "combined_score": 16.21,
+      "best_table_caption": "",
+      "best_table_section": "15 largest commercial banks",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "wikitext_tables:2",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Education",
+      "subdomain": "universities",
+      "title": "1905–06 University of Virginia men's basketball team",
+      "url": "https://en.wikipedia.org/wiki/1905%E2%80%9306_University_of_Virginia_men%27s_basketball_team",
+      "title_score": 6.0,
+      "best_table_score": 11.7,
+      "combined_score": 13.8,
+      "best_table_caption": "",
+      "best_table_section": "Schedule",
+      "reasons": [
+        "required_terms",
+        "scoped_title",
+        "historical_year",
+        "specific_length",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Education",
+      "subdomain": "schools",
+      "title": "Lift Schools",
+      "url": "https://en.wikipedia.org/wiki/Lift_Schools",
+      "title_score": 7.6,
+      "best_table_score": 11.8,
+      "combined_score": 14.46,
+      "best_table_caption": "Number of Academies by year [ 12 ]",
+      "best_table_section": "History",
+      "reasons": [
+        "required_terms",
+        "wikitext_tables:2",
+        "wikitable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Engineering and Technology",
+      "subdomain": "bridges",
+      "title": "List of pontoon bridges",
+      "url": "https://en.wikipedia.org/wiki/List_of_pontoon_bridges",
+      "title_score": 12.3,
+      "best_table_score": 6.25,
+      "combined_score": 10.555,
+      "best_table_caption": "",
+      "best_table_section": "Longest",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "high_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "lakes",
+      "title": "Prehistoric pile dwellings around Lake Zurich",
+      "url": "https://en.wikipedia.org/wiki/Prehistoric_pile_dwellings_around_Lake_Zurich",
+      "title_score": 8.9,
+      "best_table_score": 9.35,
+      "combined_score": 12.465,
+      "best_table_caption": "",
+      "best_table_section": "Sites with World Heritage status",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "wikitext_tables:3",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "islands",
+      "title": "List of lighthouses in the Canary Islands",
+      "url": "https://en.wikipedia.org/wiki/List_of_lighthouses_in_the_Canary_Islands",
+      "title_score": 10.8,
+      "best_table_score": 11.8,
+      "combined_score": 15.58,
+      "best_table_caption": "",
+      "best_table_section": "Lighthouses",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "sortable_marker",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Life Sciences",
+      "subdomain": "birds",
+      "title": "Angry Birds Stella (TV series)",
+      "url": "https://en.wikipedia.org/wiki/Angry_Birds_Stella_(TV_series)",
+      "title_score": 4.0,
+      "best_table_score": 6.85,
+      "combined_score": 8.25,
+      "best_table_caption": "",
+      "best_table_section": "Episodes",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "disambiguated_title",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Politics and Law",
+      "subdomain": "elections",
+      "title": "2017 Japanese general election",
+      "url": "https://en.wikipedia.org/wiki/2017_Japanese_general_election",
+      "title_score": 13.0,
+      "best_table_score": 11.8,
+      "combined_score": 16.35,
+      "best_table_caption": "",
+      "best_table_section": "By prefecture",
+      "reasons": [
+        "required_terms",
+        "bonus:general",
+        "historical_year",
+        "wikitext_tables:12",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Politics and Law",
+      "subdomain": "court cases",
+      "title": "Bill Cosby sexual assault cases",
+      "url": "https://en.wikipedia.org/wiki/Bill_Cosby_sexual_assault_cases",
+      "title_score": 5.3,
+      "best_table_score": 8.8,
+      "combined_score": 10.655,
+      "best_table_caption": "",
+      "best_table_section": "Table of accusers' allegations",
+      "reasons": [
+        "required_terms",
+        "specific_length",
+        "wikitext_tables:1",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "large_page_penalty",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "large_table_penalty"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Sports and Recreation",
+      "subdomain": "championship results",
+      "title": "2016 Men's European Water Polo Championship",
+      "url": "https://en.wikipedia.org/wiki/2016_Men%27s_European_Water_Polo_Championship",
+      "title_score": 13.0,
+      "best_table_score": 11.8,
+      "combined_score": 16.35,
+      "best_table_caption": "",
+      "best_table_section": "Top goalscorers",
+      "reasons": [
+        "required_terms",
+        "historical_year",
+        "specific_length",
+        "wikitext_tables:6",
+        "wikitable_marker",
+        "sortable_marker",
+        "infobox_marker:1",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Sports and Recreation",
+      "subdomain": "stadiums",
+      "title": "List of football stadiums in Algeria",
+      "url": "https://en.wikipedia.org/wiki/List_of_football_stadiums_in_Algeria",
+      "title_score": 14.9,
+      "best_table_score": 14.3,
+      "combined_score": 19.515,
+      "best_table_caption": "",
+      "best_table_section": "Current stadiums",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "wikitext_tables:3",
+        "wikitable_marker",
+        "sortable_marker",
+        "comparable_infobox_field",
+        "comparable_table_header",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "preferred_table_context",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    }
+  ],
+  "failed_subdomains": [
+    {
+      "domain": "Computer Science and AI",
+      "subdomain": "programming languages",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Computer Science and AI",
+      "subdomain": "computing benchmarks",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Computer Era",
+        "Petit Computer"
+      ]
+    },
+    {
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "observatories",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Former Tainan Weather Observatory",
+        "Seagrave Memorial Observatory"
+      ]
+    },
+    {
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "impact structures",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Engineering and Technology",
+      "subdomain": "dams",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Hivra Dam",
+        "Asahigawa Dam",
+        "Bhushi Dam",
+        "Eklutna Dam",
+        "Little Rock Dam"
+      ]
+    },
+    {
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "crop production",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Quick Off The Mark Productions",
+        "Plautus Productions",
+        "Travis Scott production discography",
+        "Production (album)",
+        "PTT Exploration and Production"
+      ]
+    },
+    {
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "wine regions",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Language and Literature",
+      "subdomain": "literary awards",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Language and Literature",
+      "subdomain": "books",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Dark Shadows (book series)",
+        "Do You Believe in Magic? (book)",
+        "Rare Book and Manuscript Library (University of Illinois Urbana-Champaign)",
+        "The Cookery Book of Lady Clark of Tillypronie",
+        "Sixty-Six Books",
+        "From Hell to Paradise (book)",
+        "Green (picture book)",
+        "Starlight (comic book)",
+        "The Chosen Few (book)",
+        "Venezuela International Book Fair"
+      ]
+    },
+    {
+      "domain": "Life Sciences",
+      "subdomain": "mammals",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Mathematics",
+      "subdomain": "polyhedra",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Mathematics",
+      "subdomain": "mathematical constants",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Medicine and Health",
+      "subdomain": "hospitals",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "City Hospital-Gaston Memorial Hospital",
+        "Førde Heliport, Central Hospital",
+        "St David's Hospital, Cardiff",
+        "St David's Hospital, Carmarthen",
+        "Arendal Heliport, Hospital",
+        "Førde Central Hospital",
+        "Gopalganj Medical College Hospital",
+        "Lakeshore Psychiatric Hospital",
+        "Rotherham General Hospital",
+        "Sandviken Hospital"
+      ]
+    },
+    {
+      "domain": "Medicine and Health",
+      "subdomain": "epidemics",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "People",
+      "subdomain": "laureates",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "People",
+      "subdomain": "award records",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Philosophy and Religion",
+      "subdomain": "popes",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "E. Pope Bassett"
+      ]
+    },
+    {
+      "domain": "Philosophy and Religion",
+      "subdomain": "religion demographics",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Religion in Inner Mongolia",
+        "House of Religions",
+        "Religion for Atheists"
+      ]
+    },
+    {
+      "domain": "Physical Sciences",
+      "subdomain": "chemical elements",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": []
+    },
+    {
+      "domain": "Physical Sciences",
+      "subdomain": "stars",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "APAN Star Awards",
+        "TVB Star Awards Malaysia",
+        "All Stars (Jurica Pađen album)",
+        "1st K-Drama Star Awards",
+        "DD Fist of the North Star",
+        "2nd APAN Star Awards",
+        "3rd APAN Star Awards",
+        "MV Lucky Star (1976)",
+        "Eastern Star Lodge 207 F&AM",
+        "MV Star Fighter"
+      ]
+    },
+    {
+      "domain": "Society and Culture",
+      "subdomain": "museums",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Museum of Southwestern Biology",
+        "National Commission for Museums and Monuments",
+        "Frederick R. Weisman Museum of Art (California)",
+        "González Martí National Museum of Ceramics and Decorative Arts",
+        "Museum of Dinosaurs and Ancient Cultures",
+        "National Museum of Villa Guinigi",
+        "Official Museums of Amsterdam",
+        "Lane County History Museum",
+        "El Pueblo History Museum",
+        "Shanghai Jewish Refugees Museum"
+      ]
+    },
+    {
+      "domain": "Society and Culture",
+      "subdomain": "public art",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of public art in the City of Sydney"
+      ]
+    },
+    {
+      "domain": "History",
+      "subdomain": "battles",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "Battle of Bassignana (1799)",
+        "Battle of Ostrołęka (1920)",
+        "Battle of Arras (1915)",
+        "Battle of Bobruysk (1918)",
+        "Battle of Kut (2003)",
+        "Battle of the Centaurs (Michelangelo)",
+        "Battle of Baghdad International Airport",
+        "Battle of Laski and Anielin",
+        "Battle-Pieces and Aspects of the War",
+        "Second Battle of the Hook"
+      ]
+    },
+    {
+      "domain": "History",
+      "subdomain": "empires",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "SS Empire Cobbett"
+      ]
+    }
+  ],
+  "title_candidate_counts": {
+    "Architecture and Transportation / railway stations": 19,
+    "Architecture and Transportation / airports": 13,
+    "Arts and Media / film awards": 9,
+    "Arts and Media / music charts": 7,
+    "Computer Science and AI / programming languages": 0,
+    "Computer Science and AI / computing benchmarks": 2,
+    "Earth, Environment, and Space / observatories": 2,
+    "Earth, Environment, and Space / impact structures": 0,
+    "Economy and Business / companies": 32,
+    "Economy and Business / banks": 22,
+    "Education / universities": 40,
+    "Education / schools": 82,
+    "Engineering and Technology / bridges": 31,
+    "Engineering and Technology / dams": 5,
+    "Food, Agriculture, and Daily Life / crop production": 5,
+    "Food, Agriculture, and Daily Life / wine regions": 0,
+    "Geography / lakes": 43,
+    "Geography / islands": 20,
+    "Language and Literature / literary awards": 0,
+    "Language and Literature / books": 11,
+    "Life Sciences / birds": 6,
+    "Life Sciences / mammals": 0,
+    "Mathematics / polyhedra": 0,
+    "Mathematics / mathematical constants": 0,
+    "Medicine and Health / hospitals": 24,
+    "Medicine and Health / epidemics": 0,
+    "People / laureates": 0,
+    "People / award records": 0,
+    "Philosophy and Religion / popes": 1,
+    "Philosophy and Religion / religion demographics": 3,
+    "Physical Sciences / chemical elements": 0,
+    "Physical Sciences / stars": 17,
+    "Politics and Law / elections": 100,
+    "Politics and Law / court cases": 6,
+    "Society and Culture / museums": 23,
+    "Society and Culture / public art": 1,
+    "Sports and Recreation / championship results": 120,
+    "Sports and Recreation / stadiums": 14,
+    "History / battles": 24,
+    "History / empires": 1
+  },
+  "wikipedia_events": [
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+West+Yorkshire&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 27
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_West_Yorkshire",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Marshes+Turnpike+Gate+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1908
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Six+Bells+Halt+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2060
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Six_Bells_Halt_railway_station",
+      "cache_hit": false,
+      "duration_ms": 3024
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Ans+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2652
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Blaina+railway+station&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4271
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Visakhapatnam+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 64
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Visakhapatnam_Airport",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Baghdad+International+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Baghdad_International_Airport",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bhiwani+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Goldstone+Gts+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2088
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Valle+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Valle_Airport",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Wooster+Municipal+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2026
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Dallas%E2%80%93Fort+Worth+Film+Critics+Association+Awards+2014&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2013
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Dallas%E2%80%93Fort_Worth_Film_Critics_Association_Awards_2014",
+      "cache_hit": false,
+      "duration_ms": 1018
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Toronto+Film+Critics+Association+Awards+2014&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1546
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lumi%C3%A8re+Award+for+Best+French-Language+Film&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2031
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+Rialto+Channel+New+Zealand+Film+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1211
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2009+Mnet+Asian+Music+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1713
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Billboard+Music+Award+for+Top+Latin+Artist&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 47
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Billboard_Music_Award_for_Top_Latin_Artist",
+      "cache_hit": true,
+      "duration_ms": 20
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=BBC+Music+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 19
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/BBC_Music_Awards",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=APRA+Music+Awards+of+2009&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/APRA_Music_Awards_of_2009",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=10th+Canadian+Folk+Music+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/10th_Canadian_Folk_Music_Awards",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2013+Soul+Train+Music+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 20
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2013_Soul_Train_Music_Awards",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Computer+Era&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Computer_Era",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Petit+Computer&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Petit_Computer",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Former+Tainan+Weather+Observatory&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Former_Tainan_Weather_Observatory",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Seagrave+Memorial+Observatory&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Seagrave_Memorial_Observatory",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+ships+built+by+Hall%2C+Russell+%26+Company+%28601%E2%80%93700%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 27
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_ships_built_by_Hall%2C_Russell_%26_Company_(601%E2%80%93700)",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+films+produced+by+American+Broadcasting+Company&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1287
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_films_produced_by_American_Broadcasting_Company",
+      "cache_hit": false,
+      "duration_ms": 856
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Fullbright+%28company%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 62
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Fullbright_(company)",
+      "cache_hit": true,
+      "duration_ms": 65
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Inkle+%28company%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 28
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Inkle_(company)",
+      "cache_hit": true,
+      "duration_ms": 23
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=New+York+Motion+Picture+Company&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/New_York_Motion_Picture_Company",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Pearson+Candy+Company%2C+Inc.&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Pearson_Candy_Company%2C_Inc.",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Gulf+Oil+Company+Service+Station+%28Paragould%2C+Arkansas%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Gulf_Oil_Company_Service_Station_(Paragould%2C_Arkansas)",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Sears%2C+Roebuck+and+Company+Department+Store+%28Miami%2C+Florida%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Sears%2C_Roebuck_and_Company_Department_Store_(Miami%2C_Florida)",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Poinsett+Lumber+and+Manufacturing+Company+Manager%27s+House&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 11
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Poinsett_Lumber_and_Manufacturing_Company_Manager%27s_House",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+banks+in+Ukraine&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_banks_in_Ukraine",
+      "cache_hit": true,
+      "duration_ms": 20
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+banks+in+Jordan&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_banks_in_Jordan",
+      "cache_hit": true,
+      "duration_ms": 18
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2016+Suruga+Bank+Championship&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2016_Suruga_Bank_Championship",
+      "cache_hit": true,
+      "duration_ms": 28
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Busan+OK+Savings+Bank+OKman&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Busan_OK_Savings_Bank_OKman",
+      "cache_hit": true,
+      "duration_ms": 27
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=How+We+Robbed+the+Bank+of+Italy&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 18
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/How_We_Robbed_the_Bank_of_Italy",
+      "cache_hit": true,
+      "duration_ms": 29
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Multirate+filter+bank+and+multidimensional+directional+filter+banks&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2744
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=First+National+Bank+Building+%28Creedmoor%2C+North+Carolina%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1295
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/First_National_Bank_Building_(Creedmoor%2C_North_Carolina)",
+      "cache_hit": false,
+      "duration_ms": 1253
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Presidents+of+Leipzig+University&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2444
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Davos+University+Conferences&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1998
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1905%E2%80%9306+University+of+Virginia+men%27s+basketball+team&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 40
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/1905%E2%80%9306_University_of_Virginia_men%27s_basketball_team",
+      "cache_hit": true,
+      "duration_ms": 31
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1906%E2%80%9307+University+of+Virginia+men%27s+basketball+team&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 19
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/1906%E2%80%9307_University_of_Virginia_men%27s_basketball_team",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+After+School+Club+episodes&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 25
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lift+Schools&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Lift_Schools",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Kenowa+Hills+Public+Schools&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Kenowa_Hills_Public_Schools",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Coorparoo+School+of+Arts+and+RSL+Memorial+Hall&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Coorparoo_School_of_Arts_and_RSL_Memorial_Hall",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Elmezzi+Graduate+School+of+Molecular+Medicine&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Elmezzi_Graduate_School_of_Molecular_Medicine",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=National+Circus+School+of+Cambodia&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/National_Circus_School_of_Cambodia",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=School+of+Information+Technology%2C+Shinawatra+University&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/School_of_Information_Technology%2C_Shinawatra_University",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=UEH-International+School+of+Business&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 34
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/UEH-International_School_of_Business",
+      "cache_hit": true,
+      "duration_ms": 28
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=UMBC+School+of+Public+Policy&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 20
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/UMBC_School_of_Public_Policy",
+      "cache_hit": true,
+      "duration_ms": 23
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+pontoon+bridges&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 11
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_pontoon_bridges",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=South+Dakota+Dept.+of+Transportation+Bridge+No.+30-257-400&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1555
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=St.+Francis+River+Bridge+%28Lake+City%2C+Arkansas%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 67
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/St._Francis_River_Bridge_(Lake_City%2C_Arkansas)",
+      "cache_hit": true,
+      "duration_ms": 41
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bloomfield-Nulhegan+River+Route+102+Bridge&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2176
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bloomfield-Nulhegan_River_Route_102_Bridge",
+      "cache_hit": false,
+      "duration_ms": 895
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lamoille+River+Route+15-A+Bridge&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1647
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Asahigawa+Dam&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1526
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Eklutna+Dam&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1276
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Little+Rock+Dam&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2069
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Plautus+Productions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1640
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Plautus_Productions",
+      "cache_hit": false,
+      "duration_ms": 1231
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=PTT+Exploration+and+Production&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2634
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Prehistoric+pile+dwellings+around+Lake+Zurich&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1940
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Prehistoric_pile_dwellings_around_Lake_Zurich",
+      "cache_hit": false,
+      "duration_ms": 1719
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Moon+Lake+State+Forest+Recreation+Area&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2307
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Moon_Lake_State_Forest_Recreation_Area",
+      "cache_hit": false,
+      "duration_ms": 1428
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Crystal+Lake%2C+Washington+County%2C+Florida&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 43
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Crystal_Lake%2C_Washington_County%2C_Florida",
+      "cache_hit": true,
+      "duration_ms": 26
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Ray+Roberts+Lake+State+Park&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1382
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Ray_Roberts_Lake_State_Park",
+      "cache_hit": false,
+      "duration_ms": 1599
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Decker+Lake+%28British+Columbia%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1960
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Decker_Lake_(British_Columbia)",
+      "cache_hit": false,
+      "duration_ms": 1225
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Duncan+%28Amazay%29+Lake&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3236
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Duncan_(Amazay)_Lake",
+      "cache_hit": false,
+      "duration_ms": 952
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Gibson+Lake+%28Brimacombe+Township%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1565
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Gibson_Lake_(Brimacombe_Township)",
+      "cache_hit": false,
+      "duration_ms": 2455
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+professional+sports+teams+in+Rhode+Island&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 72
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_professional_sports_teams_in_Rhode_Island",
+      "cache_hit": true,
+      "duration_ms": 64
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+lighthouses+in+the+Canary+Islands&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 27
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_lighthouses_in_the_Canary_Islands",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Siau+Tagulandang+Biaro+Islands+Regency&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Siau_Tagulandang_Biaro_Islands_Regency",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Make+Me+an+Island&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1494
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Make_Me_an_Island",
+      "cache_hit": false,
+      "duration_ms": 1488
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Rainbow+Island+%281944+film%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1689
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Rainbow_Island_(1944_film)",
+      "cache_hit": false,
+      "duration_ms": 1750
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=St.+Joseph%27s+Catholic+Church+%28Mountain+Island%2C+North+Carolina%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2618
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/St._Joseph%27s_Catholic_Church_(Mountain_Island%2C_North_Carolina)",
+      "cache_hit": false,
+      "duration_ms": 821
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Coast+Guard+Station+South+Padre+Island&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1953
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Coast_Guard_Station_South_Padre_Island",
+      "cache_hit": false,
+      "duration_ms": 1018
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Duke+Island+%28lunar+mountain%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1217
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Duke_Island_(lunar_mountain)",
+      "cache_hit": false,
+      "duration_ms": 1511
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Venezuela+International+Book+Fair&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2207
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Venezuela_International_Book_Fair",
+      "cache_hit": false,
+      "duration_ms": 2866
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Angry+Birds+Stella+%28TV+series%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1353
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Angry_Birds_Stella_(TV_series)",
+      "cache_hit": false,
+      "duration_ms": 849
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Birds+of+Exile&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2183
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Birds_of_Exile",
+      "cache_hit": false,
+      "duration_ms": 836
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Adelaide+International+Bird+Sanctuary+National+Park&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3061
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Adelaide_International_Bird_Sanctuary_National_Park",
+      "cache_hit": false,
+      "duration_ms": 1844
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Michael+Bird+%28theologian%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1167
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Michael_Bird_(theologian)",
+      "cache_hit": false,
+      "duration_ms": 931
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Worry+Bird&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1717
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Worry_Bird",
+      "cache_hit": false,
+      "duration_ms": 2572
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=City+Hospital-Gaston+Memorial+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 57
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/City_Hospital-Gaston_Memorial_Hospital",
+      "cache_hit": true,
+      "duration_ms": 29
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=F%C3%B8rde+Heliport%2C+Central+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 18
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/F%C3%B8rde_Heliport%2C_Central_Hospital",
+      "cache_hit": true,
+      "duration_ms": 22
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=St+David%27s+Hospital%2C+Cardiff&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/St_David%27s_Hospital%2C_Cardiff",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=St+David%27s+Hospital%2C+Carmarthen&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/St_David%27s_Hospital%2C_Carmarthen",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Arendal+Heliport%2C+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Arendal_Heliport%2C_Hospital",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=F%C3%B8rde+Central+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/F%C3%B8rde_Central_Hospital",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Gopalganj+Medical+College+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Gopalganj_Medical_College_Hospital",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Lakeshore+Psychiatric+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Lakeshore_Psychiatric_Hospital",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Rotherham+General+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Rotherham_General_Hospital",
+      "cache_hit": true,
+      "duration_ms": 14
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Sandviken+Hospital&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Sandviken_Hospital",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=House+of+Religions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1953
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1st+K-Drama+Star+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1486
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=DD+Fist+of+the+North+Star&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2808
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Eastern+Star+Lodge+207+F%26AM&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2226
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=MV+Star+Fighter&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3766
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2016+United+States+House+of+Representatives+elections+in+Maine&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3870
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2016+United+States+House+of+Representatives+elections+in+Utah&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3682
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2017+Japanese+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 107
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2017_Japanese_general_election",
+      "cache_hit": true,
+      "duration_ms": 36
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2018+Massachusetts+gubernatorial+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 50
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2018_Massachusetts_gubernatorial_election",
+      "cache_hit": true,
+      "duration_ms": 33
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Opinion+polling+for+the+2017+United+Kingdom+general+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 41
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Opinion_polling_for_the_2017_United_Kingdom_general_election",
+      "cache_hit": true,
+      "duration_ms": 74
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2015+Democratic+Party+of+Japan+leadership+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 29
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2015_Democratic_Party_of_Japan_leadership_election",
+      "cache_hit": true,
+      "duration_ms": 31
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Bill+Cosby+sexual+assault+cases&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 64
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Bill_Cosby_sexual_assault_cases",
+      "cache_hit": true,
+      "duration_ms": 30
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=The+Case+of+Richard+Meynell&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 45
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/The_Case_of_Richard_Meynell",
+      "cache_hit": true,
+      "duration_ms": 35
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=The+Case+of+the+Missing+Man&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 31
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/The_Case_of_the_Missing_Man",
+      "cache_hit": true,
+      "duration_ms": 36
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Case+No.+18%2F9&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 31
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Case_No._18%2F9",
+      "cache_hit": true,
+      "duration_ms": 53
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Baby+Case&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 38
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Baby_Case",
+      "cache_hit": true,
+      "duration_ms": 44
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Patricia+Jim%C3%A9nez+Case&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 24
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Patricia_Jim%C3%A9nez_Case",
+      "cache_hit": true,
+      "duration_ms": 30
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Museum+of+Southwestern+Biology&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1429
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Gonz%C3%A1lez+Mart%C3%AD+National+Museum+of+Ceramics+and+Decorative+Arts&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1539
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Gonz%C3%A1lez_Mart%C3%AD_National_Museum_of_Ceramics_and_Decorative_Arts",
+      "cache_hit": false,
+      "duration_ms": 822
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Official+Museums+of+Amsterdam&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2904
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Official_Museums_of_Amsterdam",
+      "cache_hit": false,
+      "duration_ms": 940
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=El+Pueblo+History+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2468
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Shanghai+Jewish+Refugees+Museum&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2326
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Shanghai_Jewish_Refugees_Museum",
+      "cache_hit": false,
+      "duration_ms": 1134
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+World+Junior+Championships+in+Athletics+%E2%80%93+Women%27s+heptathlon&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2442
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1982+NCAA+Division+I+men%27s+basketball+championship+game&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2606
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2015+Canadian+Figure+Skating+Championships&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1784
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2016+Men%27s+European+Water+Polo+Championship&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 83
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2016_Men%27s_European_Water_Polo_Championship",
+      "cache_hit": true,
+      "duration_ms": 53
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Greece+at+the+World+Athletics+Indoor+Championships&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 66
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Greece_at_the_World_Athletics_Indoor_Championships",
+      "cache_hit": true,
+      "duration_ms": 46
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+FINA+World+Swimming+Championships+%2825+m%29+%E2%80%93+Men%27s+100+metre+backstroke&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 34
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_FINA_World_Swimming_Championships_(25_m)_%E2%80%93_Men%27s_100_metre_backstroke",
+      "cache_hit": true,
+      "duration_ms": 38
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+football+stadiums+in+Algeria&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 32
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_football_stadiums_in_Algeria",
+      "cache_hit": true,
+      "duration_ms": 56
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Wibawa+Mukti+Stadium&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 54
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Wibawa_Mukti_Stadium",
+      "cache_hit": true,
+      "duration_ms": 56
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Academy+Stadium&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 67
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Academy_Stadium",
+      "cache_hit": true,
+      "duration_ms": 59
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Suita+City+Football+Stadium&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 86
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Suita_City_Football_Stadium",
+      "cache_hit": true,
+      "duration_ms": 58
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=1+November+1954+Stadium+%28El+Oued%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 63
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/1_November_1954_Stadium_(El_Oued)",
+      "cache_hit": true,
+      "duration_ms": 63
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2004+Grozny+stadium+bombing&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 55
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2004_Grozny_stadium_bombing",
+      "cache_hit": true,
+      "duration_ms": 69
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Sardar+Vallabhbhai+Patel+Stadium%2C+Navrangpura&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 67
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Sardar_Vallabhbhai_Patel_Stadium%2C_Navrangpura",
+      "cache_hit": true,
+      "duration_ms": 71
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=18+February+Stadium+%28Ouargla%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1488
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Arras+%281915%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2287
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Arras_(1915)",
+      "cache_hit": false,
+      "duration_ms": 1575
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Kut+%282003%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1250
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+the+Centaurs+%28Michelangelo%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1598
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Baghdad+International+Airport&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Battle_of_Baghdad_International_Airport",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Battle+of+Laski+and+Anielin&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2330
+    }
+  ]
+}

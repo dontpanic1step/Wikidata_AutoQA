@@ -1,0 +1,4 @@
+page_id	url	reason
+105391	https://en.wikipedia.org/w/index.php?pageid=105391	wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>
+156745	https://en.wikipedia.org/w/index.php?pageid=156745	wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>
+599	https://en.wikipedia.org/w/index.php?pageid=599	wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>

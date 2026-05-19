@@ -1,0 +1,139 @@
+{
+  "manifest_version": 1,
+  "run_group_id": "wikipedia_stream_fast40_2026_05_19",
+  "updated_at_utc": "2026-05-19T16:12:38.251042+00:00",
+  "artifact_index": {
+    "accepted_jsonl": [
+      "outputs\\wikipedia_stream_fast40_2026_05_19_accepted.jsonl"
+    ],
+    "rejected_jsonl": [
+      "outputs\\wikipedia_stream_fast40_2026_05_19_rejected.jsonl"
+    ],
+    "summary_json": [
+      "outputs\\wikipedia_stream_fast40_fresh_2026_05_19_summary.json",
+      "outputs\\wikipedia_stream_fast40_incremental2_2026_05_19_summary.json",
+      "outputs\\wikipedia_stream_fast40_incremental3_2026_05_19_summary.json",
+      "outputs\\wikipedia_stream_fast40_incremental_2026_05_19_summary.json"
+    ],
+    "walkthrough_md": [
+      "docs\\walkthroughs\\wikipedia_stream_fast40_fresh_2026_05_19.md",
+      "docs\\walkthroughs\\wikipedia_stream_fast40_incremental2_2026_05_19.md",
+      "docs\\walkthroughs\\wikipedia_stream_fast40_incremental3_2026_05_19.md",
+      "docs\\walkthroughs\\wikipedia_stream_fast40_incremental_2026_05_19.md"
+    ],
+    "stream_state_json": [
+      "outputs\\wikipedia_stream_fast40_fresh_2026_05_19_state.json"
+    ]
+  },
+  "segments": [
+    {
+      "segment_id": "wikipedia_stream_fast40_fresh_2026_05_19_summary",
+      "created_at_utc": "2026-05-19T13:37:04.479155+00:00",
+      "start_from_endpoint": false,
+      "start_stage": "generate",
+      "streaming_mode": "page_id_stream",
+      "record_limit": 40,
+      "attempted_page_ids": 40,
+      "accepted": 5,
+      "accepted_total": 5,
+      "rejected": 35,
+      "rejected_total": 35,
+      "rerun": 0,
+      "wall_clock_seconds": 832.168,
+      "output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_accepted.jsonl",
+      "rejected_output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_rejected.jsonl",
+      "summary_output": "outputs\\wikipedia_stream_fast40_fresh_2026_05_19_summary.json",
+      "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_fast40_fresh_2026_05_19.md",
+      "stream_state": "outputs\\wikipedia_stream_fast40_fresh_2026_05_19_state.json"
+    },
+    {
+      "segment_id": "wikipedia_stream_fast40_incremental_2026_05_19_summary",
+      "created_at_utc": "2026-05-19T13:37:04.483877+00:00",
+      "start_from_endpoint": true,
+      "start_stage": "generate",
+      "streaming_mode": "page_id_stream",
+      "record_limit": 80,
+      "attempted_page_ids": 40,
+      "accepted": 11,
+      "accepted_total": 15,
+      "rejected": 29,
+      "rejected_total": 65,
+      "rerun": 0,
+      "wall_clock_seconds": 993.1934,
+      "output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_accepted.jsonl",
+      "rejected_output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_rejected.jsonl",
+      "summary_output": "outputs\\wikipedia_stream_fast40_incremental_2026_05_19_summary.json",
+      "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_fast40_incremental_2026_05_19.md",
+      "stream_state": "outputs\\wikipedia_stream_fast40_fresh_2026_05_19_state.json"
+    },
+    {
+      "segment_id": "wikipedia_stream_fast40_incremental2_2026_05_19",
+      "created_at_utc": "2026-05-19T13:37:04.483877+00:00",
+      "start_from_endpoint": true,
+      "start_stage": "generate",
+      "streaming_mode": "page_id_stream",
+      "record_limit": 120,
+      "attempted_page_ids": 40,
+      "accepted": 6,
+      "accepted_total": 21,
+      "rejected": 33,
+      "rejected_total": 98,
+      "rerun": 1,
+      "wall_clock_seconds": 406.7004,
+      "output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_accepted.jsonl",
+      "rejected_output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_rejected.jsonl",
+      "summary_output": "outputs\\wikipedia_stream_fast40_incremental2_2026_05_19_summary.json",
+      "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_fast40_incremental2_2026_05_19.md",
+      "stream_state": "outputs\\wikipedia_stream_fast40_fresh_2026_05_19_state.json"
+    },
+    {
+      "segment_id": "wikipedia_stream_fast40_incremental3_2026_05_19",
+      "created_at_utc": "2026-05-19T15:17:15.497667+00:00",
+      "start_from_endpoint": true,
+      "start_stage": "generate",
+      "streaming_mode": "page_id_stream",
+      "record_limit": 159,
+      "attempted_page_ids": 40,
+      "accepted": 12,
+      "accepted_total": 33,
+      "rejected": 28,
+      "rejected_total": 126,
+      "rerun": 0,
+      "wall_clock_seconds": 330.0469,
+      "output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_accepted.jsonl",
+      "rejected_output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_rejected.jsonl",
+      "summary_output": "outputs\\wikipedia_stream_fast40_incremental3_2026_05_19_summary.json",
+      "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_fast40_incremental3_2026_05_19.md",
+      "stream_state": "outputs\\wikipedia_stream_fast40_fresh_2026_05_19_state.json"
+    }
+  ],
+  "manual_review_adjustments": [
+    {
+      "question": "In which five-year period did the East India Company export the greatest total quantity of textiles to Europe?",
+      "answer": "1720-1724",
+      "page_id": 43281,
+      "run_segment_id": "wikipedia_stream_fast40_incremental3_2026_05_19",
+      "rejection_reason": "manual_review_rejected:manual_underspecified_period_scope",
+      "manual_review_reason": "The question says five-year period but does not specify the source table period convention or textiles-to-Europe pieces-per-year context precisely enough for a self-contained SimpleQA item.",
+      "manual_reviewed_at": "2026-05-20"
+    },
+    {
+      "question": "What is the maximum head-and-body length measured for male lions?",
+      "answer": "208",
+      "page_id": 36896,
+      "run_segment_id": "wikipedia_stream_fast40_incremental3_2026_05_19",
+      "rejection_reason": "manual_review_rejected:manual_missing_numeric_unit_in_question",
+      "manual_review_reason": "The question asks for a numeric body length but does not specify the unit; the unit-free reference answer 208 is ambiguous without centimeters/metres/inches.",
+      "manual_reviewed_at": "2026-05-20"
+    },
+    {
+      "question": "What nasal consonant sound is classified under the Palatal place of articulation in Swedish language phonology?",
+      "answer": "ŋ",
+      "page_id": 26689,
+      "run_segment_id": "wikipedia_stream_fast40_incremental3_2026_05_19",
+      "rejection_reason": "manual_review_rejected:manual_table_header_alignment_error",
+      "manual_review_reason": "The parsed table collapsed blank cells and shifted ? into the Palatal column. The source table has no palatal nasal entry there; ? belongs under Velar, so the reference answer is wrong.",
+      "manual_reviewed_at": "2026-05-20"
+    }
+  ]
+}

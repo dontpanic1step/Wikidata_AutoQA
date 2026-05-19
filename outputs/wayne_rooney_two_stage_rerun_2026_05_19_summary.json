@@ -1,0 +1,89 @@
+{
+  "start_stage": "validation",
+  "candidate_input_paths": [
+    "outputs\\wayne_rooney_rerun_input_2026_05_19.jsonl"
+  ],
+  "attempted_urls": 1,
+  "url_domains": [
+    {
+      "url": "https://en.wikipedia.org/w/index.php?pageid=199445",
+      "domain": ""
+    }
+  ],
+  "generated": 1,
+  "accepted": 0,
+  "rejected": 1,
+  "output_path": "outputs\\wayne_rooney_two_stage_rerun_2026_05_19_accepted.jsonl",
+  "rejected_output_path": "outputs\\wayne_rooney_two_stage_rerun_2026_05_19_rejected.jsonl",
+  "summary_output": "outputs\\wayne_rooney_two_stage_rerun_2026_05_19_summary.json",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": true,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 0.217,
+    "first_paragraph_fetch_seconds": 0.0892,
+    "table_parse_seconds": 2.1366,
+    "llm_question_generation_seconds": 7.2853,
+    "total_generation_seconds": 9.8857,
+    "rewrite_seconds": 4.9242,
+    "number_reference_margin_seconds": 0.0,
+    "duckduckgo_search_seconds": 0.1479,
+    "total_processing_seconds": 19.3727,
+    "candidate_processing_seconds": 19.3727,
+    "second_stage_grading_seconds": 14.3001
+  },
+  "telemetry": {
+    "process_generated_candidates": {
+      "generated": 1,
+      "accepted": 0,
+      "rejected": 1,
+      "second_stage_grading_summary": {
+        "run_count": 1,
+        "per_model": {
+          "openai/gpt-4.1-mini": {
+            "runs": 1,
+            "correct": 1,
+            "incorrect": 0,
+            "not_attempted": 0,
+            "accuracy": 1.0
+          },
+          "google/gemini-3-flash-preview": {
+            "runs": 1,
+            "correct": 1,
+            "incorrect": 0,
+            "not_attempted": 0,
+            "accuracy": 1.0
+          }
+        }
+      }
+    },
+    "wikipedia": [],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=For+which+club+did+Wayne+Rooney+score+the+highest+number+of+league+goals%3F",
+        "cache_hit": true,
+        "duration_ms": 80
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wayne+Rooney+club+with+most+league+goals",
+        "cache_hit": true,
+        "duration_ms": 116
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wayne+Rooney+highest+league+goals+by+club",
+        "cache_hit": true,
+        "duration_ms": 120
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wayne+Rooney+league+goals+scored+per+club",
+        "cache_hit": true,
+        "duration_ms": 26
+      }
+    ]
+  }
+}

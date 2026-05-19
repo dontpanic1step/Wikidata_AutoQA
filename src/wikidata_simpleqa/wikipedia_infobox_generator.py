@@ -58,6 +58,7 @@ MUTABLE_OR_PLACEHOLDER_TABLE_HINTS = {
     "tie-breaking",
     "qualification",
 }
+LIVE_TABLE_SCOPE_TERMS = ("current", "active", "incumbent", "present", "latest")
 ANSWER_PRECISION_PROMPT_RULES = (
     "- If the answer is a temporal value, the question must specify the requested precision or unit, "
     "such as what year, what month, what day, or how many months.\n"
@@ -78,6 +79,7 @@ class WikipediaTable:
     table_type: str
     section_heading: str
     caption: str
+    nearby_intro: str
     headers: list[str]
     rows: list[list[str]]
     row_dicts: list[dict[str, str]]
@@ -90,6 +92,7 @@ class WikipediaTable:
             "table_type": self.table_type,
             "section_heading": self.section_heading,
             "caption": self.caption,
+            "nearby_intro": self.nearby_intro[:1000],
             "headers": self.headers,
             "rows": self.rows[:max_rows],
             "row_dicts": self.row_dicts[:max_rows],
@@ -106,6 +109,7 @@ class WikipediaPageTables:
     title: str
     canonical_url: str
     content_domain: str
+    html: str
     first_paragraph: str
     first_paragraph_fetch_error: str
     prose_text: str
@@ -125,6 +129,7 @@ class WikipediaInfoboxTableGenerator:
     url_domains: dict[str, str] | None = None
     search_query_count: int = 3
     enable_rest_summary_fallback: bool = False
+    min_table_score: float = 0.0
 
     def generate(self, *, run_date: str, cutoff_year: int) -> list[GeneratedCandidate]:
         """Generate candidates from up to ``record_limit`` Wikipedia URLs."""
@@ -165,20 +170,6 @@ class WikipediaInfoboxTableGenerator:
         canonical_url = "https://en.wikipedia.org/wiki/" + title.replace(" ", "_") if title else url
         html = str(parse_body.get("text", "")).strip()
 
-        paragraph_start = perf_counter()
-        first_paragraph = extract_first_paragraph(html)
-        first_paragraph_fetch_error = ""
-        timings["first_paragraph_extract_seconds"] = _elapsed(paragraph_start)
-        if not first_paragraph and title and self.enable_rest_summary_fallback:
-            paragraph_fetch_start = perf_counter()
-            try:
-                summary = self.wikipedia_client.fetch_summary(title)
-                first_paragraph = str(summary.get("extract", "")).strip()
-            except Exception as exc:  # noqa: BLE001
-                first_paragraph_fetch_error = f"{type(exc).__name__}:{exc}"
-            finally:
-                timings["first_paragraph_fetch_seconds"] = _elapsed(paragraph_fetch_start)
-
         parse_start = perf_counter()
         tables = extract_wikipedia_tables(html)
         prose_text = extract_non_table_prose(html)
@@ -188,11 +179,29 @@ class WikipediaInfoboxTableGenerator:
             title=title,
             canonical_url=canonical_url,
             content_domain=self._domain_for_url(url, canonical_url, title),
-            first_paragraph=first_paragraph,
-            first_paragraph_fetch_error=first_paragraph_fetch_error,
+            html=html,
+            first_paragraph="",
+            first_paragraph_fetch_error="",
             prose_text=prose_text,
             tables=tables,
         )
+
+    def _extract_first_paragraph_context(self, page: WikipediaPageTables, *, timings: dict[str, float]) -> None:
+        """Populate first-paragraph context after a page has surviving tables."""
+        if page.first_paragraph or page.first_paragraph_fetch_error:
+            return
+        paragraph_start = perf_counter()
+        page.first_paragraph = extract_first_paragraph(page.html)
+        timings["first_paragraph_extract_seconds"] = _elapsed(paragraph_start)
+        if not page.first_paragraph and page.title and self.enable_rest_summary_fallback:
+            paragraph_fetch_start = perf_counter()
+            try:
+                summary = self.wikipedia_client.fetch_summary(page.title)
+                page.first_paragraph = str(summary.get("extract", "")).strip()
+            except Exception as exc:  # noqa: BLE001
+                page.first_paragraph_fetch_error = f"{type(exc).__name__}:{exc}"
+            finally:
+                timings["first_paragraph_fetch_seconds"] = _elapsed(paragraph_fetch_start)
 
     def _domain_for_url(self, source_url: str, canonical_url: str, title: str) -> str:
         """Return the configured broad content domain for one page."""
@@ -231,18 +240,71 @@ class WikipediaInfoboxTableGenerator:
                 canonical_url=page.canonical_url,
                 content_domain=page.content_domain,
                 first_paragraph=page.first_paragraph,
+                min_table_score=self.min_table_score,
             )
         table_selection = rank_wikipedia_tables(
             page.tables,
             first_paragraph=page.first_paragraph,
             prose_text=page.prose_text,
         )
+        table_selection = _annotate_table_score_cutoff(table_selection, self.min_table_score)
+        safe_table_selection = [
+            row
+            for row in table_selection
+            if not str(row.get("live_scope_rejection_reason", "")).strip()
+            and not bool(row.get("below_min_table_score"))
+        ]
         selected_tables = [
             row["table"]
-            for row in table_selection
+            for row in safe_table_selection
             if isinstance(row.get("table"), WikipediaTable)
         ][:3]
         if not selected_tables:
+            live_scope_rows = [
+                row
+                for row in table_selection
+                if str(row.get("live_scope_rejection_reason", "")).strip()
+            ]
+            below_min_rows = [
+                row
+                for row in table_selection
+                if bool(row.get("below_min_table_score"))
+            ]
+            below_min_non_live_rows = [
+                row
+                for row in below_min_rows
+                if not str(row.get("live_scope_rejection_reason", "")).strip()
+            ]
+            if live_scope_rows and not below_min_non_live_rows:
+                return _rejected_placeholder(
+                    url=page.source_url,
+                    reason="wikipedia_infobox_live_table_scope",
+                    run_date=run_date,
+                    timings=timings,
+                    title=page.title,
+                    canonical_url=page.canonical_url,
+                    content_domain=page.content_domain,
+                    first_paragraph=page.first_paragraph,
+                    discard_reason=str(live_scope_rows[0].get("live_scope_rejection_reason", "")),
+                    tables=page.tables,
+                    table_selection=table_selection,
+                    min_table_score=self.min_table_score,
+                )
+            if below_min_rows:
+                return _rejected_placeholder(
+                    url=page.source_url,
+                    reason="wikipedia_infobox_table_score_below_minimum",
+                    run_date=run_date,
+                    timings=timings,
+                    title=page.title,
+                    canonical_url=page.canonical_url,
+                    content_domain=page.content_domain,
+                    first_paragraph=page.first_paragraph,
+                    discard_reason=_table_score_cutoff_discard_reason(below_min_rows, self.min_table_score),
+                    tables=page.tables,
+                    table_selection=table_selection,
+                    min_table_score=self.min_table_score,
+                )
             return _rejected_placeholder(
                 url=page.source_url,
                 reason="wikipedia_infobox_no_suitable_tables",
@@ -254,7 +316,9 @@ class WikipediaInfoboxTableGenerator:
                 first_paragraph=page.first_paragraph,
                 tables=page.tables,
                 table_selection=table_selection,
+                min_table_score=self.min_table_score,
             )
+        self._extract_first_paragraph_context(page, timings=timings)
         prompt = build_wikipedia_infobox_prompt(
             title=page.title,
             canonical_url=page.canonical_url,
@@ -266,7 +330,7 @@ class WikipediaInfoboxTableGenerator:
                 cutoff_year,
             ),
             tables=selected_tables,
-            table_selection=table_selection,
+            table_selection=safe_table_selection,
             cutoff_year=cutoff_year,
             search_query_count=self.search_query_count,
         )
@@ -289,6 +353,7 @@ class WikipediaInfoboxTableGenerator:
                 llm_response=response,
                 llm_prompt=prompt,
                 table_selection=table_selection,
+                min_table_score=self.min_table_score,
             )
 
         question = str(response.get("question", "")).strip()
@@ -308,6 +373,7 @@ class WikipediaInfoboxTableGenerator:
                 llm_response=response,
                 llm_prompt=prompt,
                 table_selection=table_selection,
+                min_table_score=self.min_table_score,
             )
 
         answer, aliases = _normalize_generated_answer(
@@ -379,6 +445,7 @@ class WikipediaInfoboxTableGenerator:
                     selected_tables,
                     cutoff_year,
                 ),
+                min_table_score=self.min_table_score,
             ),
         )
 
@@ -428,9 +495,10 @@ def build_wikipedia_infobox_prompt(
         f"{ANSWER_PRECISION_PROMPT_RULES}"
         "- Use subject_anchors only to understand the page/table scope; do not copy anchor text mechanically into the question.\n"
         "- If the page title contains a cutoff-year marker, use one of safe_subject_aliases when you need to name the subject; do not use the cutoff-year title text.\n"
-        "- Let the table caption or nearby section heading define the safe scope. For example, `15 largest commercial banks` supports asking which bank is largest within that listed table, but not how many banks exist in Ukraine. A `1980 chart` table supports asking about facts in that 1980 chart, but not when a song first entered a chart because it may have entered in another year.\n"
+        "- Let the table caption, nearby paragraph intro, or nearby section heading define the safe scope. Pay special attention to nearby intros with words like `following` or `above`; they often state which rows are included or excluded. For example, `15 largest commercial banks` supports asking which bank is largest within that listed table, but not how many banks exist in Ukraine. A `1980 chart` table supports asking about facts in that 1980 chart, but not when a song first entered a chart because it may have entered in another year.\n"
         "- Treat curated list pages such as `List of national parks of the United States` as complete and authoritative for membership within their stated scope. Do not hedge by saying `according to the List of ...`.\n"
         "- Do not write `according to the table`, `according to the [source] table`, or `in the List of ...`. Name the actual entity, event, chart, list, or scope naturally. Only use `according to ...` when the source is a well-known named chart or list, such as a Billboard chart or UNESCO list.\n"
+        "- Avoid questions with unclear or overly broad answer categories, such as `What equipment ...`. If the answer column is generic, name the domain-specific category in the question, such as telecommunications equipment category, award category, country of birth, or chart entry.\n"
         "- Do not ask cumulative-statistic questions such as how many goals Messi has scored, total wins, career points, revenue, downloads, citations, or followers unless the statistic is explicitly scoped to a historically settled slice, completed event, completed season, or fixed table/list.\n"
         "- Do not use generic phrases like `the listed table`, `the tournament`, or `the award` without naming the source subject.\n"
         "- Do not ask about current, latest, most recent, or live-status facts.\n"
@@ -503,7 +571,7 @@ def rank_wikipedia_tables(
             hint for hint in COMPOSITION_HEADER_HINTS if hint in header_text
         )
         table_context = " ".join(
-            [table.section_heading, table.caption, " ".join(table.headers)]
+            [table.section_heading, table.caption, table.nearby_intro, " ".join(table.headers)]
         ).lower()
         preferred_context_hits = sorted(
             hint for hint in PREFERRED_TABLE_HINTS if hint in table_context
@@ -511,6 +579,7 @@ def rank_wikipedia_tables(
         mutable_context_hits = sorted(
             hint for hint in MUTABLE_OR_PLACEHOLDER_TABLE_HINTS if hint in table_context
         )
+        live_scope_reason = _live_table_scope_rejection_reason(table)
         zero_numeric_count = sum(
             1
             for row in data_rows
@@ -552,6 +621,9 @@ def rank_wikipedia_tables(
         if mutable_context_hits:
             score -= 3.0
             reasons.append("mutable_or_placeholder_context")
+        if live_scope_reason:
+            score -= 5.0
+            reasons.append("live_table_scope")
         if zero_numeric_rate >= 0.5 and numeric_cell_count >= 6:
             score -= 4.0
             reasons.append("zero_dominant_numeric_values")
@@ -571,6 +643,7 @@ def rank_wikipedia_tables(
                 "table_type": table.table_type,
                 "caption": table.caption,
                 "section_heading": table.section_heading,
+                "nearby_intro": table.nearby_intro[:1000],
                 "score": round(score, 4),
                 "reasons": reasons,
                 "row_count": row_count,
@@ -578,6 +651,7 @@ def rank_wikipedia_tables(
                 "comparable_header_hits": comparable_header_hits,
                 "preferred_context_hits": preferred_context_hits,
                 "mutable_context_hits": mutable_context_hits,
+                "live_scope_rejection_reason": live_scope_reason,
                 "zero_numeric_rate": round(zero_numeric_rate, 4),
                 "prose_leakage": {
                     "checked_values": checked_values,
@@ -595,6 +669,41 @@ def rank_wikipedia_tables(
         ),
         reverse=True,
     )
+
+
+def _annotate_table_score_cutoff(
+    table_selection: list[dict[str, Any]],
+    min_table_score: float,
+) -> list[dict[str, Any]]:
+    """Mark ranked tables that are below the configured score cutoff."""
+    annotated: list[dict[str, Any]] = []
+    threshold = float(min_table_score)
+    for row in table_selection:
+        score = _selection_score(row)
+        copied = dict(row)
+        copied["min_table_score"] = threshold
+        copied["below_min_table_score"] = score < threshold
+        if copied["below_min_table_score"]:
+            reasons = list(copied.get("reasons", []))
+            if "below_min_table_score" not in reasons:
+                reasons.append("below_min_table_score")
+            copied["reasons"] = reasons
+        annotated.append(copied)
+    return annotated
+
+
+def _table_score_cutoff_discard_reason(rows: list[dict[str, Any]], min_table_score: float) -> str:
+    """Return a concise rejection reason when no table meets the score cutoff."""
+    best_score = max((_selection_score(row) for row in rows), default=0.0)
+    return f"table_score_below_minimum:min_table_score={float(min_table_score):.4f};best_score={best_score:.4f}"
+
+
+def _selection_score(row: dict[str, Any]) -> float:
+    """Return one ranked table score as a float."""
+    try:
+        return float(row.get("score", 0.0))
+    except (TypeError, ValueError):
+        return 0.0
 
 
 class _FirstParagraphParser(HTMLParser):
@@ -659,8 +768,11 @@ class _WikipediaTableParser(HTMLParser):
         super().__init__(convert_charrefs=True)
         self.frames: list[dict[str, Any]] = []
         self.current_heading = ""
+        self._last_paragraph = ""
         self._heading_tag = ""
         self._heading_parts: list[str] = []
+        self._active_paragraph = False
+        self._paragraph_parts: list[str] = []
         self._active_table: dict[str, Any] | None = None
         self._table_depth = 0
         self._active_row: list[dict[str, Any]] | None = None
@@ -672,6 +784,10 @@ class _WikipediaTableParser(HTMLParser):
         if tag in {"h2", "h3", "h4"}:
             self._heading_tag = tag
             self._heading_parts = []
+            return
+        if tag == "p" and self._active_table is None:
+            self._active_paragraph = True
+            self._paragraph_parts = []
             return
         if tag == "table":
             if self._active_table is not None:
@@ -685,6 +801,7 @@ class _WikipediaTableParser(HTMLParser):
                 "table_type": table_type,
                 "section_heading": self.current_heading,
                 "caption": "",
+                "nearby_intro": self._last_paragraph,
                 "rows": [],
             }
             self._table_depth = 1
@@ -703,8 +820,16 @@ class _WikipediaTableParser(HTMLParser):
             heading = _clean_text(" ".join(self._heading_parts))
             if heading:
                 self.current_heading = heading
+                self._last_paragraph = ""
             self._heading_tag = ""
             self._heading_parts = []
+            return
+        if tag == "p" and self._active_paragraph:
+            paragraph = _clean_text(" ".join(self._paragraph_parts))
+            if paragraph:
+                self._last_paragraph = paragraph
+            self._active_paragraph = False
+            self._paragraph_parts = []
             return
         if self._active_table is None:
             return
@@ -740,6 +865,8 @@ class _WikipediaTableParser(HTMLParser):
     def handle_data(self, data: str) -> None:
         if self._heading_tag:
             self._heading_parts.append(data)
+        if self._active_paragraph:
+            self._paragraph_parts.append(data)
         if self._active_table is None or self._table_depth != 1:
             return
         if self._active_cell is not None:
@@ -775,6 +902,7 @@ def _build_wikipedia_table(table_index: int, frame: dict[str, Any]) -> Wikipedia
         table_type=str(frame.get("table_type", "")).strip(),
         section_heading=str(frame.get("section_heading", "")).strip(),
         caption=str(frame.get("caption", "")).strip(),
+        nearby_intro=str(frame.get("nearby_intro", "")).strip(),
         headers=headers,
         rows=rows,
         row_dicts=row_dicts,
@@ -796,6 +924,7 @@ def _source_metadata(
     reasoning_type: str = "",
     tie_completion_warning: str = "",
     subject_anchors: dict[str, Any] | None = None,
+    min_table_score: float = 0.0,
 ) -> dict[str, Any]:
     """Build Route 3 audit metadata."""
     safe_subject_aliases = _first_paragraph_aliases(page.title, page.first_paragraph)
@@ -809,6 +938,7 @@ def _source_metadata(
         "subject_anchor_aliases": _subject_anchor_options(page.title, page.first_paragraph, 2025),
         "safe_subject_aliases": safe_subject_aliases,
         "subject_anchors": subject_anchors or [],
+        "min_table_score": float(min_table_score),
         "parsed_tables": [table.to_metadata() for table in tables],
         "table_selection": [_selection_payload(row) for row in table_selection],
         "selected_source_table": source_table.to_metadata() if source_table is not None else {},
@@ -848,21 +978,25 @@ def _rejected_placeholder(
     llm_response: dict[str, Any] | None = None,
     llm_prompt: str = "",
     table_selection: list[dict[str, Any]] | None = None,
+    source_table: WikipediaTable | None = None,
+    question: str = "",
+    answer: str = "",
+    min_table_score: float = 0.0,
 ) -> GeneratedCandidate:
     """Build a placeholder candidate so shared output records route-local failures."""
     return GeneratedCandidate(
         source_type=SOURCE_TYPE,
         generation_route=ROUTE_NAME,
-        question=title or url,
-        canonical_question=title or url,
-        answer="",
+        question=question or title or url,
+        canonical_question=question or title or url,
+        answer=answer,
         answer_aliases=[],
         subject_entity=EntityReference(
             name=title or normalize_wikipedia_title(url),
             wikipedia_title=(title or normalize_wikipedia_title(url)).replace(" ", "_"),
             url=canonical_url or url,
         ),
-        answer_entity=EntityReference(name=""),
+        answer_entity=EntityReference(name=answer),
         relation_or_claim="wikipedia_table_fact",
         evidence=EvidenceRecord(
             text=first_paragraph,
@@ -879,8 +1013,10 @@ def _rejected_placeholder(
             "page_title": title,
             "content_domain": content_domain,
             "first_paragraph": first_paragraph,
+            "min_table_score": float(min_table_score),
             "parsed_tables": [table.to_metadata() for table in tables or []],
             "table_selection": [_selection_payload(row) for row in table_selection or []],
+            "selected_source_table": source_table.to_metadata() if source_table is not None else {},
             "llm_prompt": llm_prompt,
             "llm_response": llm_response or {},
             "small_model_qa_response": llm_response or {},
@@ -911,6 +1047,23 @@ def _table_by_index(tables: list[WikipediaTable], table_index: int | None) -> Wi
     return tables[0] if tables else None
 
 
+def _live_table_scope_rejection_reason(table: WikipediaTable | None) -> str:
+    """Return a rejection reason for live/current table scopes."""
+    if table is None:
+        return ""
+    context_parts = {
+        "section_heading": table.section_heading,
+        "caption": table.caption,
+        "nearby_intro": table.nearby_intro,
+    }
+    for field_name, text in context_parts.items():
+        normalized = str(text or "").lower()
+        for term in LIVE_TABLE_SCOPE_TERMS:
+            if re.search(rf"\b{re.escape(term)}\b", normalized):
+                return f"live_table_scope:{field_name}:{term}"
+    return ""
+
+
 def _selection_payload(row: dict[str, Any]) -> dict[str, Any]:
     """Return serializable table-selection metadata."""
     return {
@@ -918,6 +1071,7 @@ def _selection_payload(row: dict[str, Any]) -> dict[str, Any]:
         "table_type": row.get("table_type"),
         "caption": row.get("caption"),
         "section_heading": row.get("section_heading"),
+        "nearby_intro": row.get("nearby_intro", ""),
         "score": row.get("score"),
         "reasons": row.get("reasons", []),
         "row_count": row.get("row_count"),
@@ -925,6 +1079,9 @@ def _selection_payload(row: dict[str, Any]) -> dict[str, Any]:
         "comparable_header_hits": row.get("comparable_header_hits", []),
         "preferred_context_hits": row.get("preferred_context_hits", []),
         "mutable_context_hits": row.get("mutable_context_hits", []),
+        "live_scope_rejection_reason": row.get("live_scope_rejection_reason", ""),
+        "min_table_score": row.get("min_table_score"),
+        "below_min_table_score": bool(row.get("below_min_table_score", False)),
         "zero_numeric_rate": row.get("zero_numeric_rate"),
         "prose_leakage": row.get("prose_leakage", {}),
     }

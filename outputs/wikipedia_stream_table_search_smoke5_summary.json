@@ -1,0 +1,422 @@
+{
+  "start_stage": "generate",
+  "streaming_mode": "page_id_stream",
+  "stream_page_source": "table-search",
+  "stream_search_queries": [
+    "insource:\"wikitable\"",
+    "insource:/\\{\\|/"
+  ],
+  "stream_search_offsets": {
+    "insource:\"wikitable\"": 150
+  },
+  "run_date": "2026-05-19",
+  "stream_state": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\wikipedia_infobox_stream_state.json",
+  "stream_state_stats": {
+    "used": 5,
+    "in_progress": 0,
+    "accepted": 1,
+    "rejected": 4,
+    "rerun_pool": 0,
+    "table_search_queries": 1
+  },
+  "recovered_stale_in_progress_ids": [],
+  "page_id_bounds": {
+    "min": 1,
+    "max": 80000000
+  },
+  "random_seed": 42,
+  "record_limit": 5,
+  "stream_batch_size": 2,
+  "stream_accepted_target": 0,
+  "attempted_page_ids": 5,
+  "page_ids": [
+    32611,
+    17416221,
+    199445,
+    21355232,
+    66958
+  ],
+  "accepted": 1,
+  "rejected": 4,
+  "rerun": 0,
+  "output_path": "outputs\\wikipedia_stream_table_search_smoke5_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_stream_table_search_smoke5_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_stream_table_search_smoke5_summary.json",
+  "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_table_search_smoke5_2026_05_19.md",
+  "domain_policy": "domain_and_subdomain_optional_for_random_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": true,
+  "second_stage_grading_enabled": false,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "entered": 5,
+      "failed": 0,
+      "survived": 5,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "entered": 5,
+      "failed": 0,
+      "survived": 5,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Page extraction, table grading, and QA generation",
+      "entered": 5,
+      "failed": 0,
+      "survived": 5,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "entered": 5,
+      "failed": 1,
+      "survived": 4,
+      "survival_rate_from_layer_input": 0.8,
+      "cumulative_survival_rate": 0.8
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "entered": 4,
+      "failed": 3,
+      "survived": 1,
+      "survival_rate_from_layer_input": 0.25,
+      "cumulative_survival_rate": 0.2
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "entered": 1,
+      "failed": 0,
+      "survived": 1,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.2
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared route-aware validation",
+      "entered": 1,
+      "failed": 0,
+      "survived": 1,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.2
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "entered": 1,
+      "failed": 0,
+      "survived": 1,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.2
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "entered": 1,
+      "failed": 0,
+      "survived": 1,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.2
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+      "count": 2
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded",
+      "count": 1
+    },
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded",
+      "count": 1
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 5,
+      "total": 88.4021,
+      "average": 17.6804,
+      "max": 30.4774
+    },
+    "duckduckgo_search_seconds": {
+      "count": 4,
+      "total": 50.7034,
+      "average": 12.6759,
+      "max": 16.5041
+    },
+    "first_paragraph_fetch_seconds": {
+      "count": 5,
+      "total": 24.9588,
+      "average": 4.9918,
+      "max": 9.7639
+    },
+    "llm_question_generation_seconds": {
+      "count": 5,
+      "total": 36.17,
+      "average": 7.234,
+      "max": 9.4325
+    },
+    "number_reference_margin_seconds": {
+      "count": 4,
+      "total": 0.0003,
+      "average": 0.0001,
+      "max": 0.0002
+    },
+    "page_fetch_seconds": {
+      "count": 5,
+      "total": 64.6658,
+      "average": 12.9332,
+      "max": 18.378
+    },
+    "rewrite_seconds": {
+      "count": 5,
+      "total": 37.689,
+      "average": 7.5378,
+      "max": 13.9662
+    },
+    "table_parse_seconds": {
+      "count": 5,
+      "total": 6.0399,
+      "average": 1.208,
+      "max": 1.7455
+    },
+    "total_generation_seconds": {
+      "count": 5,
+      "total": 132.4618,
+      "average": 26.4924,
+      "max": 37.5511
+    },
+    "total_processing_seconds": {
+      "count": 5,
+      "total": 88.4021,
+      "average": 17.6804,
+      "max": 30.4774
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 64.6658,
+    "first_paragraph_fetch_seconds": 24.9588,
+    "table_parse_seconds": 6.0399,
+    "llm_question_generation_seconds": 36.17,
+    "total_generation_seconds": 132.4618,
+    "rewrite_seconds": 37.689,
+    "number_reference_margin_seconds": 0.0003,
+    "duckduckgo_search_seconds": 50.7034,
+    "total_processing_seconds": 88.4021,
+    "candidate_processing_seconds": 88.4021
+  },
+  "telemetry": {
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=0&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": false,
+        "duration_ms": 5831,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=32611",
+        "cache_hit": false,
+        "duration_ms": 18375,
+        "attempts": 2,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Vietnam_War",
+        "cache_hit": false,
+        "duration_ms": 9762,
+        "attempts": 2,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=17416221",
+        "cache_hit": false,
+        "duration_ms": 13858,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/South_Africa",
+        "cache_hit": false,
+        "duration_ms": 4399,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=50&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": false,
+        "duration_ms": 6463,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=199445",
+        "cache_hit": false,
+        "duration_ms": 9999,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Wayne_Rooney",
+        "cache_hit": false,
+        "duration_ms": 4382,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=21355232",
+        "cache_hit": false,
+        "duration_ms": 7891,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_national_parks_of_the_United_States",
+        "cache_hit": false,
+        "duration_ms": 4090,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=100&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": false,
+        "duration_ms": 3664,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=66958",
+        "cache_hit": false,
+        "duration_ms": 14532,
+        "attempts": 1,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Renminbi",
+        "cache_hit": false,
+        "duration_ms": 2319,
+        "attempts": 1,
+        "used_direct_fallback": false
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=South+Vietnam+military+deaths+peak+year+Vietnam+War",
+        "cache_hit": false,
+        "duration_ms": 2840,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+saw+the+highest+number+of+military+deaths+for+South+Vietnam+during+the+Vietnam+War+from+1955+to+1975%3F",
+        "cache_hit": false,
+        "duration_ms": 3193,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+with+most+South+Vietnam+military+deaths+1955-1975",
+        "cache_hit": false,
+        "duration_ms": 3227,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Vietnam+War+South+Vietnam+highest+military+casualties+year",
+        "cache_hit": false,
+        "duration_ms": 11335,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+province+in+South+Africa+had+the+largest+population+according+to+2022+data%3F",
+        "cache_hit": false,
+        "duration_ms": 2820,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+population+province+South+Africa+2022",
+        "cache_hit": false,
+        "duration_ms": 3726,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=South+Africa+province+population+2022",
+        "cache_hit": false,
+        "duration_ms": 7323,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=South+Africa+provinces+population+statistics+2022",
+        "cache_hit": false,
+        "duration_ms": 8065,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wayne+Rooney+England+national+team+highest+goal+scoring+year",
+        "cache_hit": false,
+        "duration_ms": 2699,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Year+Wayne+Rooney+scored+most+goals+for+England",
+        "cache_hit": false,
+        "duration_ms": 4720,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wayne+Rooney+top+scoring+year+England+football",
+        "cache_hit": false,
+        "duration_ms": 3896,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+Wayne+Rooney+score+the+highest+number+of+goals+for+the+England+national+team%3F",
+        "cache_hit": false,
+        "duration_ms": 9000,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=U.S.+state+with+the+most+national+parks",
+        "cache_hit": false,
+        "duration_ms": 7076,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+U.S.+state+has+the+greatest+number+of+national+parks+according+to+the+List+of+national+parks+of+the+United+States%3F",
+        "cache_hit": false,
+        "duration_ms": 9460,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+national+parks+of+the+United+States+by+state",
+        "cache_hit": false,
+        "duration_ms": 9018,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=number+of+national+parks+by+U.S.+state",
+        "cache_hit": false,
+        "duration_ms": 16440,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

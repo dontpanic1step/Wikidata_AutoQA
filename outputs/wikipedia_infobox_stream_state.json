@@ -1,0 +1,122 @@
+{
+  "used_ids": [
+    32611,
+    66958,
+    199445,
+    17416221,
+    21355232
+  ],
+  "in_progress_ids": [],
+  "accepted_ids": [
+    21355232
+  ],
+  "rejected_ids": [
+    32611,
+    66958,
+    199445,
+    17416221
+  ],
+  "rerun_pool": [],
+  "table_search_offsets": {
+    "insource:\"wikitable\"": 150
+  },
+  "failure_reasons": {
+    "32611": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "66958": "rewrite_guard_rejected:cutoff_year_exceeded",
+    "199445": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded",
+    "17416221": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+  },
+  "events": [
+    {
+      "event": "discovery_error",
+      "page_ids": [],
+      "reason": "table_search:insource:\"wikitable\":offset=0:URLError:<urlopen error [WinError 10013] 以一种访问权限不允许的方式做了一个访问套接字的尝试。>"
+    },
+    {
+      "event": "discovery_error",
+      "page_ids": [],
+      "reason": "table_search:insource:/\\{\\|/:offset=0:URLError:<urlopen error [WinError 10013] 以一种访问权限不允许的方式做了一个访问套接字的尝试。>"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":50"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        32611,
+        17416221
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=0"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        32611
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        17416221
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":100"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        199445,
+        21355232
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=50"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        199445
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        21355232
+      ],
+      "reason": ""
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":150"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        66958
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=100"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        66958
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    }
+  ],
+  "stats": {
+    "used": 5,
+    "in_progress": 0,
+    "accepted": 1,
+    "rejected": 4,
+    "rerun_pool": 0,
+    "table_search_queries": 1
+  }
+}

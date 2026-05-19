@@ -1,0 +1,1969 @@
+{
+  "used_ids": [
+    599,
+    738,
+    1064,
+    1640,
+    5488,
+    5489,
+    5615,
+    5643,
+    8083,
+    8957,
+    9316,
+    11787,
+    11857,
+    12186,
+    12240,
+    12300,
+    12542,
+    13277,
+    14849,
+    15049,
+    15240,
+    15606,
+    16384,
+    16801,
+    18947,
+    19261,
+    19590,
+    20804,
+    22093,
+    22304,
+    22461,
+    22948,
+    23906,
+    25286,
+    25445,
+    26689,
+    30042,
+    30217,
+    30292,
+    31730,
+    31740,
+    31940,
+    32611,
+    34411,
+    36646,
+    36896,
+    39776,
+    43088,
+    43281,
+    44635,
+    47498,
+    52812,
+    56636,
+    56668,
+    57659,
+    57877,
+    57905,
+    57951,
+    65433,
+    66524,
+    66958,
+    67436,
+    67923,
+    68761,
+    73199,
+    76988,
+    80482,
+    83316,
+    84952,
+    86224,
+    91195,
+    96875,
+    101965,
+    104944,
+    105391,
+    105908,
+    107825,
+    113933,
+    129619,
+    138268,
+    147311,
+    151451,
+    151603,
+    156745,
+    164390,
+    167051,
+    174716,
+    180763,
+    194910,
+    199445,
+    200129,
+    212472,
+    214179,
+    217231,
+    221478,
+    226734,
+    229275,
+    231156,
+    235916,
+    235959,
+    241717,
+    246920,
+    250230,
+    260996,
+    261671,
+    262831,
+    292259,
+    333199,
+    342334,
+    356375,
+    380845,
+    384695,
+    407239,
+    422038,
+    438269,
+    441357,
+    479109,
+    540317,
+    563616,
+    569459,
+    683599,
+    695780,
+    1069583,
+    1146123,
+    1161220,
+    1564433,
+    1625048,
+    1787105,
+    2056103,
+    2114995,
+    2209490,
+    2615708,
+    2924002,
+    3329753,
+    4595410,
+    7549995,
+    17278765,
+    17416221,
+    18938412,
+    18947898,
+    19653842,
+    21355232,
+    22852566,
+    26457880,
+    28229246,
+    32005912,
+    32551521,
+    33094374,
+    35412202,
+    38657800,
+    40010153,
+    41853326,
+    42042635,
+    45367389,
+    47864412,
+    52374650,
+    55440889,
+    60382764,
+    61795854
+  ],
+  "in_progress_ids": [],
+  "accepted_ids": [
+    12542,
+    15606,
+    30217,
+    31940,
+    39776,
+    52812,
+    56636,
+    57905,
+    67436,
+    67923,
+    68761,
+    73199,
+    96875,
+    101965,
+    105391,
+    164390,
+    217231,
+    235916,
+    246920,
+    250230,
+    342334,
+    384695,
+    563616,
+    569459,
+    1161220,
+    1564433,
+    1625048,
+    2056103,
+    2114995,
+    18938412,
+    28229246,
+    32551521,
+    40010153
+  ],
+  "rejected_ids": [
+    599,
+    738,
+    1064,
+    1640,
+    5488,
+    5489,
+    5615,
+    5643,
+    8083,
+    8957,
+    9316,
+    11787,
+    11857,
+    12186,
+    12240,
+    12300,
+    13277,
+    14849,
+    15049,
+    15240,
+    16384,
+    16801,
+    18947,
+    19261,
+    19590,
+    20804,
+    22093,
+    22304,
+    22461,
+    22948,
+    23906,
+    25286,
+    25445,
+    26689,
+    30042,
+    30292,
+    31730,
+    31740,
+    32611,
+    34411,
+    36646,
+    36896,
+    43088,
+    43281,
+    44635,
+    47498,
+    56668,
+    57659,
+    57877,
+    57951,
+    65433,
+    66524,
+    66958,
+    76988,
+    80482,
+    83316,
+    84952,
+    86224,
+    91195,
+    104944,
+    105908,
+    107825,
+    113933,
+    129619,
+    138268,
+    147311,
+    151451,
+    151603,
+    156745,
+    167051,
+    174716,
+    180763,
+    194910,
+    199445,
+    200129,
+    212472,
+    214179,
+    221478,
+    226734,
+    229275,
+    231156,
+    235959,
+    241717,
+    260996,
+    261671,
+    262831,
+    292259,
+    333199,
+    356375,
+    380845,
+    407239,
+    422038,
+    438269,
+    441357,
+    479109,
+    540317,
+    683599,
+    695780,
+    1069583,
+    1146123,
+    1787105,
+    2209490,
+    2615708,
+    2924002,
+    3329753,
+    4595410,
+    7549995,
+    17278765,
+    17416221,
+    18947898,
+    19653842,
+    21355232,
+    22852566,
+    26457880,
+    32005912,
+    33094374,
+    35412202,
+    38657800,
+    41853326,
+    42042635,
+    45367389,
+    47864412,
+    52374650,
+    55440889,
+    60382764,
+    61795854
+  ],
+  "rerun_pool": [],
+  "table_search_offsets": {
+    "insource:\"wikitable\"": 600,
+    "insource:wikitable": 200
+  },
+  "failure_reasons": {
+    "599": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "738": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "1064": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
+    "1640": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
+    "5488": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "5489": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "5615": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "5643": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "8083": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
+    "8957": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "9316": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "11787": "search_longtail_verifier_rejected:full_question:answer_in_title",
+    "11857": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
+    "12186": "rewrite_guard_rejected:answer_leakage",
+    "12240": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "12300": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded",
+    "13277": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "14849": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "15049": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded",
+    "15240": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "16384": "search_longtail_verifier_error",
+    "16801": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "18947": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "19261": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "19590": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "20804": "manual_review_rejected:manual_answer_form_scope_issue",
+    "22093": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "22304": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "22461": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
+    "22948": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "23906": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "25286": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "25445": "wikipedia_infobox_table_score_below_minimum:table_score_below_minimum:min_table_score=0.0000;best_score=-0.1000",
+    "30042": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "30292": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "31730": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "31740": "rewrite_guard_rejected:cutoff_year_exceeded",
+    "32611": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "34411": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "36646": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "43088": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "44635": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "47498": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
+    "56668": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "57659": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "57877": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "57951": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "65433": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "66524": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "66958": "rewrite_guard_rejected:cutoff_year_exceeded",
+    "76988": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "80482": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
+    "83316": "manual_review_rejected:manual_missing_nearby_intro_scope",
+    "84952": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "86224": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
+    "91195": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "104944": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "105908": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "107825": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "113933": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "129619": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
+    "138268": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "147311": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "151451": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "151603": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
+    "156745": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded",
+    "167051": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded",
+    "174716": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "180763": "wikipedia_infobox_generation_error:HTTPError:HTTP Error 429: Too Many Requests",
+    "194910": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "199445": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "200129": "search_longtail_verifier_error",
+    "212472": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "214179": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "221478": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "226734": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "229275": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "231156": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "235959": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "241717": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "260996": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "261671": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "262831": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "292259": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "333199": "rewrite_guard_rejected:forbidden_temporal_phrase",
+    "356375": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "380845": "rewrite_guard_rejected:cutoff_year_exceeded",
+    "407239": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "422038": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "438269": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "441357": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "479109": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "540317": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "683599": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "695780": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "1069583": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "1146123": "rewrite_guard_rejected:answer_leakage",
+    "1787105": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "2209490": "rewrite_guard_rejected:answer_leakage",
+    "2615708": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "2924002": "rewrite_guard_rejected:cutoff_year_exceeded",
+    "3329753": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "4595410": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded",
+    "7549995": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "17278765": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "17416221": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "18947898": "search_longtail_verifier_rejected:full_question:answer_in_title",
+    "19653842": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "21355232": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "22852566": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "26457880": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "32005912": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "33094374": "manual_review_rejected:manual_unclear_broad_answer_category",
+    "35412202": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "38657800": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "41853326": "rewrite_guard_rejected:cutoff_year_exceeded",
+    "42042635": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "45367389": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "47864412": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "52374650": "manual_review_rejected:manual_ambiguous_current_list_scope",
+    "55440889": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "60382764": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "61795854": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "43281": "manual_review_rejected:manual_underspecified_period_scope",
+    "36896": "manual_review_rejected:manual_missing_numeric_unit_in_question",
+    "26689": "manual_review_rejected:manual_table_header_alignment_error"
+  },
+  "events": [
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":50"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        32611,
+        17416221,
+        9316,
+        22093,
+        5489,
+        738,
+        13277,
+        14849,
+        19261,
+        11857
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=0"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        32611
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        17416221
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        9316
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        22093
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        5489
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        738
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        13277
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        14849
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        19261
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        11857
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":100"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        199445,
+        21355232,
+        31740,
+        8083,
+        292259,
+        40010153,
+        39776,
+        5488,
+        1640,
+        151603
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=50"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        199445
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        21355232
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        31740
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        8083
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        292259
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        40010153
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        39776
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        5488
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        1640
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        151603
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":150"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        66958,
+        41853326,
+        60382764,
+        45367389,
+        105908,
+        217231,
+        34411,
+        12186,
+        5643,
+        19653842
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=100"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        66958
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        41853326
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        60382764
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        45367389
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        105908
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        217231
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        34411
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        12186
+      ],
+      "reason": "rewrite_guard_rejected:answer_leakage"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        5643
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        19653842
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":200"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        22948,
+        55440889,
+        84952,
+        235916,
+        2924002,
+        30292,
+        33094374,
+        260996,
+        235959,
+        91195
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=150"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        22948
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        55440889
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        84952
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        235916
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        2924002
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        30292
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        33094374
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        260996
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        235959
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        91195
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":250"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        569459,
+        105391,
+        342334,
+        17278765,
+        68761,
+        229275,
+        246920,
+        2114995,
+        96875,
+        1625048
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=200"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        569459
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        105391
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        342334
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        17278765
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        68761
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        229275
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        246920
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        2114995
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        96875
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        1625048
+      ],
+      "reason": ""
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":300"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        156745,
+        599,
+        151451,
+        7549995,
+        43088,
+        47864412,
+        57905,
+        26457880,
+        31730,
+        18947898
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=250"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        156745
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        599
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        151451
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        7549995
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        43088
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        47864412
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        57905
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        26457880
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        31730
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        18947898
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:answer_in_title"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":350"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        80482,
+        32005912,
+        214179,
+        57877,
+        407239,
+        57659,
+        76988,
+        15049,
+        1064,
+        35412202
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=300"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        80482
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        32005912
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        214179
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        57877
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        407239
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        57659
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        76988
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        15049
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        1064
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        35412202
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":400"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        2209490,
+        129619,
+        23906,
+        422038,
+        540317,
+        67923,
+        1161220,
+        47498,
+        113933,
+        22461
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=350"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        2209490
+      ],
+      "reason": "rewrite_guard_rejected:answer_leakage"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        129619
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        23906
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        422038
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        540317
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        67923
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        1161220
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        47498
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        113933
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        22461
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":450"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        2056103,
+        261671,
+        57951,
+        250230,
+        18938412,
+        15240,
+        67436,
+        695780,
+        38657800,
+        200129
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=400"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        57951
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        261671
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        2056103
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        250230
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        18938412
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        15240
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        695780
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        67436
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        38657800
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        200129
+      ],
+      "reason": "search_longtail_verifier_error"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":500"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        441357,
+        221478,
+        479109,
+        20804,
+        356375,
+        86224,
+        241717,
+        52374650,
+        167051,
+        22304
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=450"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        479109
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        441357
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        20804
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        356375
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        221478
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        86224
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        167051
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        241717
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        22304
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        52374650
+      ],
+      "reason": ""
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":550"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        180763,
+        683599,
+        1069583,
+        1787105,
+        32551521,
+        56668,
+        104944,
+        83316,
+        4595410,
+        333199
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=500"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        180763
+      ],
+      "reason": "wikipedia_infobox_generation_error:HTTPError:HTTP Error 429: Too Many Requests"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        1069583
+      ],
+      "reason": "wikipedia_infobox_generation_error:RemoteDisconnected:Remote end closed connection without response"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        1787105
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        683599
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        56668
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        32551521
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        104944
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        333199
+      ],
+      "reason": "rewrite_guard_rejected:forbidden_temporal_phrase"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        4595410
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        83316
+      ],
+      "reason": ""
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        1069583,
+        107825,
+        42042635,
+        194910,
+        1146123,
+        31940,
+        61795854,
+        438269,
+        16801,
+        226734
+      ],
+      "reason": "rerun_pool"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":600"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        107825,
+        42042635,
+        194910,
+        1146123,
+        31940,
+        61795854,
+        438269,
+        16801,
+        226734
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=550"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        1069583
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        194910
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        107825
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        42042635
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        1146123
+      ],
+      "reason": "rewrite_guard_rejected:answer_leakage"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        16801
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        31940
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        61795854
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        438269
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        226734
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "manual_review_rejected",
+      "page_ids": [
+        33094374
+      ],
+      "reason": "manual_review_rejected:manual_unclear_broad_answer_category"
+    },
+    {
+      "event": "manual_review_rejected",
+      "page_ids": [
+        20804
+      ],
+      "reason": "manual_review_rejected:manual_answer_form_scope_issue"
+    },
+    {
+      "event": "manual_review_rejected",
+      "page_ids": [
+        52374650
+      ],
+      "reason": "manual_review_rejected:manual_ambiguous_current_list_scope"
+    },
+    {
+      "event": "manual_review_rejected",
+      "page_ids": [
+        83316
+      ],
+      "reason": "manual_review_rejected:manual_missing_nearby_intro_scope"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:wikitable:50"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        25445,
+        380845,
+        11787,
+        15606,
+        12240,
+        43281,
+        36896,
+        44635,
+        19590,
+        147311
+      ],
+      "reason": "table_search:insource:wikitable:offset=0"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        25445
+      ],
+      "reason": "wikipedia_infobox_table_score_below_minimum:table_score_below_minimum:min_table_score=0.0000;best_score=-0.1000"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        380845
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        11787
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:answer_in_title"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        12240
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        15606
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        44635
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        43281
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        36896
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        19590
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        147311
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:wikitable:100"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        12300,
+        212472,
+        3329753,
+        231156,
+        65433,
+        22852566,
+        12542,
+        5615,
+        30217,
+        25286
+      ],
+      "reason": "table_search:insource:wikitable:offset=50"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        231156
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        12300
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        3329753
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        212472
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        22852566
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        65433
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        5615
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        12542
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        25286
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        30217
+      ],
+      "reason": ""
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:wikitable:150"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        384695,
+        30042,
+        8957,
+        138268,
+        2615708,
+        73199,
+        52812,
+        1564433,
+        26689,
+        56636
+      ],
+      "reason": "table_search:insource:wikitable:offset=100"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        8957
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        138268
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        30042
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        384695
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        2615708
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        73199
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        1564433
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        26689
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        52812
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        56636
+      ],
+      "reason": ""
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:wikitable:200"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        262831,
+        164390,
+        18947,
+        28229246,
+        36646,
+        66524,
+        16384,
+        563616,
+        174716,
+        101965
+      ],
+      "reason": "table_search:insource:wikitable:offset=150"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        262831
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        18947
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        164390
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        28229246
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        36646
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        16384
+      ],
+      "reason": "search_longtail_verifier_error"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        66524
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        174716
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        563616
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        101965
+      ],
+      "reason": ""
+    }
+  ],
+  "stats": {
+    "used": 159,
+    "in_progress": 0,
+    "accepted": 36,
+    "rejected": 123,
+    "rerun_pool": 0,
+    "table_search_queries": 2
+  }
+}

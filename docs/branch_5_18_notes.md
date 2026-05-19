@@ -25,6 +25,17 @@
 
 ## Network Reliability And Defaults
 
+- Added configurable streaming concurrency:
+  - page worker pool default `4`
+  - Wikipedia concurrency default `4`
+  - DuckDuckGo concurrency default `4`
+  - OpenRouter generation/rewrite concurrency default `10`
+  - second-stage concurrency default `10`
+- Streaming output commits use a shared lock so accepted/rejected JSONL appends and stream-state updates happen atomically.
+- Second-stage answer models can run in parallel, the grader can score executed panel predictions in one batched call, and low-threshold runs can early-stop when the first panel model already makes the candidate too easy.
+- Added run-group artifact manifests. A resumed run can share one `--run-group-id`, assign each invocation a `--run-segment-id`, and keep a manifest of all accepted/rejected JSONL endpoints, summaries, walkthroughs, and stream-state files.
+- Route 3 now captures the immediate paragraph before each table as `nearby_intro`, filters live-scope tables before prompting the generation model, and warns the model away from unclear broad answer categories such as `What equipment ...`.
+- Added `--min-table-score` for Route 3. Tables below the cutoff are dropped before first-paragraph alias/context extraction and before the generation model; if no table survives, the page is rejected before any LLM call.
 - Reduced MediaWiki retry count to 2.
 - Added more robust MediaWiki request handling for transient TLS/connection failures.
 - Turned REST summary fallback off by default.

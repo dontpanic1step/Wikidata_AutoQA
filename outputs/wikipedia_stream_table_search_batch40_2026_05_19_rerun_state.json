@@ -1,0 +1,154 @@
+{
+  "used_ids": [
+    599,
+    19261,
+    57877,
+    66958,
+    105391,
+    151451,
+    156745,
+    292259,
+    407239
+  ],
+  "in_progress_ids": [],
+  "accepted_ids": [
+    57877,
+    407239
+  ],
+  "rejected_ids": [
+    19261,
+    66958,
+    151451,
+    292259
+  ],
+  "rerun_pool": [
+    105391,
+    156745,
+    599
+  ],
+  "table_search_offsets": {},
+  "failure_reasons": {
+    "599": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+    "19261": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "66958": "rewrite_guard_rejected:cutoff_year_exceeded",
+    "105391": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+    "151451": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
+    "156745": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>",
+    "292259": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+  },
+  "events": [
+    {
+      "event": "seed_rerun_pool_from_batch40_retryable_generation_failures",
+      "page_ids": [
+        292259,
+        66958,
+        105391,
+        156745,
+        599,
+        151451,
+        57877,
+        407239,
+        19261
+      ],
+      "reason": "retry_transient_wikipedia_generation_errors"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        292259,
+        66958,
+        105391
+      ],
+      "reason": "rerun_pool"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        292259
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        66958
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        105391
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        156745,
+        599,
+        151451
+      ],
+      "reason": "rerun_pool"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        156745
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        599
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        151451
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        57877,
+        407239,
+        19261
+      ],
+      "reason": "rerun_pool"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        57877
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        407239
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        19261
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    }
+  ],
+  "stats": {
+    "used": 9,
+    "in_progress": 0,
+    "accepted": 2,
+    "rejected": 4,
+    "rerun_pool": 3,
+    "table_search_queries": 0
+  }
+}

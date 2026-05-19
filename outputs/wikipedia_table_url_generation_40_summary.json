@@ -1,0 +1,1213 @@
+{
+  "target_count": 40,
+  "curated_plan_count": 40,
+  "selected_count": 40,
+  "failed_count": 0,
+  "output": "config\\wikipedia_table_urls_40.tsv",
+  "duration_seconds": 14.6895,
+  "candidates": [
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "tall buildings",
+      "title": "List of tallest buildings in Fort Wayne",
+      "url": "https://en.wikipedia.org/wiki/List_of_tallest_buildings_in_Fort_Wayne",
+      "best_table_score": 10.5,
+      "best_table_caption": "",
+      "best_table_section": "Timeline of tallest buildings",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "airports",
+      "title": "List of busiest airports by passenger traffic",
+      "url": "https://en.wikipedia.org/wiki/List_of_busiest_airports_by_passenger_traffic",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "2021 statistics",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Arts and Media",
+      "subdomain": "film awards",
+      "title": "23rd Independent Spirit Awards",
+      "url": "https://en.wikipedia.org/wiki/23rd_Independent_Spirit_Awards",
+      "best_table_score": 4.1,
+      "best_table_caption": "Films that received multiple nominations",
+      "best_table_section": "Films with multiple nominations and awards",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "no_comparable_headers"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Arts and Media",
+      "subdomain": "music chart",
+      "title": "List of Billboard Hot 100 top-ten singles in 1984",
+      "url": "https://en.wikipedia.org/wiki/List_of_Billboard_Hot_100_top-ten_singles_in_1984",
+      "best_table_score": 11.8,
+      "best_table_caption": "List of Billboard Hot 100 top ten singles which peaked in 1984",
+      "best_table_section": "Top-ten singles",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Computer Science and AI",
+      "subdomain": "supercomputers",
+      "title": "TOP500",
+      "url": "https://en.wikipedia.org/wiki/TOP500",
+      "best_table_score": 11.8,
+      "best_table_caption": "Distribution of supercomputers in the TOP500 list by country (as of November 2025 [update] ) [ 3 ]",
+      "best_table_section": "Top countries",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Computer Science and AI",
+      "subdomain": "programming languages",
+      "title": "Comparison of programming languages",
+      "url": "https://en.wikipedia.org/wiki/Comparison_of_programming_languages",
+      "best_table_score": 8.8,
+      "best_table_caption": "",
+      "best_table_section": "General comparison",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "impact structures",
+      "title": "List of impact structures in Europe",
+      "url": "https://en.wikipedia.org/wiki/List_of_impact_structures_in_Europe",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "Confirmed impact structures",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "observatories",
+      "title": "List of astronomical observatories",
+      "url": "https://en.wikipedia.org/wiki/List_of_astronomical_observatories",
+      "best_table_score": 6.8,
+      "best_table_caption": "",
+      "best_table_section": "Observatories",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "no_comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "banks",
+      "title": "List of largest banks",
+      "url": "https://en.wikipedia.org/wiki/List_of_largest_banks",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "By total assets",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "companies",
+      "title": "List of largest companies by revenue",
+      "url": "https://en.wikipedia.org/wiki/List_of_largest_companies_by_revenue",
+      "best_table_score": 12.3,
+      "best_table_caption": "",
+      "best_table_section": "List",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "preferred_table_context"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Education",
+      "subdomain": "colleges",
+      "title": "List of colleges and universities in Maine",
+      "url": "https://en.wikipedia.org/wiki/List_of_colleges_and_universities_in_Maine",
+      "best_table_score": 5.8,
+      "best_table_caption": "",
+      "best_table_section": "Open institutions",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "no_comparable_headers"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Education",
+      "subdomain": "university rankings",
+      "title": "Academic Ranking of World Universities",
+      "url": "https://en.wikipedia.org/wiki/Academic_Ranking_of_World_Universities",
+      "best_table_score": 5.65,
+      "best_table_caption": "ARWU methodology [ 15 ]",
+      "best_table_section": "Methodology",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "no_comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Engineering and Technology",
+      "subdomain": "bridges",
+      "title": "List of longest suspension bridge spans",
+      "url": "https://en.wikipedia.org/wiki/List_of_longest_suspension_bridge_spans",
+      "best_table_score": 11.7,
+      "best_table_caption": "",
+      "best_table_section": "History of longest suspension spans",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Engineering and Technology",
+      "subdomain": "dams",
+      "title": "List of largest dams",
+      "url": "https://en.wikipedia.org/wiki/List_of_largest_dams",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "cereal production",
+      "title": "List of countries by cereal production",
+      "url": "https://en.wikipedia.org/wiki/List_of_countries_by_cereal_production",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "Production by country",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "wine production",
+      "title": "List of wine-producing regions",
+      "url": "https://en.wikipedia.org/wiki/List_of_wine-producing_regions",
+      "best_table_score": 9.8,
+      "best_table_caption": "Wine production by country in 2021",
+      "best_table_section": "Countries",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "lakes",
+      "title": "List of lakes of Minnesota",
+      "url": "https://en.wikipedia.org/wiki/List_of_lakes_of_Minnesota",
+      "best_table_score": 10.8,
+      "best_table_caption": "",
+      "best_table_section": "",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "islands",
+      "title": "List of islands by area",
+      "url": "https://en.wikipedia.org/wiki/List_of_islands_by_area",
+      "best_table_score": 10.8,
+      "best_table_caption": "",
+      "best_table_section": "Islands with areas of 1,000 km 2 (390 sq mi) or greater",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Language and Literature",
+      "subdomain": "literary awards",
+      "title": "Cybils Award",
+      "url": "https://en.wikipedia.org/wiki/Cybils_Award",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "Picture book (2006–)",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Language and Literature",
+      "subdomain": "book awards",
+      "title": "List of winners of the National Book Award",
+      "url": "https://en.wikipedia.org/wiki/List_of_winners_of_the_National_Book_Award",
+      "best_table_score": 11.8,
+      "best_table_caption": "National Book Award for Nonfiction winners, 1984 to present",
+      "best_table_section": "Nonfiction",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Life Sciences",
+      "subdomain": "bird populations",
+      "title": "List of birds by population",
+      "url": "https://en.wikipedia.org/wiki/List_of_birds_by_population",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "By taxonomy",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Life Sciences",
+      "subdomain": "cephalopod size",
+      "title": "Cephalopod size",
+      "url": "https://en.wikipedia.org/wiki/Cephalopod_size",
+      "best_table_score": 5.2,
+      "best_table_caption": "",
+      "best_table_section": "Mantle length",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "no_comparable_headers"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Mathematics",
+      "subdomain": "mathematical constants",
+      "title": "List of mathematical constants",
+      "url": "https://en.wikipedia.org/wiki/List_of_mathematical_constants",
+      "best_table_score": 10.9,
+      "best_table_caption": "",
+      "best_table_section": "Sequences of constants",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Mathematics",
+      "subdomain": "polyhedra",
+      "title": "List of uniform polyhedra",
+      "url": "https://en.wikipedia.org/wiki/List_of_uniform_polyhedra",
+      "best_table_score": 10.8,
+      "best_table_caption": "",
+      "best_table_section": "Uniform star polyhedra",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Medicine and Health",
+      "subdomain": "hospitals",
+      "title": "List of hospitals in Russia",
+      "url": "https://en.wikipedia.org/wiki/List_of_hospitals_in_Russia",
+      "best_table_score": 9.8,
+      "best_table_caption": "Hospitals in Russia",
+      "best_table_section": "",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Medicine and Health",
+      "subdomain": "epidemics",
+      "title": "List of epidemics and pandemics",
+      "url": "https://en.wikipedia.org/wiki/List_of_epidemics_and_pandemics",
+      "best_table_score": 9.8,
+      "best_table_caption": "Chronological table of epidemic and pandemic events that started in the 2000s",
+      "best_table_section": "2000s",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "People",
+      "subdomain": "nobel laureates",
+      "title": "List of Nobel laureates",
+      "url": "https://en.wikipedia.org/wiki/List_of_Nobel_laureates",
+      "best_table_score": 10.8,
+      "best_table_caption": ".mw-parser-output .sr-only{border:0;clip:rect(0,0,0,0);clip-path:polygon(0px 0px,0px 0px,0px 0px);height:1px;margin:-1px;overflow:hidden;padding:0;position:absolute;width:1px;white-space:nowrap} list of laureates",
+      "best_table_section": "List of laureates",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "People",
+      "subdomain": "award records",
+      "title": "List of Academy Award records",
+      "url": "https://en.wikipedia.org/wiki/List_of_Academy_Award_records",
+      "best_table_score": 10.25,
+      "best_table_caption": "",
+      "best_table_section": "Age-related records",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Philosophy and Religion",
+      "subdomain": "popes",
+      "title": "List of popes",
+      "url": "https://en.wikipedia.org/wiki/List_of_popes",
+      "best_table_score": 11.8,
+      "best_table_caption": "Popes of the 10th century",
+      "best_table_section": "10th century",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Philosophy and Religion",
+      "subdomain": "religion demographics",
+      "title": "Religion in the United States",
+      "url": "https://en.wikipedia.org/wiki/Religion_in_the_United_States",
+      "best_table_score": 11.8,
+      "best_table_caption": "Source: ARIS 2008 [ 116 ]",
+      "best_table_section": "ARIS findings regarding self-identification",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Physical Sciences",
+      "subdomain": "chemical elements",
+      "title": "List of chemical elements",
+      "url": "https://en.wikipedia.org/wiki/List_of_chemical_elements",
+      "best_table_score": 8.8,
+      "best_table_caption": "",
+      "best_table_section": "List",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "large_table_penalty"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Physical Sciences",
+      "subdomain": "nearby stars",
+      "title": "List of nearest stars",
+      "url": "https://en.wikipedia.org/wiki/List_of_nearest_stars",
+      "best_table_score": 11.8,
+      "best_table_caption": "Stars that are known to have passed or will pass within 5 light-years of the Sun in the past or future [ 82 ] [ 83 ] [ 84 ]",
+      "best_table_section": "Distant future and past encounters",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Politics and Law",
+      "subdomain": "municipal elections",
+      "title": "2019 Chicago aldermanic election",
+      "url": "https://en.wikipedia.org/wiki/2019_Chicago_aldermanic_election",
+      "best_table_score": 9.5,
+      "best_table_caption": "47th Ward General election [ 41 ] [ 22 ]",
+      "best_table_section": "Results",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Politics and Law",
+      "subdomain": "court cases",
+      "title": "United States Reports, volume 1",
+      "url": "https://en.wikipedia.org/wiki/United_States_Reports,_volume_1",
+      "best_table_score": 8.8,
+      "best_table_caption": "",
+      "best_table_section": "List of cases in 1 U.S. (1 Dall.)",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "large_table_penalty"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Society and Culture",
+      "subdomain": "museums",
+      "title": "List of museums in Kentucky",
+      "url": "https://en.wikipedia.org/wiki/List_of_museums_in_Kentucky",
+      "best_table_score": 9.9,
+      "best_table_caption": "",
+      "best_table_section": "Museums",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Society and Culture",
+      "subdomain": "public art",
+      "title": "List of public art in Indianapolis",
+      "url": "https://en.wikipedia.org/wiki/List_of_public_art_in_Indianapolis",
+      "best_table_score": 11.1,
+      "best_table_caption": "",
+      "best_table_section": "St. Vincent / Greenbriar",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Sports and Recreation",
+      "subdomain": "tournament venues",
+      "title": "2026 FIFA World Cup",
+      "url": "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup",
+      "best_table_score": 9.9,
+      "best_table_caption": "List of tournament venues",
+      "best_table_section": "Venues",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "preferred_table_context",
+        "high_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Sports and Recreation",
+      "subdomain": "athletics results",
+      "title": "2014 World Junior Championships in Athletics",
+      "url": "https://en.wikipedia.org/wiki/2014_World_Junior_Championships_in_Athletics",
+      "best_table_score": 7.8,
+      "best_table_caption": "",
+      "best_table_section": "Medal table",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "high_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "History",
+      "subdomain": "battles",
+      "title": "List of battles by casualties",
+      "url": "https://en.wikipedia.org/wiki/List_of_battles_by_casualties",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "Sieges and urban combat",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "History",
+      "subdomain": "empires",
+      "title": "List of largest empires",
+      "url": "https://en.wikipedia.org/wiki/List_of_largest_empires",
+      "best_table_score": 11.8,
+      "best_table_caption": "",
+      "best_table_section": "Timeline of largest empires at the time",
+      "reasons": [
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "curated_seed",
+      "open_status": "opened",
+      "error_message": ""
+    }
+  ],
+  "failed_curated_urls": [],
+  "wikipedia_events": [
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+tallest+buildings+in+Fort+Wayne&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_tallest_buildings_in_Fort_Wayne",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+airports+by+passenger+traffic&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 6
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_airports_by_passenger_traffic",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=23rd+Independent+Spirit+Awards&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/23rd_Independent_Spirit_Awards",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Billboard+Hot+100+top-ten+singles+in+1984&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Billboard_Hot_100_top-ten_singles_in_1984",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=TOP500&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/TOP500",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Comparison+of+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Comparison_of_programming_languages",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+impact+structures+in+Europe&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_impact_structures_in_Europe",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+astronomical+observatories&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 18
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_astronomical_observatories",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+largest+banks&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_largest_banks",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+largest+companies+by+revenue&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_largest_companies_by_revenue",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+colleges+and+universities+in+Maine&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_colleges_and_universities_in_Maine",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Academic+Ranking+of+World+Universities&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Academic_Ranking_of_World_Universities",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+longest+suspension+bridge+spans&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 3
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_longest_suspension_bridge_spans",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+largest+dams&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_largest_dams",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+countries+by+cereal+production&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_countries_by_cereal_production",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+wine-producing+regions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 18
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_wine-producing_regions",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+lakes+of+Minnesota&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 6
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_lakes_of_Minnesota",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+islands+by+area&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_islands_by_area",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Cybils+Award&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 4
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Cybils_Award",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+winners+of+the+National+Book+Award&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 3
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_winners_of_the_National_Book_Award",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+birds+by+population&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 27
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_birds_by_population",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Cephalopod+size&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 30
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Cephalopod_size",
+      "cache_hit": true,
+      "duration_ms": 17
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+mathematical+constants&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 35
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_mathematical_constants",
+      "cache_hit": true,
+      "duration_ms": 25
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+uniform+polyhedra&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 18
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_uniform_polyhedra",
+      "cache_hit": true,
+      "duration_ms": 12
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+hospitals+in+Russia&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_hospitals_in_Russia",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+epidemics+and+pandemics&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 29
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_epidemics_and_pandemics",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Nobel+laureates&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Nobel_laureates",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Academy+Award+records&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Academy_Award_records",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+popes&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 4
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_popes",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=Religion+in+the+United+States&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 8
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Religion_in_the_United_States",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+chemical+elements&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_chemical_elements",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+nearest+stars&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 27
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_nearest_stars",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2019+Chicago+aldermanic+election&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 8
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2019_Chicago_aldermanic_election",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=United+States+Reports%2C+volume+1&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/United_States_Reports%2C_volume_1",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+museums+in+Kentucky&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 1
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_museums_in_Kentucky",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+public+art+in+Indianapolis&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 3
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_public_art_in_Indianapolis",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2026+FIFA+World+Cup&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 8
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2026_FIFA_World_Cup",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=2014+World+Junior+Championships+in+Athletics&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/2014_World_Junior_Championships_in_Athletics",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+battles+by+casualties&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 3
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_battles_by_casualties",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+largest+empires&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 2
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_largest_empires",
+      "cache_hit": true,
+      "duration_ms": 0
+    }
+  ]
+}

@@ -1,0 +1,700 @@
+{
+  "start_stage": "validation",
+  "candidate_input_paths": [
+    "outputs\\wikipedia_infobox_rawdump_best20x2_accepted.jsonl",
+    "outputs\\wikipedia_infobox_rawdump_best20x2_rejected.jsonl"
+  ],
+  "attempted_urls": 30,
+  "url_domains": [
+    {
+      "url": "https://en.wikipedia.org/wiki/Visakhapatnam_Airport",
+      "domain": "Architecture and Transportation"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_banks_in_Ukraine",
+      "domain": "Economy and Business"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_pontoon_bridges",
+      "domain": "Engineering and Technology"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Siau_Tagulandang_Biaro_Islands_Regency",
+      "domain": "Geography"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Sixty-Six_Books",
+      "domain": "Language and Literature"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Tangara_(bird)",
+      "domain": "Life Sciences"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Ebullioscopic_constant",
+      "domain": "Mathematics"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/BSA_Gold_Star",
+      "domain": "Physical Sciences"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/National_Commission_for_Museums_and_Monuments",
+      "domain": "Society and Culture"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Battle_of_Bassignana_(1799)",
+      "domain": "History"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Carlisle_Lake_District_Airport",
+      "domain": "Architecture and Transportation"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Filmfare_Award_for_Best_Film_%E2%80%93_Telugu",
+      "domain": "Arts and Media"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Nandi_Award_for_Best_Feature_Film",
+      "domain": "Arts and Media"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_banks_in_Malaysia",
+      "domain": "Economy and Business"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Presidents_of_Leipzig_University",
+      "domain": "Education"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2014%E2%80%9315_Boston_University_Terriers_men%27s_ice_hockey_season",
+      "domain": "Education"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Travis_Scott_production_discography",
+      "domain": "Food, Agriculture, and Daily Life"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_lighthouses_in_the_Canary_Islands",
+      "domain": "Geography"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/The_Great_Controversy_(book)",
+      "domain": "Language and Literature"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Picus_(bird)",
+      "domain": "Life Sciences"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Constant-weight_code",
+      "domain": "Mathematics"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_NHS_regional_hospital_boards_(1947%E2%80%931974)",
+      "domain": "Medicine and Health"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Religion_in_Scotland",
+      "domain": "Philosophy and Religion"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Bad_Religion_discography",
+      "domain": "Philosophy and Religion"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Lego_Star_Wars",
+      "domain": "Physical Sciences"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2016_United_States_House_of_Representatives_elections_in_Arizona",
+      "domain": "Politics and Law"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/2017_Japanese_general_election",
+      "domain": "Politics and Law"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Leeds_Industrial_Museum_at_Armley_Mills",
+      "domain": "Society and Culture"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/List_of_football_stadiums_in_Algeria",
+      "domain": "Sports and Recreation"
+    },
+    {
+      "url": "https://en.wikipedia.org/wiki/Wibawa_Mukti_Stadium",
+      "domain": "Sports and Recreation"
+    }
+  ],
+  "generated": 30,
+  "accepted": 11,
+  "rejected": 19,
+  "output_path": "outputs\\wikipedia_infobox_rawdump_best20x2_validation_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_infobox_rawdump_best20x2_validation_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_infobox_rawdump_best20x2_validation_summary.json",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 0.2179,
+    "first_paragraph_fetch_seconds": 0.0725,
+    "table_parse_seconds": 13.4966,
+    "llm_question_generation_seconds": 178.6222,
+    "total_generation_seconds": 194.5076,
+    "rewrite_seconds": 0.0,
+    "number_reference_margin_seconds": 0.0,
+    "duckduckgo_search_seconds": 20.1466,
+    "second_stage_grading_seconds": 544.896,
+    "total_processing_seconds": 565.1202,
+    "candidate_processing_seconds": 565.1202
+  },
+  "telemetry": {
+    "process_generated_candidates": {
+      "generated": 30,
+      "accepted": 11,
+      "rejected": 19,
+      "second_stage_grading_summary": {
+        "run_count": 18,
+        "per_model": {
+          "openai/gpt-4.1-mini": {
+            "runs": 18,
+            "correct": 5,
+            "incorrect": 13,
+            "not_attempted": 0,
+            "accuracy": 0.2777777777777778
+          },
+          "google/gemini-3-flash-preview": {
+            "runs": 18,
+            "correct": 6,
+            "incorrect": 12,
+            "not_attempted": 0,
+            "accuracy": 0.3333333333333333
+          }
+        }
+      }
+    },
+    "wikipedia": [],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+year+had+the+highest+passenger+traffic+at+Visakhapatnam+Airport%3F",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Visakhapatnam+Airport+annual+passenger+traffic+by+year",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+passenger+traffic+year+Visakhapatnam+Airport",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Visakhapatnam+Airport+passenger+statistics",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+bank+in+the+List+of+banks+in+Ukraine+has+the+highest+number+of+branches%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=bank+in+Ukraine+with+most+branches",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+number+of+branches+Ukrainian+banks",
+        "cache_hit": true,
+        "duration_ms": 9
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+pontoon+bridge+is+the+longest+in+the+List+of+pontoon+bridges%3F",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+pontoon+bridges+longest",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=longest+pontoon+bridge",
+        "cache_hit": true,
+        "duration_ms": 23
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+district+in+Siau+Tagulandang+Biaro+Islands+Regency+has+the+largest+area+in+square+kilometers%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+district+by+area+in+Siau+Tagulandang+Biaro+Islands+Regency",
+        "cache_hit": true,
+        "duration_ms": 17
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Siau+Tagulandang+Biaro+Islands+Regency+district+areas",
+        "cache_hit": true,
+        "duration_ms": 18
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Siau+Tagulandang+Biaro+Islands+Regency+administrative+districts+area",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+books+in+Sixty-Six+Books+have+plays+featuring+Miranda+Raison+in+the+cast%3F",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Sixty-Six+Books+plays+cast+Miranda+Raison",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Sixty-Six+Books+list+of+plays+with+cast",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Sixty-Six+Books+play+authors+and+cast",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Tangara+%28bird%29+species+has+the+widest+distribution+range+in+terms+of+the+number+of+countries+listed%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Tangara+species+distribution+range+comparison",
+        "cache_hit": true,
+        "duration_ms": 16
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Tangara+bird+species+list+by+distribution",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+solvent+has+the+highest+ebullioscopic+constant+Kb+in+K%E2%8B%85kg%2Fmol%3F",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+ebullioscopic+constant+solvent",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=solvent+with+max+Kb+value",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=ebullioscopic+constant+values+for+solvents",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+winner+had+the+highest+speed+in+miles+per+hour+in+the+Isle+of+Man+TT+wins+listed+for+BSA+Gold+Star%3F",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Isle+of+Man+TT+winners+highest+speed",
+        "cache_hit": true,
+        "duration_ms": 16
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=BSA+Gold+Star+Isle+of+Man+TT+race+speeds",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Nigerian+state+has+the+most+listed+National+Monuments+and+Heritage+Sites+according+to+the+National+Commission+for+Museums+and+Monuments%3F",
+        "cache_hit": true,
+        "duration_ms": 0
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=National+Monuments+and+Heritage+Sites+by+state+Nigeria",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=National+Commission+for+Museums+and+Monuments+heritage+sites+distribution",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+brigade+had+the+largest+strength+in+Andrei+Grigorevich+Rosenberg%27s+forces+at+the+Battle+of+Bassignana+%281799%29%3F",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Andrei+Grigorevich+Rosenberg+brigades+strength+comparison+Battle+of+Bassignana",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+strength+brigade+Andrei+Grigorevich+Rosenberg+forces+Battle+of+Bassignana+1799",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=strongest+brigade+Rosenberg+forces+Battle+of+Bassignana+1799",
+        "cache_hit": true,
+        "duration_ms": 22
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+which+year+did+Carlisle+Lake+District+Airport+have+the+highest+number+of+aircraft+movements%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Carlisle+Lake+District+Airport+aircraft+movements+by+year",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+aircraft+movements+Carlisle+Lake+District+Airport",
+        "cache_hit": true,
+        "duration_ms": 15
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Carlisle+Lake+District+Airport+traffic+statistics",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+producer%28s%29+won+the+Filmfare+Award+for+Best+Film+%E2%80%93+Telugu+the+most+times+in+the+2010s%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Filmfare+Award+for+Best+Film+Telugu+2010s+producers",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=most+awarded+producer+Filmfare+Best+Film+Telugu+2010s",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Filmfare+Best+Film+Telugu+winners+2010s",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+movie+won+the+Nandi+Award+for+Best+Feature+Film+-+Gold+in+the+year+2015%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Nandi+Award+for+Best+Feature+Film+Gold+winners",
+        "cache_hit": true,
+        "duration_ms": 9
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Best+Feature+Film+Gold+2015+Nandi+Award",
+        "cache_hit": true,
+        "duration_ms": 15
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2015+Nandi+Award+Best+Feature+Film+winner",
+        "cache_hit": true,
+        "duration_ms": 6
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+bank+in+Malaysia+had+the+highest+total+assets+as+of+31+December+2023%3F",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+bank+by+total+assets+in+Malaysia+2023",
+        "cache_hit": true,
+        "duration_ms": 15
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=top+Malaysian+banks+by+assets+2023",
+        "cache_hit": true,
+        "duration_ms": 21
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+president+of+Leipzig+University+served+in+the+earliest+year+in+the+20th+century%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=earliest+president+of+Leipzig+University+20th+century",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Leipzig+University+presidents+1900",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=first+president+Leipzig+University+20th+century",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+team+had+the+highest+number+of+overall+wins+in+the+2014%E2%80%9315+Hockey+East+men%27s+standings%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014%E2%80%9315+Hockey+East+men%27s+standings+overall+wins",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=team+with+most+overall+wins+2014%E2%80%9315+Hockey+East",
+        "cache_hit": true,
+        "duration_ms": 17
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2014%E2%80%9315+Hockey+East+standings+win+comparison",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+single+produced+by+Travis+Scott+had+the+highest+peak+chart+position+in+the+US%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Travis+Scott+singles+peak+US+chart+position",
+        "cache_hit": true,
+        "duration_ms": 14
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+US+chart+position+Travis+Scott+produced+songs",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Travis+Scott+production+discography+US+chart+peaks",
+        "cache_hit": true,
+        "duration_ms": 15
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+lighthouse+in+the+Canary+Islands+has+the+tallest+tower+height%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=tallest+lighthouse+tower+height+Canary+Islands",
+        "cache_hit": true,
+        "duration_ms": 16
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=lighthouse+tower+height+comparison+Canary+Islands",
+        "cache_hit": true,
+        "duration_ms": 27
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Canary+Islands+lighthouses+tallest+tower",
+        "cache_hit": true,
+        "duration_ms": 22
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+edition+of+The+Great+Controversy+has+the+highest+word+count%3F",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=The+Great+Controversy+book+versions+comparison",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=The+Great+Controversy+editions+word+count",
+        "cache_hit": true,
+        "duration_ms": 21
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=The+Great+Controversy+publishing+and+distribution+details",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Picus+%28bird%29+species+has+the+widest+distribution+range+according+to+the+Taxonomy+table%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Picus+bird+species+distribution+range",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Picus+taxonomy+distribution+comparison",
+        "cache_hit": true,
+        "duration_ms": 22
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Picus+bird+widest+distribution",
+        "cache_hit": true,
+        "duration_ms": 16
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=3-of-6+code+original+data+bits+with+most+appended+bits+set+to+1",
+        "cache_hit": false,
+        "duration_ms": 2697,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+the+3-of-6+code%2C+which+original+3+data+bits+have+the+maximum+number+of+appended+bits+set+to+1%3F",
+        "cache_hit": false,
+        "duration_ms": 3253,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=constant-weight+code+3-of-6+code+appended+bits+count",
+        "cache_hit": false,
+        "duration_ms": 8207,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=which+3+data+bits+in+3-of-6+code+have+appended+bits+111",
+        "cache_hit": false,
+        "duration_ms": 16313,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+NHS+regional+hospital+board+in+England+had+the+greatest+number+of+county+boroughs+between+1947+and+1974%3F",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=NHS+regional+hospital+boards+county+boroughs+count",
+        "cache_hit": true,
+        "duration_ms": 5
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=List+of+NHS+regional+hospital+boards+in+England+1947-1974",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=NHS+regional+hospital+board+with+most+county+boroughs",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Presbyterian+denomination+had+the+highest+Sunday+church+attendance+in+Scotland+in+1994+according+to+the+Scottish+Church+Census%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=1994+Sunday+church+attendance+Scottish+Presbyterian+denominations",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+Sunday+church+attendance+1994+Scotland+Presbyterian",
+        "cache_hit": true,
+        "duration_ms": 15
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Bad+Religion+single+had+the+highest+peak+position+on+the+US+Alternative+chart%3F",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Bad+Religion+singles+US+Alternative+chart+peak+positions",
+        "cache_hit": true,
+        "duration_ms": 8
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+charting+Bad+Religion+single+US+Alternative",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Lego+Star+Wars+Ultimate+Collector+Series+set+has+the+highest+number+of+pieces%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Lego+Star+Wars+Ultimate+Collector+Series+set+with+most+pieces",
+        "cache_hit": true,
+        "duration_ms": 18
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=largest+Lego+Star+Wars+UCS+set+by+piece+count",
+        "cache_hit": true,
+        "duration_ms": 15
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Lego+Star+Wars+UCS+set+piece+counts",
+        "cache_hit": true,
+        "duration_ms": 9
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+Arizona+congressional+district+had+the+highest+number+of+total+votes+in+the+2016+United+States+House+of+Representatives+elections+in+Arizona%3F",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2016+United+States+House+of+Representatives+elections+in+Arizona+total+votes+by+district",
+        "cache_hit": true,
+        "duration_ms": 8
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Arizona+2016+House+elections+district+vote+counts",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=highest+total+votes+district+2016+Arizona+House+elections",
+        "cache_hit": true,
+        "duration_ms": 8
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+prefecture+won+the+highest+number+of+seats+in+the+2017+Japanese+general+election%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2017+Japanese+general+election+seats+won+by+prefecture",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=prefecture+with+most+seats+won+in+2017+Japanese+general+election",
+        "cache_hit": true,
+        "duration_ms": 9
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+team+scored+the+highest+number+of+goals+in+a+single+match+at+the+2018+Asian+Games+Men%27s+Football+held+at+Wibawa+Mukti+Stadium%3F",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wibawa+Mukti+Stadium+2018+Asian+Games+football+match+scores",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=2018+Asian+Games+Men%27s+Football+highest+goals+scored+in+a+match",
+        "cache_hit": true,
+        "duration_ms": 18
+      }
+    ]
+  }
+}

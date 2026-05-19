@@ -1,0 +1,1024 @@
+{
+  "target_count": 20,
+  "domain_limit": 10,
+  "subdomains_per_domain": 2,
+  "dump_url": "https://dumps.wikimedia.your.org/enwiki/latest/enwiki-latest-all-titles-in-ns0.gz",
+  "dump_title_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\cache\\wikipedia_dumps\\enwiki-latest-all-titles-in-ns0.gz",
+  "selected_count": 11,
+  "failed_count": 9,
+  "output": "config\\wikipedia_table_urls_dump20.tsv",
+  "duration_seconds": 4258.1546,
+  "candidates": [
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "railway stations",
+      "title": "List of busiest railway stations in Great Britain (2019–20)",
+      "url": "https://en.wikipedia.org/wiki/List_of_busiest_railway_stations_in_Great_Britain_(2019%E2%80%9320)",
+      "title_score": 9.5,
+      "best_table_score": 11.8,
+      "combined_score": 15.125,
+      "best_table_caption": "",
+      "best_table_section": "All stations",
+      "reasons": [
+        "required_terms",
+        "bonus:railway",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "historical_year",
+        "specific_length",
+        "disambiguated_title",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Architecture and Transportation",
+      "subdomain": "airports",
+      "title": "List of busiest airports by passenger traffic (2000–2009)",
+      "url": "https://en.wikipedia.org/wiki/List_of_busiest_airports_by_passenger_traffic_(2000%E2%80%932009)",
+      "title_score": 10.5,
+      "best_table_score": 11.8,
+      "combined_score": 15.475,
+      "best_table_caption": "",
+      "best_table_section": "2009 statistics",
+      "reasons": [
+        "required_terms",
+        "bonus:traffic",
+        "bonus:list",
+        "bonus:passenger",
+        "list_title",
+        "scoped_title",
+        "historical_year",
+        "specific_length",
+        "disambiguated_title",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Computer Science and AI",
+      "subdomain": "programming languages",
+      "title": "Actor model",
+      "url": "https://en.wikipedia.org/wiki/Actor_model",
+      "title_score": 7.0,
+      "best_table_score": 9.8,
+      "combined_score": 12.25,
+      "best_table_caption": "",
+      "best_table_section": "Actor libraries and frameworks",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Computer Science and AI",
+      "subdomain": "computing benchmarks",
+      "title": "List of benchmarking methods and software tools",
+      "url": "https://en.wikipedia.org/wiki/List_of_benchmarking_methods_and_software_tools",
+      "title_score": 6.0,
+      "best_table_score": 5.8,
+      "combined_score": 7.9,
+      "best_table_caption": "",
+      "best_table_section": "Benchmarking methods",
+      "reasons": [
+        "required_terms",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "no_comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "impact structures",
+      "title": "List of impact structures in Africa",
+      "url": "https://en.wikipedia.org/wiki/List_of_impact_structures_in_Africa",
+      "title_score": 8.0,
+      "best_table_score": 11.8,
+      "combined_score": 14.6,
+      "best_table_caption": "",
+      "best_table_section": "Confirmed impact structures",
+      "reasons": [
+        "required_terms",
+        "bonus:crater",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "companies",
+      "title": "List of The Electric Company (2009 TV series) episodes",
+      "url": "https://en.wikipedia.org/wiki/List_of_The_Electric_Company_(2009_TV_series)_episodes",
+      "title_score": 8.5,
+      "best_table_score": 11.8,
+      "combined_score": 14.775,
+      "best_table_caption": "",
+      "best_table_section": "Season 2 (2010)",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "historical_year",
+        "specific_length",
+        "disambiguated_title",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Education",
+      "subdomain": "schools",
+      "title": "List of school districts in New York",
+      "url": "https://en.wikipedia.org/wiki/List_of_school_districts_in_New_York",
+      "title_score": 8.5,
+      "best_table_score": 10.8,
+      "combined_score": 13.775,
+      "best_table_caption": "",
+      "best_table_section": "",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "bonus:district",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "disambiguated_title",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage",
+        "large_table_penalty"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Engineering and Technology",
+      "subdomain": "bridges",
+      "title": "List of longest cantilever bridge spans",
+      "url": "https://en.wikipedia.org/wiki/List_of_longest_cantilever_bridge_spans",
+      "title_score": 9.0,
+      "best_table_score": 11.8,
+      "combined_score": 14.95,
+      "best_table_caption": "",
+      "best_table_section": "Completed cantilever bridges",
+      "reasons": [
+        "required_terms",
+        "bonus:span",
+        "bonus:list",
+        "bonus:longest",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "wine regions",
+      "title": "List of wine-producing regions",
+      "url": "https://en.wikipedia.org/wiki/List_of_wine-producing_regions",
+      "title_score": 8.0,
+      "best_table_score": 9.8,
+      "combined_score": 12.6,
+      "best_table_caption": "Wine production by country in 2021",
+      "best_table_section": "Countries",
+      "reasons": [
+        "required_terms",
+        "bonus:regions",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "lakes",
+      "title": "List of lakes by area",
+      "url": "https://en.wikipedia.org/wiki/List_of_lakes_by_area",
+      "title_score": 8.0,
+      "best_table_score": 11.8,
+      "combined_score": 14.6,
+      "best_table_caption": "",
+      "best_table_section": "Conventional list",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "bonus:area",
+        "list_title",
+        "scoped_title",
+        "specific_length",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "numeric_values",
+        "comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    },
+    {
+      "domain": "Language and Literature",
+      "subdomain": "books",
+      "title": "List of Booknotes interviews first aired in 1990",
+      "url": "https://en.wikipedia.org/wiki/List_of_Booknotes_interviews_first_aired_in_1990",
+      "title_score": 8.0,
+      "best_table_score": 5.8,
+      "combined_score": 8.6,
+      "best_table_caption": "",
+      "best_table_section": "",
+      "reasons": [
+        "required_terms",
+        "bonus:list",
+        "list_title",
+        "scoped_title",
+        "historical_year",
+        "specific_length",
+        "article_table",
+        "multi_row",
+        "has_headers",
+        "no_comparable_headers",
+        "low_prose_leakage"
+      ],
+      "discovered_by": "wikimedia_title_dump",
+      "open_status": "opened",
+      "error_message": ""
+    }
+  ],
+  "failed_subdomains": [
+    {
+      "domain": "Arts and Media",
+      "subdomain": "film awards",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of awards and nominations received by Joker (2019 film)",
+        "List of awards and nominations received by Luca (2021 film)",
+        "List of awards received by The Wolf of Wall Street (2013 film)",
+        "List of African film awards and festivals",
+        "List of Greek award-winning films in International Film Festivals",
+        "List of Greek award-winning films in international film festivals",
+        "List of National Film Awards Winners 2012",
+        "List of San Diego Asian Film Festival award winners"
+      ]
+    },
+    {
+      "domain": "Arts and Media",
+      "subdomain": "music charts",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of Billboard China V Chart Top 10 albums of 2016",
+        "List of Billboard China V Chart number-one albums of 2017",
+        "List of Billboard China V Chart top 10 albums of 2016",
+        "List of Billboard China V Chart top 10 albums of 2017",
+        "List of RPM number-one alternative rock singles chart of 1995 (Canada)",
+        "List of RPM number-one alternative rock singles chart of 1996 (Canada)",
+        "List of RPM number-one country singles chart of 1964 (Canada)",
+        "List of RPM number-one country singles chart of 1965 (Canada)"
+      ]
+    },
+    {
+      "domain": "Earth, Environment, and Space",
+      "subdomain": "observatories",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of astronomical observatory codes",
+        "List of observatory codes (000-499)",
+        "List of observatory codes (000–499)",
+        "List of observatory codes (500-999)",
+        "List of observatory codes (500–999)",
+        "List of observatory codes (A00-Z99)",
+        "List of observatory codes (A00–Z99)",
+        "List of directors of Dunsink Observatory"
+      ]
+    },
+    {
+      "domain": "Economy and Business",
+      "subdomain": "banks",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of Clydebank F.C. (1965) seasons",
+        "List of Music Bank Chart Winners (2010)",
+        "List of Music Bank Chart Winners (2011)",
+        "List of Music Bank Chart Winners (2012)",
+        "List of Music Bank Chart Winners (2013)",
+        "List of Music Bank Chart Winners (2014)",
+        "List of Music Bank Chart Winners (2015)",
+        "List of Music Bank Chart Winners (2016)"
+      ]
+    },
+    {
+      "domain": "Education",
+      "subdomain": "universities",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of NCAA University Division independents football standings (1956-1972)",
+        "List of NCAA University Division independents football standings (1956–1972)",
+        "List of NCAA University Division independents football standings (1962-1972)",
+        "List of NCAA University Division independents football standings (1962–1972)",
+        "List of auditors of the Literary and Historical Society (University College Dublin)",
+        "List of colleges and universities in Georgia (U.S. state)",
+        "List of colleges and universities in New York (state)",
+        "List of colleges and universities in Washington (U.S. state)"
+      ]
+    },
+    {
+      "domain": "Engineering and Technology",
+      "subdomain": "dams",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of The Addams Family (1973 TV series) episodes",
+        "List of cultural sites damaged during the Russo-Ukrainian war (2022-present)",
+        "List of cultural sites damaged during the Russo-Ukrainian war (2022–present)",
+        "List of damaged cultural sites during the Russo-Ukrainian war (2022-present)",
+        "List of damaged cultural sites during the Russo-Ukrainian war (2022–present)",
+        "List of damaged cultural sites during the 2022 Russian invasion of Ukraine",
+        "List of hydroelectric dams in Africa",
+        "List of hydroelectric dams in Alabama"
+      ]
+    },
+    {
+      "domain": "Food, Agriculture, and Daily Life",
+      "subdomain": "crop production",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of Chinese film production companies (pre-1949)",
+        "List of Chinese film-production companies before 1949",
+        "List of major productions of Swan Lake derived from its 1895 revival",
+        "List of productions affected by the 2023 SAG-AFTRA strike",
+        "List of productions affected by the 2023 WGA strike",
+        "List of productions affected by the 2023 Writers Guild of America strike",
+        "List of productions impacted by the 2023 SAG-AFTRA strike",
+        "List of productions impacted by the 2023 SAG–AFTRA strike"
+      ]
+    },
+    {
+      "domain": "Geography",
+      "subdomain": "islands",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of Islands of Washington State by Population and Area",
+        "List of islands of Washington State by population and area",
+        "List of Desert Island Discs episodes (1942 - 1946)",
+        "List of Desert Island Discs episodes (1942 - 1950)",
+        "List of Desert Island Discs episodes (1942 – 1946)",
+        "List of Desert Island Discs episodes (1942-1946)",
+        "List of Desert Island Discs episodes (1942-46)",
+        "List of Desert Island Discs episodes (1942–1946)"
+      ]
+    },
+    {
+      "domain": "Language and Literature",
+      "subdomain": "literary awards",
+      "reason": "no_dump_title_candidate_with_tables",
+      "candidate_titles": [
+        "List of Bangla Academy Literary Award recipients (1960-1969)",
+        "List of Bangla Academy Literary Award recipients (1960-69)",
+        "List of Bangla Academy Literary Award recipients (1960–1969)",
+        "List of Bangla Academy Literary Award recipients (1960–69)",
+        "List of Bangla Academy Literary Award recipients (1970-1979)",
+        "List of Bangla Academy Literary Award recipients (1970-79)",
+        "List of Bangla Academy Literary Award recipients (1970–1979)",
+        "List of Bangla Academy Literary Award recipients (1970–79)"
+      ]
+    }
+  ],
+  "title_candidate_counts": {
+    "Architecture and Transportation / railway stations": 80,
+    "Architecture and Transportation / airports": 80,
+    "Arts and Media / film awards": 80,
+    "Arts and Media / music charts": 80,
+    "Computer Science and AI / programming languages": 80,
+    "Computer Science and AI / computing benchmarks": 80,
+    "Earth, Environment, and Space / observatories": 80,
+    "Earth, Environment, and Space / impact structures": 80,
+    "Economy and Business / companies": 80,
+    "Economy and Business / banks": 80,
+    "Education / universities": 80,
+    "Education / schools": 80,
+    "Engineering and Technology / bridges": 80,
+    "Engineering and Technology / dams": 80,
+    "Food, Agriculture, and Daily Life / crop production": 80,
+    "Food, Agriculture, and Daily Life / wine regions": 80,
+    "Geography / lakes": 80,
+    "Geography / islands": 80,
+    "Language and Literature / literary awards": 80,
+    "Language and Literature / books": 80
+  },
+  "wikipedia_events": [
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+Great+Britain+%282019-20%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1525
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_Great_Britain_(2019%E2%80%9320)",
+      "cache_hit": false,
+      "duration_ms": 936
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+Great+Britain+%282019%E2%80%9320%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1397
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_Great_Britain_(2019%E2%80%9320)",
+      "cache_hit": true,
+      "duration_ms": 47
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+Great+Britain+%282020-21%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1994
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_Great_Britain_(2020%E2%80%9321)",
+      "cache_hit": false,
+      "duration_ms": 1057
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+Great+Britain+%282020%E2%80%9321%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1718
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_Great_Britain_(2020%E2%80%9321)",
+      "cache_hit": true,
+      "duration_ms": 18
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+Great+Britain+%282021-22%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2072
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_Great_Britain_(2021%E2%80%9322)",
+      "cache_hit": false,
+      "duration_ms": 1191
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+Great+Britain+%282021%E2%80%9322%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2898
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_Great_Britain_(2021%E2%80%9322)",
+      "cache_hit": true,
+      "duration_ms": 13
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+Great+Britain+%282022-23%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1541
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_Great_Britain_(2022%E2%80%9323)",
+      "cache_hit": false,
+      "duration_ms": 936
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+railway+stations+in+Great+Britain+%282022%E2%80%9323%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1705
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_railway_stations_in_Great_Britain_(2022%E2%80%9323)",
+      "cache_hit": true,
+      "duration_ms": 19
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+airports+by+passenger+traffic+%282000-2009%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 5519
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_airports_by_passenger_traffic_(2000%E2%80%932009)",
+      "cache_hit": false,
+      "duration_ms": 998
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+airports+by+passenger+traffic+%282000%E2%80%932009%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2955
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_airports_by_passenger_traffic_(2000%E2%80%932009)",
+      "cache_hit": true,
+      "duration_ms": 22
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+airports+by+passenger+traffic+%282010-2015%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2963
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_airports_by_passenger_traffic_(2010%E2%80%932019)",
+      "cache_hit": false,
+      "duration_ms": 1271
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+airports+by+passenger+traffic+%282010-2019%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3408
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_airports_by_passenger_traffic_(2010%E2%80%932019)",
+      "cache_hit": true,
+      "duration_ms": 11
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+airports+by+passenger+traffic+%282010%E2%80%932015%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2522
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_airports_by_passenger_traffic_(2010%E2%80%932019)",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+busiest+airports+by+passenger+traffic+%282010%E2%80%932019%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3013
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_airports_by_passenger_traffic_(2010%E2%80%932019)",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+airports+by+international+passenger+traffic&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2403
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_busiest_airports_by_international_passenger_traffic",
+      "cache_hit": false,
+      "duration_ms": 861
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Chinese+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4609
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Non-English-based_programming_languages",
+      "cache_hit": false,
+      "duration_ms": 1676
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Lisp-family+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3397
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Lisp-family_programming_languages",
+      "cache_hit": false,
+      "duration_ms": 1484
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+actor+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3070
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/Actor_model",
+      "cache_hit": false,
+      "duration_ms": 967
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+array+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4171
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_programming_languages_by_type",
+      "cache_hit": false,
+      "duration_ms": 1011
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+audio+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1113
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+compiled+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 4288
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_programming_languages_by_type",
+      "cache_hit": true,
+      "duration_ms": 19
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+concurrent+and+parallel+programming+languages&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1947
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+benchmarking+methods+and+software+tools&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1759
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_benchmarking_methods_and_software_tools",
+      "cache_hit": false,
+      "duration_ms": 1191
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+language+model+benchmarks&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2547
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+open+source+benchmarks&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2434
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+impact+craters+in+Africa&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2755
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_impact_structures_in_Africa",
+      "cache_hit": false,
+      "duration_ms": 3158
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+impact+craters+in+Antarctica&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1715
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_impact_structures_in_Antarctica",
+      "cache_hit": false,
+      "duration_ms": 1065
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+impact+craters+in+Asia&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3498
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_impact_structures_in_Asia_and_Russia",
+      "cache_hit": false,
+      "duration_ms": 1087
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+impact+craters+in+Asia+and+Russia&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1878
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_impact_structures_in_Asia_and_Russia",
+      "cache_hit": true,
+      "duration_ms": 57
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+impact+craters+in+Australasia&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1713
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_impact_structures_in_Australia",
+      "cache_hit": false,
+      "duration_ms": 1176
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+The+Electric+Company+%282009+TV+series%29+episodes&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1826
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_The_Electric_Company_(2009_TV_series)_episodes",
+      "cache_hit": false,
+      "duration_ms": 1727
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Officials+and+Shareholders+in+the+Royal+African+Company%2C+1672&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1298
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+officials+and+shareholders+in+the+Royal+African+Company%2C+1672&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1531
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Fox+Broadcasting+Company+affiliates+%28by+U.S.+state%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2391
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Fox_Broadcasting_Company_affiliates",
+      "cache_hit": false,
+      "duration_ms": 992
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Fox+Broadcasting+Company+affiliates+%28table%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1974
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Fox_Broadcasting_Company_affiliates",
+      "cache_hit": true,
+      "duration_ms": 18
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+school+districts+in+Georgia+%28U.S.+state%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1648
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_school_districts_in_Georgia",
+      "cache_hit": false,
+      "duration_ms": 865
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+school+districts+in+New+York+%28state%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2686
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_school_districts_in_New_York",
+      "cache_hit": false,
+      "duration_ms": 1950
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+school+districts+in+Washington+%28U.S.+state%29&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2074
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+longest+arch+bridge+spans&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3311
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_longest_arch_bridge_spans",
+      "cache_hit": false,
+      "duration_ms": 1289
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+longest+beam+bridge+spans&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3782
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_longest_beam_bridge_spans",
+      "cache_hit": false,
+      "duration_ms": 2264
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+longest+cable-stayed+bridge+spans&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2648
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_longest_cable-stayed_bridge_spans",
+      "cache_hit": false,
+      "duration_ms": 1472
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+longest+cantilever+bridge+spans&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3546
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_longest_cantilever_bridge_spans",
+      "cache_hit": false,
+      "duration_ms": 1438
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+longest+continuous+truss+bridge+spans&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1935
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_longest_continuous_truss_bridge_spans",
+      "cache_hit": false,
+      "duration_ms": 851
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+longest+masonry+arch+bridge+spans&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1592
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_longest_masonry_arch_bridge_spans",
+      "cache_hit": false,
+      "duration_ms": 854
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+longest+suspension+bridge+spans&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 32
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_longest_suspension_bridge_spans",
+      "cache_hit": true,
+      "duration_ms": 16
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+The+Bridge+%282013+TV+series%29+episodes&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2317
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_The_Bridge_(2013_TV_series)_episodes",
+      "cache_hit": false,
+      "duration_ms": 800
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Bulgarian+wine+regions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1422
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+German+wine+regions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1622
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Portuguese+wine+regions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1317
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Turkish+wine+regions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1717
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Turkish_wine_regions",
+      "cache_hit": false,
+      "duration_ms": 949
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+wine+growing+regions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2466
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_wine-producing_regions",
+      "cache_hit": true,
+      "duration_ms": 15
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+wine+producing+regions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 3755
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_wine-producing_regions",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+wine-producing+regions&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": true,
+      "duration_ms": 21
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_wine-producing_regions",
+      "cache_hit": true,
+      "duration_ms": 0
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+United+States+lakes+by+area&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1790
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_largest_lakes_of_the_United_States_by_area",
+      "cache_hit": false,
+      "duration_ms": 1515
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+lakes+by+area&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2588
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_lakes_by_area",
+      "cache_hit": false,
+      "duration_ms": 902
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+lakes+by+depth&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2369
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_lakes_by_depth",
+      "cache_hit": false,
+      "duration_ms": 970
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+lakes+by+surface+area&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 2040
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_lakes_by_area",
+      "cache_hit": true,
+      "duration_ms": 27
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Booknotes+interviews+first+aired+in+1990&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1784
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Booknotes_interviews_first_aired_in_1990",
+      "cache_hit": false,
+      "duration_ms": 1160
+    },
+    {
+      "url": "https://en.wikipedia.org/w/api.php?action=parse&page=List+of+Booknotes+interviews+first+aired+in+1991&prop=text%7Cdisplaytitle%7Csections%7Cproperties&format=json&formatversion=2&redirects=1",
+      "cache_hit": false,
+      "duration_ms": 1734
+    },
+    {
+      "url": "https://en.wikipedia.org/api/rest_v1/page/summary/List_of_Booknotes_interviews_first_aired_in_1991",
+      "cache_hit": false,
+      "duration_ms": 1005
+    }
+  ]
+}
