@@ -28,6 +28,16 @@ ANSWER_PRECISION_PROMPT_RULES = (
     "- Do not add units to the reference answer or answer_aliases; keep numeric reference answers as "
     "normalized values only.\n"
 )
+SOURCE_TABLE_WORDING_RULE = (
+    "- Do not phrase questions as `according to the table` or `according to the [source] table`; "
+    "name the actual subject/event/list instead. Only use `according to ...` when the source is a "
+    "well-known named chart or list, such as a Billboard chart or UNESCO list.\n"
+)
+CUMULATIVE_FACT_PROMPT_RULE = (
+    "- Do not ask cumulative-statistic questions such as how many goals Messi has scored, total wins, "
+    "career points, revenue, downloads, citations, or followers unless the statistic is explicitly "
+    "scoped to a historically settled slice, completed event, completed season, or fixed table/list.\n"
+)
 
 
 class RewriteClient(ABC):
@@ -187,6 +197,7 @@ def build_rewrite_prompt(payload: dict[str, Any]) -> str:
     cutoff_rule = ""
     if cutoff_year is not None:
         cutoff_rule = f"- Avoid question wording that depends on events in {cutoff_year} or later.\n"
+    query_count = _query_count(payload)
     return (
         "Rewrite the question into one concise SimpleQA-style fact-seeking question.\n\n"
         "Rules:\n"
@@ -198,9 +209,11 @@ def build_rewrite_prompt(payload: dict[str, Any]) -> str:
         "- Do not include the answer or any answer alias in any casing, capitalization, or normalized variant.\n"
         "- The rewritten_question must not contain the answer or any answer alias.\n"
         f"{ANSWER_PRECISION_PROMPT_RULES}"
+        f"{SOURCE_TABLE_WORDING_RULE}"
+        f"{CUMULATIVE_FACT_PROMPT_RULE}"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"{cutoff_rule}"
-        "- Generate exactly 5 answer-blind search queries.\n\n"
+        f"- Generate exactly {query_count} answer-blind search queries.\n\n"
         f"Payload:\n{serialized}\n\n"
         "Output valid JSON only:\n"
         "{\n"
@@ -216,6 +229,7 @@ def build_route1_rewrite_prompt(payload: dict[str, Any]) -> str:
     """Build the Route 1 rewrite-and-query prompt."""
     forbidden_patterns = payload.get("forbidden_patterns", [])
     forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
+    query_count = _query_count(payload)
     return (
         "You are generating a SimpleQA-style factual question and answer-blind search queries for Route 1.\n\n"
         "Input:\n"
@@ -229,7 +243,7 @@ def build_route1_rewrite_prompt(payload: dict[str, Any]) -> str:
         "3. Do not add, remove, narrow, broaden, or change any information from the canonical question; only rephrase it so it sounds natural.\n"
         "4. Keep all required anchors and disambiguating cues.\n"
         "5. The rewritten_question must not contain the answer or any answer alias.\n"
-        "6. Generate exactly 5 answer-blind search queries for long-tail verification.\n"
+        f"6. Generate exactly {query_count} answer-blind search queries for long-tail verification.\n"
         "7. Return extra answer aliases or abbreviations that may appear in snippets, using [] if none.\n\n"
         "Important constraints:\n"
         "- The search queries must not contain the answer or any answer alias.\n"
@@ -238,6 +252,8 @@ def build_route1_rewrite_prompt(payload: dict[str, Any]) -> str:
         "- If the canonical question says `first degree`, do not rewrite it as a named degree such as `Doctor of Medicine`.\n"
         "- Do not add any degree name, date, title, role, or other factual detail that is absent from the canonical question unless it is already required for disambiguation.\n"
         f"{ANSWER_PRECISION_PROMPT_RULES}"
+        f"{SOURCE_TABLE_WORDING_RULE}"
+        f"{CUMULATIVE_FACT_PROMPT_RULE}"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
         "- The first query will be the rewritten question itself and will be added by code. Do not repeat it in search_queries.\n\n"
@@ -255,6 +271,7 @@ def build_route2_rewrite_prompt(payload: dict[str, Any]) -> str:
     """Build the Route 2 rewrite-and-query prompt."""
     forbidden_patterns = payload.get("forbidden_patterns", [])
     forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
+    query_count = _query_count(payload)
     return (
         "You are generating a SimpleQA-style factual question and answer-blind search queries for Route 2.\n\n"
         "Input:\n"
@@ -268,13 +285,15 @@ def build_route2_rewrite_prompt(payload: dict[str, Any]) -> str:
         "3. Do not add, remove, narrow, broaden, or change any information from the canonical question; only rephrase it so it sounds natural.\n"
         "4. Keep all required anchors.\n"
         "5. The rewritten_question must not contain the answer or any answer alias.\n"
-        "6. Generate exactly 5 answer-blind search queries for long-tail verification.\n"
+        f"6. Generate exactly {query_count} answer-blind search queries for long-tail verification.\n"
         "7. Return extra answer aliases or abbreviations that may appear in snippets, using [] if none.\n\n"
         "Important constraints:\n"
         "- The search queries must not contain the answer or any answer alias.\n"
         "- Preserve the same answer relation as the canonical question. Do not narrow or specialize it.\n"
         "- Do not add a more specific degree, award, role, date, or other factual detail that is absent from the canonical question unless it is already required for disambiguation.\n"
         f"{ANSWER_PRECISION_PROMPT_RULES}"
+        f"{SOURCE_TABLE_WORDING_RULE}"
+        f"{CUMULATIVE_FACT_PROMPT_RULE}"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
         "- The first query will be the rewritten question itself and will be added by code. Do not repeat it in search_queries.\n\n"
@@ -292,6 +311,7 @@ def build_kelm_rewrite_prompt(payload: dict[str, Any]) -> str:
     """Build the KELM-specific rewrite-and-query prompt."""
     forbidden_patterns = payload.get("forbidden_patterns", [])
     forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
+    query_count = _query_count(payload)
     return (
         "You are generating a SimpleQA-style factual question and answer-blind search queries for long-tail verification.\n\n"
         "Input:\n"
@@ -306,12 +326,14 @@ def build_kelm_rewrite_prompt(payload: dict[str, Any]) -> str:
         "3. Do not add, remove, narrow, broaden, or change information from the source sentence or triple; only rephrase supported source information into a question.\n"
         "4. Do not use rigid templates. Write naturally.\n"
         "5. The rewritten_question must not contain the answer or any alias, casing variant, capitalization variant, or normalized form of the answer.\n"
-        "6. Then generate exactly 5 answer-blind search queries that a user might try before knowing the answer.\n\n"
+        f"6. Then generate exactly {query_count} answer-blind search queries that a user might try before knowing the answer.\n\n"
         "Important constraints:\n"
         "- The search queries must not contain the answer or any alias, casing variant, capitalization variant, or normalized form of the answer.\n"
         "- The queries should use only information available in the question, KELM sentence, or non-answer parts of the triple.\n"
         "- Preserve the same answer relation and information scope as the source.\n"
         "- Do not add a more specific degree, award, role, date, or other factual detail that is not explicit in the source.\n"
+        f"{SOURCE_TABLE_WORDING_RULE}"
+        f"{CUMULATIVE_FACT_PROMPT_RULE}"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
         "- The first query will be the rewritten question itself and will be added by code. Do not include the whole rewritten question in search_queries.\n"
@@ -339,3 +361,11 @@ def parse_json_object(text: str) -> dict[str, Any]:
     if start == -1 or end == -1 or end < start:
         raise ValueError("Model response did not contain a JSON object.")
     return json.loads(stripped[start : end + 1])
+
+
+def _query_count(payload: dict[str, Any]) -> int:
+    """Return the configured answer-blind query count for a rewrite prompt."""
+    try:
+        return max(0, int(payload.get("search_query_count", 3)))
+    except (TypeError, ValueError):
+        return 3

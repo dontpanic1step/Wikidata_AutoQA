@@ -39,6 +39,18 @@ class ConfigTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Settings(target_time="2026", second_stage_grading_accuracy_threshold=1.5)
 
+    def test_invalid_query_settings_raise(self) -> None:
+        with self.assertRaises(ValueError):
+            Settings(target_time="2026", duckduckgo_parallel_queries=0)
+        with self.assertRaises(ValueError):
+            Settings(target_time="2026", generated_search_query_count=-1)
+
+    def test_default_search_hit_rate_thresholds_are_uniform_point_three(self) -> None:
+        settings = Settings(target_time="2026")
+        self.assertEqual(settings.search_longtail_max_full_question_hit_rate, 0.3)
+        self.assertEqual(settings.search_longtail_max_keyword_hit_rate, 0.3)
+        self.assertEqual(settings.search_longtail_max_overall_hit_rate, 0.3)
+
 
 if __name__ == "__main__":
     unittest.main()

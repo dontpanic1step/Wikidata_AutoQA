@@ -26,13 +26,15 @@ Prefer high precision over high recall. Treat early pilot outputs as candidate g
 - Years, dates, and temporal anchors are allowed for historically settled facts.
 - By default, reject question text that depends on events in 2025 or later unless project config explicitly overrides the cutoff.
 - Reject live-status wording such as `current`, `currently`, `latest`, `most recent`, and `as of now`.
-- Reject mutable statuses, current roles, relationships, affiliations, and cumulative statistics by default.
+- Mutable statuses, current roles, relationships, affiliations, and cumulative statistics are risky and should be avoided in prompts, but the shared surface guard no longer rejects them directly.
 - Historically settled slices of mutable properties are allowed only when deterministic provenance shows the slice is fixed.
 - Do not let disambiguation descriptors or question wording leak the answer.
 - Prefer natural category names over pipeline or relation labels.
 - If the answer is temporal, the question must specify the requested precision or unit, such as `what year`, `what month`, `what day`, or `how many months`.
 - If the answer is a full calendar date, ask `what day, month, and year ...` for better answer normalization.
 - If the answer is numeric, the question must specify the counted quantity or unit, such as `how many gallons`, and the reference answer should not include the unit.
+- Avoid generic source phrasing such as `according to the table` or `according to the [source] table` in prompts; Route 3 should also avoid `in the List of ...` wording. Name the actual subject/event/list naturally. This is prompt guidance only, not a surface-rejection gate.
+- Avoid cumulative-statistic questions such as how many goals Messi has scored, total wins, career points, revenue, downloads, citations, or followers unless the statistic is explicitly scoped to a historically settled slice, completed event, completed season, or fixed table/list. This is prompt guidance; the shared surface guard no longer rejects cumulative wording directly.
 
 ## Source And Route Contract
 
@@ -42,7 +44,11 @@ Prefer high precision over high recall. Treat early pilot outputs as candidate g
 - Wikidata grounding, Wikidata disambiguation, time-invariance checks, and Wikidata-specific dedupe are Route 1 validators that may be reused only when appropriate.
 - Non-Wikidata routes must define their own validation assumptions and failure modes.
 - Route 3 (`route3_wikipedia_infobox`) is Wikipedia-only, uses directly supplied Wikipedia URLs, and treats side infoboxes plus article tables as semi-structured sources.
+- Route 3 URL seed files may use `domain<TAB>subdomain<TAB>url`; domains should come from the Domain Axis in `docs/template_catalog_review.md` plus `History`.
+- Route 3 URL discovery should default to dump-backed discovery, not hand-prepared URL lists. Prefer raw pages-articles XML slices extracted into JSONL while preserving wikitext table/infobox markup. A Wikimedia title dump or bounded MediaWiki search may be used as a fallback, but opened pages must still be grade-filtered by parsed table quality.
+- Route 3 discovery may score multiple subdomains per broad domain, then keep the best-scoring subdomain and the top URLs for that domain. This preserves the reusable Domain Axis while avoiding brittle first-subdomain-only selection on sparse dump slices.
 - Route 3 stores provenance and parsed tables, but does not perform route-local factual validation beyond provenance and downstream shared checks.
+- Route 3 prompt payloads should pass subject scope as context, not mandatory question text. Include the page title, title-derived aliases, and each selected table's caption plus nearby section heading so the model can infer a safe, bounded question scope without copying `List of ...` page titles. Pass safe first-paragraph aliases separately as `safe_subject_aliases`; when the page title has a cutoff-year marker, the model should use one of those aliases if it needs to name the subject.
 
 ## Candidate Schema Contract
 
@@ -75,11 +81,11 @@ Important optional/audit fields include:
 - `source_metadata`
 - `source_candidate` for Wikidata-backed routes
 
-For numeric answers, store the normalized reference value without units. For temporal answers, make the question text responsible for declaring whether the expected answer is a year, month, full date, duration, or other temporal unit.
+For numeric answers, store the normalized reference value without units. For temporal answers, make the question text responsible for declaring whether the expected answer is a year, month, full date, duration, or other temporal unit. Route 3 generated candidates must include `answer_type` as `Entity`, `Number`, or `Date`.
 
 Accepted JSONL records include the final question, answer, aliases, route, source entities, evidence, canonical and rewritten question fields, template key/domain compatibility fields, search metadata, grading metadata, validation metadata, notes, and `source_metadata`.
 
-Rejected JSONL records use the same audit shape plus `rejection_reason` and `rejection_notes`.
+Rejected JSONL records use the same audit shape plus `rejection_reason` and `rejection_notes`. Surface-guard rejections must also expose the exact violated rule as `rejection_rule`, `rejection_notes.failure_reason`, and `source_metadata.surface_validation_failure_reason` so reviewers can distinguish failures such as `answer_leakage` or `cutoff_year_exceeded`.
 
 ## Metadata Contract
 
@@ -122,14 +128,16 @@ Do not use a standalone cheap-model exact-match QA phase as a rejection gate. LL
 Shared surface validation must reject:
 
 - missing questions
-- lost subject anchors
 - answer leakage
 - bridge entity leakage for Wikidata multi-hop candidates
 - lost required reasoning clues when shortcut checks apply
-- mutable fact wording
 - non-SimpleQA question shape
 - forbidden temporal phrasing
 - cutoff-year violations
+
+Lost subject anchors are recorded as non-blocking `surface_validation_warnings` because they produced too many false positives in Route 3 pilot review.
+
+For numeric answers, answer-leakage validation must compare extracted normalized number values from the question and reference answer rather than raw substring containment. This prevents false positives such as answer `6` being treated as leaked by the year `2016`.
 
 Route 3 validation is intentionally limited:
 
@@ -138,12 +146,13 @@ Route 3 validation is intentionally limited:
 - `question_unambiguous` requires a subject URL.
 - shared rewrite/surface guards still apply.
 - metadata records `route_local_factual_validation` as false and names the provenance-only policy.
+- the incomplete tied-answer detector is retained for review but is non-blocking; Route 3 records it under `source_metadata.route_guard_warnings.wikipedia_infobox_incomplete_tie_answer`.
 
 ## Search Contract
 
 The search verifier always includes the full final question. It uses route-provided answer-blind `search_queries` when present; otherwise it may add subject/relation fallback queries for non-special routes.
 
-Answer hits are detected in titles and snippets using normalized answer strings, aliases, conservative country/date variants, and numeric variants or margins where applicable. Exact final-question hits and answer-hit rates can reject a candidate according to configured thresholds.
+Answer hits are detected in titles and snippets using normalized answer strings, aliases, conservative country/date variants, and numeric variants or margins where applicable. Date answers are normalized before first-stage matching in the same spirit as number answers. Exact final-question hits and answer-hit rates can reject a candidate according to configured thresholds. Search queries may run with bounded per-candidate parallelism and may early-reject when a threshold can no longer be recovered.
 
 ## Grading Contract
 
@@ -161,8 +170,10 @@ General settings currently default to:
 
 - `cutoff_year`: `2025`
 - `duckduckgo_top_k`: `10`
+- `duckduckgo_parallel_queries`: `3`
+- generated search query count: `3`
 - `second_stage_grading_enabled`: `true`
-- search hit-rate thresholds: full question `0.0`, keyword queries `0.3`, overall `0.3`
+- search hit-rate thresholds: full question `0.3`, keyword queries `0.3`, overall `0.3`; hit rates equal to the threshold pass, and only rates above the threshold reject
 - second-stage accuracy threshold: `0.1`  
 - default second-stage answer models: `openai/gpt-4.1-mini`, `google/gemini-3-flash-preview`
 - default grader: `openai/gpt-4.1-mini`
@@ -179,6 +190,11 @@ The Wikipedia infobox/table runner currently defaults to:
 - small model: `openai/gpt-4.1-mini`
 - small-model provider/base URL: OpenRouter at `https://openrouter.ai/api/v1`
 - outputs under `outputs/wikipedia_infobox_*`
+- URL seed helper: `scripts/generate_wikipedia_table_urls.py`
+- raw dump extractor: `scripts/extract_wikipedia_raw_pages.py`
+- preferred URL seed source: raw page JSONL from pages-articles XML slices, with wikitext tables preserved
+- fallback URL seed source: Wikimedia `enwiki-latest-all-titles-in-ns0.gz`, cached under `cache/wikipedia_dumps/`, or bounded MediaWiki search for incomplete subdomains
+- Route 3 URL seed format: URL-only, `domain<TAB>url`, or `domain<TAB>subdomain<TAB>url`
 
 ## Network And Secrets Contract
 

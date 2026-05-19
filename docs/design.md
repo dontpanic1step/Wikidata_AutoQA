@@ -164,9 +164,9 @@ Design intent:
 
 There is no standalone cheap-model exact-match QA rejection gate. SimpleQA Verified uses autorated model answers for difficulty/evaluation rather than a separate cheap-model long-tail rejection phase, so model-answer judgment belongs in the grading panel.
 
-DuckDuckGo filtering uses normalized answer matching over answer labels and aliases. It normalizes case, punctuation, common number forms, and common country aliases where applicable. Search-result title hits and snippet hits are thresholded evidence signals, not unconditional rejection rules; setting thresholds to `1.0` intentionally lets candidates pass stage 1 for walkthrough/debug runs.
+DuckDuckGo filtering uses normalized answer matching over answer labels and aliases. It normalizes case, punctuation, common number forms, common date forms, and common country aliases where applicable. Search-result title hits and snippet hits are thresholded evidence signals, not unconditional rejection rules; setting thresholds to `1.0` intentionally lets candidates pass stage 1 for walkthrough/debug runs.
 
-For `Number` templates, normalize the answer during candidate construction for future comparison and SimpleQA Verified-style margin generation. Compute the reference margin before DuckDuckGo filtering. For number answers outside the exact-integer `[-10, 30]` bucket, DuckDuckGo leakage matching extracts Arabic-number and English-number mentions from titles/snippets, normalizes them, and counts them as answer exposure when they fall inside the acceptable range. Exact integers in `[-10, 30]` keep the existing string/word matching plus optional snippet-judge rule instead of using margin matching.
+For `Number` templates, normalize the answer during candidate construction for future comparison and SimpleQA Verified-style margin generation. Compute the reference margin before DuckDuckGo filtering. For number answers outside the exact-integer `[-10, 30]` bucket, DuckDuckGo leakage matching extracts Arabic-number and English-number mentions from titles/snippets, normalizes them, and counts them as answer exposure when they fall inside the acceptable range. Exact integers in `[-10, 30]` keep the existing string/word matching plus optional snippet-judge rule instead of using margin matching. For `Date` answers, normalize common full-date, month-year, and year-only forms before first-stage matching.
 
 Both stages must remain auditable:
 
@@ -199,9 +199,13 @@ Route 3 may emit complete list answers when a composition operation has a tie. T
 
 Before prompting the model, Route 3 ranks extracted tables. Prefer article tables over infoboxes, tables with multiple structured rows, headers that expose comparable values such as capacity/rank/count/date/votes, and row values that are not repeated in non-table prose. Penalize short infobox-style summaries, oversized prose-like tables, placeholder/mutable tables such as live standings, and tables whose row values are already easy to recover from article text. Pass only the top three ranked tables to the small model so it focuses on the most useful evidence. Store the ranking criteria and scores as metadata so table choice can be audited.
 
-The Route 3 small-model prompt follows the shared answer-normalization wording rule: temporal questions must name the requested precision, full-date answers should be requested as day, month, and year, and numeric questions must put the unit or counted quantity in the question rather than in the reference answer.
+The Route 3 small-model prompt emits `answer_type` as `Entity`, `Number`, or `Date`, and follows the shared answer-normalization wording rule: temporal questions must name the requested precision, full-date answers should be requested as day, month, and year, and numeric questions must put the unit or counted quantity in the question rather than in the reference answer. The prompt passes `subject_anchors` as page/table scope hints rather than required wording. These hints include the page title, title-derived aliases, and the selected tables' captions and nearby section headings. Safe first-paragraph aliases are passed separately as `safe_subject_aliases`; when the page title contains a cutoff-year marker, the model should use one of those aliases if it needs to name the subject. The model should use the scope hints to understand scope, for example that `15 largest commercial banks` supports asking which bank is largest within that table but not how many banks exist in Ukraine.
 
-Route 3 URL discovery should be a separate, auditable step. It may query Wikipedia search across diverse broad domains, score pages by parsed-table quality, and write a reusable URL text file for the generation runner. The URL file should preserve broad domain labels alongside URLs so accepted examples can report both source URL and source domain. The first discovery target is 10 URLs; later runs may scale this target, subject to the project's network-use constraints.
+Route 3 and shared rewriting prompts should avoid generic provenance phrasing such as `according to the table` or `according to the [source] table`, and Route 3 specifically should avoid `in the List of ...` wording. The question should name the actual subject, event, chart, list, or scope naturally. `According to ...` wording is preferred only for well-known named charts or lists such as Billboard charts or UNESCO lists. This is prompt guidance; the shared surface guard does not reject the wording directly.
+
+Route 3 URL discovery should be a separate, auditable step. It should not default to hand-prepared URLs, because those bias pilots toward short-tail facts. The preferred discovery path reads raw pages-articles XML slices extracted to JSONL while preserving wikitext table and infobox markup, scores candidate pages inside the Domain Axis from `docs/template_catalog_review.md` plus `History`, then opens and grades a bounded number of candidates with the same parsed-table quality scorer used by Route 3. WikiExtractor-style plain-text extraction is not suitable for this route because it flattens away the table structures needed for source discovery. A cached Wikimedia title dump or bounded MediaWiki search can supplement sparse subdomains, but final URL choice must still come from table-quality grading.
+
+For sparse pilot slices, discovery may evaluate more than one subdomain per broad domain and then keep only the best-scoring subdomain plus the top URLs for that domain. This preserves the "one subdomain per domain" pilot shape while avoiding a brittle dependency on whichever subdomain appears first in the catalog plan. The URL file preserves `domain<TAB>subdomain<TAB>url` rows so accepted examples can report both source URL and source domain. Later runs may scale the seed target, subject to the project's network-use constraints.
 
 Route 3 does not perform factual validation or uniqueness proof. Its conservative contract is auditability: accepted and rejected outputs must store the source URL, canonical page title, first paragraph, parsed table metadata, model derivation summary, generated search queries, downstream DuckDuckGo evidence, optional grading evidence, and phase timings. Because the route has no Wikidata grounding, shared processing must not require a Wikidata `source_candidate` for Route 3 candidates.
 
@@ -280,14 +284,14 @@ Required behavior:
 - avoid putting the answer or answer aliases in the rewritten question
 - avoid live-status phrasing
 - respect the temporal policy for question wording
-- generate exactly five answer-blind or minimally leaky search queries
+- generate a configurable number of answer-blind or minimally leaky search queries, defaulting to three for efficiency-focused pilots
 - return useful answer aliases or abbreviations for snippet matching audit
 
 For Route 1, the rewrite layer should generally start from a template-derived canonical question rather than raw source text alone.
 
 ### 4.4 Long-tail layer
 
-The long-tail layer is shared in structure, even if thresholds may vary.
+The long-tail layer is shared in structure, even if thresholds may vary. Search queries should run with bounded parallelism per candidate, and the verifier may early-reject once the configured hit-rate thresholds are mathematically impossible to recover from.
 
 Proposed order:
 
@@ -423,7 +427,9 @@ For a non-Wikidata route:
 - define its own temporal checks if the source semantics differ
 - define its own deduplication and provenance rules where needed
 
-For `route3_wikipedia_infobox`, the first implementation intentionally has no route-local factual validator beyond parsing success and model-output shape checks. It stores provenance and parsed source content as metadata, then relies on shared surface checks, DuckDuckGo long-tail filtering, optional model grading, and manual review.
+For `route3_wikipedia_infobox`, the first implementation intentionally has no route-local factual validator beyond parsing success and model-output shape checks. It stores provenance and parsed source content as metadata, then relies on shared surface checks, DuckDuckGo long-tail filtering, optional model grading, and manual review. The lost-subject-anchor and incomplete-tie detectors are retained as review signals but are no longer hard rejection gates because pilot review showed too many false positives. Numeric answer-leakage checks compare extracted normalized number values rather than raw substrings, so a short answer such as `6` is not rejected merely because a year such as `2016` appears in the question.
+
+Route 3 runner invocations may resume from existing accepted/rejected JSONL at the validation stage. This path reconstructs generated candidates from stored metadata and LLM responses, clears stale surface-rejection metadata, and reruns the shared downstream filters without refetching pages or regenerating questions.
 
 The framework should share contracts, not forced source assumptions.
 

@@ -13,6 +13,8 @@ from typing import Any
 from .cheap_model_qa import parse_json_object
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .entity_normalization import normalize_name
+from .date_reference import normalize_date_answer
+from .number_reference import parse_number_token
 from .wikipedia_client import WikipediaClient, normalize_wikipedia_title
 
 ROUTE_NAME = "route3_wikipedia_infobox"
@@ -120,6 +122,7 @@ class WikipediaInfoboxTableGenerator:
     route_name: str = ROUTE_NAME
     source_type: str = SOURCE_TYPE
     url_domains: dict[str, str] | None = None
+    search_query_count: int = 3
 
     def generate(self, *, run_date: str, cutoff_year: int) -> list[GeneratedCandidate]:
         """Generate candidates from up to ``record_limit`` Wikipedia URLs."""
@@ -246,10 +249,16 @@ class WikipediaInfoboxTableGenerator:
             title=page.title,
             canonical_url=page.canonical_url,
             first_paragraph=page.first_paragraph,
-            subject_anchor_aliases=_subject_anchor_options(page.title, page.first_paragraph, cutoff_year),
+            subject_anchors=_subject_anchor_context(
+                page.title,
+                page.first_paragraph,
+                selected_tables,
+                cutoff_year,
+            ),
             tables=selected_tables,
             table_selection=table_selection,
             cutoff_year=cutoff_year,
+            search_query_count=self.search_query_count,
         )
         llm_start = perf_counter()
         response = parse_json_object(self.llm_client.complete_text(prompt))
@@ -295,15 +304,23 @@ class WikipediaInfoboxTableGenerator:
             answer_value,
             _string_list(response.get("answer_aliases", [])),
         )
+        answer_type = _normalize_answer_type(response.get("answer_type"), answer, question)
         answer_items = _answer_items(answer_value)
         search_queries = _sanitize_answer_blind_queries(
             response.get("search_queries", []),
             answer=answer,
             answer_aliases=aliases,
             answer_items=answer_items,
+            max_queries=self.search_query_count,
         )
         source_table_index = _coerce_table_index(response.get("source_table"))
         source_table = _table_by_index(selected_tables, source_table_index)
+        tie_problem = _tie_completion_problem(
+            source_table=source_table,
+            composition_type=str(response.get("composition_type", "")).strip(),
+            answer=answer,
+            answer_items=answer_items,
+        )
         evidence_text = source_table.normalized_text if source_table is not None else page.first_paragraph
         return GeneratedCandidate(
             source_type=self.source_type,
@@ -329,7 +346,7 @@ class WikipediaInfoboxTableGenerator:
                 retrieved_at=run_date,
             ),
             question_family="wikipedia_infobox_table_composition",
-            answer_type="Entity",
+            answer_type=answer_type,
             topic="Wikipedia semi-structured data",
             target_time=run_date[:4],
             source_template_domain="wikipedia_infobox_table",
@@ -343,6 +360,14 @@ class WikipediaInfoboxTableGenerator:
                 table_selection=table_selection,
                 timings=timings,
                 answer_items=answer_items,
+                answer_type=answer_type,
+                tie_completion_warning=tie_problem,
+                subject_anchors=_subject_anchor_context(
+                    page.title,
+                    page.first_paragraph,
+                    selected_tables,
+                    cutoff_year,
+                ),
             ),
         )
 
@@ -352,17 +377,19 @@ def build_wikipedia_infobox_prompt(
     title: str,
     canonical_url: str,
     first_paragraph: str,
-    subject_anchor_aliases: list[str],
+    subject_anchors: dict[str, Any],
     tables: list[WikipediaTable],
     table_selection: list[dict[str, Any]],
     cutoff_year: int,
+    search_query_count: int = 3,
 ) -> str:
     """Build the small-model prompt for Wikipedia table QA generation."""
     payload = {
         "title": title,
         "canonical_url": canonical_url,
         "first_paragraph": first_paragraph[:2500],
-        "preferred_subject_anchors": subject_anchor_aliases,
+        "safe_subject_aliases": subject_anchors.get("safe_subject_aliases", []),
+        "subject_anchors": subject_anchors,
         "table_selection_criteria": [
             "Prefer tables with many structured data rows.",
             "Prefer tables with numeric, ordinal, date, rank, count, or comparable value columns.",
@@ -387,21 +414,24 @@ def build_wikipedia_infobox_prompt(
         "- Do not choose an infobox when a higher-ranked article table supports a composition question.\n"
         "- Prefer table facts that are not easily found in article prose outside tables.\n"
         f"{ANSWER_PRECISION_PROMPT_RULES}"
-        "- The question must contain one preferred_subject_anchor exactly or in a very close natural form.\n"
+        "- Use subject_anchors only to understand the page/table scope; do not copy anchor text mechanically into the question.\n"
+        "- If the page title contains a cutoff-year marker, use one of safe_subject_aliases when you need to name the subject; do not use the cutoff-year title text.\n"
+        "- Let the table caption or nearby section heading define the safe scope. For example, `15 largest commercial banks` supports asking which bank is largest within that listed table, but not how many banks exist in Ukraine. A `1980 chart` table supports asking about facts in that 1980 chart, but not when a song first entered a chart because it may have entered in another year.\n"
+        "- Do not write `according to the table`, `according to the [source] table`, or `in the List of ...`. Name the actual entity, event, chart, list, or scope naturally. Only use `according to ...` when the source is a well-known named chart or list, such as a Billboard chart or UNESCO list.\n"
+        "- Do not ask cumulative-statistic questions such as how many goals Messi has scored, total wins, career points, revenue, downloads, citations, or followers unless the statistic is explicitly scoped to a historically settled slice, completed event, completed season, or fixed table/list.\n"
         "- Do not use generic phrases like `the listed table`, `the tournament`, or `the award` without naming the source subject.\n"
-        "- Use a preferred_subject_anchor instead of the page title when the page title contains a year at or after the cutoff.\n"
-        "- For the 2026 FIFA World Cup page, use `23rd FIFA World Cup` instead of `2026 FIFA World Cup`.\n"
         "- Do not ask about current, latest, most recent, or live-status facts.\n"
         "- Avoid mutable-sounding wording such as `total assets`, `total number`, `current`, or `as of`.\n"
         "- For completed historical tables, phrase the comparison as a fixed result within the named event or list.\n"
         f"- Do not make the question text depend on events in {cutoff_year} or later.\n"
         "- Do not include the answer or answer aliases in the question or search queries.\n"
-        "- Generate exactly five answer-blind search queries.\n"
+        f"- Generate exactly {search_query_count} answer-blind search queries.\n"
         "- If no safe composition question is possible, set discard_reason and leave the other fields empty.\n\n"
         "Output schema:\n"
         "{\n"
         '  "question": string,\n'
         '  "answer": string | string[],\n'
+        '  "answer_type": "Entity|Number|Date",\n'
         '  "answer_aliases": string[],\n'
         '  "search_queries": string[],\n'
         '  "composition_type": "max|min|sum|count|comparison|ordinal|other",\n'
@@ -749,16 +779,21 @@ def _source_metadata(
     table_selection: list[dict[str, Any]],
     timings: dict[str, float],
     answer_items: list[str] | None = None,
+    answer_type: str = "",
+    tie_completion_warning: str = "",
+    subject_anchors: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build Route 3 audit metadata."""
-    first_paragraph_aliases = _subject_anchor_options(page.title, page.first_paragraph, 2025)
+    safe_subject_aliases = _first_paragraph_aliases(page.title, page.first_paragraph)
     return {
         "source_url": page.source_url,
         "canonical_url": page.canonical_url,
         "page_title": page.title,
         "content_domain": page.content_domain,
         "first_paragraph": page.first_paragraph,
-        "subject_anchor_aliases": first_paragraph_aliases,
+        "subject_anchor_aliases": _subject_anchor_options(page.title, page.first_paragraph, 2025),
+        "safe_subject_aliases": safe_subject_aliases,
+        "subject_anchors": subject_anchors or [],
         "parsed_tables": [table.to_metadata() for table in tables],
         "table_selection": [_selection_payload(row) for row in table_selection],
         "selected_source_table": source_table.to_metadata() if source_table is not None else {},
@@ -766,6 +801,10 @@ def _source_metadata(
         "llm_response": llm_response,
         "answer_items": answer_items or [],
         "answer_is_list": bool(answer_items),
+        "answer_type": answer_type,
+        "route_guard_warnings": {
+            "wikipedia_infobox_incomplete_tie_answer": tie_completion_warning,
+        } if tie_completion_warning else {},
         "composition_type": str(llm_response.get("composition_type", "")).strip(),
         "derivation_summary": str(llm_response.get("derivation_summary", "")).strip(),
         "phase_timings_seconds": dict(timings),
@@ -898,6 +937,7 @@ def _sanitize_answer_blind_queries(
     answer: str,
     answer_aliases: list[str],
     answer_items: list[str] | None = None,
+    max_queries: int | None = None,
 ) -> list[str]:
     """Return model queries after dropping answer-containing strings."""
     blocked = {
@@ -905,11 +945,81 @@ def _sanitize_answer_blind_queries(
         *{normalize_name(item) for item in answer_items or [] if normalize_name(item)},
         *{normalize_name(alias) for alias in answer_aliases if normalize_name(alias)},
     }
-    return [
+    queries = [
         query
         for query in _string_list(value)
         if not any(blocked_value and blocked_value in normalize_name(query) for blocked_value in blocked)
     ]
+    if max_queries is None:
+        return queries
+    return queries[: max(0, max_queries)]
+
+
+def _tie_completion_problem(
+    *,
+    source_table: WikipediaTable | None,
+    composition_type: str,
+    answer: str,
+    answer_items: list[str],
+) -> str:
+    """Return a rejection note when a simple grouped max/min table has an incomplete tie answer."""
+    if source_table is None or composition_type not in {"max", "min"}:
+        return ""
+    expected_items = _simple_grouped_extreme_items(source_table, composition_type)
+    if len(expected_items) <= 1:
+        return ""
+    provided_items = answer_items or [answer]
+    provided = {normalize_name(item) for item in provided_items if normalize_name(item)}
+    expected = {normalize_name(item) for item in expected_items if normalize_name(item)}
+    if expected and not expected.issubset(provided):
+        missing = [item for item in expected_items if normalize_name(item) not in provided]
+        return "incomplete_tie_answer; missing tied answers: " + "; ".join(missing)
+    return ""
+
+
+def _simple_grouped_extreme_items(table: WikipediaTable, composition_type: str) -> list[str]:
+    """Infer tied max/min answer items from simple two-column grouped numeric tables."""
+    if len(table.headers) < 2:
+        return []
+    groups: dict[float, list[str]] = {}
+    current_value: float | None = None
+    saw_continuation = False
+    for row in _data_rows(table):
+        if not row:
+            continue
+        metric = parse_number_token(row[0])
+        if metric is not None and len(row) >= 2:
+            current_value = float(metric)
+            item = _strip_footnote_markers(row[1])
+            if item:
+                groups.setdefault(current_value, []).append(item)
+            continue
+        if current_value is not None and len(row) == 1:
+            item = _strip_footnote_markers(row[0])
+            if item:
+                groups.setdefault(current_value, []).append(item)
+                saw_continuation = True
+    if not saw_continuation or not groups:
+        return []
+    target_value = max(groups) if composition_type == "max" else min(groups)
+    return groups.get(target_value, [])
+
+
+def _normalize_answer_type(value: Any, answer: str, question: str) -> str:
+    """Return a supported answer type with conservative fallback inference."""
+    normalized = str(value or "").strip()
+    normalized_question = normalize_name(question)
+    if normalized in {"Number", "Date"}:
+        return normalized
+    if normalized == "Entity":
+        return normalized
+    normalized_date = normalize_date_answer(answer, "Date")
+    if normalized_date != answer.strip() or re.fullmatch(r"\d{4}(?:\s*[-–—/]\s*\d{2,4})?", answer.strip()):
+        if any(token in normalized_question for token in ("year", "date", "day", "month", "when")):
+            return "Date"
+    if parse_number_token(answer) is not None:
+        return "Number"
+    return "Entity"
 
 
 def _normalize_generated_answer(answer: Any, aliases: list[str]) -> tuple[str, list[str]]:
@@ -1086,6 +1196,36 @@ def _subject_anchor_options(title: str, first_paragraph: str, cutoff_year: int) 
         seen.add(key)
         deduped.append(cleaned)
     return deduped
+
+
+def _subject_anchor_context(
+    title: str,
+    first_paragraph: str,
+    tables: list[WikipediaTable],
+    cutoff_year: int,
+) -> dict[str, Any]:
+    """Return page and table scope hints for prompt grounding."""
+    first_paragraph_aliases = _first_paragraph_aliases(title, first_paragraph)
+    title_aliases = _title_subject_aliases(title)
+    safe_page_title = "" if _text_has_cutoff_year(title, cutoff_year) else title
+    return {
+        "page_title": title,
+        "safe_page_title": safe_page_title,
+        "safe_subject_aliases": first_paragraph_aliases,
+        "title_aliases": title_aliases,
+        "table_scopes": [
+            {
+                "table_index": table.table_index,
+                "table_title": table.caption,
+                "nearby_section_heading": table.section_heading,
+            }
+            for table in tables
+        ],
+        "usage_note": (
+            "Use these fields to understand the page and table scope. "
+            "They are context hints, not required wording for the question."
+        ),
+    }
 
 
 def _title_subject_aliases(title: str) -> list[str]:

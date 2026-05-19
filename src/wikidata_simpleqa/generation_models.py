@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from .date_reference import normalize_date_answer
 from .models import CandidateFact
 from .number_reference import normalize_number_answer
 
@@ -62,14 +63,20 @@ class GeneratedCandidate:
 
     def __post_init__(self) -> None:
         """Normalize numeric answers at the shared downstream boundary."""
-        if self.answer_type != "Number":
-            return
-        self.answer = normalize_number_answer(self.answer, self.answer_type)
-        self.answer_aliases = [
-            normalize_number_answer(alias, self.answer_type)
-            for alias in self.answer_aliases
-        ]
-        self.answer_entity.name = normalize_number_answer(self.answer_entity.name, self.answer_type)
+        if self.answer_type == "Number":
+            self.answer = normalize_number_answer(self.answer, self.answer_type)
+            self.answer_aliases = [
+                normalize_number_answer(alias, self.answer_type)
+                for alias in self.answer_aliases
+            ]
+            self.answer_entity.name = normalize_number_answer(self.answer_entity.name, self.answer_type)
+        elif self.answer_type == "Date":
+            self.answer = normalize_date_answer(self.answer, self.answer_type)
+            self.answer_aliases = [
+                normalize_date_answer(alias, self.answer_type)
+                for alias in self.answer_aliases
+            ]
+            self.answer_entity.name = normalize_date_answer(self.answer_entity.name, self.answer_type)
 
     @property
     def final_question(self) -> str:
@@ -157,4 +164,8 @@ class GeneratedCandidate:
         record.pop("id", None)
         record["rejection_reason"] = reason
         record["rejection_notes"] = notes or {}
+        if notes:
+            rejection_rule = notes.get("surface_validation_failure_reason") or notes.get("failure_reason")
+            if rejection_rule:
+                record["rejection_rule"] = str(rejection_rule)
         return record

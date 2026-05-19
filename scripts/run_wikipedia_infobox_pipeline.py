@@ -15,12 +15,19 @@ if str(SRC) not in sys.path:
 
 from wikidata_simpleqa.cheap_model_qa import make_cheap_model_qa_client
 from wikidata_simpleqa.config import LLMConfig, Settings
+from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.io import write_jsonl
 from wikidata_simpleqa.llm_rewrite import make_rewrite_client
 from wikidata_simpleqa.search_client import DuckDuckGoSearchClient
 from wikidata_simpleqa.wikipedia_client import WikipediaClient, normalize_wikipedia_title
-from wikidata_simpleqa.wikipedia_infobox_generator import WikipediaInfoboxTableGenerator
+from wikidata_simpleqa.wikipedia_infobox_generator import (
+    WikipediaInfoboxTableGenerator,
+    _answer_items,
+    _normalize_answer_type,
+    _normalize_generated_answer,
+    _sanitize_answer_blind_queries,
+)
 
 
 @dataclass(slots=True)
@@ -29,6 +36,7 @@ class UrlEntry:
 
     url: str
     domain: str = ""
+    subdomain: str = ""
 
 
 def parse_args() -> argparse.Namespace:
@@ -36,12 +44,27 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", action="append", default=[], help="Wikipedia URL. Can be repeated.")
     parser.add_argument("--url-file", type=Path, default=None, help="Text file with one Wikipedia URL per line.")
+    parser.add_argument(
+        "--candidate-input",
+        action="append",
+        default=[],
+        type=Path,
+        help="Existing accepted/rejected JSONL candidate file. Can be repeated.",
+    )
+    parser.add_argument(
+        "--start-stage",
+        choices=["generate", "validation"],
+        default="generate",
+        help="Start from URL generation or from existing post-rewrite candidates.",
+    )
     parser.add_argument("--record-limit", type=int, default=10)
     parser.add_argument("--target-time", type=str, default="2024")
     parser.add_argument("--run-date", type=str, default=None)
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--duckduckgo-top-k", type=int, default=10)
+    parser.add_argument("--duckduckgo-parallel-queries", type=int, default=3)
+    parser.add_argument("--generated-search-query-count", type=int, default=3)
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--small-model-provider", type=str, default="openrouter")
     parser.add_argument("--small-model", type=str, default="openai/gpt-4.1-mini")
@@ -52,7 +75,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rewrite-model", type=str, default="openai/gpt-4.1-mini")
     parser.add_argument("--enable-second-stage-grading", action="store_true")
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.1)
-    parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.0)
+    parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-keyword-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-overall-hit-rate", type=float, default=0.3)
     parser.add_argument(
@@ -78,8 +101,10 @@ def main() -> int:
     args = parse_args()
     url_entries = _load_url_entries(args.url, args.url_file)
     urls = [entry.url for entry in url_entries]
-    if not urls:
+    if args.start_stage == "generate" and not urls:
         raise ValueError("Provide at least one Wikipedia URL with --url or --url-file.")
+    if args.start_stage == "validation" and not args.candidate_input:
+        raise ValueError("Provide --candidate-input when --start-stage validation is used.")
     proxy = _optional_proxy(args.proxy)
     small_llm = LLMConfig(
         provider=args.small_model_provider,
@@ -105,6 +130,8 @@ def main() -> int:
         cutoff_year=args.cutoff_year,
         timeout_seconds=args.timeout_seconds,
         duckduckgo_top_k=args.duckduckgo_top_k,
+        duckduckgo_parallel_queries=args.duckduckgo_parallel_queries,
+        generated_search_query_count=args.generated_search_query_count,
         search_longtail_max_full_question_hit_rate=args.search_longtail_max_full_question_hit_rate,
         search_longtail_max_keyword_hit_rate=args.search_longtail_max_keyword_hit_rate,
         search_longtail_max_overall_hit_rate=args.search_longtail_max_overall_hit_rate,
@@ -131,17 +158,25 @@ def main() -> int:
     )
     llm_client = make_cheap_model_qa_client(small_llm, settings.timeout_seconds)
     rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds) if settings.rewrite_enabled else None
-    generator = WikipediaInfoboxTableGenerator(
-        urls=urls,
-        wikipedia_client=wikipedia_client,
-        llm_client=llm_client,
-        record_limit=args.record_limit,
-        url_domains=_url_domain_map(url_entries),
-    )
-    generated_candidates = generator.generate(
-        run_date=settings.run_date,
-        cutoff_year=settings.cutoff_year,
-    )
+    if args.start_stage == "validation":
+        generated_candidates = _load_candidate_inputs(args.candidate_input, limit=args.record_limit)
+        if not generated_candidates:
+            raise ValueError("No candidates were loaded from --candidate-input.")
+        if not url_entries:
+            url_entries = _url_entries_from_candidates(generated_candidates)
+    else:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=urls,
+            wikipedia_client=wikipedia_client,
+            llm_client=llm_client,
+            record_limit=args.record_limit,
+            url_domains=_url_domain_map(url_entries),
+            search_query_count=args.generated_search_query_count,
+        )
+        generated_candidates = generator.generate(
+            run_date=settings.run_date,
+            cutoff_year=settings.cutoff_year,
+        )
     result = process_generated_candidates(
         generated_candidates,
         settings=settings,
@@ -151,9 +186,16 @@ def main() -> int:
     write_jsonl(args.output, result.accepted)
     write_jsonl(args.rejected_output, result.rejected)
     summary = {
-        "attempted_urls": min(len(urls), args.record_limit),
+        "start_stage": args.start_stage,
+        "candidate_input_paths": [str(path) for path in args.candidate_input],
+        "attempted_urls": (
+            min(len(urls), args.record_limit)
+            if args.start_stage == "generate"
+            else len(generated_candidates)
+        ),
         "url_domains": [
             {"url": entry.url, "domain": entry.domain}
+            | ({"subdomain": entry.subdomain} if entry.subdomain else {})
             for entry in url_entries[: args.record_limit]
         ],
         "generated": len(generated_candidates),
@@ -166,6 +208,8 @@ def main() -> int:
         "small_model": args.small_model,
         "rewrite_enabled": settings.rewrite_enabled,
         "second_stage_grading_enabled": settings.second_stage_grading_enabled,
+        "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
+        "generated_search_query_count": settings.generated_search_query_count,
         "aggregate_phase_timings_seconds": _aggregate_phase_timings(result.accepted, result.rejected),
         "telemetry": {
             **result.telemetry,
@@ -196,13 +240,16 @@ def _load_url_entries(cli_urls: list[str], url_file: Path | None) -> list[UrlEnt
 
 
 def _parse_url_file_line(line: str) -> UrlEntry | None:
-    """Parse ``url`` or ``domain<TAB>url`` lines from a Route 3 URL file."""
+    """Parse ``url``, ``domain<TAB>url``, or ``domain<TAB>subdomain<TAB>url`` lines."""
     stripped = line.strip()
     if not stripped or stripped.startswith("#"):
         return None
-    if "\t" in stripped:
-        domain, url = stripped.split("\t", 1)
-        return UrlEntry(url=url.strip(), domain=domain.strip())
+    parts = [part.strip() for part in stripped.split("\t")]
+    if len(parts) >= 3:
+        return UrlEntry(url=parts[2], domain=parts[0], subdomain=parts[1])
+    if len(parts) == 2:
+        domain, url = parts
+        return UrlEntry(url=url, domain=domain)
     return UrlEntry(url=stripped)
 
 
@@ -218,6 +265,190 @@ def _url_domain_map(entries: list[UrlEntry]) -> dict[str, str]:
             mapping[title] = entry.domain
             mapping[title.replace(" ", "_")] = entry.domain
     return mapping
+
+
+def _load_candidate_inputs(paths: list[Path], *, limit: int) -> list[GeneratedCandidate]:
+    """Load serialized Route 3 candidates for downstream validation reruns."""
+    candidates: list[GeneratedCandidate] = []
+    for path in paths:
+        for line in path.read_text(encoding="utf-8").splitlines():
+            if not line.strip():
+                continue
+            candidates.append(_candidate_from_record(json.loads(line)))
+            if len(candidates) >= limit:
+                return candidates
+    return candidates
+
+
+def _candidate_from_record(record: dict) -> GeneratedCandidate:
+    """Reconstruct a generated candidate from an accepted or rejected JSONL record."""
+    source_metadata = dict(record.get("source_metadata") or {})
+    source_metadata.pop("surface_validation_failure_reason", None)
+    source_metadata.pop("llm_discard_reason", None)
+    llm_response = source_metadata.get("llm_response")
+    if not isinstance(llm_response, dict):
+        llm_response = {}
+
+    question = str(record.get("rewritten_question") or record.get("question") or "").strip()
+    answer = str(record.get("answer") or "").strip()
+    answer_aliases = _string_list(record.get("answer_aliases", []))
+    answer_type = str(record.get("answer_type") or source_metadata.get("answer_type") or "").strip()
+    search_queries = _string_list(record.get("search_queries", []))
+    relation_or_claim = str(record.get("relation_or_claim") or "wikipedia_table_composition").strip()
+
+    if _should_use_llm_response(record, llm_response):
+        _record_disabled_tie_warning(record, source_metadata)
+        question = str(llm_response.get("question", question)).strip()
+        raw_answer = llm_response.get("answer", answer)
+        answer, answer_aliases = _normalize_generated_answer(
+            raw_answer,
+            _string_list(llm_response.get("answer_aliases", [])),
+        )
+        answer_type = _normalize_answer_type(llm_response.get("answer_type"), answer, question)
+        answer_items = _answer_items(raw_answer)
+        search_queries = _sanitize_answer_blind_queries(
+            llm_response.get("search_queries", []),
+            answer=answer,
+            answer_aliases=answer_aliases,
+            answer_items=answer_items,
+        )
+        source_metadata["answer_items"] = answer_items
+        source_metadata["answer_is_list"] = bool(answer_items)
+        source_metadata["answer_type"] = answer_type
+        relation_or_claim = str(llm_response.get("composition_type") or relation_or_claim).strip()
+
+    subject_entity = _entity_reference(record.get("subject_entity", {}))
+    answer_entity = _entity_reference(record.get("answer_entity", {}), fallback_name=answer)
+    evidence = _evidence_record(record.get("evidence", {}))
+    source_table = _selected_source_table(source_metadata, llm_response)
+    if source_table:
+        source_metadata["selected_source_table"] = source_table
+    if source_table.get("normalized_text"):
+        evidence.text = str(source_table.get("normalized_text") or "")
+        evidence.url = evidence.url or str(source_metadata.get("canonical_url") or source_metadata.get("source_url") or "")
+        evidence.source_title = evidence.source_title or str(source_metadata.get("page_title") or "")
+        evidence.section = evidence.section or str(source_table.get("section_heading") or "")
+    elif not evidence.text:
+        evidence.text = str(source_metadata.get("first_paragraph") or "")
+        evidence.url = evidence.url or str(source_metadata.get("canonical_url") or source_metadata.get("source_url") or "")
+        evidence.source_title = evidence.source_title or str(source_metadata.get("page_title") or "")
+
+    notes = [
+        str(note)
+        for note in record.get("notes", [])
+        if str(note) != "wikipedia_infobox_incomplete_tie_answer"
+    ]
+    candidate = GeneratedCandidate(
+        source_type=str(record.get("source_type") or "wikipedia_tables"),
+        generation_route=str(record.get("generation_route") or "route3_wikipedia_infobox"),
+        question=question,
+        canonical_question=str(record.get("canonical_question") or question),
+        rewritten_question=question,
+        answer=answer,
+        answer_aliases=answer_aliases,
+        subject_entity=subject_entity,
+        answer_entity=answer_entity,
+        relation_or_claim=relation_or_claim or "wikipedia_table_composition",
+        evidence=evidence,
+        question_family=str(record.get("question_family") or "wikipedia_infobox_table_composition"),
+        answer_type=answer_type,
+        topic=str(record.get("topic") or record.get("domain") or "Wikipedia semi-structured data"),
+        target_time=str(record.get("target_time") or ""),
+        source_template_domain=str(record.get("template_key") or "wikipedia_infobox_table"),
+        search_queries=search_queries,
+        notes=notes,
+        source_metadata=source_metadata,
+    )
+    return candidate
+
+
+def _record_disabled_tie_warning(record: dict, source_metadata: dict) -> None:
+    """Preserve disabled incomplete-tie rejections as metadata warnings."""
+    notes = {str(note) for note in record.get("notes", [])}
+    if (
+        str(record.get("rejection_reason", "")) != "wikipedia_infobox_incomplete_tie_answer"
+        and "wikipedia_infobox_incomplete_tie_answer" not in notes
+    ):
+        return
+    warnings = source_metadata.setdefault("route_guard_warnings", {})
+    if isinstance(warnings, dict):
+        warnings["wikipedia_infobox_incomplete_tie_answer"] = str(
+            source_metadata.get("discard_reason") or "disabled_incomplete_tie_answer_guard"
+        )
+
+
+def _should_use_llm_response(record: dict, llm_response: dict) -> bool:
+    """Return whether stored Route 3 LLM output should rebuild the candidate."""
+    if not llm_response:
+        return False
+    if not str(llm_response.get("question", "")).strip():
+        return False
+    if not str(llm_response.get("answer", "")).strip() and not isinstance(llm_response.get("answer"), list):
+        return False
+    return True
+
+
+def _entity_reference(value: object, *, fallback_name: str = "") -> EntityReference:
+    """Convert a serialized entity object into an EntityReference."""
+    if not isinstance(value, dict):
+        return EntityReference(name=fallback_name)
+    return EntityReference(
+        name=str(value.get("name") or fallback_name),
+        qid=str(value.get("qid") or ""),
+        wikipedia_title=str(value.get("wikipedia_title") or ""),
+        url=str(value.get("url") or ""),
+    )
+
+
+def _evidence_record(value: object) -> EvidenceRecord:
+    """Convert a serialized evidence object into an EvidenceRecord."""
+    if not isinstance(value, dict):
+        return EvidenceRecord()
+    return EvidenceRecord(
+        text=str(value.get("text") or ""),
+        url=str(value.get("url") or ""),
+        source_title=str(value.get("source_title") or ""),
+        section=str(value.get("section") or ""),
+        retrieved_at=str(value.get("retrieved_at") or ""),
+    )
+
+
+def _selected_source_table(source_metadata: dict, llm_response: dict) -> dict:
+    """Return selected source-table metadata from a prior run record."""
+    selected = source_metadata.get("selected_source_table")
+    if isinstance(selected, dict) and selected:
+        return selected
+    try:
+        table_index = int(llm_response.get("source_table"))
+    except (TypeError, ValueError):
+        table_index = -1
+    tables = source_metadata.get("parsed_tables", [])
+    if isinstance(tables, list):
+        for table in tables:
+            if isinstance(table, dict) and int(table.get("table_index", -2)) == table_index:
+                return table
+    return {}
+
+
+def _url_entries_from_candidates(candidates: list[GeneratedCandidate]) -> list[UrlEntry]:
+    """Build summary URL rows from loaded candidate metadata."""
+    entries: list[UrlEntry] = []
+    seen: set[str] = set()
+    for candidate in candidates:
+        metadata = candidate.source_metadata
+        url = str(metadata.get("source_url") or metadata.get("canonical_url") or candidate.subject_entity.url)
+        if not url or url in seen:
+            continue
+        seen.add(url)
+        entries.append(UrlEntry(url=url, domain=str(metadata.get("content_domain") or "")))
+    return entries
+
+
+def _string_list(value: object) -> list[str]:
+    """Return a clean string list."""
+    if not isinstance(value, list):
+        return []
+    return [str(item).strip() for item in value if str(item).strip()]
 
 
 def _optional_proxy(value: str) -> str | None:

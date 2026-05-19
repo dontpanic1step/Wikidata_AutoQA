@@ -204,11 +204,19 @@ def process_generated_candidates(
         )
         if surface_reason is not None:
             candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            candidate.source_metadata["surface_validation_failure_reason"] = surface_reason
+            candidate.validation = {
+                "rewrite_guard_passed": False,
+                "surface_validation_failure_reason": surface_reason,
+            }
             _record_candidate_timings(candidate, candidate_timings)
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason="rewrite_guard_rejected",
-                    notes={"failure_reason": surface_reason},
+                    notes={
+                        "failure_reason": surface_reason,
+                        "surface_validation_failure_reason": surface_reason,
+                    },
                 )
             )
             continue
@@ -227,6 +235,7 @@ def process_generated_candidates(
                 max_full_question_hit_rate=settings.search_longtail_max_full_question_hit_rate,
                 max_keyword_hit_rate=settings.search_longtail_max_keyword_hit_rate,
                 max_overall_hit_rate=settings.search_longtail_max_overall_hit_rate,
+                max_parallel_queries=settings.duckduckgo_parallel_queries,
             )
             candidate_timings["duckduckgo_search_seconds"] = _elapsed(search_start)
             search_features["duration_seconds"] = candidate_timings["duckduckgo_search_seconds"]
@@ -420,7 +429,12 @@ def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, set
         candidate.notes.append("rewrite_disabled")
         return
     forbidden_patterns = ["current", "currently", "latest", "most recent", "as of now"]
-    payload = _build_route_rewrite_payload(candidate, settings.cutoff_year, forbidden_patterns)
+    payload = _build_route_rewrite_payload(
+        candidate,
+        settings.cutoff_year,
+        forbidden_patterns,
+        search_query_count=settings.generated_search_query_count,
+    )
     if candidate.generation_route == "kelm_bootstrap_half_pipeline":
         payload = {
             "task_type": "kelm_question_and_queries",
@@ -430,6 +444,7 @@ def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, set
             "answer_aliases": candidate.answer_aliases,
             "forbidden_patterns": forbidden_patterns,
             "cutoff_year": settings.cutoff_year,
+            "search_query_count": settings.generated_search_query_count,
         }
     try:
         rewritten = rewrite_client.rewrite_question(payload)
@@ -514,6 +529,8 @@ def _build_route_rewrite_payload(
     candidate: GeneratedCandidate,
     cutoff_year: int,
     forbidden_patterns: list[str],
+    *,
+    search_query_count: int,
 ) -> dict[str, object]:
     """Build a shared rewrite payload with route-specific inputs."""
     payload: dict[str, object] = {
@@ -525,6 +542,7 @@ def _build_route_rewrite_payload(
         "target_property": candidate.relation_or_claim,
         "cutoff_year": cutoff_year,
         "forbidden_patterns": forbidden_patterns,
+        "search_query_count": search_query_count,
     }
     source_candidate = candidate.source_candidate
     if candidate.generation_route == "route1_wikidata_light" and source_candidate is not None:

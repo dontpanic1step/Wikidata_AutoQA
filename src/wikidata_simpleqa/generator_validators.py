@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import json
 import re
 from typing import Any
@@ -9,7 +10,7 @@ from typing import Any
 from .cheap_model_qa import parse_json_object
 from .entity_normalization import normalize_name
 from .generation_models import GeneratedCandidate
-from .number_reference import get_number_reference_margin, number_margin_hits
+from .number_reference import extract_number_mentions, format_decimal, get_number_reference_margin, number_margin_hits, parse_number_token
 from .validators import (
     YEAR_PATTERN,
     candidate_is_time_invariant,
@@ -110,6 +111,7 @@ COUNTRY_ALIAS_GROUPS = [
     {"united arab emirates", "uae", "u a e"},
 ]
 ISO_DATE_PATTERN = re.compile(r"^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})$")
+ISO_MONTH_PATTERN = re.compile(r"^(?P<year>\d{4})-(?P<month>\d{2})$")
 LONG_DATE_PATTERN = re.compile(
     r"^(?P<month>[a-z]+)\s+(?P<day>\d{1,2})\s+(?P<year>\d{4})$"
 )
@@ -118,6 +120,19 @@ DMY_DATE_PATTERN = re.compile(
 )
 INTEGER_PATTERN = re.compile(r"^-?\d+$")
 NUMBER_IN_TEXT_PATTERN = re.compile(r"\b\d[\d,]*\b")
+GENERIC_TABLE_SOURCE_PATTERN = re.compile(
+    r"\baccording\s+to\s+(?:the|this|that|provided|source)?\s*(?:[\w\s,'&().-]{0,80}\s+)?table\b",
+    flags=re.IGNORECASE,
+)
+WELL_KNOWN_TABLE_SOURCE_TERMS = (
+    "billboard",
+    "hot 100",
+    "uk singles chart",
+    "official singles chart",
+    "official albums chart",
+    "unesco",
+    "world heritage list",
+)
 
 
 def run_fact_level_longtail_prefilter(
@@ -229,6 +244,8 @@ def evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
     normalized_evidence = normalize_name(candidate.evidence.text)
     if not normalized_evidence:
         return False
+    if _text_contains_answer(candidate.evidence.text, _build_answer_matchers(candidate)):
+        return True
     answer_items = candidate.source_metadata.get("answer_items", [])
     if isinstance(answer_items, list) and answer_items:
         return all(
@@ -253,8 +270,8 @@ def validate_question_surface(
     if not question.strip():
         return "missing_question"
     if not _question_has_subject_anchor(question, candidate):
-        return "lost_subject_anchor"
-    if question_leaks_any_answer(question, _answer_labels_for_leakage(candidate), candidate.answer_aliases):
+        _record_surface_warning(candidate, "lost_subject_anchor")
+    if _question_leaks_candidate_answer(question, candidate):
         return "answer_leakage"
     source_candidate = candidate.source_candidate
     if source_candidate is not None:
@@ -263,8 +280,6 @@ def validate_question_surface(
             return "lost_required_reasoning_clue"
         if question_leaks_bridge_entities(question, source_candidate):
             return "bridge_entity_leakage"
-    if question_targets_mutable_fact(question):
-        return "mutable_fact_wording"
     if not is_simple_question(question):
         return "not_simple_question"
     if has_forbidden_temporal_text(question):
@@ -274,6 +289,48 @@ def validate_question_surface(
         if any(year >= cutoff_year for year in years):
             return "cutoff_year_exceeded"
     return None
+
+
+def _record_surface_warning(candidate: GeneratedCandidate, warning: str) -> None:
+    """Attach a non-blocking surface warning without duplicating entries."""
+    warnings = candidate.source_metadata.setdefault("surface_validation_warnings", [])
+    if isinstance(warnings, list) and warning not in warnings:
+        warnings.append(warning)
+
+
+def _question_leaks_candidate_answer(question: str, candidate: GeneratedCandidate) -> bool:
+    """Return whether the question leaks the answer, with numeric-safe matching."""
+    if candidate.answer_type == "Number":
+        answer_numbers = _answer_number_values(candidate)
+        if answer_numbers:
+            question_numbers = {
+                format_decimal(value)
+                for value in extract_number_mentions(question)
+            }
+            return bool(answer_numbers.intersection(question_numbers))
+    return question_leaks_any_answer(
+        question,
+        _answer_labels_for_leakage(candidate),
+        candidate.answer_aliases,
+    )
+
+
+def _answer_number_values(candidate: GeneratedCandidate) -> set[str]:
+    """Return normalized numeric values from a numeric answer and aliases."""
+    values: set[str] = set()
+    for raw_value in [*_answer_labels_for_leakage(candidate), *candidate.answer_aliases]:
+        value = parse_number_token(str(raw_value))
+        if value is not None:
+            values.add(format_decimal(value))
+    return values
+
+
+def _uses_generic_table_source_wording(question: str) -> bool:
+    """Return whether a question leans on generic source-table wording."""
+    lowered = question.lower()
+    if not GENERIC_TABLE_SOURCE_PATTERN.search(lowered):
+        return False
+    return not any(term in lowered for term in WELL_KNOWN_TABLE_SOURCE_TERMS)
 
 
 def _question_has_subject_anchor(question: str, candidate: GeneratedCandidate) -> bool:
@@ -310,11 +367,23 @@ def run_search_based_longtail_verifier(
     max_full_question_hit_rate: float,
     max_keyword_hit_rate: float,
     max_overall_hit_rate: float,
+    max_parallel_queries: int = 1,
 ) -> tuple[bool, dict[str, Any]]:
     """Run the stricter post-rewrite search-based long-tail verification."""
     queries = _build_longtail_queries(candidate)
+    query_plan = [
+        {
+            "query_index": index,
+            "query_name": query_name,
+            "query_text": query_text,
+            "query_category": query_category,
+        }
+        for index, (query_name, query_text, query_category) in enumerate(queries)
+    ]
     features: dict[str, Any] = {
         "top_k": top_k,
+        "max_parallel_queries": max_parallel_queries,
+        "early_stopped": False,
         "queries": [],
         "category_hit_rates": {},
         "thresholds": {
@@ -328,56 +397,74 @@ def run_search_based_longtail_verifier(
     answer_matchers = _build_answer_matchers(candidate)
     normalized_question = normalize_name(candidate.final_question)
 
-    for query_name, query_text, query_category in queries:
-        results = search_client.search(query_text, max_results=top_k)
-        title_hits = 0
-        snippet_hits = 0
-        exact_question_hit = False
-        answer_hit_results = 0
-        serialized_results: list[dict[str, Any]] = []
-        for result in results:
-            normalized_title = normalize_name(result.title)
-            normalized_snippet = normalize_name(result.snippet)
-            title_number_margin_hits = _answer_number_margin_hits(result.title, answer_matchers)
-            snippet_number_margin_hits = _answer_number_margin_hits(result.snippet, answer_matchers)
-            title_hit = bool(title_number_margin_hits) or _text_contains_answer(result.title, answer_matchers)
-            snippet_hit = bool(snippet_number_margin_hits) or _text_contains_answer(result.snippet, answer_matchers)
-            if title_hit:
-                title_hits += 1
-            if snippet_hit:
-                snippet_hits += 1
-            if title_hit or snippet_hit:
-                answer_hit_results += 1
-            if normalized_question and normalized_question in normalized_title:
-                exact_question_hit = True
-            serialized_results.append(
-                {
-                    "title": result.title,
-                    "snippet": result.snippet,
-                    "url": result.url,
-                    "answer_hit": bool(title_hit or snippet_hit),
-                    "title_number_margin_hits": title_number_margin_hits,
-                    "snippet_number_margin_hits": snippet_number_margin_hits,
-                }
-            )
-        features["queries"].append(
-            {
-                "query_name": query_name,
-                "query_category": query_category,
-                "query": query_text,
-                "result_count": len(results),
-                "title_hits": title_hits,
-                "snippet_hits": snippet_hits,
-                "answer_hit_results": answer_hit_results,
-                "exact_question_hit": exact_question_hit,
-                "results": serialized_results,
-            }
-        )
-        if exact_question_hit and not features["triggered_rule"]:
-            features["passed"] = False
-            features["triggered_rule"] = f"{query_name}:exact_question_hit"
-            break
+    max_workers = max(1, int(max_parallel_queries or 1))
+    next_query_index = 0
+    pending = {}
+    executor = ThreadPoolExecutor(max_workers=max_workers)
+    try:
+        while next_query_index < len(query_plan) or pending:
+            while next_query_index < len(query_plan) and len(pending) < max_workers:
+                row = query_plan[next_query_index]
+                future = executor.submit(
+                    _run_one_longtail_query,
+                    row,
+                    search_client,
+                    top_k,
+                    answer_matchers,
+                    normalized_question,
+                )
+                pending[future] = row
+                next_query_index += 1
+            if not pending:
+                break
+            done, _ = wait(pending, return_when=FIRST_COMPLETED)
+            for future in done:
+                pending.pop(future)
+                row = future.result()
+                features["queries"].append(row)
+                features["queries"].sort(key=lambda item: int(item.get("query_index", 0)))
+                if row.get("exact_question_hit") and not features["triggered_rule"]:
+                    features["passed"] = False
+                    features["triggered_rule"] = f"{row.get('query_name', 'query')}:exact_question_hit"
+                    features["early_stopped"] = True
+                if not features["triggered_rule"]:
+                    title_rule = _first_title_hit_rate_rule(
+                        features["queries"],
+                        full_question_threshold=max_full_question_hit_rate,
+                        keyword_threshold=max_keyword_hit_rate,
+                        overall_threshold=max_overall_hit_rate,
+                    )
+                    if title_rule is not None:
+                        features["passed"] = False
+                        features["triggered_rule"] = title_rule
+                        features["early_stopped"] = True
+                if not features["triggered_rule"]:
+                    impossible_rule = _impossible_hit_rate_recovery_rule(
+                        features["queries"],
+                        query_plan=query_plan,
+                        top_k=top_k,
+                        full_question_threshold=max_full_question_hit_rate,
+                        keyword_threshold=max_keyword_hit_rate,
+                        overall_threshold=max_overall_hit_rate,
+                    )
+                    if impossible_rule is not None:
+                        features["passed"] = False
+                        features["triggered_rule"] = impossible_rule
+                        features["early_stopped"] = True
+                if features["triggered_rule"]:
+                    for pending_future in pending:
+                        pending_future.cancel()
+                    pending.clear()
+                    break
+    finally:
+        executor.shutdown(wait=True, cancel_futures=True)
+
+    for row in features["queries"]:
+        row.pop("query_index", None)
     features["category_hit_rates"] = _compute_category_hit_rates(features["queries"])
+    if features["triggered_rule"]:
+        return False, features
+
     title_rule = _first_title_hit_rate_rule(
         features["queries"],
         full_question_threshold=max_full_question_hit_rate,
@@ -413,6 +500,104 @@ def run_search_based_longtail_verifier(
             features["passed"] = False
             features["triggered_rule"] = "overall:hit_rate_exceeded"
     return bool(features["passed"]), features
+
+
+def _run_one_longtail_query(
+    query_plan_row: dict[str, Any],
+    search_client,
+    top_k: int,
+    answer_matchers: dict[str, Any],
+    normalized_question: str,
+) -> dict[str, Any]:
+    """Run one search query and return its serialized long-tail evidence row."""
+    query_name = str(query_plan_row["query_name"])
+    query_text = str(query_plan_row["query_text"])
+    query_category = str(query_plan_row["query_category"])
+    results = search_client.search(query_text, max_results=top_k)
+    title_hits = 0
+    snippet_hits = 0
+    exact_question_hit = False
+    answer_hit_results = 0
+    serialized_results: list[dict[str, Any]] = []
+    for result in results:
+        normalized_title = normalize_name(result.title)
+        title_number_margin_hits = _answer_number_margin_hits(result.title, answer_matchers)
+        snippet_number_margin_hits = _answer_number_margin_hits(result.snippet, answer_matchers)
+        title_hit = bool(title_number_margin_hits) or _text_contains_answer(result.title, answer_matchers)
+        snippet_hit = bool(snippet_number_margin_hits) or _text_contains_answer(result.snippet, answer_matchers)
+        if title_hit:
+            title_hits += 1
+        if snippet_hit:
+            snippet_hits += 1
+        if title_hit or snippet_hit:
+            answer_hit_results += 1
+        if normalized_question and normalized_question in normalized_title:
+            exact_question_hit = True
+        serialized_results.append(
+            {
+                "title": result.title,
+                "snippet": result.snippet,
+                "url": result.url,
+                "answer_hit": bool(title_hit or snippet_hit),
+                "title_number_margin_hits": title_number_margin_hits,
+                "snippet_number_margin_hits": snippet_number_margin_hits,
+            }
+        )
+    return {
+        "query_index": int(query_plan_row["query_index"]),
+        "query_name": query_name,
+        "query_category": query_category,
+        "query": query_text,
+        "result_count": len(results),
+        "title_hits": title_hits,
+        "snippet_hits": snippet_hits,
+        "answer_hit_results": answer_hit_results,
+        "exact_question_hit": exact_question_hit,
+        "results": serialized_results,
+    }
+
+
+def _impossible_hit_rate_recovery_rule(
+    query_rows: list[dict[str, Any]],
+    *,
+    query_plan: list[dict[str, Any]],
+    top_k: int,
+    full_question_threshold: float,
+    keyword_threshold: float,
+    overall_threshold: float,
+) -> str | None:
+    """Return a rejection rule when remaining queries cannot lower a hit rate enough."""
+    processed_indexes = {int(row.get("query_index", -1)) for row in query_rows}
+    checks = [
+        ("full_question", full_question_threshold),
+        ("keyword_queries", keyword_threshold),
+        ("overall", overall_threshold),
+    ]
+    for category, threshold in checks:
+        if category == "overall":
+            current_rows = [
+                row for row in query_rows if row.get("query_category") in {"full_question", "keyword_queries"}
+            ]
+            remaining_count = sum(
+                1
+                for row in query_plan
+                if int(row["query_index"]) not in processed_indexes
+                and row.get("query_category") in {"full_question", "keyword_queries"}
+            )
+        else:
+            current_rows = [row for row in query_rows if row.get("query_category") == category]
+            remaining_count = sum(
+                1
+                for row in query_plan
+                if int(row["query_index"]) not in processed_indexes
+                and row.get("query_category") == category
+            )
+        hit_results = sum(int(row.get("answer_hit_results", 0)) for row in current_rows)
+        current_results = sum(int(row.get("result_count", 0)) for row in current_rows)
+        possible_total_results = current_results + remaining_count * top_k
+        if possible_total_results and hit_results / possible_total_results > threshold:
+            return f"{category}:hit_rate_exceeded"
+    return None
 
 
 def _first_title_hit_rate_rule(
@@ -637,6 +822,16 @@ def _date_variants(value: str) -> set[str]:
             variants.add(normalize_name(f"{month_alias} {day} {year}"))
             variants.add(normalize_name(f"{day} {month_alias} {year}"))
         variants.add(normalize_name(f"{year} {month} {day}"))
+        return variants
+    match = ISO_MONTH_PATTERN.fullmatch(value.strip())
+    if match:
+        year = match.group("year")
+        month = int(match.group("month"))
+        if 1 <= month <= 12:
+            for month_alias in MONTH_VARIANTS.get(list(MONTH_VARIANTS.keys())[month - 1], ()):
+                variants.add(normalize_name(f"{month_alias} {year}"))
+                variants.add(normalize_name(f"{year} {month_alias}"))
+            variants.add(normalize_name(f"{year} {month}"))
         return variants
     for pattern in (LONG_DATE_PATTERN, DMY_DATE_PATTERN):
         match = pattern.fullmatch(normalized)

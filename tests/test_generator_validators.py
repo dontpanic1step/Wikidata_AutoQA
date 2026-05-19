@@ -148,6 +148,71 @@ class GeneratorValidatorTests(unittest.TestCase):
         )
         self.assertEqual(reason, "cutoff_year_exceeded")
 
+    def test_question_surface_allows_month_names(self) -> None:
+        candidate = make_generated_candidate()
+        reason = validate_question_surface(
+            "Who directed the May release Example Film?",
+            candidate,
+            cutoff_year=2025,
+        )
+        self.assertIsNone(reason)
+
+    def test_question_surface_allows_generic_according_to_table_wording(self) -> None:
+        candidate = make_generated_candidate()
+        reason = validate_question_surface(
+            "Who directed Example Film according to the table?",
+            candidate,
+            cutoff_year=2025,
+        )
+        self.assertIsNone(reason)
+
+    def test_question_surface_allows_named_public_chart_wording(self) -> None:
+        candidate = make_generated_candidate()
+        reason = validate_question_surface(
+            "Who directed Example Film according to the Billboard chart table?",
+            candidate,
+            cutoff_year=2025,
+        )
+        self.assertIsNone(reason)
+
+    def test_question_surface_allows_mutable_wording_when_rule_disabled(self) -> None:
+        candidate = make_generated_candidate()
+        reason = validate_question_surface(
+            "Who is the spouse in Example Film?",
+            candidate,
+            cutoff_year=2025,
+        )
+        self.assertIsNone(reason)
+
+    def test_question_surface_allows_lost_subject_anchor_when_rule_disabled(self) -> None:
+        candidate = make_generated_candidate()
+        reason = validate_question_surface(
+            "Who directed the drama film?",
+            candidate,
+            cutoff_year=2025,
+        )
+        self.assertIsNone(reason)
+        self.assertIn("lost_subject_anchor", candidate.source_metadata["surface_validation_warnings"])
+
+    def test_question_surface_number_leakage_uses_extracted_number_values(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "6"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Number"
+        candidate.answer_entity.name = "6"
+        reason = validate_question_surface(
+            "Which Example Film district had the highest vote count in 2016?",
+            candidate,
+            cutoff_year=2025,
+        )
+        self.assertIsNone(reason)
+        leaked_reason = validate_question_surface(
+            "Which Example Film district was district 6?",
+            candidate,
+            cutoff_year=2025,
+        )
+        self.assertEqual(leaked_reason, "answer_leakage")
+
     def test_search_verifier_rejects_answer_in_title(self) -> None:
         candidate = make_generated_candidate()
         client = FakeSearchClient(
@@ -247,6 +312,40 @@ class GeneratorValidatorTests(unittest.TestCase):
         self.assertFalse(passed)
         self.assertEqual(features["triggered_rule"], "keyword_queries:hit_rate_exceeded")
         self.assertGreater(features["category_hit_rates"]["keyword_queries"]["answer_hit_rate"], 0.1)
+
+    def test_search_verifier_allows_hit_rate_equal_to_threshold(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.search_queries = ["Example Film director query"]
+        client = FakeSearchClient(
+            {
+                "Who directed Example Film?": [
+                    {
+                        "title": f"Question result {index}",
+                        "snippet": "No answer here.",
+                        "url": f"https://example.test/q{index}",
+                    }
+                    for index in range(10)
+                ],
+                "Example Film director query": [
+                    {
+                        "title": f"Keyword result {index}",
+                        "snippet": "Jane Doe appears here." if index < 3 else "No answer here.",
+                        "url": f"https://example.test/k{index}",
+                    }
+                    for index in range(10)
+                ],
+            }
+        )
+        passed, features = run_search_based_longtail_verifier(
+            candidate,
+            search_client=client,
+            top_k=10,
+            max_full_question_hit_rate=0.3,
+            max_keyword_hit_rate=0.3,
+            max_overall_hit_rate=0.3,
+        )
+        self.assertTrue(passed)
+        self.assertEqual(features["category_hit_rates"]["keyword_queries"]["answer_hit_rate"], 0.3)
 
     def test_search_verifier_matches_country_aliases_in_snippets(self) -> None:
         candidate = make_generated_candidate()

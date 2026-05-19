@@ -40,9 +40,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rewrite-base-url", type=str, default="https://openrouter.ai/api/v1")
     parser.add_argument("--enable-second-stage-grading", action="store_true")
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.5)
-    parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.0)
-    parser.add_argument("--search-longtail-max-keyword-hit-rate", type=float, default=0.1)
-    parser.add_argument("--search-longtail-max-overall-hit-rate", type=float, default=0.1)
+    parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.3)
+    parser.add_argument("--search-longtail-max-keyword-hit-rate", type=float, default=0.3)
+    parser.add_argument("--search-longtail-max-overall-hit-rate", type=float, default=0.3)
     parser.add_argument(
         "--live-probe-mode",
         action="store_true",

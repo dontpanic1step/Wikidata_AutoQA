@@ -456,7 +456,12 @@ class GenerationPipelineTests(unittest.TestCase):
             )
         self.assertEqual(result.accepted, [])
         self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+        self.assertEqual(result.rejected[0]["rejection_rule"], "lost_required_reasoning_clue")
         self.assertEqual(result.rejected[0]["rejection_notes"]["failure_reason"], "lost_required_reasoning_clue")
+        self.assertEqual(
+            result.rejected[0]["source_metadata"]["surface_validation_failure_reason"],
+            "lost_required_reasoning_clue",
+        )
 
     def test_process_generated_candidates_uses_llm_generated_kelm_queries(self) -> None:
         source_candidate = make_candidate()

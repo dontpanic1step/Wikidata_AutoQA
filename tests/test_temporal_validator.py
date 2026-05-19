@@ -30,8 +30,8 @@ class TemporalValidatorTests(unittest.TestCase):
     def test_rejects_latest_fact_wording(self) -> None:
         self.assertTrue(has_forbidden_temporal_text("Who won the latest edition of X?"))
 
-    def test_rejects_month_name(self) -> None:
-        self.assertTrue(has_forbidden_temporal_text("Who published X in January?"))
+    def test_allows_month_name_without_year(self) -> None:
+        self.assertFalse(has_forbidden_temporal_text("Who published X in January?"))
 
     def test_allows_non_temporal_disambiguation(self) -> None:
         text = "Who directed the film adaptation of Andy Weir's novel Project Hail Mary?"

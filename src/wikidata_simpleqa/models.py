@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from typing import Any
 
+from .date_reference import normalize_date_answer
 from .number_reference import normalize_number_answer
 
 
@@ -106,16 +107,24 @@ class CandidateFact:
 
     def __post_init__(self) -> None:
         """Normalize generated numeric answers once they enter the candidate model."""
-        if self.answer_type != "Number":
-            return
-        self.answer_labels = [
-            normalize_number_answer(label, self.answer_type)
-            for label in self.answer_labels
-        ]
-        self.answer_aliases = [
-            normalize_number_answer(alias, self.answer_type)
-            for alias in self.answer_aliases
-        ]
+        if self.answer_type == "Number":
+            self.answer_labels = [
+                normalize_number_answer(label, self.answer_type)
+                for label in self.answer_labels
+            ]
+            self.answer_aliases = [
+                normalize_number_answer(alias, self.answer_type)
+                for alias in self.answer_aliases
+            ]
+        elif self.answer_type == "Date":
+            self.answer_labels = [
+                normalize_date_answer(label, self.answer_type)
+                for label in self.answer_labels
+            ]
+            self.answer_aliases = [
+                normalize_date_answer(alias, self.answer_type)
+                for alias in self.answer_aliases
+            ]
 
     def to_output_record(self, example_id: str) -> dict[str, Any]:
         """Return the accepted-output representation."""

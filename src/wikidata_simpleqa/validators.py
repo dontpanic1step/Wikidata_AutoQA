@@ -124,8 +124,6 @@ def has_forbidden_temporal_text(text: str) -> bool:
     """Return whether text contains forbidden temporal content."""
     if YEAR_PATTERN.search(text) or DATE_PATTERN.search(text):
         return True
-    if MONTH_PATTERN.search(text):
-        return True
     return bool(TEMPORAL_PATTERN.search(text))
 
 

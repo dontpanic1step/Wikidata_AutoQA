@@ -78,10 +78,12 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn("Do not narrow or specialize it", prompt)
         self.assertIn("Do not add, remove, narrow, broaden, or change any information", prompt)
         self.assertIn("The rewritten_question must not contain the answer or any answer alias", prompt)
-        self.assertIn("Generate exactly 5 answer-blind search queries", prompt)
+        self.assertIn("Generate exactly 3 answer-blind search queries", prompt)
         self.assertIn("what day, month, and year", prompt)
         self.assertIn("specify the counted quantity or unit", prompt)
         self.assertIn("Do not add units to the reference answer", prompt)
+        self.assertIn("Do not phrase questions as `according to the table`", prompt)
+        self.assertIn("Do not ask cumulative-statistic questions", prompt)
 
     def test_route2_prompt_includes_time_and_number_normalization_rules(self) -> None:
         prompt = build_rewrite_prompt(
@@ -98,6 +100,8 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn("how many months", prompt)
         self.assertIn("specify the counted quantity or unit", prompt)
         self.assertIn("Do not add units to the reference answer", prompt)
+        self.assertIn("Billboard chart or UNESCO list", prompt)
+        self.assertIn("completed event, completed season, or fixed table/list", prompt)
 
     def test_kelm_prompt_requests_queries_and_discard_reason(self) -> None:
         prompt = build_rewrite_prompt(
@@ -118,10 +122,12 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn("capitalization variant", prompt)
         self.assertIn("Do not add, remove, narrow, broaden, or change information", prompt)
         self.assertIn("The rewritten_question must not contain the answer or any alias", prompt)
-        self.assertIn("generate exactly 5 answer-blind search queries", prompt)
+        self.assertIn("generate exactly 3 answer-blind search queries", prompt)
         self.assertIn("what day, month, and year", prompt)
         self.assertIn("Only ask for temporal precision that is actually supported by the source", prompt)
         self.assertIn("Do not add units to the reference answer", prompt)
+        self.assertIn("Do not phrase questions as `according to the table`", prompt)
+        self.assertIn("Do not ask cumulative-statistic questions", prompt)
 
     def test_openrouter_request_constants_are_defined(self) -> None:
         self.assertTrue(OPENROUTER_REFERER.startswith("https://"))

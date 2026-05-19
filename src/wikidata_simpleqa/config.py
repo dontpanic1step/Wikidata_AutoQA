@@ -70,6 +70,8 @@ class Settings:
         "route1_wikidata_light",
     )
     duckduckgo_top_k: int = 10
+    duckduckgo_parallel_queries: int = 3
+    generated_search_query_count: int = 3
     second_stage_grading_enabled: bool = False
     second_stage_grading_models: tuple[LLMConfig, ...] = field(
         default_factory=_default_second_stage_grading_models
@@ -81,9 +83,9 @@ class Settings:
     number_snippet_judge_llm: LLMConfig | None = None
     longtail_prefilter_max_sitelinks: int = 80
     longtail_prefilter_max_claims: int = 400
-    search_longtail_max_full_question_hit_rate: float = 0.0
-    search_longtail_max_keyword_hit_rate: float = 0.1
-    search_longtail_max_overall_hit_rate: float = 0.1
+    search_longtail_max_full_question_hit_rate: float = 0.3
+    search_longtail_max_keyword_hit_rate: float = 0.3
+    search_longtail_max_overall_hit_rate: float = 0.3
     allow_year_in_official_title: bool = False
     reject_future_dated_candidates: bool = True
     reject_current_or_latest_facts: bool = True
@@ -115,6 +117,10 @@ class Settings:
         self._validate_target_time()
         if not 0.0 <= self.second_stage_grading_accuracy_threshold <= 1.0:
             raise ValueError("second_stage_grading_accuracy_threshold must be between 0.0 and 1.0")
+        if self.duckduckgo_parallel_queries < 1:
+            raise ValueError("duckduckgo_parallel_queries must be at least 1")
+        if self.generated_search_query_count < 0:
+            raise ValueError("generated_search_query_count must be non-negative")
         if self.route1_subject_seed_window_granularity not in {"year", "month", "day"}:
             raise ValueError("route1_subject_seed_window_granularity must be one of: year, month, day")
         if self.live_probe_mode:
