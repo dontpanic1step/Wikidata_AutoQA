@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field, replace
+import re
 from time import perf_counter
 
 from .cheap_model_qa import make_cheap_model_qa_client
@@ -417,10 +418,24 @@ def _apply_number_reference_margin(candidate: GeneratedCandidate) -> None:
     """Add SimpleQA Verified-style numeric reference metadata before model grading."""
     if candidate.answer_type != "Number":
         return
+    if _looks_like_year_answer_to_temporal_question(candidate.answer, candidate.final_question):
+        candidate.source_metadata[NUMBER_REFERENCE_MARGIN_KEY] = {
+            "enabled": False,
+            "reason": "temporal_question_year_answer_should_use_date_type",
+            "original_answer": candidate.answer,
+        }
+        return
     candidate.source_metadata[NUMBER_REFERENCE_MARGIN_KEY] = build_number_reference_margin(
         candidate.answer,
         candidate.answer_type,
     )
+
+
+def _looks_like_year_answer_to_temporal_question(answer: str, question: str) -> bool:
+    """Return whether a Number answer appears to be a mislabeled year/date answer."""
+    if re.fullmatch(r"\d{4}(?:\s*\W+\s*\d{2,4})?", answer.strip()) is None:
+        return False
+    return re.search(r"\b(year|date|day|month|when)\b", normalize_name(question)) is not None
 
 
 def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, settings: Settings) -> None:
@@ -451,6 +466,7 @@ def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, set
     except Exception as exc:  # noqa: BLE001
         candidate.notes.append(f"rewrite_failed:{type(exc).__name__}")
         return
+    candidate.source_metadata["small_model_rewrite_response"] = rewritten
     discard_reason_value = rewritten.get("discard_reason")
     discard_reason = ""
     if discard_reason_value not in {None, ""}:

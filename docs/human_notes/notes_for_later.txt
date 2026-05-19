@@ -17,14 +17,8 @@ Other source: https://w3id.org/t-rex (triples + Wikipedia abstracts) (This is be
 我遇到了一个架构设计的问题：SimpleQA Verified在筛选时用到了误差范围。对于答案是数字的题目，在我们的一阶段长尾检查中，我们检查DuckDuckGo检索返回的snippets中是否包含答案。如果一个范围内的数字都可以被接受，那怎么做数字匹配呢？
 金戈答：可以先确定哪些问题需要精确数字匹配、哪些允许误差，然后给后者尝试匹配各种精度下的数字表达（这是个工程问题）
 
-WARNING
-From which university did Naomi C Futhey receive a first degree?
-Answer: University of British Columbia
-Rewritten question: From which university did Naomi C Futhey earn her Doctor of Medicine degree?
-Problem: 
-1, UBC is not Naomi's first university, McGill is. Need to check Wikidata.
-2, Rewritten question added more information (Doctor of Medicine degree), this is forbidden, modify the rewriting prompt.
-3, UBC is an alias for University of British Columbia. In the rewriting prompt, ask the model to output alias(es) for the answer, and look for both answer and its alias(es) in DuckDuckGo snippets.
+Stop using pre-prepared URLS becaused they're biases toward short-tail facts. Download Wikpedia dumps, grade and filter the pages from each sub domain with tables using the system you used in wikipedia seed search.
+introduce "successor" question. like: Who is the next xx after yy? Where did x work after leaving y?
 
 ordinal_tournament_winner	Who won the {ordinal} edition of {descriptor}? -> Who won the {ordinal} {descriptor}? Also, "Who won the 10th edition of NCAA Division III football?" The question itself is wrong. There is no "edition" of a tournament. The 10th season of NCAA Division III football is in 1982.
 

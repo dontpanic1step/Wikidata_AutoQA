@@ -9,7 +9,12 @@ import tempfile
 
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import Settings
-from wikidata_simpleqa.generation_pipeline import process_generated_candidates, run_generation_pipeline
+from wikidata_simpleqa.generation_pipeline import (
+    _apply_number_reference_margin,
+    _build_route_rewrite_payload,
+    process_generated_candidates,
+    run_generation_pipeline,
+)
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generator_validators import run_search_based_longtail_verifier
 from wikidata_simpleqa.grading import ModelPanelMember
@@ -300,6 +305,10 @@ class GenerationPipelineTests(unittest.TestCase):
             ],
         )
         self.assertEqual(result.accepted[0]["answer_aliases"], ["J. Doe", "Jane D."])
+        self.assertEqual(
+            result.accepted[0]["source_metadata"]["small_model_rewrite_response"]["rewritten_question"],
+            "Who directed Example Film according to rewrite director?",
+        )
         self.assertNotIn("rewrite_disabled", result.accepted[0]["notes"])
 
     def test_route1_rewrite_payload_uses_triplet_text_contract(self) -> None:
@@ -771,6 +780,55 @@ class GenerationPipelineTests(unittest.TestCase):
             cheap_features["reason"],
             "cheap_model_longtail_rejection_removed_for_simpleqa_verified_alignment",
         )
+
+    def test_number_reference_margin_is_disabled_for_mislabeled_year_answers(self) -> None:
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route3_wikipedia_infobox",
+            question="What year had the highest number of viewers for the Academy Awards?",
+            canonical_question="What year had the highest number of viewers for the Academy Awards?",
+            answer="1998",
+            answer_aliases=[],
+            subject_entity=EntityReference(name="Academy Awards"),
+            answer_entity=EntityReference(name="1998"),
+            relation_or_claim="max",
+            evidence=EvidenceRecord(text="1998 had the highest viewership."),
+            answer_type="Number",
+            source_metadata={},
+        )
+
+        _apply_number_reference_margin(candidate)
+
+        margin = candidate.source_metadata["number_reference_margin"]
+        self.assertFalse(margin["enabled"])
+        self.assertEqual(margin["reason"], "temporal_question_year_answer_should_use_date_type")
+
+    def test_route3_rewrite_payload_does_not_include_first_paragraph(self) -> None:
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route3_wikipedia_infobox",
+            question="Which stadium hosting the 23rd FIFA World Cup has the largest capacity?",
+            canonical_question="Which stadium hosting the 23rd FIFA World Cup has the largest capacity?",
+            answer="AT&T Stadium",
+            answer_aliases=[],
+            subject_entity=EntityReference(name="2026 FIFA World Cup"),
+            answer_entity=EntityReference(name="AT&T Stadium"),
+            relation_or_claim="max",
+            evidence=EvidenceRecord(text="Venue | Capacity\nAT&T Stadium | 80000"),
+            answer_type="Entity",
+            source_metadata={"first_paragraph": "The 2026 FIFA World Cup is the 23rd FIFA World Cup."},
+        )
+
+        payload = _build_route_rewrite_payload(
+            candidate,
+            cutoff_year=2025,
+            forbidden_patterns=["current"],
+            search_query_count=3,
+        )
+
+        self.assertEqual(payload["task_type"], "generic_question_and_queries")
+        self.assertNotIn("first_paragraph", payload)
+        self.assertNotIn("evidence_text", payload)
 
     def test_process_generated_candidates_records_second_stage_panel_accuracy(self) -> None:
         source_candidate = make_candidate()

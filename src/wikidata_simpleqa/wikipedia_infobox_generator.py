@@ -1,4 +1,4 @@
-"""Wikipedia infobox/table route for composition-style QA generation."""
+"""Wikipedia infobox/table route for table-grounded QA generation."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from .generation_models import EntityReference, EvidenceRecord, GeneratedCandida
 from .entity_normalization import normalize_name
 from .date_reference import normalize_date_answer
 from .number_reference import parse_number_token
-from .wikipedia_client import WikipediaClient, normalize_wikipedia_title
+from .wikipedia_client import WikipediaClient, normalize_wikipedia_page_id, normalize_wikipedia_title
 
 ROUTE_NAME = "route3_wikipedia_infobox"
 SOURCE_TYPE = "wikipedia_tables"
@@ -107,13 +107,14 @@ class WikipediaPageTables:
     canonical_url: str
     content_domain: str
     first_paragraph: str
+    first_paragraph_fetch_error: str
     prose_text: str
     tables: list[WikipediaTable]
 
 
 @dataclass(slots=True)
 class WikipediaInfoboxTableGenerator:
-    """Generate one table-composition QA candidate per supplied Wikipedia URL."""
+    """Generate one table-grounded QA candidate per supplied Wikipedia URL."""
 
     urls: list[str]
     wikipedia_client: WikipediaClient
@@ -123,6 +124,7 @@ class WikipediaInfoboxTableGenerator:
     source_type: str = SOURCE_TYPE
     url_domains: dict[str, str] | None = None
     search_query_count: int = 3
+    enable_rest_summary_fallback: bool = False
 
     def generate(self, *, run_date: str, cutoff_year: int) -> list[GeneratedCandidate]:
         """Generate candidates from up to ``record_limit`` Wikipedia URLs."""
@@ -164,11 +166,18 @@ class WikipediaInfoboxTableGenerator:
         html = str(parse_body.get("text", "")).strip()
 
         paragraph_start = perf_counter()
-        summary = self.wikipedia_client.fetch_summary(title) if title else {}
-        first_paragraph = str(summary.get("extract", "")).strip()
-        timings["first_paragraph_fetch_seconds"] = _elapsed(paragraph_start)
-        if not first_paragraph:
-            first_paragraph = extract_first_paragraph(html)
+        first_paragraph = extract_first_paragraph(html)
+        first_paragraph_fetch_error = ""
+        timings["first_paragraph_extract_seconds"] = _elapsed(paragraph_start)
+        if not first_paragraph and title and self.enable_rest_summary_fallback:
+            paragraph_fetch_start = perf_counter()
+            try:
+                summary = self.wikipedia_client.fetch_summary(title)
+                first_paragraph = str(summary.get("extract", "")).strip()
+            except Exception as exc:  # noqa: BLE001
+                first_paragraph_fetch_error = f"{type(exc).__name__}:{exc}"
+            finally:
+                timings["first_paragraph_fetch_seconds"] = _elapsed(paragraph_fetch_start)
 
         parse_start = perf_counter()
         tables = extract_wikipedia_tables(html)
@@ -180,6 +189,7 @@ class WikipediaInfoboxTableGenerator:
             canonical_url=canonical_url,
             content_domain=self._domain_for_url(url, canonical_url, title),
             first_paragraph=first_paragraph,
+            first_paragraph_fetch_error=first_paragraph_fetch_error,
             prose_text=prose_text,
             tables=tables,
         )
@@ -315,9 +325,10 @@ class WikipediaInfoboxTableGenerator:
         )
         source_table_index = _coerce_table_index(response.get("source_table"))
         source_table = _table_by_index(selected_tables, source_table_index)
+        reasoning_type = _reasoning_type(response)
         tie_problem = _tie_completion_problem(
             source_table=source_table,
-            composition_type=str(response.get("composition_type", "")).strip(),
+            reasoning_type=reasoning_type,
             answer=answer,
             answer_items=answer_items,
         )
@@ -336,8 +347,7 @@ class WikipediaInfoboxTableGenerator:
                 url=page.canonical_url,
             ),
             answer_entity=EntityReference(name=answer),
-            relation_or_claim=str(response.get("composition_type", "wikipedia_table_composition")).strip()
-            or "wikipedia_table_composition",
+            relation_or_claim=reasoning_type or "wikipedia_table_fact",
             evidence=EvidenceRecord(
                 text=evidence_text,
                 url=page.canonical_url,
@@ -345,7 +355,7 @@ class WikipediaInfoboxTableGenerator:
                 section=source_table.section_heading if source_table is not None else "",
                 retrieved_at=run_date,
             ),
-            question_family="wikipedia_infobox_table_composition",
+            question_family="wikipedia_infobox_table_fact",
             answer_type=answer_type,
             topic="Wikipedia semi-structured data",
             target_time=run_date[:4],
@@ -361,6 +371,7 @@ class WikipediaInfoboxTableGenerator:
                 timings=timings,
                 answer_items=answer_items,
                 answer_type=answer_type,
+                reasoning_type=reasoning_type,
                 tie_completion_warning=tie_problem,
                 subject_anchors=_subject_anchor_context(
                     page.title,
@@ -406,17 +417,19 @@ def build_wikipedia_infobox_prompt(
         "Generate one SimpleQA-style factual question from a Wikipedia infobox or table.\n"
         "Return JSON only.\n\n"
         "Requirements:\n"
-        "- Use a composition operation over table rows or values: max, min, sum, count, comparison, or ordinal.\n"
-        "- The answer must be a stable entity/value from the provided table content, or a complete list when the operation has a tie.\n"
+        "- Use either a single fact lookup from the structured source or a table reasoning operation over rows or values: max, min, sum, count, comparison, or ordinal.\n"
+        "- A single fact question is allowed when it asks for one stable value from an infobox or table and is likely to remain long-tail after search filtering.\n"
+        "- The answer must be a stable entity/value from the provided table content, or a complete list when the reasoning operation has a tie.\n"
         "- If max/min/ordinal/count has tied answers, return answer as a JSON array containing every tied answer.\n"
         "- If a table cell has a parenthetical alias, put the plain entity name in answer and the parenthetical text in answer_aliases.\n"
         "- Choose from the top three ranked tables. Prefer rank 1 unless it cannot support a safe question.\n"
-        "- Do not choose an infobox when a higher-ranked article table supports a composition question.\n"
+        "- Prefer a high-quality article table over an infobox when both support a safe, long-tail question.\n"
         "- Prefer table facts that are not easily found in article prose outside tables.\n"
         f"{ANSWER_PRECISION_PROMPT_RULES}"
         "- Use subject_anchors only to understand the page/table scope; do not copy anchor text mechanically into the question.\n"
         "- If the page title contains a cutoff-year marker, use one of safe_subject_aliases when you need to name the subject; do not use the cutoff-year title text.\n"
         "- Let the table caption or nearby section heading define the safe scope. For example, `15 largest commercial banks` supports asking which bank is largest within that listed table, but not how many banks exist in Ukraine. A `1980 chart` table supports asking about facts in that 1980 chart, but not when a song first entered a chart because it may have entered in another year.\n"
+        "- Treat curated list pages such as `List of national parks of the United States` as complete and authoritative for membership within their stated scope. Do not hedge by saying `according to the List of ...`.\n"
         "- Do not write `according to the table`, `according to the [source] table`, or `in the List of ...`. Name the actual entity, event, chart, list, or scope naturally. Only use `according to ...` when the source is a well-known named chart or list, such as a Billboard chart or UNESCO list.\n"
         "- Do not ask cumulative-statistic questions such as how many goals Messi has scored, total wins, career points, revenue, downloads, citations, or followers unless the statistic is explicitly scoped to a historically settled slice, completed event, completed season, or fixed table/list.\n"
         "- Do not use generic phrases like `the listed table`, `the tournament`, or `the award` without naming the source subject.\n"
@@ -426,7 +439,7 @@ def build_wikipedia_infobox_prompt(
         f"- Do not make the question text depend on events in {cutoff_year} or later.\n"
         "- Do not include the answer or answer aliases in the question or search queries.\n"
         f"- Generate exactly {search_query_count} answer-blind search queries.\n"
-        "- If no safe composition question is possible, set discard_reason and leave the other fields empty.\n\n"
+        "- If no safe single fact or table reasoning question is possible, set discard_reason and leave the other fields empty.\n\n"
         "Output schema:\n"
         "{\n"
         '  "question": string,\n'
@@ -434,7 +447,7 @@ def build_wikipedia_infobox_prompt(
         '  "answer_type": "Entity|Number|Date",\n'
         '  "answer_aliases": string[],\n'
         '  "search_queries": string[],\n'
-        '  "composition_type": "max|min|sum|count|comparison|ordinal|other",\n'
+        '  "reasoning_type": "single_fact|max|min|sum|count|comparison|ordinal|other",\n'
         '  "source_table": integer,\n'
         '  "derivation_summary": string,\n'
         '  "discard_reason": string | null\n'
@@ -780,13 +793,15 @@ def _source_metadata(
     timings: dict[str, float],
     answer_items: list[str] | None = None,
     answer_type: str = "",
+    reasoning_type: str = "",
     tie_completion_warning: str = "",
     subject_anchors: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build Route 3 audit metadata."""
     safe_subject_aliases = _first_paragraph_aliases(page.title, page.first_paragraph)
-    return {
+    metadata = {
         "source_url": page.source_url,
+        "page_id": normalize_wikipedia_page_id(page.source_url),
         "canonical_url": page.canonical_url,
         "page_title": page.title,
         "content_domain": page.content_domain,
@@ -799,17 +814,22 @@ def _source_metadata(
         "selected_source_table": source_table.to_metadata() if source_table is not None else {},
         "llm_prompt": llm_prompt,
         "llm_response": llm_response,
+        "small_model_qa_response": llm_response,
         "answer_items": answer_items or [],
         "answer_is_list": bool(answer_items),
         "answer_type": answer_type,
         "route_guard_warnings": {
             "wikipedia_infobox_incomplete_tie_answer": tie_completion_warning,
         } if tie_completion_warning else {},
-        "composition_type": str(llm_response.get("composition_type", "")).strip(),
+        "reasoning_type": reasoning_type or _reasoning_type(llm_response),
+        "legacy_composition_type": str(llm_response.get("composition_type", "")).strip(),
         "derivation_summary": str(llm_response.get("derivation_summary", "")).strip(),
         "phase_timings_seconds": dict(timings),
         "route_validation_policy": "no_route_local_factual_validation; provenance_and_parsed_tables_stored_for_review",
     }
+    if page.first_paragraph_fetch_error:
+        metadata["first_paragraph_fetch_error"] = page.first_paragraph_fetch_error
+    return metadata
 
 
 def _rejected_placeholder(
@@ -843,7 +863,7 @@ def _rejected_placeholder(
             url=canonical_url or url,
         ),
         answer_entity=EntityReference(name=""),
-        relation_or_claim="wikipedia_table_composition",
+        relation_or_claim="wikipedia_table_fact",
         evidence=EvidenceRecord(
             text=first_paragraph,
             url=canonical_url or url,
@@ -854,6 +874,7 @@ def _rejected_placeholder(
         notes=[reason],
         source_metadata={
             "source_url": url,
+            "page_id": normalize_wikipedia_page_id(url),
             "canonical_url": canonical_url or url,
             "page_title": title,
             "content_domain": content_domain,
@@ -862,6 +883,7 @@ def _rejected_placeholder(
             "table_selection": [_selection_payload(row) for row in table_selection or []],
             "llm_prompt": llm_prompt,
             "llm_response": llm_response or {},
+            "small_model_qa_response": llm_response or {},
             "discard_reason": discard_reason,
             "error_message": error_message,
             "phase_timings_seconds": dict(timings),
@@ -955,17 +977,38 @@ def _sanitize_answer_blind_queries(
     return queries[: max(0, max_queries)]
 
 
+def _reasoning_type(response: dict[str, Any]) -> str:
+    """Return the normalized Route 3 reasoning type, accepting legacy composition_type."""
+    raw_value = response.get("reasoning_type")
+    if raw_value in {None, ""}:
+        raw_value = response.get("composition_type")
+    normalized = str(raw_value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    if normalized == "simple_fact":
+        normalized = "single_fact"
+    allowed = {
+        "single_fact",
+        "max",
+        "min",
+        "sum",
+        "count",
+        "comparison",
+        "ordinal",
+        "other",
+    }
+    return normalized if normalized in allowed else "single_fact"
+
+
 def _tie_completion_problem(
     *,
     source_table: WikipediaTable | None,
-    composition_type: str,
+    reasoning_type: str,
     answer: str,
     answer_items: list[str],
 ) -> str:
     """Return a rejection note when a simple grouped max/min table has an incomplete tie answer."""
-    if source_table is None or composition_type not in {"max", "min"}:
+    if source_table is None or reasoning_type not in {"max", "min"}:
         return ""
-    expected_items = _simple_grouped_extreme_items(source_table, composition_type)
+    expected_items = _simple_grouped_extreme_items(source_table, reasoning_type)
     if len(expected_items) <= 1:
         return ""
     provided_items = answer_items or [answer]
@@ -977,7 +1020,7 @@ def _tie_completion_problem(
     return ""
 
 
-def _simple_grouped_extreme_items(table: WikipediaTable, composition_type: str) -> list[str]:
+def _simple_grouped_extreme_items(table: WikipediaTable, reasoning_type: str) -> list[str]:
     """Infer tied max/min answer items from simple two-column grouped numeric tables."""
     if len(table.headers) < 2:
         return []
@@ -1001,7 +1044,7 @@ def _simple_grouped_extreme_items(table: WikipediaTable, composition_type: str) 
                 saw_continuation = True
     if not saw_continuation or not groups:
         return []
-    target_value = max(groups) if composition_type == "max" else min(groups)
+    target_value = max(groups) if reasoning_type == "max" else min(groups)
     return groups.get(target_value, [])
 
 
@@ -1009,14 +1052,20 @@ def _normalize_answer_type(value: Any, answer: str, question: str) -> str:
     """Return a supported answer type with conservative fallback inference."""
     normalized = str(value or "").strip()
     normalized_question = normalize_name(question)
+    normalized_date = normalize_date_answer(answer, "Date")
+    looks_like_temporal_answer = normalized_date != answer.strip() or re.fullmatch(
+        r"\d{4}(?:\s*\W+\s*\d{2,4})?",
+        answer.strip(),
+    ) is not None
+    if looks_like_temporal_answer and any(
+        token in normalized_question
+        for token in ("year", "date", "day", "month", "when")
+    ):
+        return "Date"
     if normalized in {"Number", "Date"}:
         return normalized
     if normalized == "Entity":
         return normalized
-    normalized_date = normalize_date_answer(answer, "Date")
-    if normalized_date != answer.strip() or re.fullmatch(r"\d{4}(?:\s*[-–—/]\s*\d{2,4})?", answer.strip()):
-        if any(token in normalized_question for token in ("year", "date", "day", "month", "when")):
-            return "Date"
     if parse_number_token(answer) is not None:
         return "Number"
     return "Entity"

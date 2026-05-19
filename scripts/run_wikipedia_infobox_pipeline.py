@@ -4,9 +4,13 @@ from __future__ import annotations
 
 import argparse
 import json
+import random
 import sys
-from dataclasses import dataclass
+from collections import Counter, defaultdict
+from dataclasses import dataclass, field
+from json import JSONDecodeError
 from pathlib import Path
+from time import perf_counter
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -17,16 +21,25 @@ from wikidata_simpleqa.cheap_model_qa import make_cheap_model_qa_client
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
-from wikidata_simpleqa.io import write_jsonl
+from wikidata_simpleqa.io import append_jsonl, write_jsonl
 from wikidata_simpleqa.llm_rewrite import make_rewrite_client
 from wikidata_simpleqa.search_client import DuckDuckGoSearchClient
-from wikidata_simpleqa.wikipedia_client import WikipediaClient, normalize_wikipedia_title
+from wikidata_simpleqa.wikipedia_client import WikipediaClient, normalize_wikipedia_page_id, normalize_wikipedia_title
 from wikidata_simpleqa.wikipedia_infobox_generator import (
     WikipediaInfoboxTableGenerator,
     _answer_items,
     _normalize_answer_type,
     _normalize_generated_answer,
+    _reasoning_type,
     _sanitize_answer_blind_queries,
+)
+from wikidata_simpleqa.wikipedia_streaming import (
+    BROAD_TABLE_SEARCH_QUERY,
+    DEFAULT_PAGE_ID_MAX,
+    DEFAULT_PAGE_ID_MIN,
+    DEFAULT_TABLE_SEARCH_QUERIES,
+    PageIdStreamState,
+    build_pageid_url,
 )
 
 
@@ -39,11 +52,89 @@ class UrlEntry:
     subdomain: str = ""
 
 
+@dataclass(slots=True)
+class EndpointResumeState:
+    """Accepted/rejected endpoint files used as a resume checkpoint."""
+
+    enabled: bool = False
+    accepted_records: list[dict] = field(default_factory=list)
+    rejected_records: list[dict] = field(default_factory=list)
+    skipped_lines: list[dict[str, object]] = field(default_factory=list)
+
+    @property
+    def accepted_count(self) -> int:
+        return len(self.accepted_records)
+
+    @property
+    def rejected_count(self) -> int:
+        return len(self.rejected_records)
+
+    @property
+    def final_decision_count(self) -> int:
+        return self.accepted_count + self.rejected_count
+
+    def summary(self) -> dict[str, object]:
+        return {
+            "enabled": self.enabled,
+            "accepted_records_loaded": self.accepted_count,
+            "rejected_records_loaded": self.rejected_count,
+            "final_decisions_loaded": self.final_decision_count,
+            "skipped_malformed_lines": len(self.skipped_lines),
+            "skipped_line_details": self.skipped_lines[:20],
+        }
+
+
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments for the Wikipedia table route."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--url", action="append", default=[], help="Wikipedia URL. Can be repeated.")
     parser.add_argument("--url-file", type=Path, default=None, help="Text file with one Wikipedia URL per line.")
+    parser.add_argument(
+        "--stream-random-page-ids",
+        action="store_true",
+        help="Stream Wikipedia page IDs and process action=parse&pageid records incrementally.",
+    )
+    parser.add_argument(
+        "--stream-state",
+        type=Path,
+        default=ROOT / "outputs" / "wikipedia_infobox_stream_state.json",
+        help="Persistent page-id cache, in-progress list, and rerun pool for streaming mode.",
+    )
+    parser.add_argument("--stream-page-id-min", type=int, default=DEFAULT_PAGE_ID_MIN)
+    parser.add_argument("--stream-page-id-max", type=int, default=DEFAULT_PAGE_ID_MAX)
+    parser.add_argument(
+        "--stream-page-source",
+        choices=["table-search", "random-page-id"],
+        default="table-search",
+        help="How streaming mode finds page IDs before action=parse&pageid processing.",
+    )
+    parser.add_argument(
+        "--stream-search-query",
+        action="append",
+        default=[],
+        help="MediaWiki srsearch query for table-search mode. Can be repeated.",
+    )
+    parser.add_argument(
+        "--enable-broad-table-search",
+        action="store_true",
+        help=r"Also include the broad MediaWiki table query insource:/\{\|/. Off by default.",
+    )
+    parser.add_argument("--stream-search-limit", type=int, default=50)
+    parser.add_argument("--stream-search-max-rounds", type=int, default=10)
+    parser.add_argument("--stream-random-seed", type=int, default=42)
+    parser.add_argument("--stream-batch-size", type=int, default=10)
+    parser.add_argument(
+        "--stream-accepted-target",
+        type=int,
+        default=0,
+        help="Optional accepted-record target; 0 means process --record-limit page IDs.",
+    )
+    parser.add_argument(
+        "--walkthrough-output",
+        type=Path,
+        default=None,
+        help="Optional markdown walkthrough with survival rates, failure reasons, and timings.",
+    )
     parser.add_argument(
         "--candidate-input",
         action="append",
@@ -57,20 +148,33 @@ def parse_args() -> argparse.Namespace:
         default="generate",
         help="Start from URL generation or from existing post-rewrite candidates.",
     )
+    parser.add_argument(
+        "--start-from-endpoint",
+        action="store_true",
+        help=(
+            "Resume from existing accepted/rejected endpoint JSONL files. "
+            "Streaming mode syncs page-ID state and processes the remaining total; URL mode skips completed URLs and appends."
+        ),
+    )
     parser.add_argument("--record-limit", type=int, default=10)
     parser.add_argument("--target-time", type=str, default="2024")
     parser.add_argument("--run-date", type=str, default=None)
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
-    parser.add_argument("--duckduckgo-top-k", type=int, default=10)
+    parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--duckduckgo-parallel-queries", type=int, default=3)
-    parser.add_argument("--generated-search-query-count", type=int, default=3)
+    parser.add_argument("--generated-search-query-count", type=int, default=2)
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--small-model-provider", type=str, default="openrouter")
     parser.add_argument("--small-model", type=str, default="openai/gpt-4.1-mini")
     parser.add_argument("--small-model-api-key-env", type=str, default="OPENROUTER_API_KEY")
     parser.add_argument("--small-model-base-url", type=str, default="https://openrouter.ai/api/v1")
     parser.add_argument("--small-model-max-tokens", type=int, default=1200)
+    parser.add_argument(
+        "--enable-rest-summary-fallback",
+        action="store_true",
+        help="Fetch REST page summaries only when action=parse HTML has no first paragraph. Off by default.",
+    )
     parser.add_argument("--enable-rewrite", action="store_true")
     parser.add_argument("--rewrite-model", type=str, default="openai/gpt-4.1-mini")
     parser.add_argument("--enable-second-stage-grading", action="store_true")
@@ -99,9 +203,23 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     """Run the Wikipedia table route and persist outputs."""
     args = parse_args()
+    endpoint_resume = _load_endpoint_resume(args)
     url_entries = _load_url_entries(args.url, args.url_file)
+    skipped_endpoint_urls: list[str] = []
+    effective_record_limit = args.record_limit
+    if args.start_from_endpoint and args.start_stage == "generate" and not args.stream_random_page_ids:
+        url_entries, skipped_endpoint_urls = _filter_endpoint_url_entries(url_entries, endpoint_resume)
+        effective_record_limit = _remaining_after_endpoint(args.record_limit, endpoint_resume.final_decision_count)
     urls = [entry.url for entry in url_entries]
-    if args.start_stage == "generate" and not urls:
+    if args.stream_random_page_ids and args.start_stage != "generate":
+        raise ValueError("--stream-random-page-ids only supports --start-stage generate.")
+    if args.stream_random_page_ids and args.stream_batch_size < 1:
+        raise ValueError("--stream-batch-size must be at least 1.")
+    if args.stream_random_page_ids and args.stream_search_limit < 1:
+        raise ValueError("--stream-search-limit must be at least 1.")
+    if args.stream_random_page_ids and args.stream_search_max_rounds < 1:
+        raise ValueError("--stream-search-max-rounds must be at least 1.")
+    if args.start_stage == "generate" and not urls and not args.stream_random_page_ids and effective_record_limit > 0:
         raise ValueError("Provide at least one Wikipedia URL with --url or --url-file.")
     if args.start_stage == "validation" and not args.candidate_input:
         raise ValueError("Provide --candidate-input when --start-stage validation is used.")
@@ -126,7 +244,7 @@ def main() -> int:
     settings = Settings(
         target_time=args.target_time,
         run_date=args.run_date or Settings(target_time=args.target_time).run_date,
-        pilot_total=args.record_limit,
+        pilot_total=effective_record_limit,
         cutoff_year=args.cutoff_year,
         timeout_seconds=args.timeout_seconds,
         duckduckgo_top_k=args.duckduckgo_top_k,
@@ -158,8 +276,20 @@ def main() -> int:
     )
     llm_client = make_cheap_model_qa_client(small_llm, settings.timeout_seconds)
     rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds) if settings.rewrite_enabled else None
+    if args.stream_random_page_ids:
+        summary = _run_streaming_page_id_pipeline(
+            args=args,
+            settings=settings,
+            wikipedia_client=wikipedia_client,
+            search_client=search_client,
+            llm_client=llm_client,
+            rewrite_client=rewrite_client,
+            endpoint_resume=endpoint_resume,
+        )
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return 0
     if args.start_stage == "validation":
-        generated_candidates = _load_candidate_inputs(args.candidate_input, limit=args.record_limit)
+        generated_candidates = _load_candidate_inputs(args.candidate_input, limit=effective_record_limit)
         if not generated_candidates:
             raise ValueError("No candidates were loaded from --candidate-input.")
         if not url_entries:
@@ -169,9 +299,10 @@ def main() -> int:
             urls=urls,
             wikipedia_client=wikipedia_client,
             llm_client=llm_client,
-            record_limit=args.record_limit,
+            record_limit=effective_record_limit,
             url_domains=_url_domain_map(url_entries),
             search_query_count=args.generated_search_query_count,
+            enable_rest_summary_fallback=args.enable_rest_summary_fallback,
         )
         generated_candidates = generator.generate(
             run_date=settings.run_date,
@@ -183,31 +314,45 @@ def main() -> int:
         search_client=search_client,
         rewrite_client=rewrite_client,
     )
-    write_jsonl(args.output, result.accepted)
-    write_jsonl(args.rejected_output, result.rejected)
+    _renumber_accepted_records(result.accepted, offset=endpoint_resume.accepted_count if args.start_from_endpoint else 0)
+    if args.start_from_endpoint:
+        append_jsonl(args.output, result.accepted)
+        append_jsonl(args.rejected_output, result.rejected)
+    else:
+        write_jsonl(args.output, result.accepted)
+        write_jsonl(args.rejected_output, result.rejected)
     summary = {
         "start_stage": args.start_stage,
+        "start_from_endpoint": args.start_from_endpoint,
+        "endpoint_resume": endpoint_resume.summary(),
         "candidate_input_paths": [str(path) for path in args.candidate_input],
         "attempted_urls": (
-            min(len(urls), args.record_limit)
+            min(len(urls), effective_record_limit)
             if args.start_stage == "generate"
             else len(generated_candidates)
         ),
+        "skipped_endpoint_urls": skipped_endpoint_urls,
         "url_domains": [
             {"url": entry.url, "domain": entry.domain}
             | ({"subdomain": entry.subdomain} if entry.subdomain else {})
-            for entry in url_entries[: args.record_limit]
+            for entry in url_entries[: effective_record_limit]
         ],
         "generated": len(generated_candidates),
         "accepted": len(result.accepted),
+        "accepted_total": endpoint_resume.accepted_count + len(result.accepted),
         "rejected": len(result.rejected),
+        "rejected_total": endpoint_resume.rejected_count + len(result.rejected),
+        "record_limit": args.record_limit,
+        "record_limit_remaining_at_start": effective_record_limit,
         "output_path": str(args.output),
         "rejected_output_path": str(args.rejected_output),
         "summary_output": str(args.summary_output),
         "enabled_routes": list(settings.enabled_routes),
+        "rest_summary_fallback_enabled": args.enable_rest_summary_fallback,
         "small_model": args.small_model,
         "rewrite_enabled": settings.rewrite_enabled,
         "second_stage_grading_enabled": settings.second_stage_grading_enabled,
+        "duckduckgo_top_k": settings.duckduckgo_top_k,
         "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
         "generated_search_query_count": settings.generated_search_query_count,
         "aggregate_phase_timings_seconds": _aggregate_phase_timings(result.accepted, result.rejected),
@@ -221,6 +366,1280 @@ def main() -> int:
     args.summary_output.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0
+
+
+def _load_endpoint_resume(args: argparse.Namespace) -> EndpointResumeState:
+    """Load existing accepted/rejected output files when endpoint resume is enabled."""
+    if not getattr(args, "start_from_endpoint", False):
+        return EndpointResumeState(enabled=False)
+    accepted_records, accepted_skipped = _load_endpoint_jsonl(args.output, label="accepted")
+    rejected_records, rejected_skipped = _load_endpoint_jsonl(args.rejected_output, label="rejected")
+    return EndpointResumeState(
+        enabled=True,
+        accepted_records=accepted_records,
+        rejected_records=rejected_records,
+        skipped_lines=[*accepted_skipped, *rejected_skipped],
+    )
+
+
+def _load_endpoint_jsonl(path: Path, *, label: str) -> tuple[list[dict], list[dict[str, object]]]:
+    """Load a JSONL endpoint, tolerating a malformed trailing line from a crash."""
+    if not path.exists():
+        return [], []
+    records: list[dict] = []
+    skipped: list[dict[str, object]] = []
+    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), start=1):
+        if not line.strip():
+            continue
+        try:
+            value = json.loads(line)
+        except JSONDecodeError as exc:
+            skipped.append(
+                {
+                    "path": str(path),
+                    "endpoint": label,
+                    "line_number": line_number,
+                    "error": str(exc),
+                }
+            )
+            continue
+        if isinstance(value, dict):
+            records.append(value)
+        else:
+            skipped.append(
+                {
+                    "path": str(path),
+                    "endpoint": label,
+                    "line_number": line_number,
+                    "error": "non_object_jsonl_record",
+                }
+            )
+    return records, skipped
+
+
+def _remaining_after_endpoint(record_limit: int, final_decision_count: int) -> int:
+    """Return how many additional final decisions are needed for a resumed endpoint."""
+    return max(0, int(record_limit) - max(0, int(final_decision_count)))
+
+
+def _filter_endpoint_url_entries(
+    entries: list[UrlEntry],
+    endpoint_resume: EndpointResumeState,
+) -> tuple[list[UrlEntry], list[str]]:
+    """Remove URL entries already present in accepted/rejected endpoint records."""
+    if not endpoint_resume.enabled:
+        return entries, []
+    completed_keys = _endpoint_source_keys(endpoint_resume.accepted_records + endpoint_resume.rejected_records)
+    filtered: list[UrlEntry] = []
+    skipped: list[str] = []
+    for entry in entries:
+        keys = _url_entry_keys(entry)
+        if completed_keys.intersection(keys):
+            skipped.append(entry.url)
+            continue
+        filtered.append(entry)
+    return filtered, skipped
+
+
+def _endpoint_source_keys(records: list[dict]) -> set[str]:
+    """Return URL/title keys represented by endpoint records."""
+    keys: set[str] = set()
+    for record in records:
+        metadata = record.get("source_metadata", {})
+        if not isinstance(metadata, dict):
+            metadata = {}
+        subject_entity = record.get("subject_entity", {})
+        if not isinstance(subject_entity, dict):
+            subject_entity = {}
+        for value in (
+            metadata.get("source_url"),
+            metadata.get("stream_source_url"),
+            metadata.get("canonical_url"),
+            subject_entity.get("url"),
+            metadata.get("page_title"),
+            subject_entity.get("wikipedia_title"),
+        ):
+            keys.update(_source_key_variants(str(value or "")))
+    return keys
+
+
+def _url_entry_keys(entry: UrlEntry) -> set[str]:
+    """Return comparable URL/title keys for a URL entry."""
+    return _source_key_variants(entry.url)
+
+
+def _source_key_variants(value: str) -> set[str]:
+    """Return normalized URL/title/page-ID variants for endpoint matching."""
+    stripped = value.strip()
+    if not stripped:
+        return set()
+    keys = {stripped, stripped.replace(" ", "_")}
+    title = normalize_wikipedia_title(stripped)
+    if title:
+        keys.add(title)
+        keys.add(title.replace(" ", "_"))
+        keys.add("https://en.wikipedia.org/wiki/" + title.replace(" ", "_"))
+    page_id = normalize_wikipedia_page_id(stripped)
+    if page_id is not None:
+        keys.add(str(page_id))
+        keys.add(build_pageid_url(page_id))
+    return {key for key in keys if key}
+
+
+def _endpoint_page_ids(records: list[dict]) -> list[int]:
+    """Extract page IDs from endpoint records for stream-state synchronization."""
+    page_ids: list[int] = []
+    for record in records:
+        metadata = record.get("source_metadata", {})
+        if not isinstance(metadata, dict):
+            metadata = {}
+        streaming = metadata.get("streaming_discovery", {})
+        if not isinstance(streaming, dict):
+            streaming = {}
+        for value in (
+            metadata.get("page_id"),
+            streaming.get("page_id"),
+            normalize_wikipedia_page_id(str(metadata.get("stream_source_url") or "")),
+            normalize_wikipedia_page_id(str(metadata.get("source_url") or "")),
+        ):
+            try:
+                page_id = int(value)
+            except (TypeError, ValueError):
+                continue
+            if page_id > 0:
+                page_ids.append(page_id)
+                break
+    return page_ids
+
+
+def _renumber_accepted_records(records: list[dict], *, offset: int) -> None:
+    """Keep appended accepted records from reusing existing JSONL IDs."""
+    for index, record in enumerate(records, start=offset + 1):
+        record["id"] = f"simpleqa_candidate_{index:06d}"
+
+
+def _run_streaming_page_id_pipeline(
+    *,
+    args: argparse.Namespace,
+    settings: Settings,
+    wikipedia_client: WikipediaClient,
+    search_client: DuckDuckGoSearchClient,
+    llm_client,
+    rewrite_client,
+    endpoint_resume: EndpointResumeState,
+) -> dict:
+    """Process random Wikipedia page IDs and append decisions incrementally."""
+    run_started = perf_counter()
+    if llm_client is None:
+        raise ValueError("Streaming Route 3 requires a small-model client.")
+    state = PageIdStreamState.load(args.stream_state)
+    endpoint_sync = {"accepted_ids_synced": 0, "rejected_ids_synced": 0}
+    if args.start_from_endpoint:
+        endpoint_sync = state.sync_decided_ids(
+            accepted_ids=_endpoint_page_ids(endpoint_resume.accepted_records),
+            rejected_ids=_endpoint_page_ids(endpoint_resume.rejected_records),
+        )
+    recovered_ids = state.recover_stale_in_progress()
+    rng = random.Random(args.stream_random_seed)
+    processed_ids: list[int] = []
+    accepted_records: list[dict] = []
+    rejected_records: list[dict] = []
+    rerun_records: list[dict] = []
+    accepted_target = max(0, int(args.stream_accepted_target or 0))
+    if args.start_from_endpoint and accepted_target:
+        accepted_target = max(0, accepted_target - endpoint_resume.accepted_count)
+    ids_remaining = max(0, int(args.record_limit))
+    if args.start_from_endpoint:
+        ids_remaining = _remaining_after_endpoint(args.record_limit, endpoint_resume.final_decision_count)
+
+    while ids_remaining > 0:
+        if accepted_target and len(accepted_records) >= accepted_target:
+            break
+        batch_size = min(max(1, int(args.stream_batch_size)), ids_remaining)
+        reserved_ids = _reserve_stream_page_ids(
+            state=state,
+            args=args,
+            wikipedia_client=wikipedia_client,
+            rng=rng,
+            count=batch_size,
+        )
+        if not reserved_ids:
+            break
+        for index, page_id in enumerate(reserved_ids):
+            processed_ids.append(page_id)
+            ids_remaining -= 1
+            decision = _process_one_stream_page_id(
+                page_id,
+                args=args,
+                settings=settings,
+                state=state,
+                wikipedia_client=wikipedia_client,
+                search_client=search_client,
+                llm_client=llm_client,
+                rewrite_client=rewrite_client,
+            )
+            accepted_records.extend(decision.get("accepted_records", []))
+            rejected_records.extend(decision.get("rejected_records", []))
+            if decision.get("status") == "rerun":
+                rerun_records.append(decision)
+            if accepted_target and len(accepted_records) >= accepted_target:
+                for unprocessed_page_id in reserved_ids[index + 1 :]:
+                    state.mark_rerun(
+                        unprocessed_page_id,
+                        reason="accepted_target_reached_before_processing",
+                    )
+                break
+
+    all_decision_records = [*accepted_records, *rejected_records]
+    summary = {
+        "start_stage": "generate",
+        "start_from_endpoint": args.start_from_endpoint,
+        "endpoint_resume": {
+            **endpoint_resume.summary(),
+            **endpoint_sync,
+        },
+        "streaming_mode": "page_id_stream",
+        "stream_page_source": args.stream_page_source,
+        "stream_search_queries": _stream_search_queries(args),
+        "stream_broad_table_search_enabled": args.enable_broad_table_search,
+        "stream_search_offsets": state.table_search_offsets.copy(),
+        "run_date": settings.run_date,
+        "stream_state": str(args.stream_state),
+        "stream_state_stats": state.stats(),
+        "rerun_pool_ids_after_run": state.rerun_pool.copy(),
+        "rerun_pool_failure_reasons_after_run": {
+            str(page_id): state.failure_reasons.get(page_id, "")
+            for page_id in state.rerun_pool
+        },
+        "recovered_stale_in_progress_ids": recovered_ids,
+        "page_id_bounds": {
+            "min": args.stream_page_id_min,
+            "max": args.stream_page_id_max,
+        },
+        "random_seed": args.stream_random_seed,
+        "record_limit": args.record_limit,
+        "record_limit_remaining_at_start": ids_remaining + len(processed_ids),
+        "stream_batch_size": args.stream_batch_size,
+        "stream_accepted_target": args.stream_accepted_target,
+        "stream_accepted_target_remaining_at_start": accepted_target,
+        "attempted_page_ids": len(processed_ids),
+        "page_ids": processed_ids,
+        "accepted": len(accepted_records),
+        "accepted_total": endpoint_resume.accepted_count + len(accepted_records),
+        "rejected": len(rejected_records),
+        "rejected_total": endpoint_resume.rejected_count + len(rejected_records),
+        "rerun": len(rerun_records),
+        "wall_clock_seconds": round(perf_counter() - run_started, 4),
+        "output_path": str(args.output),
+        "rejected_output_path": str(args.rejected_output),
+        "summary_output": str(args.summary_output),
+        "walkthrough_output": str(args.walkthrough_output) if args.walkthrough_output else "",
+        "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
+        "enabled_routes": list(settings.enabled_routes),
+        "rest_summary_fallback_enabled": args.enable_rest_summary_fallback,
+        "small_model": args.small_model,
+        "rewrite_enabled": settings.rewrite_enabled,
+        "second_stage_grading_enabled": settings.second_stage_grading_enabled,
+        "duckduckgo_top_k": settings.duckduckgo_top_k,
+        "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
+        "generated_search_query_count": settings.generated_search_query_count,
+        "survival_by_layer": _survival_by_layer(
+            attempted_count=len(processed_ids),
+            rejected_records=rejected_records,
+            rerun_records=rerun_records,
+        ),
+        "failure_reason_counts": _failure_reason_counts(rejected_records, rerun_records),
+        "phase_timing_stats_seconds": _phase_timing_stats(all_decision_records),
+        "aggregate_phase_timings_seconds": _aggregate_phase_timings(accepted_records, rejected_records),
+        "telemetry": {
+            "wikipedia": wikipedia_client.request_events.copy(),
+            "search": search_client.request_events.copy(),
+        },
+    }
+    args.summary_output.parent.mkdir(parents=True, exist_ok=True)
+    args.summary_output.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    if args.walkthrough_output is not None:
+        _write_stream_walkthrough(
+            path=args.walkthrough_output,
+            summary=summary,
+            accepted_records=accepted_records,
+            rejected_records=rejected_records,
+            rerun_records=rerun_records,
+            existing_accepted_records=endpoint_resume.accepted_records if endpoint_resume.enabled else [],
+            existing_rejected_records=endpoint_resume.rejected_records if endpoint_resume.enabled else [],
+        )
+    return summary
+
+
+def _process_one_stream_page_id(
+    page_id: int,
+    *,
+    args: argparse.Namespace,
+    settings: Settings,
+    state: PageIdStreamState,
+    wikipedia_client: WikipediaClient,
+    search_client: DuckDuckGoSearchClient,
+    llm_client,
+    rewrite_client,
+) -> dict:
+    """Run one page ID through generation and shared processing."""
+    url = build_pageid_url(page_id)
+    try:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=[url],
+            wikipedia_client=wikipedia_client,
+            llm_client=llm_client,
+            record_limit=1,
+            url_domains={},
+            search_query_count=args.generated_search_query_count,
+            enable_rest_summary_fallback=args.enable_rest_summary_fallback,
+        )
+        generated_candidates = generator.generate(
+            run_date=settings.run_date,
+            cutoff_year=settings.cutoff_year,
+        )
+        if not generated_candidates:
+            state.mark_rerun(page_id, reason="no_generated_candidate")
+            return {
+                "status": "rerun",
+                "page_id": page_id,
+                "url": url,
+                "reason": "no_generated_candidate",
+            }
+        candidate = generated_candidates[0]
+        _attach_stream_metadata(candidate, page_id=page_id, url=url, args=args)
+        result = process_generated_candidates(
+            [candidate],
+            settings=settings,
+            search_client=search_client,
+            rewrite_client=rewrite_client,
+        )
+        if result.accepted:
+            for index, record in enumerate(result.accepted):
+                record["id"] = f"wikipedia_stream_{len(state.accepted_ids) + index + 1:06d}"
+                _attach_stream_record_metadata(record, page_id=page_id, url=url, args=args)
+            append_jsonl(args.output, result.accepted)
+            state.mark_accepted(page_id)
+            return {
+                "status": "accepted",
+                "page_id": page_id,
+                "url": url,
+                "accepted_records": result.accepted,
+                "rejected_records": [],
+            }
+        if result.rejected:
+            for record in result.rejected:
+                _attach_stream_record_metadata(record, page_id=page_id, url=url, args=args)
+            reason = _exact_failure_reason(result.rejected[0])
+            if _should_rerun_stream_rejection(result.rejected[0]):
+                state.mark_rerun(page_id, reason=reason)
+                return {
+                    "status": "rerun",
+                    "page_id": page_id,
+                    "url": url,
+                    "accepted_records": [],
+                    "rejected_records": [],
+                    "reason": reason,
+                }
+            append_jsonl(args.rejected_output, result.rejected)
+            state.mark_rejected(page_id, reason=reason)
+            return {
+                "status": "rejected",
+                "page_id": page_id,
+                "url": url,
+                "accepted_records": [],
+                "rejected_records": result.rejected,
+                "reason": reason,
+            }
+        state.mark_rerun(page_id, reason="pipeline_no_accept_or_reject")
+        return {
+            "status": "rerun",
+            "page_id": page_id,
+            "url": url,
+            "reason": "pipeline_no_accept_or_reject",
+        }
+    except Exception as exc:  # noqa: BLE001
+        reason = f"pipeline_exception:{type(exc).__name__}"
+        state.mark_rerun(page_id, reason=reason)
+        return {
+            "status": "rerun",
+            "page_id": page_id,
+            "url": url,
+            "reason": reason,
+            "error_message": str(exc),
+        }
+
+
+def _should_rerun_stream_rejection(record: dict) -> bool:
+    """Return whether a rejected stream record represents a transient retryable failure."""
+    reason = str(record.get("rejection_reason", "")).strip()
+    if not reason.startswith("wikipedia_infobox_generation_error:"):
+        return False
+    metadata = record.get("source_metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+    error_text = " ".join(
+        str(value)
+        for value in (
+            reason,
+            metadata.get("error_message", ""),
+            ";".join(str(note) for note in record.get("notes", [])),
+        )
+        if value
+    )
+    retryable_markers = (
+        "URLError",
+        "SSL:",
+        "UNEXPECTED_EOF_WHILE_READING",
+        "RemoteDisconnected",
+        "TimeoutError",
+        "timed out",
+        "ConnectionResetError",
+        "Temporary failure",
+    )
+    return any(marker in error_text for marker in retryable_markers)
+
+
+def _reserve_stream_page_ids(
+    *,
+    state: PageIdStreamState,
+    args: argparse.Namespace,
+    wikipedia_client: WikipediaClient,
+    rng: random.Random,
+    count: int,
+) -> list[int]:
+    """Reserve page IDs from the configured streaming discovery source."""
+    if args.stream_page_source == "random-page-id":
+        return state.reserve_ids(
+            count=count,
+            lower_bound=args.stream_page_id_min,
+            upper_bound=args.stream_page_id_max,
+            rng=rng,
+            prefer_rerun_pool=True,
+        )
+
+    selected = state.reserve_candidate_ids(
+        [],
+        count=count,
+        source="rerun_pool",
+        prefer_rerun_pool=True,
+    )
+    if len(selected) >= count:
+        return selected
+
+    queries = _stream_search_queries(args)
+    rounds = 0
+    while len(selected) < count and rounds < args.stream_search_max_rounds:
+        rounds += 1
+        made_progress = False
+        for query in queries:
+            offset = state.table_search_offset(query)
+            try:
+                hits = wikipedia_client.search_page_ids(
+                    query,
+                    namespace=0,
+                    limit=args.stream_search_limit,
+                    offset=offset,
+                )
+            except Exception as exc:  # noqa: BLE001
+                state.record_discovery_error(
+                    source=f"table_search:{query}:offset={offset}",
+                    error=f"{type(exc).__name__}:{exc}",
+                )
+                continue
+            state.advance_table_search_offset(query, args.stream_search_limit)
+            candidate_ids = [hit.page_id for hit in hits]
+            reserved = state.reserve_candidate_ids(
+                candidate_ids,
+                count=count - len(selected),
+                source=f"table_search:{query}:offset={offset}",
+                prefer_rerun_pool=False,
+            )
+            if hits:
+                made_progress = True
+            selected.extend(reserved)
+            if len(selected) >= count:
+                break
+        if not made_progress:
+            break
+    return selected
+
+
+def _stream_search_queries(args: argparse.Namespace) -> list[str]:
+    """Return table-search queries for streaming discovery."""
+    queries = [query.strip() for query in args.stream_search_query if query.strip()]
+    if not queries:
+        queries = list(DEFAULT_TABLE_SEARCH_QUERIES)
+    if args.enable_broad_table_search and BROAD_TABLE_SEARCH_QUERY not in queries:
+        queries.append(BROAD_TABLE_SEARCH_QUERY)
+    return queries
+
+
+def _attach_stream_metadata(candidate: GeneratedCandidate, *, page_id: int, url: str, args: argparse.Namespace) -> None:
+    """Attach stream sampling metadata to a generated candidate."""
+    _ensure_small_model_response_metadata(candidate.source_metadata)
+    candidate.source_metadata["page_id"] = page_id
+    candidate.source_metadata["stream_source_url"] = url
+    candidate.source_metadata["streaming_discovery"] = {
+        "mode": "page_id_stream",
+        "page_source": args.stream_page_source,
+        "page_id": page_id,
+        "pageid_url": url,
+        "page_id_min": args.stream_page_id_min,
+        "page_id_max": args.stream_page_id_max,
+        "random_seed": args.stream_random_seed,
+        "domain_policy": "domain_and_subdomain_optional",
+    }
+
+
+def _attach_stream_record_metadata(record: dict, *, page_id: int, url: str, args: argparse.Namespace) -> None:
+    """Attach stream sampling metadata to a serialized output record."""
+    metadata = record.setdefault("source_metadata", {})
+    if isinstance(metadata, dict):
+        _ensure_small_model_response_metadata(metadata)
+        metadata["page_id"] = page_id
+        metadata["stream_source_url"] = url
+        metadata["streaming_discovery"] = {
+            "mode": "page_id_stream",
+            "page_source": args.stream_page_source,
+            "page_id": page_id,
+            "pageid_url": url,
+            "page_id_min": args.stream_page_id_min,
+            "page_id_max": args.stream_page_id_max,
+            "random_seed": args.stream_random_seed,
+            "domain_policy": "domain_and_subdomain_optional",
+        }
+
+
+def _ensure_small_model_response_metadata(metadata: dict) -> None:
+    """Keep explicit small-model response keys alongside legacy metadata names."""
+    llm_response = metadata.get("llm_response")
+    if isinstance(llm_response, dict) and "small_model_qa_response" not in metadata:
+        metadata["small_model_qa_response"] = llm_response
+
+
+def _survival_by_layer(
+    *,
+    attempted_count: int,
+    rejected_records: list[dict],
+    rerun_records: list[dict],
+) -> list[dict[str, object]]:
+    """Return layer-by-layer survival stats for a streaming run."""
+    stage_failures = Counter(_rejection_stage(record) for record in rejected_records)
+    if rerun_records:
+        stage_failures["unresolved_rerun"] += len(rerun_records)
+    layers = [
+        ("page_id_reservation", "Page-id reservation"),
+        ("unresolved_rerun", "Unresolved or returned to rerun pool"),
+        ("route_generation", "Page extraction, table grading, and QA generation"),
+        ("rewrite_surface", "Rewrite and surface validation"),
+        ("search_longtail", "DuckDuckGo long-tail filtering"),
+        ("second_stage_grading", "Second-stage model grading"),
+        ("shared_validation", "Shared route-aware validation"),
+        ("deduplication", "Deduplication"),
+        ("other", "Other rejection"),
+    ]
+    rows: list[dict[str, object]] = []
+    entered = attempted_count
+    for stage, label in layers:
+        failed = 0 if stage == "page_id_reservation" else int(stage_failures.get(stage, 0))
+        survived = max(0, entered - failed)
+        rows.append(
+            {
+                "stage": stage,
+                "layer": label,
+                "entered": entered,
+                "failed": failed,
+                "survived": survived,
+                "survival_rate_from_layer_input": _rate(survived, entered),
+                "cumulative_survival_rate": _rate(survived, attempted_count),
+            }
+        )
+        entered = survived
+    return rows
+
+
+def _failure_reason_counts(rejected_records: list[dict], rerun_records: list[dict]) -> list[dict[str, object]]:
+    """Return exact failure reasons grouped by stage."""
+    counts: Counter[tuple[str, str]] = Counter()
+    for record in rejected_records:
+        counts[(_rejection_stage(record), _exact_failure_reason(record))] += 1
+    for record in rerun_records:
+        counts[("unresolved_rerun", str(record.get("reason", "unresolved")))] += 1
+    return [
+        {"stage": stage, "reason": reason, "count": count}
+        for (stage, reason), count in sorted(counts.items(), key=lambda item: (-item[1], item[0][0], item[0][1]))
+    ]
+
+
+def _phase_timing_explanation_rows() -> list[dict[str, str]]:
+    """Return the ordered timing glossary used by walkthroughs."""
+    return [
+        {
+            "order": "0",
+            "phase": "wall_clock_seconds",
+            "kind": "run total",
+            "additive": "No",
+            "meaning": "Elapsed time for the whole streaming command.",
+        },
+        {
+            "order": "1",
+            "phase": "page_fetch_seconds",
+            "kind": "child of total_generation_seconds",
+            "additive": "Yes, within generation only",
+            "meaning": "MediaWiki action=parse fetch for one page.",
+        },
+        {
+            "order": "2",
+            "phase": "first_paragraph_extract_seconds",
+            "kind": "child of total_generation_seconds",
+            "additive": "Yes, within generation only",
+            "meaning": "Local extraction of first paragraph from parse HTML.",
+        },
+        {
+            "order": "3",
+            "phase": "first_paragraph_fetch_seconds",
+            "kind": "optional child of total_generation_seconds",
+            "additive": "Yes, within generation only",
+            "meaning": "REST summary fallback when explicitly enabled and parse HTML lacks a paragraph.",
+        },
+        {
+            "order": "4",
+            "phase": "table_parse_seconds",
+            "kind": "child of total_generation_seconds",
+            "additive": "Yes, within generation only",
+            "meaning": "Local table/prose parsing and table ranking inputs.",
+        },
+        {
+            "order": "5",
+            "phase": "llm_question_generation_seconds",
+            "kind": "child of total_generation_seconds",
+            "additive": "Yes, within generation only",
+            "meaning": "Small-model Route 3 QA generation call.",
+        },
+        {
+            "order": "6",
+            "phase": "total_generation_seconds",
+            "kind": "parent",
+            "additive": "No",
+            "meaning": "Overall Route 3 generation time for one page.",
+        },
+        {
+            "order": "7",
+            "phase": "rewrite_seconds",
+            "kind": "child of total_processing_seconds",
+            "additive": "Yes, within processing only",
+            "meaning": "Shared rewrite call when enabled.",
+        },
+        {
+            "order": "8",
+            "phase": "number_reference_margin_seconds",
+            "kind": "child of total_processing_seconds",
+            "additive": "Yes, within processing only",
+            "meaning": "Numeric reference margin setup for Number answers.",
+        },
+        {
+            "order": "9",
+            "phase": "duckduckgo_search_seconds",
+            "kind": "child of total_processing_seconds",
+            "additive": "Yes, within processing only",
+            "meaning": "DuckDuckGo long-tail queries and leakage scoring.",
+        },
+        {
+            "order": "10",
+            "phase": "second_stage_grading_seconds",
+            "kind": "optional child of total_processing_seconds",
+            "additive": "Yes, within processing only",
+            "meaning": "Model-panel answerability grading when enabled.",
+        },
+        {
+            "order": "11",
+            "phase": "total_processing_seconds",
+            "kind": "parent",
+            "additive": "No",
+            "meaning": "Shared rewrite, filtering, grading, validation, and dedup processing for one candidate.",
+        },
+        {
+            "order": "12",
+            "phase": "candidate_processing_seconds",
+            "kind": "alias",
+            "additive": "No",
+            "meaning": "Alias of total_processing_seconds for compatibility.",
+        },
+    ]
+
+
+def _phase_timing_stats(records: list[dict]) -> dict[str, dict[str, float | int]]:
+    """Return total, average, and max timings by phase."""
+    values_by_phase: dict[str, list[float]] = defaultdict(list)
+    for record in records:
+        timings = record.get("source_metadata", {}).get("phase_timings_seconds", {})
+        if not isinstance(timings, dict):
+            continue
+        for phase, seconds in timings.items():
+            try:
+                values_by_phase[str(phase)].append(float(seconds))
+            except (TypeError, ValueError):
+                continue
+    return {
+        phase: {
+            "count": len(values),
+            "total": round(sum(values), 4),
+            "average": round(sum(values) / len(values), 4),
+            "max": round(max(values), 4),
+        }
+        for phase, values in sorted(values_by_phase.items())
+        if values
+    }
+
+
+def _rejection_stage(record: dict) -> str:
+    """Map one rejected output record to the pipeline stage that rejected it."""
+    reason = str(record.get("rejection_reason", "")).strip()
+    if reason.startswith("wikipedia_infobox_"):
+        return "route_generation"
+    if reason in {"llm_rewrite_discarded", "rewrite_guard_rejected"}:
+        return "rewrite_surface"
+    if reason.startswith("search_longtail_"):
+        return "search_longtail"
+    if reason.startswith("second_stage_grading"):
+        return "second_stage_grading"
+    if reason == "shared_validation_failed":
+        return "shared_validation"
+    if reason.startswith("duplicate_"):
+        return "deduplication"
+    return "other"
+
+
+def _exact_failure_reason(record: dict) -> str:
+    """Return a precise, reviewer-facing failure reason for one rejected record."""
+    reason = str(record.get("rejection_reason", "")).strip() or "unknown_rejection"
+    notes = record.get("rejection_notes", {})
+    if not isinstance(notes, dict):
+        return reason
+    if reason == "rewrite_guard_rejected":
+        rule = record.get("rejection_rule") or notes.get("failure_reason") or notes.get("surface_validation_failure_reason")
+        return f"{reason}:{rule}" if rule else reason
+    if reason == "search_longtail_verifier_rejected":
+        features = notes.get("search_verification_features", {})
+        if isinstance(features, dict) and features.get("triggered_rule"):
+            return f"{reason}:{features['triggered_rule']}"
+    if reason.startswith("second_stage_grading"):
+        features = notes.get("panel_grading_features", {})
+        if isinstance(features, dict):
+            accuracy = features.get("accuracy")
+            threshold = features.get("accuracy_threshold")
+            if accuracy is not None and threshold is not None:
+                return f"{reason}:accuracy={accuracy};threshold={threshold}"
+    if reason == "shared_validation_failed":
+        validation = notes.get("validation", {})
+        if isinstance(validation, dict):
+            failed_keys = [key for key, value in validation.items() if value is False]
+            if failed_keys:
+                return f"{reason}:{','.join(failed_keys)}"
+    metadata = record.get("source_metadata", {})
+    if isinstance(metadata, dict):
+        discard_reason = str(metadata.get("discard_reason") or "").strip()
+        error_message = str(metadata.get("error_message") or "").strip()
+        if discard_reason:
+            return f"{reason}:{discard_reason}"
+        if error_message:
+            return f"{reason}:{error_message[:160]}"
+    return reason
+
+
+def _rate(numerator: int, denominator: int) -> float:
+    """Return a rounded rate, guarding against division by zero."""
+    if denominator <= 0:
+        return 0.0
+    return round(numerator / denominator, 4)
+
+
+def _write_stream_walkthrough(
+    *,
+    path: Path,
+    summary: dict,
+    accepted_records: list[dict],
+    rejected_records: list[dict],
+    rerun_records: list[dict],
+    existing_accepted_records: list[dict] | None = None,
+    existing_rejected_records: list[dict] | None = None,
+) -> None:
+    """Write a markdown walkthrough for a streaming Route 3 run."""
+    existing_accepted_records = existing_accepted_records or []
+    existing_rejected_records = existing_rejected_records or []
+    record_groups = _walkthrough_record_groups(
+        existing_accepted_records=existing_accepted_records,
+        existing_rejected_records=existing_rejected_records,
+        accepted_records=accepted_records,
+        rejected_records=rejected_records,
+    )
+    path.parent.mkdir(parents=True, exist_ok=True)
+    lines: list[str] = []
+    lines.append(f"# Route 3 Streaming Wikipedia Page-ID Walkthrough - {summary.get('run_date', '2026-05-19')}")
+    lines.append("")
+    lines.append("## Stats")
+    lines.append("")
+    lines.append(f"- Mode: `{summary.get('streaming_mode', '')}`")
+    lines.append(f"- Page source: `{summary.get('stream_page_source', '')}`")
+    search_queries = summary.get("stream_search_queries", [])
+    if search_queries:
+        lines.append(f"- Table-search queries: `{'; '.join(str(query) for query in search_queries)}`")
+    endpoint_resume = summary.get("endpoint_resume", {})
+    if isinstance(endpoint_resume, dict) and endpoint_resume.get("enabled"):
+        lines.append(
+            "- Endpoint resume: "
+            f"{endpoint_resume.get('accepted_records_loaded', 0)} accepted and "
+            f"{endpoint_resume.get('rejected_records_loaded', 0)} rejected records loaded"
+        )
+        lines.append(f"- Existing accepted QAs before run: {len(existing_accepted_records)}")
+        lines.append(f"- Existing rejected QAs/pages before run: {len(existing_rejected_records)}")
+    lines.append(f"- Attempted page IDs: {summary.get('attempted_page_ids', 0)}")
+    lines.append(f"- Accepted QAs: {summary.get('accepted', 0)}")
+    if isinstance(endpoint_resume, dict) and endpoint_resume.get("enabled"):
+        lines.append(f"- Accepted QAs after resume: {summary.get('accepted_total', 0)}")
+    lines.append(f"- Rejected QAs/pages: {summary.get('rejected', 0)}")
+    if isinstance(endpoint_resume, dict) and endpoint_resume.get("enabled"):
+        lines.append(f"- Rejected QAs/pages after resume: {summary.get('rejected_total', 0)}")
+    lines.append(f"- Returned to rerun pool without final decision: {summary.get('rerun', 0)}")
+    if summary.get("wall_clock_seconds") is not None:
+        lines.append(f"- Wall-clock runtime: {float(summary.get('wall_clock_seconds', 0.0)):.4f}s")
+    lines.append(f"- DuckDuckGo top K: {summary.get('duckduckgo_top_k', '')}")
+    lines.append(f"- Generated search queries per QA: {summary.get('generated_search_query_count', '')}")
+    lines.append(f"- DuckDuckGo parallel queries: {summary.get('duckduckgo_parallel_queries', '')}")
+    bounds = summary.get("page_id_bounds", {})
+    if isinstance(bounds, dict):
+        lines.append(f"- Page-id bounds: {bounds.get('min')} to {bounds.get('max')}")
+    lines.append(f"- Stream state: `{summary.get('stream_state', '')}`")
+    lines.append(f"- Accepted output: `{summary.get('output_path', '')}`")
+    lines.append(f"- Rejected output: `{summary.get('rejected_output_path', '')}`")
+    lines.append(f"- Domain policy: `{summary.get('domain_policy', '')}`")
+    rerun_pool_ids = summary.get("rerun_pool_ids_after_run", [])
+    if isinstance(rerun_pool_ids, list):
+        lines.append(f"- Rerun pool after run: `{', '.join(str(page_id) for page_id in rerun_pool_ids) or 'empty'}`")
+    lines.append("")
+    if existing_accepted_records or existing_rejected_records:
+        _append_overall_resume_stats(
+            lines,
+            summary=summary,
+            existing_accepted_records=existing_accepted_records,
+            existing_rejected_records=existing_rejected_records,
+            accepted_records=accepted_records,
+            rejected_records=rejected_records,
+            rerun_records=rerun_records,
+        )
+        lines.append("")
+    lines.append("### Survival By Layer")
+    lines.append("")
+    lines.append("| Layer | Entered | Failed | Survived | Layer survival | Cumulative survival |")
+    lines.append("| --- | ---: | ---: | ---: | ---: | ---: |")
+    for row in summary.get("survival_by_layer", []):
+        lines.append(
+            "| {layer} | {entered} | {failed} | {survived} | {layer_rate:.1%} | {cumulative_rate:.1%} |".format(
+                layer=row.get("layer", ""),
+                entered=int(row.get("entered", 0)),
+                failed=int(row.get("failed", 0)),
+                survived=int(row.get("survived", 0)),
+                layer_rate=float(row.get("survival_rate_from_layer_input", 0.0)),
+                cumulative_rate=float(row.get("cumulative_survival_rate", 0.0)),
+            )
+        )
+    lines.append("")
+    lines.append("### Failure Reasons")
+    lines.append("")
+    lines.append("| Stage | Exact reason | Count |")
+    lines.append("| --- | --- | ---: |")
+    for row in summary.get("failure_reason_counts", []):
+        lines.append(f"| `{row.get('stage', '')}` | `{_escape_table_text(str(row.get('reason', '')))}` | {row.get('count', 0)} |")
+    if not summary.get("failure_reason_counts"):
+        lines.append("| n/a | n/a | 0 |")
+    lines.append("")
+    lines.append("### Rerun Pool After Run")
+    lines.append("")
+    rerun_reasons = summary.get("rerun_pool_failure_reasons_after_run", {})
+    if isinstance(rerun_pool_ids, list) and rerun_pool_ids:
+        lines.append("| Page ID | Exact reason |")
+        lines.append("| ---: | --- |")
+        for page_id in rerun_pool_ids:
+            reason = ""
+            if isinstance(rerun_reasons, dict):
+                reason = str(rerun_reasons.get(str(page_id), ""))
+            lines.append(f"| {page_id} | `{_escape_table_text(reason)}` |")
+    else:
+        lines.append("Rerun pool is empty.")
+    lines.append("")
+    lines.append("### Phase Timings")
+    lines.append("")
+    lines.append(
+        "Timing nesting: `wall_clock_seconds` is the whole run. "
+        "`total_generation_seconds` contains page fetch/paragraph/table parse/LLM QA generation for one page. "
+        "`total_processing_seconds` contains rewrite, number margin, DuckDuckGo search, second-stage grading when enabled, "
+        "shared validation, and dedup checks for one generated candidate. "
+        "`candidate_processing_seconds` is an alias of `total_processing_seconds`. "
+        "Child phase totals are useful for bottlenecks, but they should not be added to parent totals."
+    )
+    lines.append("")
+    lines.append("| Pipeline order | Phase | Parent/child | Additive? | Meaning |")
+    lines.append("| ---: | --- | --- | --- | --- |")
+    for row in _phase_timing_explanation_rows():
+        lines.append(
+            "| {order} | `{phase}` | {kind} | {additive} | {meaning} |".format(
+                order=row["order"],
+                phase=row["phase"],
+                kind=row["kind"],
+                additive=row["additive"],
+                meaning=row["meaning"],
+            )
+        )
+    lines.append("")
+    lines.append("| Phase | Count | Total seconds | Average seconds | Max seconds |")
+    lines.append("| --- | ---: | ---: | ---: | ---: |")
+    for phase, stats in summary.get("phase_timing_stats_seconds", {}).items():
+        lines.append(
+            "| `{phase}` | {count} | {total:.4f} | {average:.4f} | {max_value:.4f} |".format(
+                phase=phase,
+                count=int(stats.get("count", 0)),
+                total=float(stats.get("total", 0.0)),
+                average=float(stats.get("average", 0.0)),
+                max_value=float(stats.get("max", 0.0)),
+            )
+        )
+    lines.append("")
+    lines.append("## Accepted Candidates")
+    lines.append("")
+    if existing_accepted_records or existing_rejected_records:
+        lines.append("Existing endpoint records are shown first; incremental records are the records appended by this run.")
+        lines.append("")
+    if any(group_accepted for _, group_accepted, _ in record_groups):
+        for group_label, group_accepted, _ in record_groups:
+            if len(record_groups) > 1:
+                lines.append(f"### {group_label}")
+                lines.append("")
+            if group_accepted:
+                lines.append("| Page ID | Question | Answer | Source |")
+                lines.append("| ---: | --- | --- | --- |")
+                for record in group_accepted:
+                    lines.append(
+                        "| {page_id} | {question} | {answer} | {url} |".format(
+                            page_id=_record_page_id(record),
+                            question=_escape_table_text(str(record.get("question", ""))),
+                            answer=_escape_table_text(str(record.get("answer", ""))),
+                            url=_escape_table_text(str(record.get("source_metadata", {}).get("canonical_url") or record.get("source_metadata", {}).get("stream_source_url") or "")),
+                        )
+                    )
+            else:
+                lines.append("No accepted candidates in this scope.")
+            lines.append("")
+    else:
+        lines.append("No accepted candidates in this run.")
+    _append_second_stage_filtering_responses_section(
+        lines,
+        record_groups=record_groups,
+        rerun_records=rerun_records,
+    )
+    lines.append("")
+    _append_route3_generation_responses_section(
+        lines,
+        record_groups=record_groups,
+        rerun_records=rerun_records,
+    )
+    lines.append("")
+    lines.append("## Rejected And Rerun Decisions")
+    lines.append("")
+    if any(group_rejected for _, _, group_rejected in record_groups) or rerun_records:
+        for group_label, _, group_rejected in record_groups:
+            if len(record_groups) > 1:
+                lines.append(f"### {group_label}")
+                lines.append("")
+            if group_rejected:
+                lines.append("| Page ID | Stage | Exact reason | Page/question |")
+                lines.append("| ---: | --- | --- | --- |")
+                for record in group_rejected:
+                    lines.append(
+                        "| {page_id} | `{stage}` | `{reason}` | {question} |".format(
+                            page_id=_record_page_id(record),
+                            stage=_rejection_stage(record),
+                            reason=_escape_table_text(_exact_failure_reason(record)),
+                            question=_escape_table_text(str(record.get("question", ""))),
+                        )
+                    )
+            else:
+                lines.append("No rejected decisions in this scope.")
+            lines.append("")
+        if rerun_records:
+            lines.append("### Rerun Records")
+            lines.append("")
+            lines.append("| Page ID | Stage | Exact reason | Page/question |")
+            lines.append("| ---: | --- | --- | --- |")
+            for record in rerun_records:
+                lines.append(
+                    "| {page_id} | `unresolved_rerun` | `{reason}` | {url} |".format(
+                        page_id=record.get("page_id", ""),
+                        reason=_escape_table_text(str(record.get("reason", ""))),
+                        url=_escape_table_text(str(record.get("url", ""))),
+                    )
+                )
+    else:
+        lines.append("No rejected or rerun decisions in this run.")
+    lines.append("")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _append_overall_resume_stats(
+    lines: list[str],
+    *,
+    summary: dict,
+    existing_accepted_records: list[dict],
+    existing_rejected_records: list[dict],
+    accepted_records: list[dict],
+    rejected_records: list[dict],
+    rerun_records: list[dict],
+) -> None:
+    """Append overall counts across endpoint-loaded and incremental records."""
+    existing_final = len(existing_accepted_records) + len(existing_rejected_records)
+    attempted = int(summary.get("attempted_page_ids", 0) or 0)
+    incremental_accepted = len(accepted_records)
+    incremental_rejected = len(rejected_records)
+    incremental_rerun = len(rerun_records)
+    overall_pages = existing_final + attempted
+    overall_accepted = len(existing_accepted_records) + incremental_accepted
+    overall_rejected = len(existing_rejected_records) + incremental_rejected
+    lines.append("### Overall Displayed Stats")
+    lines.append("")
+    lines.append("| Scope | Page IDs/records | Accepted | Rejected | Rerun | Accepted/page rate |")
+    lines.append("| --- | ---: | ---: | ---: | ---: | ---: |")
+    lines.append(
+        "| Existing endpoint records | {records} | {accepted} | {rejected} | 0 | {rate:.1%} |".format(
+            records=existing_final,
+            accepted=len(existing_accepted_records),
+            rejected=len(existing_rejected_records),
+            rate=_rate(len(existing_accepted_records), existing_final),
+        )
+    )
+    lines.append(
+        "| Incremental run | {records} | {accepted} | {rejected} | {rerun} | {rate:.1%} |".format(
+            records=attempted,
+            accepted=incremental_accepted,
+            rejected=incremental_rejected,
+            rerun=incremental_rerun,
+            rate=_rate(incremental_accepted, attempted),
+        )
+    )
+    lines.append(
+        "| Overall displayed | {records} | {accepted} | {rejected} | {rerun} | {rate:.1%} |".format(
+            records=overall_pages,
+            accepted=overall_accepted,
+            rejected=overall_rejected,
+            rerun=incremental_rerun,
+            rate=_rate(overall_accepted, overall_pages),
+        )
+    )
+
+
+def _walkthrough_record_groups(
+    *,
+    existing_accepted_records: list[dict],
+    existing_rejected_records: list[dict],
+    accepted_records: list[dict],
+    rejected_records: list[dict],
+) -> list[tuple[str, list[dict], list[dict]]]:
+    """Return record scopes for walkthrough rendering."""
+    if existing_accepted_records or existing_rejected_records:
+        return [
+            ("Existing Endpoint Records", existing_accepted_records, existing_rejected_records),
+            ("Incremental Records", accepted_records, rejected_records),
+        ]
+    return [("Current Run Records", accepted_records, rejected_records)]
+
+
+def _append_second_stage_filtering_responses_section(
+    lines: list[str],
+    *,
+    record_groups: list[tuple[str, list[dict], list[dict]]],
+    rerun_records: list[dict],
+) -> None:
+    """Append exact second-stage small-model QA responses to the walkthrough."""
+    lines.append("## Second-Stage Filtering Responses")
+    lines.append("")
+    lines.append(
+        "These are the small-model QA responses used by the second-stage filter: "
+        "`openai/gpt-4.1-mini` and `google/gemini-3-flash-preview`. "
+        "Route 3 generation and rewrite outputs are listed separately below."
+    )
+    lines.append("")
+    if any(group_accepted or group_rejected for _, group_accepted, group_rejected in record_groups):
+        for group_label, group_accepted, group_rejected in record_groups:
+            records = [*group_accepted, *group_rejected]
+            if len(record_groups) > 1:
+                lines.append(f"### {group_label}")
+                lines.append("")
+            if records:
+                lines.append("| Page ID | Question | Reference answer | openai/gpt-4.1-mini | google/gemini-3-flash-preview |")
+                lines.append("| ---: | --- | --- | --- | --- |")
+                for record in records:
+                    features = _second_stage_panel_features(record)
+                    lines.append(
+                        "| {page_id} | {question} | {reference_answer} | {openai} | {gemini} |".format(
+                            page_id=_record_page_id(record),
+                            question=_escape_table_text(str(record.get("question", ""))),
+                            reference_answer=_escape_table_text(_second_stage_reference_answer(record, features)),
+                            openai=_escape_table_text(_second_stage_model_cell(features, "openai/gpt-4.1-mini")),
+                            gemini=_escape_table_text(_second_stage_model_cell(features, "google/gemini-3-flash-preview")),
+                        )
+                    )
+                lines.append("")
+            else:
+                lines.append("No final candidate records in this scope.")
+                lines.append("")
+    else:
+        lines.append("No final candidate records were produced in this run.")
+    if rerun_records:
+        lines.append("")
+        lines.append("Rerun-pool entries have no second-stage filtering response unless they reached the panel before the transient failure.")
+
+
+def _append_route3_generation_responses_section(
+    lines: list[str],
+    *,
+    record_groups: list[tuple[str, list[dict], list[dict]]],
+    rerun_records: list[dict],
+) -> None:
+    """Append exact parsed Route 3 generation and rewrite responses to the walkthrough."""
+    lines.append("## Route 3 Generation Responses")
+    lines.append("")
+    lines.append("These are the source-page QA generation and rewrite responses, not the second-stage small-model QA panel.")
+    lines.append("")
+    if any(group_accepted or group_rejected for _, group_accepted, group_rejected in record_groups):
+        for group_label, group_accepted, group_rejected in record_groups:
+            records = [*group_accepted, *group_rejected]
+            accepted_record_ids = {id(record) for record in group_accepted}
+            if len(record_groups) > 1:
+                lines.append(f"### {group_label}")
+                lines.append("")
+            if records:
+                for record in records:
+                    decision = "accepted" if id(record) in accepted_record_ids else _rejection_stage(record)
+                    decision_reason = "accepted" if decision == "accepted" else _exact_failure_reason(record)
+                    heading_level = "####" if len(record_groups) > 1 else "###"
+                    lines.append(f"{heading_level} Page {_record_page_id(record)} - {decision}")
+                    lines.append("")
+                    lines.append(f"- Exact failure/rejection reason: `{_escape_inline_code(decision_reason)}`")
+                    lines.append("")
+                    lines.append("Route 3 generation response:")
+                    lines.append("")
+                    lines.append("```json")
+                    lines.append(_small_model_qa_response_text(record))
+                    lines.append("```")
+                    rewrite_response = _small_model_rewrite_response_text(record)
+                    if rewrite_response:
+                        lines.append("")
+                        lines.append("Rewrite response:")
+                        lines.append("")
+                        lines.append("```json")
+                        lines.append(rewrite_response)
+                        lines.append("```")
+                    lines.append("")
+            else:
+                lines.append("No Route 3 generation responses in this scope.")
+                lines.append("")
+    else:
+        lines.append("No Route 3 generation responses were produced in this run.")
+    if rerun_records:
+        lines.append("")
+        lines.append("Rerun-pool entries have no final Route 3 generation response unless generation reached the model before the transient failure.")
+
+
+def _second_stage_panel_features(record: dict) -> dict:
+    """Return the stored second-stage panel features for an accepted or rejected record."""
+    features = record.get("panel_grading_features")
+    if isinstance(features, dict):
+        return features
+    notes = record.get("rejection_notes", {})
+    if isinstance(notes, dict):
+        features = notes.get("panel_grading_features")
+        if isinstance(features, dict):
+            return features
+    return {}
+
+
+def _second_stage_reference_answer(record: dict, features: dict) -> str:
+    """Return the reference answer displayed for one second-stage row."""
+    reference = features.get("reference_answer_for_grading") or features.get("gold_answer")
+    if reference is not None:
+        return str(reference)
+    return str(record.get("answer", ""))
+
+
+def _second_stage_model_cell(features: dict, model_name: str) -> str:
+    """Return a compact grade/prediction cell for one panel model."""
+    models = features.get("models")
+    if not isinstance(models, list):
+        return "not run"
+    for row in models:
+        if not isinstance(row, dict) or row.get("model") != model_name:
+            continue
+        grade = str(row.get("grade", "UNKNOWN")).strip() or "UNKNOWN"
+        predicted_answer = str(row.get("predicted_answer", "")).strip()
+        if predicted_answer:
+            return f"{grade}; predicted_answer: {predicted_answer}"
+        return f"{grade}; predicted_answer:"
+    return "not run"
+
+
+def _has_second_stage_model_responses(features: dict) -> bool:
+    """Return whether panel features include concrete model answer rows."""
+    models = features.get("models")
+    return isinstance(models, list) and any(isinstance(row, dict) and row.get("predicted_answer") is not None for row in models)
+
+
+def _small_model_qa_response_text(record: dict) -> str:
+    """Return a compact JSON rendering of one generation-model QA response."""
+    metadata = record.get("source_metadata", {})
+    if not isinstance(metadata, dict):
+        return ""
+    response = metadata.get("small_model_qa_response")
+    if not isinstance(response, dict):
+        response = metadata.get("llm_response")
+    return _walkthrough_json(response)
+
+
+def _small_model_rewrite_response_text(record: dict) -> str:
+    """Return a compact JSON rendering of one rewrite-model response."""
+    metadata = record.get("source_metadata", {})
+    if not isinstance(metadata, dict):
+        return ""
+    return _walkthrough_json(metadata.get("small_model_rewrite_response"))
+
+
+def _walkthrough_json(value: object) -> str:
+    """Return full pretty JSON text for markdown walkthrough blocks."""
+    if not value:
+        return "{}"
+    try:
+        return json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2)
+    except TypeError:
+        return json.dumps(str(value), ensure_ascii=False, indent=2)
+
+
+def _record_page_id(record: dict) -> int | str:
+    metadata = record.get("source_metadata", {})
+    if isinstance(metadata, dict):
+        page_id = metadata.get("page_id")
+        if page_id:
+            return page_id
+        source_url = str(metadata.get("source_url") or metadata.get("stream_source_url") or "")
+        parsed = normalize_wikipedia_page_id(source_url)
+        if parsed is not None:
+            return parsed
+    return ""
+
+
+def _escape_inline_code(value: str) -> str:
+    return value.replace("`", "'").replace("\n", " ").strip()
+
+
+def _escape_table_text(value: str) -> str:
+    return value.replace("|", "\\|").replace("\n", " ").strip()
 
 
 def _load_urls(cli_urls: list[str], url_file: Path | None) -> list[str]:
@@ -288,13 +1707,20 @@ def _candidate_from_record(record: dict) -> GeneratedCandidate:
     llm_response = source_metadata.get("llm_response")
     if not isinstance(llm_response, dict):
         llm_response = {}
+    _ensure_small_model_response_metadata(source_metadata)
 
     question = str(record.get("rewritten_question") or record.get("question") or "").strip()
     answer = str(record.get("answer") or "").strip()
     answer_aliases = _string_list(record.get("answer_aliases", []))
     answer_type = str(record.get("answer_type") or source_metadata.get("answer_type") or "").strip()
     search_queries = _string_list(record.get("search_queries", []))
-    relation_or_claim = str(record.get("relation_or_claim") or "wikipedia_table_composition").strip()
+    relation_or_claim = str(
+        record.get("relation_or_claim")
+        or source_metadata.get("reasoning_type")
+        or source_metadata.get("legacy_composition_type")
+        or source_metadata.get("composition_type")
+        or "wikipedia_table_fact"
+    ).strip()
 
     if _should_use_llm_response(record, llm_response):
         _record_disabled_tie_warning(record, source_metadata)
@@ -315,7 +1741,19 @@ def _candidate_from_record(record: dict) -> GeneratedCandidate:
         source_metadata["answer_items"] = answer_items
         source_metadata["answer_is_list"] = bool(answer_items)
         source_metadata["answer_type"] = answer_type
-        relation_or_claim = str(llm_response.get("composition_type") or relation_or_claim).strip()
+        reasoning_type = _reasoning_type(llm_response)
+        source_metadata["reasoning_type"] = reasoning_type
+        if llm_response.get("composition_type") and "legacy_composition_type" not in source_metadata:
+            source_metadata["legacy_composition_type"] = str(llm_response.get("composition_type", "")).strip()
+        relation_or_claim = reasoning_type or relation_or_claim
+    elif "reasoning_type" not in source_metadata:
+        legacy_response = {
+            "reasoning_type": source_metadata.get("reasoning_type"),
+            "composition_type": source_metadata.get("legacy_composition_type") or source_metadata.get("composition_type"),
+        }
+        source_metadata["reasoning_type"] = _reasoning_type(legacy_response)
+    if relation_or_claim == "wikipedia_table_composition":
+        relation_or_claim = str(source_metadata.get("reasoning_type") or "wikipedia_table_fact")
 
     subject_entity = _entity_reference(record.get("subject_entity", {}))
     answer_entity = _entity_reference(record.get("answer_entity", {}), fallback_name=answer)
@@ -348,9 +1786,9 @@ def _candidate_from_record(record: dict) -> GeneratedCandidate:
         answer_aliases=answer_aliases,
         subject_entity=subject_entity,
         answer_entity=answer_entity,
-        relation_or_claim=relation_or_claim or "wikipedia_table_composition",
+        relation_or_claim=relation_or_claim or "wikipedia_table_fact",
         evidence=evidence,
-        question_family=str(record.get("question_family") or "wikipedia_infobox_table_composition"),
+        question_family=str(record.get("question_family") or "wikipedia_infobox_table_fact"),
         answer_type=answer_type,
         topic=str(record.get("topic") or record.get("domain") or "Wikipedia semi-structured data"),
         target_time=str(record.get("target_time") or ""),

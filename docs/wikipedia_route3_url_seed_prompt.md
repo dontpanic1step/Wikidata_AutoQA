@@ -7,7 +7,7 @@ You are preparing a diverse dump-discovery plan for a Wikipedia table-based Simp
 
 Goal:
 - Produce subdomain matching rules likely to surface Wikipedia pages with stable, structured infoboxes or article tables from raw dump pages, title dumps, or bounded search fallback.
-- The downstream generator will create one max/min/sum/count/comparison/ordinal QA per URL.
+- The downstream generator will create one single fact or table reasoning QA per URL.
 - Prefer pages where table rows contain facts that are not trivially repeated in article prose.
 - Prefer settled historical or reference pages, not live/current status pages.
 
@@ -41,7 +41,7 @@ Bad source patterns:
 False-grounding guardrails:
 - Treat table facts as local, bounded facts, not global claims.
 - Do not seed pages that invite questions like "In which year did Song X enter the chart?" when the year is only the page title or one local chart slice.
-- Prefer pages where a composition question can preserve the table scope, metric, unit, and section.
+- Prefer pages where a single fact question or table reasoning question can preserve the table scope, metric, unit, and section.
 
 For each title-rule before finalizing:
 - Check that the terms can match more than one plausible title/page in a dump slice or all-titles dump.

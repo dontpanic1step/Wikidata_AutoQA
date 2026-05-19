@@ -43,11 +43,12 @@ Prefer high precision over high recall. Treat early pilot outputs as candidate g
 - Route 1 is template-led and uses templates to construct candidate questions before shared rewriting.
 - Wikidata grounding, Wikidata disambiguation, time-invariance checks, and Wikidata-specific dedupe are Route 1 validators that may be reused only when appropriate.
 - Non-Wikidata routes must define their own validation assumptions and failure modes.
-- Route 3 (`route3_wikipedia_infobox`) is Wikipedia-only, uses directly supplied Wikipedia URLs, and treats side infoboxes plus article tables as semi-structured sources.
+- Route 3 (`route3_wikipedia_infobox`) is Wikipedia-only, uses directly supplied Wikipedia URLs or streamed page IDs, and treats side infoboxes plus article tables as semi-structured sources.
 - Route 3 URL seed files may use `domain<TAB>subdomain<TAB>url`; domains should come from the Domain Axis in `docs/template_catalog_review.md` plus `History`.
 - Route 3 URL discovery should default to dump-backed discovery, not hand-prepared URL lists. Prefer raw pages-articles XML slices extracted into JSONL while preserving wikitext table/infobox markup. A Wikimedia title dump or bounded MediaWiki search may be used as a fallback, but opened pages must still be grade-filtered by parsed table quality.
 - Route 3 discovery may score multiple subdomains per broad domain, then keep the best-scoring subdomain and the top URLs for that domain. This preserves the reusable Domain Axis while avoiding brittle first-subdomain-only selection on sparse dump slices.
 - Route 3 stores provenance and parsed tables, but does not perform route-local factual validation beyond provenance and downstream shared checks.
+- Route 3 questions may be single fact table/infobox questions or compositional questions. New model payloads and records use `reasoning_type`; legacy `composition_type` is accepted only at compatibility boundaries.
 - Route 3 prompt payloads should pass subject scope as context, not mandatory question text. Include the page title, title-derived aliases, and each selected table's caption plus nearby section heading so the model can infer a safe, bounded question scope without copying `List of ...` page titles. Pass safe first-paragraph aliases separately as `safe_subject_aliases`; when the page title has a cutoff-year marker, the model should use one of those aliases if it needs to name the subject.
 
 ## Candidate Schema Contract
