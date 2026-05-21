@@ -1,7 +1,7 @@
 {
   "manifest_version": 1,
   "run_group_id": "wikipedia_stream_fast40_2026_05_19",
-  "updated_at_utc": "2026-05-19T16:12:38.251042+00:00",
+  "updated_at_utc": "2026-05-20T05:42:12.109739+00:00",
   "artifact_index": {
     "accepted_jsonl": [
       "outputs\\wikipedia_stream_fast40_2026_05_19_accepted.jsonl"
@@ -28,7 +28,7 @@
   "segments": [
     {
       "segment_id": "wikipedia_stream_fast40_fresh_2026_05_19_summary",
-      "created_at_utc": "2026-05-19T13:37:04.479155+00:00",
+      "created_at_utc": "2026-05-20T05:42:12.052104+00:00",
       "start_from_endpoint": false,
       "start_stage": "generate",
       "streaming_mode": "page_id_stream",
@@ -48,7 +48,7 @@
     },
     {
       "segment_id": "wikipedia_stream_fast40_incremental_2026_05_19_summary",
-      "created_at_utc": "2026-05-19T13:37:04.483877+00:00",
+      "created_at_utc": "2026-05-20T05:42:12.085427+00:00",
       "start_from_endpoint": true,
       "start_stage": "generate",
       "streaming_mode": "page_id_stream",
@@ -68,7 +68,7 @@
     },
     {
       "segment_id": "wikipedia_stream_fast40_incremental2_2026_05_19",
-      "created_at_utc": "2026-05-19T13:37:04.483877+00:00",
+      "created_at_utc": "2026-05-20T05:42:12.109739+00:00",
       "start_from_endpoint": true,
       "start_stage": "generate",
       "streaming_mode": "page_id_stream",
@@ -88,18 +88,18 @@
     },
     {
       "segment_id": "wikipedia_stream_fast40_incremental3_2026_05_19",
-      "created_at_utc": "2026-05-19T15:17:15.497667+00:00",
+      "created_at_utc": "2026-05-20T05:42:12.109739+00:00",
       "start_from_endpoint": true,
       "start_stage": "generate",
       "streaming_mode": "page_id_stream",
-      "record_limit": 159,
-      "attempted_page_ids": 40,
-      "accepted": 12,
-      "accepted_total": 33,
-      "rejected": 28,
-      "rejected_total": 126,
+      "record_limit": 183,
+      "attempted_page_ids": 5,
+      "accepted": 3,
+      "accepted_total": 41,
+      "rejected": 2,
+      "rejected_total": 142,
       "rerun": 0,
-      "wall_clock_seconds": 330.0469,
+      "wall_clock_seconds": 71.7513,
       "output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_accepted.jsonl",
       "rejected_output_path": "outputs\\wikipedia_stream_fast40_2026_05_19_rejected.jsonl",
       "summary_output": "outputs\\wikipedia_stream_fast40_incremental3_2026_05_19_summary.json",
@@ -128,7 +128,7 @@
     },
     {
       "question": "What nasal consonant sound is classified under the Palatal place of articulation in Swedish language phonology?",
-      "answer": "ŋ",
+      "answer": "艐",
       "page_id": 26689,
       "run_segment_id": "wikipedia_stream_fast40_incremental3_2026_05_19",
       "rejection_reason": "manual_review_rejected:manual_table_header_alignment_error",

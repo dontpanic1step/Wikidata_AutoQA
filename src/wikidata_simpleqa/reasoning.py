@@ -11,6 +11,7 @@ LEGACY_REASONING_STYLE_MAP = {
     "multi_hop_join": "multi_hop_join",
     "multi_hop_ordinal": "multi_hop_ordinal",
     "multi_hop_aggregate": "multi_hop_aggregate",
+    "multi_hop_hidden_entity": "multi_hop_hidden_entity",
 }
 
 
@@ -22,7 +23,12 @@ def normalize_reasoning_style(style: str) -> str:
 def is_multi_hop_reasoning_style(style: str) -> bool:
     """Return whether a reasoning style represents compositional multi-hop logic."""
     normalized = normalize_reasoning_style(style)
-    return normalized in {"multi_hop_join", "multi_hop_ordinal", "multi_hop_aggregate"}
+    return normalized in {
+        "multi_hop_join",
+        "multi_hop_ordinal",
+        "multi_hop_aggregate",
+        "multi_hop_hidden_entity",
+    }
 
 
 def build_reasoning_hop(

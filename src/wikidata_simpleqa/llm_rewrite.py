@@ -21,8 +21,22 @@ OPENROUTER_USER_AGENT = "wikidata-simpleqa-generator/0.1"
 ANSWER_PRECISION_PROMPT_RULES = (
     "- If the answer is a temporal value, the question must specify the requested precision or unit, "
     "such as what year, what month, what day, or how many months.\n"
-    "- If the answer is a full calendar date, ask `what day, month, and year ...` so the expected "
-    "normalization is clear.\n"
+    "- If the answer is a full calendar date, ask `what month, day, and year ...` and format the "
+    "reference answer like `May 20, 2024`; if the answer is a month, ask `what month and year ...` "
+    "and format it like `May 2024`.\n"
+    "- If the answer is a number, specify the counted quantity or unit in the question, such as gallons, "
+    "people, months, authors, or tracks.\n"
+    "- Do not add units to the reference answer or answer_aliases; keep numeric reference answers as "
+    "normalized values only.\n"
+)
+DATE_PRECISION_PROMPT_RULES = (
+    "- If the answer is a temporal value, the question must specify the requested precision or unit, "
+    "such as what year, what month, what day, or how many months.\n"
+    "- If the answer is a full calendar date, ask `what month, day, and year ...` and format the "
+    "reference answer like `May 20, 2024`; if the answer is a month, ask `what month and year ...` "
+    "and format it like `May 2024`.\n"
+)
+NUMBER_PRECISION_PROMPT_RULES = (
     "- If the answer is a number, specify the counted quantity or unit in the question, such as gallons, "
     "people, months, authors, or tracks.\n"
     "- Do not add units to the reference answer or answer_aliases; keep numeric reference answers as "
@@ -37,6 +51,14 @@ CUMULATIVE_FACT_PROMPT_RULE = (
     "- Do not ask cumulative-statistic questions such as how many goals Messi has scored, total wins, "
     "career points, revenue, downloads, citations, or followers unless the statistic is explicitly "
     "scoped to a historically settled slice, completed event, completed season, or fixed table/list.\n"
+)
+HISTORICALLY_SETTLED_PROMPT_RULE = (
+    "- Only ask for an answer that is historically settled and cannot change; reject mutable "
+    "statuses, current roles, live affiliations, and other facts whose answer can change over time.\n"
+)
+NO_SOCIAL_SCIENCE_RESEARCH_PROMPT = (
+    "Ask factual questions, not questions about the findings or conclusions of social science research, "
+    "such as results derived from census studies."
 )
 
 
@@ -168,6 +190,7 @@ def build_rewrite_payload(candidate: CandidateFact) -> dict[str, Any]:
         "target_property": candidate.target_property_label,
         "domain": candidate.domain,
         "reasoning_style": candidate.reasoning_style,
+        "answer_type": candidate.answer_type,
     }
 
 
@@ -198,19 +221,23 @@ def build_rewrite_prompt(payload: dict[str, Any]) -> str:
     if cutoff_year is not None:
         cutoff_rule = f"- Avoid question wording that depends on events in {cutoff_year} or later.\n"
     query_count = _query_count(payload)
+    extra_prompt = _extra_prompt_text(payload)
     return (
         "Rewrite the question into one concise SimpleQA-style fact-seeking question.\n\n"
         "Rules:\n"
         "- Return JSON only.\n"
         "- Preserve all required anchors.\n"
         "- Preserve the same answer relation and information scope as the canonical question.\n"
+        f"- Preserve the configured answer_type `{payload.get('answer_type', '')}` when one is provided.\n"
         "- Do not add, remove, narrow, broaden, or change any information from the canonical question; only rephrase it so it sounds natural.\n"
         "- Do not add a more specific degree, award, role, date, or other fact that is not already explicit in the canonical question or required anchors.\n"
         "- Do not include the answer or any answer alias in any casing, capitalization, or normalized variant.\n"
         "- The rewritten_question must not contain the answer or any answer alias.\n"
-        f"{ANSWER_PRECISION_PROMPT_RULES}"
+        f"{_answer_precision_prompt_rules(payload)}"
         f"{SOURCE_TABLE_WORDING_RULE}"
         f"{CUMULATIVE_FACT_PROMPT_RULE}"
+        f"{HISTORICALLY_SETTLED_PROMPT_RULE}"
+        f"{extra_prompt}"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"{cutoff_rule}"
         f"- Generate exactly {query_count} answer-blind search queries.\n\n"
@@ -226,15 +253,49 @@ def build_rewrite_prompt(payload: dict[str, Any]) -> str:
 
 
 def build_route1_rewrite_prompt(payload: dict[str, Any]) -> str:
-    """Build the Route 1 rewrite-and-query prompt."""
+    """Build the Wikidata-route rewrite-and-query prompt."""
     forbidden_patterns = payload.get("forbidden_patterns", [])
     forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
     query_count = _query_count(payload)
+    extra_prompt = _extra_prompt_text(payload)
+    required_anchors = ", ".join(str(anchor) for anchor in payload.get("required_anchors", []))
+    required_reasoning_clues = ", ".join(
+        str(clue) for clue in payload.get("required_reasoning_clues", [])
+    )
+    route_contract = str(payload.get("route_contract", "")).strip()
+    multi_hop_rule = ""
+    if route_contract == "route1_qid_first_multihop_join":
+        multi_hop_rule = (
+            "- This is a Route 1 QID-first multi-hop join question. Preserve the required reasoning clues so the question cannot be answered as a simpler single-hop question.\n"
+            "- Do not name hidden bridge entities from the reasoning path unless the canonical question already names them.\n"
+        )
+    hidden_entity_contracts = {"route4_two_hop", "route1_hidden_entity_two_hop"}
+    if route_contract in hidden_entity_contracts:
+        route_label = "Route 4" if route_contract == "route4_two_hop" else "Route 1"
+        multi_hop_rule = (
+            f"- This is a {route_label} hidden-entity two-hop question. Ask for the answer hop's object while identifying the hidden entity only through the clue hop.\n"
+            "- Do not name any hidden entity in the rewritten question or search queries.\n"
+            "- Preserve the clue relation and visible clue so the question cannot be answered as a simple one-hop fact about a named subject.\n"
+        )
+    route_specific_context = ""
+    if route_contract in hidden_entity_contracts:
+        route_specific_context = (
+            f"- Answer hop: {json.dumps(payload.get('answer_hop', {}), ensure_ascii=False)}\n"
+            f"- Clue hop: {json.dumps(payload.get('clue_hop', {}), ensure_ascii=False)}\n"
+            f"- Clue orientation: {payload.get('clue_orientation', '')}\n"
+            f"- Hidden entities: {json.dumps(payload.get('hidden_entities', []), ensure_ascii=False)}\n"
+            f"- Visible clue: {json.dumps(payload.get('visible_clue', {}), ensure_ascii=False)}\n"
+        )
     return (
-        "You are generating a SimpleQA-style factual question and answer-blind search queries for Route 1.\n\n"
+        "You are generating a SimpleQA-style factual question and answer-blind search queries for a Wikidata-backed route.\n\n"
         "Input:\n"
         f"- Canonical question: {payload.get('canonical_question', '')}\n"
         f"- Wikidata triplet text: {payload.get('wikidata_triplet_text', '')}\n"
+        f"{route_specific_context}"
+        f"- Required anchors: {required_anchors}\n"
+        f"- Required reasoning clues: {required_reasoning_clues}\n"
+        f"- Answer type: {payload.get('answer_type', '')}\n"
+        f"- Route contract: {route_contract}\n"
         f"- Forbidden text: {forbidden_text}\n"
         f"- Cutoff year: {payload.get('cutoff_year', '')}\n\n"
         "Task:\n"
@@ -249,11 +310,15 @@ def build_route1_rewrite_prompt(payload: dict[str, Any]) -> str:
         "- The search queries must not contain the answer or any answer alias.\n"
         "- The queries should use only non-answer context from the canonical question or triplet text.\n"
         "- Preserve the same answer relation as the canonical question. Do not narrow or specialize it.\n"
+        "- Preserve the configured answer type; do not rewrite the question so it asks for a different type of answer.\n"
         "- If the canonical question says `first degree`, do not rewrite it as a named degree such as `Doctor of Medicine`.\n"
         "- Do not add any degree name, date, title, role, or other factual detail that is absent from the canonical question unless it is already required for disambiguation.\n"
-        f"{ANSWER_PRECISION_PROMPT_RULES}"
+        f"{multi_hop_rule}"
+        f"{_answer_precision_prompt_rules(payload)}"
         f"{SOURCE_TABLE_WORDING_RULE}"
         f"{CUMULATIVE_FACT_PROMPT_RULE}"
+        f"{HISTORICALLY_SETTLED_PROMPT_RULE}"
+        f"{extra_prompt}"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
         "- The first query will be the rewritten question itself and will be added by code. Do not repeat it in search_queries.\n\n"
@@ -272,11 +337,13 @@ def build_route2_rewrite_prompt(payload: dict[str, Any]) -> str:
     forbidden_patterns = payload.get("forbidden_patterns", [])
     forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
     query_count = _query_count(payload)
+    extra_prompt = _extra_prompt_text(payload)
     return (
         "You are generating a SimpleQA-style factual question and answer-blind search queries for Route 2.\n\n"
         "Input:\n"
         f"- Canonical question: {payload.get('canonical_question', '')}\n"
         f"- Evidence text: {payload.get('evidence_text', '')}\n"
+        f"- Answer type: {payload.get('answer_type', '')}\n"
         f"- Forbidden text: {forbidden_text}\n"
         f"- Cutoff year: {payload.get('cutoff_year', '')}\n\n"
         "Task:\n"
@@ -290,10 +357,13 @@ def build_route2_rewrite_prompt(payload: dict[str, Any]) -> str:
         "Important constraints:\n"
         "- The search queries must not contain the answer or any answer alias.\n"
         "- Preserve the same answer relation as the canonical question. Do not narrow or specialize it.\n"
+        "- Preserve the configured answer type; do not rewrite the question so it asks for a different type of answer.\n"
         "- Do not add a more specific degree, award, role, date, or other factual detail that is absent from the canonical question unless it is already required for disambiguation.\n"
-        f"{ANSWER_PRECISION_PROMPT_RULES}"
+        f"{_answer_precision_prompt_rules(payload)}"
         f"{SOURCE_TABLE_WORDING_RULE}"
         f"{CUMULATIVE_FACT_PROMPT_RULE}"
+        f"{HISTORICALLY_SETTLED_PROMPT_RULE}"
+        f"{extra_prompt}"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
         "- The first query will be the rewritten question itself and will be added by code. Do not repeat it in search_queries.\n\n"
@@ -312,12 +382,14 @@ def build_kelm_rewrite_prompt(payload: dict[str, Any]) -> str:
     forbidden_patterns = payload.get("forbidden_patterns", [])
     forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
     query_count = _query_count(payload)
+    extra_prompt = _extra_prompt_text(payload)
     return (
         "You are generating a SimpleQA-style factual question and answer-blind search queries for long-tail verification.\n\n"
         "Input:\n"
         f"- Serialized triple: {payload.get('serialized_triple', '')}\n"
         f"- KELM sentence: {payload.get('kelm_sentence', '')}\n"
         f"- Answer: {payload.get('answer', '')}\n"
+        f"- Answer type: {payload.get('answer_type', '')}\n"
         f"- Forbidden text: {forbidden_text}\n"
         f"- Cutoff year: {payload.get('cutoff_year', '')}\n\n"
         "Task:\n"
@@ -331,16 +403,19 @@ def build_kelm_rewrite_prompt(payload: dict[str, Any]) -> str:
         "- The search queries must not contain the answer or any alias, casing variant, capitalization variant, or normalized form of the answer.\n"
         "- The queries should use only information available in the question, KELM sentence, or non-answer parts of the triple.\n"
         "- Preserve the same answer relation and information scope as the source.\n"
+        "- Preserve the configured answer type; do not rewrite the question so it asks for a different type of answer.\n"
         "- Do not add a more specific degree, award, role, date, or other factual detail that is not explicit in the source.\n"
         f"{SOURCE_TABLE_WORDING_RULE}"
         f"{CUMULATIVE_FACT_PROMPT_RULE}"
+        f"{HISTORICALLY_SETTLED_PROMPT_RULE}"
+        f"{extra_prompt}"
         f"- Avoid these forbidden patterns: {forbidden_text}.\n"
         f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
         "- The first query will be the rewritten question itself and will be added by code. Do not include the whole rewritten question in search_queries.\n"
         "- Prefer queries combining the subject with relation words, descriptors, locations, or other non-answer context.\n"
         "- Use quotation marks around rare names or exact entity names when helpful.\n\n"
         "Date and number constraints:\n"
-        f"{ANSWER_PRECISION_PROMPT_RULES}"
+        f"{_answer_precision_prompt_rules(payload)}"
         "- Only ask for temporal precision that is actually supported by the source. If the source only states a year, ask for the year, not the day/month/year.\n"
         "- Do not create false precision from serialized dates such as \"01 January YYYY\" unless the KELM sentence or source explicitly supports the full date.\n\n"
         "Output valid JSON only:\n"
@@ -369,3 +444,28 @@ def _query_count(payload: dict[str, Any]) -> int:
         return max(0, int(payload.get("search_query_count", 3)))
     except (TypeError, ValueError):
         return 3
+
+
+def _answer_precision_prompt_rules(payload: dict[str, Any]) -> str:
+    """Return answer precision guidance only when it matches the configured answer type."""
+    answer_type = str(payload.get("answer_type") or "").strip()
+    if not answer_type:
+        return ANSWER_PRECISION_PROMPT_RULES
+    if answer_type == "Date":
+        return DATE_PRECISION_PROMPT_RULES
+    if answer_type == "Number":
+        return NUMBER_PRECISION_PROMPT_RULES
+    return ""
+
+
+def _extra_prompt_text(payload: dict[str, Any]) -> str:
+    """Return optional stricter prompt rules supplied by upstream routes."""
+    raw_values = payload.get("extra_prompt") or payload.get("extra_prompts") or []
+    if isinstance(raw_values, str):
+        values = [raw_values]
+    elif isinstance(raw_values, list):
+        values = [str(value).strip() for value in raw_values]
+    else:
+        values = []
+    lines = [value.rstrip(".") for value in values if value]
+    return "".join(f"- {line}.\n" for line in lines)

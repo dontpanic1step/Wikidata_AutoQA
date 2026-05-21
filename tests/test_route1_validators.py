@@ -107,6 +107,34 @@ class Route1ValidatorTests(unittest.TestCase):
         self.assertEqual(result.reason, "subject_label_missing")
         self.assertEqual(client.search_call_count, 0)
 
+    def test_candidate_validator_rejects_qid_like_subject_label_before_search(self) -> None:
+        client = FakeClient()
+        candidate = make_candidate()
+        candidate.subject_label = "Q130598234"
+        result = validate_route1_candidate(
+            client,
+            Settings(target_time="2020"),
+            candidate,
+            make_template(),
+        )
+        self.assertIsInstance(result, RejectedCandidate)
+        self.assertEqual(result.reason, "subject_label_qid_like")
+        self.assertEqual(client.search_call_count, 0)
+
+    def test_candidate_validator_rejects_qid_like_answer_label_before_search(self) -> None:
+        client = FakeClient()
+        candidate = make_candidate()
+        candidate.answer_labels = ["Q42"]
+        result = validate_route1_candidate(
+            client,
+            Settings(target_time="2020"),
+            candidate,
+            make_template(),
+        )
+        self.assertIsInstance(result, RejectedCandidate)
+        self.assertEqual(result.reason, "answer_label_qid_like")
+        self.assertEqual(client.search_call_count, 0)
+
     def test_candidate_validator_rejects_ambiguous_same_medium_candidate(self) -> None:
         result = validate_route1_candidate(
             FakeClient(

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import re
+
 from .ambiguity import resolve_subject_ambiguity
 from .models import AmbiguityResolution, CandidateFact, DomainTemplate, RejectedCandidate
 from .validators import (
@@ -22,6 +24,8 @@ from .validators import (
     violates_cutoff_year_policy,
 )
 
+QID_LIKE_LABEL_PATTERN = re.compile(r"^Q\d+$")
+
 
 def validate_route1_candidate(
     client,
@@ -33,6 +37,10 @@ def validate_route1_candidate(
     ensure_route1_subject_resource(candidate)
     if not candidate.subject_label.strip():
         return RejectedCandidate(reason="subject_label_missing", candidate=candidate)
+    if QID_LIKE_LABEL_PATTERN.fullmatch(candidate.subject_label.strip()):
+        return RejectedCandidate(reason="subject_label_qid_like", candidate=candidate)
+    if any(QID_LIKE_LABEL_PATTERN.fullmatch(label.strip()) for label in candidate.answer_labels):
+        return RejectedCandidate(reason="answer_label_qid_like", candidate=candidate)
     if not answer_is_unique(candidate):
         return RejectedCandidate(reason="answer_not_unique", candidate=candidate)
     if not candidate_matches_topic_constraints(candidate, template):

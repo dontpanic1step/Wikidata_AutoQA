@@ -34,12 +34,17 @@ from wikidata_simpleqa.llm_rewrite import make_rewrite_client
 from wikidata_simpleqa.search_client import DuckDuckGoSearchClient
 from wikidata_simpleqa.wikipedia_client import WikipediaClient, normalize_wikipedia_page_id, normalize_wikipedia_title
 from wikidata_simpleqa.wikipedia_infobox_generator import (
+    DEFAULT_ROUTE3_TABLE_FILTER_MODES,
     WikipediaInfoboxTableGenerator,
     _answer_items,
     _normalize_answer_type,
     _normalize_generated_answer,
     _reasoning_type,
     _sanitize_answer_blind_queries,
+    normalize_route3_answer_types,
+    normalize_route3_extra_prompts,
+    normalize_route3_reasoning_types,
+    normalize_route3_table_filter_modes,
 )
 from wikidata_simpleqa.wikipedia_streaming import (
     BROAD_TABLE_SEARCH_QUERY,
@@ -243,6 +248,27 @@ def parse_args() -> argparse.Namespace:
         help="Optional accepted-record target; 0 means process --record-limit page IDs.",
     )
     parser.add_argument(
+        "--stream-rerun-pool-only",
+        action="store_true",
+        help="Process the current streaming rerun pool once and do not discover fresh page IDs.",
+    )
+    parser.add_argument(
+        "--stream-rerun-pool-limit",
+        type=int,
+        default=0,
+        help="Maximum rerun-pool IDs to process with --stream-rerun-pool-only; 0 means the whole pool.",
+    )
+    parser.add_argument(
+        "--stream-auto-rerun-once",
+        action="store_true",
+        help="After the normal streaming pass, immediately process the rerun pool once, then stop.",
+    )
+    parser.add_argument(
+        "--reset-stream-state",
+        action="store_true",
+        help="Start streaming from a new empty state file. Use only for a new run, not endpoint resume or rerun-pool-only.",
+    )
+    parser.add_argument(
         "--walkthrough-output",
         type=Path,
         default=None,
@@ -307,6 +333,48 @@ def parse_args() -> argparse.Namespace:
         type=float,
         default=0.0,
         help="Drop Route 3 candidate tables with rank score below this value before paragraph/alias extraction and LLM generation.",
+    )
+    parser.add_argument(
+        "--route3-reasoning-type",
+        action="append",
+        default=[],
+        help=(
+            "Restrict Route 3 generation to one or more reasoning_type values. "
+            "Repeat the flag or pass comma-separated values. Default: unrestricted."
+        ),
+    )
+    parser.add_argument(
+        "--route3-answer-type",
+        action="append",
+        default=[],
+        help=(
+            "Restrict Route 3 generation to one or more SimpleQA Verified answer_type values: "
+            "Person, Place, Number, Date, Other. Repeat the flag or pass comma-separated values. Default: unrestricted."
+        ),
+    )
+    parser.add_argument(
+        "--route3-extra-prompt",
+        action="append",
+        default=[],
+        help=(
+            "Add a stricter Route 3 prompt rule by passing literal prompt text. Can be repeated. "
+            "Social-science table exclusion is now a default table filter mode."
+        ),
+    )
+    parser.add_argument(
+        "--route3-table-filter-mode",
+        action="append",
+        default=list(DEFAULT_ROUTE3_TABLE_FILTER_MODES),
+        help=(
+            "Enable one or more early Route 3 table filter modes. Repeat the flag or pass comma-separated "
+            "values. Defaults: no_big_numbers,no_social_science_research."
+        ),
+    )
+    parser.add_argument(
+        "--disable-route3-table-filter-mode",
+        action="append",
+        default=[],
+        help="Disable a default Route 3 table filter mode for this run. Can be repeated.",
     )
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--small-model-provider", type=str, default="openrouter")
@@ -373,8 +441,24 @@ def main() -> int:
         raise ValueError("--openrouter-generation-rewrite-concurrency-limit must be at least 1.")
     if args.stream_random_page_ids and args.second_stage_concurrency_limit < 1:
         raise ValueError("--second-stage-concurrency-limit must be at least 1.")
+    if args.stream_random_page_ids and args.stream_rerun_pool_limit < 0:
+        raise ValueError("--stream-rerun-pool-limit must be non-negative.")
+    if args.reset_stream_state and not args.stream_random_page_ids:
+        raise ValueError("--reset-stream-state only applies to streaming page-ID runs.")
+    if args.reset_stream_state and args.start_from_endpoint:
+        raise ValueError("--reset-stream-state cannot be combined with --start-from-endpoint.")
+    if args.reset_stream_state and args.stream_rerun_pool_only:
+        raise ValueError("--reset-stream-state cannot be combined with --stream-rerun-pool-only.")
     if args.run_artifact_manifest is not None and not args.run_group_id.strip():
         raise ValueError("--run-artifact-manifest requires --run-group-id.")
+    args.route3_reasoning_type = list(normalize_route3_reasoning_types(args.route3_reasoning_type))
+    args.route3_answer_type = list(normalize_route3_answer_types(args.route3_answer_type))
+    args.route3_extra_prompt = list(normalize_route3_extra_prompts(args.route3_extra_prompt))
+    enabled_table_filter_modes = list(normalize_route3_table_filter_modes(args.route3_table_filter_mode))
+    disabled_table_filter_modes = set(normalize_route3_table_filter_modes(args.disable_route3_table_filter_mode))
+    args.route3_table_filter_mode = [
+        mode for mode in enabled_table_filter_modes if mode not in disabled_table_filter_modes
+    ]
     if args.start_stage == "generate" and not urls and not args.stream_random_page_ids and effective_record_limit > 0:
         raise ValueError("Provide at least one Wikipedia URL with --url or --url-file.")
     if args.start_stage == "validation" and not args.candidate_input:
@@ -446,6 +530,11 @@ def main() -> int:
         return 0
     if args.start_stage == "validation":
         generated_candidates = _load_candidate_inputs(args.candidate_input, limit=effective_record_limit)
+        for candidate in generated_candidates:
+            _apply_allowed_reasoning_type_filter(candidate, args.route3_reasoning_type)
+            _apply_allowed_answer_type_filter(candidate, args.route3_answer_type)
+            _attach_route3_extra_prompts(candidate, args.route3_extra_prompt)
+            _attach_route3_table_filter_modes(candidate, args.route3_table_filter_mode)
         if not generated_candidates:
             raise ValueError("No candidates were loaded from --candidate-input.")
         if not url_entries:
@@ -460,6 +549,10 @@ def main() -> int:
             search_query_count=args.generated_search_query_count,
             enable_rest_summary_fallback=args.enable_rest_summary_fallback,
             min_table_score=args.min_table_score,
+            allowed_reasoning_types=tuple(args.route3_reasoning_type),
+            allowed_answer_types=tuple(args.route3_answer_type),
+            extra_prompts=tuple(args.route3_extra_prompt),
+            table_filter_modes=tuple(args.route3_table_filter_mode),
         )
         generated_candidates = generator.generate(
             run_date=settings.run_date,
@@ -514,6 +607,10 @@ def main() -> int:
         "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
         "generated_search_query_count": settings.generated_search_query_count,
         "min_table_score": args.min_table_score,
+        "route3_reasoning_types": args.route3_reasoning_type,
+        "route3_answer_types": args.route3_answer_type,
+        "route3_extra_prompts": args.route3_extra_prompt,
+        "route3_table_filter_modes": args.route3_table_filter_mode,
         "aggregate_phase_timings_seconds": _aggregate_phase_timings(result.accepted, result.rejected),
         "telemetry": {
             **result.telemetry,
@@ -629,8 +726,15 @@ def _manifest_segment(summary: dict) -> dict[str, object]:
         "start_from_endpoint": bool(summary.get("start_from_endpoint", False)),
         "start_stage": summary.get("start_stage", ""),
         "streaming_mode": summary.get("streaming_mode", ""),
+        "stream_rerun_pool_only": bool(summary.get("stream_rerun_pool_only", False)),
+        "stream_auto_rerun_once": bool(summary.get("stream_auto_rerun_once", False)),
+        "route3_reasoning_types": summary.get("route3_reasoning_types", []),
+        "route3_answer_types": summary.get("route3_answer_types", []),
+        "route3_extra_prompts": summary.get("route3_extra_prompts", []),
+        "route3_table_filter_modes": summary.get("route3_table_filter_modes", []),
         "record_limit": summary.get("record_limit", 0),
         "attempted_page_ids": summary.get("attempted_page_ids", summary.get("attempted_urls", 0)),
+        "auto_rerun_attempted_page_ids": summary.get("auto_rerun_attempted_page_ids", 0),
         "accepted": summary.get("accepted", 0),
         "accepted_total": summary.get("accepted_total", summary.get("accepted", 0)),
         "rejected": summary.get("rejected", 0),
@@ -831,7 +935,11 @@ def _run_streaming_page_id_pipeline(
         )
     second_stage_model_clients = _build_streaming_second_stage_model_panel(settings, concurrency)
     grading_grader_client = _build_streaming_second_stage_grader_client(settings, concurrency)
-    state = PageIdStreamState.load(args.stream_state)
+    if args.reset_stream_state:
+        state = PageIdStreamState(path=args.stream_state)
+        state.save()
+    else:
+        state = PageIdStreamState.load(args.stream_state)
     endpoint_sync = {"accepted_ids_synced": 0, "rejected_ids_synced": 0}
     if args.start_from_endpoint:
         endpoint_sync = state.sync_decided_ids(
@@ -847,10 +955,16 @@ def _run_streaming_page_id_pipeline(
     accepted_target = max(0, int(args.stream_accepted_target or 0))
     if args.start_from_endpoint and accepted_target:
         accepted_target = max(0, accepted_target - endpoint_resume.accepted_count)
-    ids_remaining = max(0, int(args.record_limit))
-    if args.start_from_endpoint:
+    if args.stream_rerun_pool_only:
+        ids_remaining = _stream_rerun_pool_run_limit(state, args)
+    else:
+        ids_remaining = max(0, int(args.record_limit))
+    if args.start_from_endpoint and not args.stream_rerun_pool_only:
         ids_remaining = _remaining_after_endpoint(args.record_limit, endpoint_resume.final_decision_count)
+    initial_ids_remaining = ids_remaining
     page_workers = 1 if accepted_target else max(1, int(args.stream_page_workers))
+    auto_rerun_pool_ids_at_start: list[int] = []
+    auto_rerun_processed_ids: list[int] = []
 
     while ids_remaining > 0:
         if accepted_target and len(accepted_records) >= accepted_target:
@@ -862,6 +976,8 @@ def _run_streaming_page_id_pipeline(
             wikipedia_client=wikipedia_client,
             rng=rng,
             count=batch_size,
+            rerun_pool_only=args.stream_rerun_pool_only,
+            prefer_rerun_pool=args.stream_rerun_pool_only,
         )
         if not reserved_ids:
             break
@@ -904,6 +1020,51 @@ def _run_streaming_page_id_pipeline(
                             )
                     break
 
+    if args.stream_auto_rerun_once and not args.stream_rerun_pool_only and state.rerun_pool:
+        auto_rerun_pool_ids_at_start = state.rerun_pool.copy()
+        auto_ids_remaining = len(auto_rerun_pool_ids_at_start)
+        while auto_ids_remaining > 0:
+            batch_size = min(max(1, int(args.stream_batch_size)), auto_ids_remaining)
+            reserved_ids = _reserve_stream_page_ids(
+                state=state,
+                args=args,
+                wikipedia_client=wikipedia_client,
+                rng=rng,
+                count=batch_size,
+                rerun_pool_only=True,
+                prefer_rerun_pool=True,
+            )
+            if not reserved_ids:
+                break
+            auto_ids_remaining -= len(reserved_ids)
+            processed_ids.extend(reserved_ids)
+            auto_rerun_processed_ids.extend(reserved_ids)
+            futures = {}
+            with ThreadPoolExecutor(max_workers=min(page_workers, len(reserved_ids))) as executor:
+                for index, page_id in enumerate(reserved_ids):
+                    futures[
+                        executor.submit(
+                            _process_one_stream_page_id,
+                            page_id,
+                            args=args,
+                            settings=settings,
+                            state=state,
+                            wikipedia_client=wikipedia_client,
+                            search_client=search_client,
+                            llm_client=llm_client,
+                            rewrite_client=rewrite_client,
+                            concurrency=concurrency,
+                            second_stage_model_clients=second_stage_model_clients,
+                            grading_grader_client=grading_grader_client,
+                        )
+                    ] = index
+                for future in as_completed(futures):
+                    decision = future.result()
+                    accepted_records.extend(decision.get("accepted_records", []))
+                    rejected_records.extend(decision.get("rejected_records", []))
+                    if decision.get("status") == "rerun":
+                        rerun_records.append(decision)
+
     all_decision_records = [*accepted_records, *rejected_records]
     summary = {
         **_run_artifact_summary(args),
@@ -921,6 +1082,13 @@ def _run_streaming_page_id_pipeline(
         "run_date": settings.run_date,
         "stream_state": str(args.stream_state),
         "stream_state_stats": state.stats(),
+        "stream_state_reset": bool(args.reset_stream_state),
+        "stream_rerun_pool_only": bool(args.stream_rerun_pool_only),
+        "stream_rerun_pool_limit": args.stream_rerun_pool_limit,
+        "stream_auto_rerun_once": bool(args.stream_auto_rerun_once),
+        "auto_rerun_pool_ids_at_start": auto_rerun_pool_ids_at_start,
+        "auto_rerun_processed_page_ids": auto_rerun_processed_ids,
+        "auto_rerun_attempted_page_ids": len(auto_rerun_processed_ids),
         "rerun_pool_ids_after_run": state.rerun_pool.copy(),
         "rerun_pool_failure_reasons_after_run": {
             str(page_id): state.failure_reasons.get(page_id, "")
@@ -933,7 +1101,7 @@ def _run_streaming_page_id_pipeline(
         },
         "random_seed": args.stream_random_seed,
         "record_limit": args.record_limit,
-        "record_limit_remaining_at_start": ids_remaining + len(processed_ids),
+        "record_limit_remaining_at_start": initial_ids_remaining,
         "stream_batch_size": args.stream_batch_size,
         "stream_page_workers": page_workers,
         "wikipedia_concurrency_limit": args.wikipedia_concurrency_limit,
@@ -943,6 +1111,7 @@ def _run_streaming_page_id_pipeline(
         "stream_accepted_target": args.stream_accepted_target,
         "stream_accepted_target_remaining_at_start": accepted_target,
         "attempted_page_ids": len(processed_ids),
+        "attempted_page_ids_unique": len(set(processed_ids)),
         "page_ids": processed_ids,
         "accepted": len(accepted_records),
         "accepted_total": endpoint_resume.accepted_count + len(accepted_records),
@@ -964,6 +1133,10 @@ def _run_streaming_page_id_pipeline(
         "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
         "generated_search_query_count": settings.generated_search_query_count,
         "min_table_score": args.min_table_score,
+        "route3_reasoning_types": args.route3_reasoning_type,
+        "route3_answer_types": args.route3_answer_type,
+        "route3_extra_prompts": args.route3_extra_prompt,
+        "route3_table_filter_modes": args.route3_table_filter_mode,
         "survival_by_layer": _survival_by_layer(
             attempted_count=len(processed_ids),
             rejected_records=rejected_records,
@@ -1002,6 +1175,15 @@ def _build_streaming_concurrency_context(args: argparse.Namespace) -> StreamingC
         ),
         second_stage_semaphore=Semaphore(max(1, int(args.second_stage_concurrency_limit))),
     )
+
+
+def _stream_rerun_pool_run_limit(state: PageIdStreamState, args: argparse.Namespace) -> int:
+    """Return how many rerun-pool IDs this invocation should attempt."""
+    pool_size = len(state.rerun_pool)
+    configured_limit = max(0, int(getattr(args, "stream_rerun_pool_limit", 0) or 0))
+    if configured_limit:
+        return min(pool_size, configured_limit)
+    return pool_size
 
 
 def _build_streaming_second_stage_model_panel(
@@ -1060,6 +1242,10 @@ def _process_one_stream_page_id(
             search_query_count=args.generated_search_query_count,
             enable_rest_summary_fallback=args.enable_rest_summary_fallback,
             min_table_score=args.min_table_score,
+            allowed_reasoning_types=tuple(args.route3_reasoning_type),
+            allowed_answer_types=tuple(args.route3_answer_type),
+            extra_prompts=tuple(args.route3_extra_prompt),
+            table_filter_modes=tuple(args.route3_table_filter_mode),
         )
         generated_candidates = generator.generate(
             run_date=settings.run_date,
@@ -1148,6 +1334,8 @@ def _process_one_stream_page_id(
 def _should_rerun_stream_rejection(record: dict) -> bool:
     """Return whether a rejected stream record represents a transient retryable failure."""
     reason = str(record.get("rejection_reason", "")).strip()
+    if reason in {"search_longtail_verifier_error", "second_stage_grading_error"}:
+        return True
     if not reason.startswith("wikipedia_infobox_generation_error:"):
         return False
     metadata = record.get("source_metadata", {})
@@ -1182,22 +1370,31 @@ def _reserve_stream_page_ids(
     wikipedia_client: WikipediaClient,
     rng: random.Random,
     count: int,
+    rerun_pool_only: bool = False,
+    prefer_rerun_pool: bool = False,
 ) -> list[int]:
     """Reserve page IDs from the configured streaming discovery source."""
+    if rerun_pool_only:
+        return state.reserve_candidate_ids(
+            [],
+            count=count,
+            source="rerun_pool_only",
+            prefer_rerun_pool=True,
+        )
     if args.stream_page_source == "random-page-id":
         return state.reserve_ids(
             count=count,
             lower_bound=args.stream_page_id_min,
             upper_bound=args.stream_page_id_max,
             rng=rng,
-            prefer_rerun_pool=True,
+            prefer_rerun_pool=prefer_rerun_pool,
         )
 
     selected = state.reserve_candidate_ids(
         [],
         count=count,
         source="rerun_pool",
-        prefer_rerun_pool=True,
+        prefer_rerun_pool=prefer_rerun_pool,
     )
     if len(selected) >= count:
         return selected
@@ -1268,6 +1465,7 @@ def _attach_stream_metadata(candidate: GeneratedCandidate, *, page_id: int, url:
     """Attach stream sampling metadata to a generated candidate."""
     _ensure_small_model_response_metadata(candidate.source_metadata)
     _attach_run_artifact_metadata(candidate.source_metadata, args=args)
+    candidate.source_metadata["table_filter_modes"] = list(args.route3_table_filter_mode)
     candidate.source_metadata["page_id"] = page_id
     candidate.source_metadata["stream_source_url"] = url
     candidate.source_metadata["streaming_discovery"] = {
@@ -1288,6 +1486,7 @@ def _attach_stream_record_metadata(record: dict, *, page_id: int, url: str, args
     if isinstance(metadata, dict):
         _ensure_small_model_response_metadata(metadata)
         _attach_run_artifact_metadata(metadata, args=args)
+        metadata["table_filter_modes"] = list(args.route3_table_filter_mode)
         metadata["page_id"] = page_id
         metadata["stream_source_url"] = url
         metadata["streaming_discovery"] = {
@@ -1329,8 +1528,8 @@ def _survival_by_layer(
 ) -> list[dict[str, object]]:
     """Return layer-by-layer survival stats for a streaming run."""
     stage_failures = Counter(_rejection_stage(record) for record in rejected_records)
-    if rerun_records:
-        stage_failures["unresolved_rerun"] += len(rerun_records)
+    for record in rerun_records:
+        stage_failures[_rerun_stage(record)] += 1
     layers = [
         ("page_id_reservation", "Page-id reservation"),
         ("unresolved_rerun", "Unresolved or returned to rerun pool"),
@@ -1368,11 +1567,23 @@ def _failure_reason_counts(rejected_records: list[dict], rerun_records: list[dic
     for record in rejected_records:
         counts[(_rejection_stage(record), _exact_failure_reason(record))] += 1
     for record in rerun_records:
-        counts[("unresolved_rerun", str(record.get("reason", "unresolved")))] += 1
+        counts[(_rerun_stage(record), str(record.get("reason", "unresolved")))] += 1
     return [
         {"stage": stage, "reason": reason, "count": count}
         for (stage, reason), count in sorted(counts.items(), key=lambda item: (-item[1], item[0][0], item[0][1]))
     ]
+
+
+def _rerun_stage(record: dict) -> str:
+    """Return the pipeline stage where a retryable stream failure occurred."""
+    reason = str(record.get("reason", "")).strip()
+    if reason.startswith("search_longtail_verifier_error"):
+        return "search_longtail"
+    if reason.startswith("second_stage_grading_error"):
+        return "second_stage_grading"
+    if reason.startswith("wikipedia_infobox_") or reason.startswith("pipeline_exception"):
+        return "route_generation"
+    return "unresolved_rerun"
 
 
 def _phase_timing_explanation_rows() -> list[dict[str, str]]:
@@ -1602,13 +1813,23 @@ def _write_stream_walkthrough(
         lines.append(f"- Existing accepted QAs before run: {len(existing_accepted_records)}")
         lines.append(f"- Existing rejected QAs/pages before run: {len(existing_rejected_records)}")
     lines.append(f"- Attempted page IDs: {summary.get('attempted_page_ids', 0)}")
+    if summary.get("attempted_page_ids_unique") is not None:
+        lines.append(f"- Unique attempted page IDs: {summary.get('attempted_page_ids_unique', 0)}")
+    if summary.get("stream_state_reset"):
+        lines.append("- Stream state reset at run start: yes")
+    if summary.get("stream_rerun_pool_only"):
+        lines.append("- Rerun-pool-only mode: yes")
+        lines.append(f"- Rerun-pool processing limit: {summary.get('stream_rerun_pool_limit', 0) or 'all'}")
+    if summary.get("stream_auto_rerun_once"):
+        lines.append("- Auto rerun pool once: yes")
+        lines.append(f"- Auto-rerun attempted page IDs: {summary.get('auto_rerun_attempted_page_ids', 0)}")
     lines.append(f"- Accepted QAs: {summary.get('accepted', 0)}")
     if isinstance(endpoint_resume, dict) and endpoint_resume.get("enabled"):
         lines.append(f"- Accepted QAs after resume: {summary.get('accepted_total', 0)}")
     lines.append(f"- Rejected QAs/pages: {summary.get('rejected', 0)}")
     if isinstance(endpoint_resume, dict) and endpoint_resume.get("enabled"):
         lines.append(f"- Rejected QAs/pages after resume: {summary.get('rejected_total', 0)}")
-    lines.append(f"- Returned to rerun pool without final decision: {summary.get('rerun', 0)}")
+    lines.append(f"- Transient rerun attempts during run: {summary.get('rerun', 0)}")
     if summary.get("wall_clock_seconds") is not None:
         lines.append(f"- Wall-clock runtime: {float(summary.get('wall_clock_seconds', 0.0)):.4f}s")
     lines.append(f"- DuckDuckGo top K: {summary.get('duckduckgo_top_k', '')}")
@@ -1616,6 +1837,14 @@ def _write_stream_walkthrough(
     lines.append(f"- DuckDuckGo parallel queries: {summary.get('duckduckgo_parallel_queries', '')}")
     if summary.get("min_table_score") is not None:
         lines.append(f"- Minimum Route 3 table score: {summary.get('min_table_score', '')}")
+    if summary.get("route3_reasoning_types"):
+        lines.append(f"- Route 3 reasoning_type constraint: `{', '.join(summary.get('route3_reasoning_types', []))}`")
+    if summary.get("route3_answer_types"):
+        lines.append(f"- Route 3 answer_type constraint: `{', '.join(summary.get('route3_answer_types', []))}`")
+    if summary.get("route3_extra_prompts"):
+        lines.append(f"- Route 3 extra prompt rules: `{'; '.join(summary.get('route3_extra_prompts', []))}`")
+    if summary.get("route3_table_filter_modes"):
+        lines.append(f"- Route 3 table filter modes: `{', '.join(summary.get('route3_table_filter_modes', []))}`")
     if summary.get("stream_page_workers") is not None:
         lines.append(f"- Stream page workers: {summary.get('stream_page_workers', '')}")
         lines.append(f"- Wikipedia concurrency limit: {summary.get('wikipedia_concurrency_limit', '')}")
@@ -1636,6 +1865,26 @@ def _write_stream_walkthrough(
     if isinstance(rerun_pool_ids, list):
         lines.append(f"- Rerun pool after run: `{', '.join(str(page_id) for page_id in rerun_pool_ids) or 'empty'}`")
     lines.append("")
+    recipe_segments = summary.get("recipe_segments", [])
+    if isinstance(recipe_segments, list) and recipe_segments:
+        lines.append("### Recipe Segments")
+        lines.append("")
+        lines.append("| Configured answer_type | Record limit | Attempted page IDs | Accepted | Rejected | Rerun |")
+        lines.append("| --- | ---: | ---: | ---: | ---: | ---: |")
+        for segment in recipe_segments:
+            if not isinstance(segment, dict):
+                continue
+            lines.append(
+                "| {answer_type} | {record_limit} | {attempted} | {accepted} | {rejected} | {rerun} |".format(
+                    answer_type=_escape_table_text(str(segment.get("answer_type", ""))),
+                    record_limit=int(segment.get("record_limit", 0) or 0),
+                    attempted=int(segment.get("attempted_page_ids", 0) or 0),
+                    accepted=int(segment.get("accepted", 0) or 0),
+                    rejected=int(segment.get("rejected", 0) or 0),
+                    rerun=int(segment.get("rerun", 0) or 0),
+                )
+            )
+        lines.append("")
     if existing_accepted_records or existing_rejected_records:
         _append_overall_resume_stats(
             lines,
@@ -1672,6 +1921,22 @@ def _write_stream_walkthrough(
     if not summary.get("failure_reason_counts"):
         lines.append("| n/a | n/a | 0 |")
     lines.append("")
+    _append_record_attribute_stats_section(
+        lines,
+        title="Answer Type Stats",
+        attribute_label="Answer type",
+        extractor=_record_answer_type,
+        record_groups=record_groups,
+    )
+    lines.append("")
+    _append_record_attribute_stats_section(
+        lines,
+        title="Reasoning Type Stats",
+        attribute_label="Reasoning type",
+        extractor=_record_reasoning_type,
+        record_groups=record_groups,
+    )
+    lines.append("")
     lines.append("### Rerun Pool After Run")
     lines.append("")
     rerun_reasons = summary.get("rerun_pool_failure_reasons_after_run", {})
@@ -1685,6 +1950,14 @@ def _write_stream_walkthrough(
             lines.append(f"| {page_id} | `{_escape_table_text(reason)}` |")
     else:
         lines.append("Rerun pool is empty.")
+    lines.append("")
+    _append_in_run_rerun_outcomes_section(
+        lines,
+        summary=summary,
+        accepted_records=accepted_records,
+        rejected_records=rejected_records,
+        rerun_records=rerun_records,
+    )
     lines.append("")
     _append_phase_timings_section(
         lines,
@@ -1757,8 +2030,9 @@ def _write_stream_walkthrough(
             lines.append("| ---: | --- | --- | --- |")
             for record in rerun_records:
                 lines.append(
-                    "| {page_id} | `unresolved_rerun` | `{reason}` | {url} |".format(
+                    "| {page_id} | `{stage}` | `{reason}` | {url} |".format(
                         page_id=record.get("page_id", ""),
+                        stage=_rerun_stage(record),
                         reason=_escape_table_text(str(record.get("reason", ""))),
                         url=_escape_table_text(str(record.get("url", ""))),
                     )
@@ -1767,6 +2041,67 @@ def _write_stream_walkthrough(
         lines.append("No rejected or rerun decisions in this run.")
     lines.append("")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def _append_in_run_rerun_outcomes_section(
+    lines: list[str],
+    *,
+    summary: dict,
+    accepted_records: list[dict],
+    rejected_records: list[dict],
+    rerun_records: list[dict],
+) -> None:
+    """Append final outcomes for page IDs retried from the rerun pool during this invocation."""
+    if not rerun_records:
+        return
+    accepted_by_page_id = {_record_page_id(record): record for record in accepted_records}
+    rejected_by_page_id = {_record_page_id(record): record for record in rejected_records}
+    rerun_pool_ids = {
+        page_id
+        for page_id in summary.get("rerun_pool_ids_after_run", [])
+        if page_id not in {None, ""}
+    }
+    attempt_counts: dict[int | str, int] = {}
+    first_reason: dict[int | str, str] = {}
+    for record in rerun_records:
+        page_id = record.get("page_id", "")
+        if page_id in {None, ""}:
+            continue
+        attempt_counts[page_id] = attempt_counts.get(page_id, 0) + 1
+        first_reason.setdefault(page_id, str(record.get("reason", "")))
+    if not attempt_counts:
+        return
+
+    lines.append("### In-Run Rerun Outcomes")
+    lines.append("")
+    lines.append(
+        "These rows show transient rerun-pool attempts and whether the same page ID later reached a final decision in this invocation."
+    )
+    lines.append("")
+    lines.append("| Page ID | Rerun attempts | Final outcome | Final reason/question | First transient reason |")
+    lines.append("| ---: | ---: | --- | --- | --- |")
+    for page_id in sorted(attempt_counts, key=lambda value: str(value)):
+        if page_id in accepted_by_page_id:
+            outcome = "accepted"
+            detail = str(accepted_by_page_id[page_id].get("question", ""))
+        elif page_id in rejected_by_page_id:
+            outcome = "rejected"
+            detail = _exact_failure_reason(rejected_by_page_id[page_id])
+        elif page_id in rerun_pool_ids:
+            outcome = "still_in_rerun_pool"
+            detail = ""
+        else:
+            outcome = "not_finalized_in_this_invocation"
+            detail = ""
+        lines.append(
+            "| {page_id} | {attempts} | `{outcome}` | {detail} | `{reason}` |".format(
+                page_id=page_id,
+                attempts=attempt_counts[page_id],
+                outcome=outcome,
+                detail=_escape_table_text(detail),
+                reason=_escape_table_text(first_reason.get(page_id, "")),
+            )
+        )
 
 
 def _append_phase_timings_section(
@@ -2082,6 +2417,86 @@ def _append_overall_resume_stats(
     )
 
 
+def _append_record_attribute_stats_section(
+    lines: list[str],
+    *,
+    title: str,
+    attribute_label: str,
+    extractor,
+    record_groups: list[tuple[str, list[dict], list[dict]]],
+) -> None:
+    """Append accepted/rejected counts grouped by one record attribute."""
+    lines.append(f"### {title}")
+    lines.append("")
+    lines.append(f"| Scope | {attribute_label} | Accepted | Rejected | Total | Accepted rate |")
+    lines.append("| --- | --- | ---: | ---: | ---: | ---: |")
+    wrote_row = False
+    for group_label, group_accepted, group_rejected in record_groups:
+        rows = _record_attribute_counts(group_accepted, group_rejected, extractor=extractor)
+        for value, accepted_count, rejected_count in rows:
+            total = accepted_count + rejected_count
+            lines.append(
+                f"| {group_label} | `{_escape_table_text(value)}` | {accepted_count} | "
+                f"{rejected_count} | {total} | {_rate(accepted_count, total):.1%} |"
+            )
+            wrote_row = True
+    if not wrote_row:
+        lines.append("| n/a | n/a | 0 | 0 | 0 | 0.0% |")
+
+
+def _record_attribute_counts(
+    accepted_records: list[dict],
+    rejected_records: list[dict],
+    *,
+    extractor,
+) -> list[tuple[str, int, int]]:
+    """Return sorted accepted/rejected counts for one extracted record attribute."""
+    accepted_counts = Counter(extractor(record) for record in accepted_records)
+    rejected_counts = Counter(extractor(record) for record in rejected_records)
+    values = sorted(set(accepted_counts) | set(rejected_counts))
+    return [
+        (value, int(accepted_counts.get(value, 0)), int(rejected_counts.get(value, 0)))
+        for value in values
+    ]
+
+
+def _record_answer_type(record: dict) -> str:
+    """Return the SimpleQA Verified answer type for a JSONL record."""
+    source_metadata = record.get("source_metadata", {})
+    if not isinstance(source_metadata, dict):
+        source_metadata = {}
+    value = record.get("answer_type") or source_metadata.get("answer_type")
+    if not str(value or "").strip():
+        return "unknown"
+    try:
+        normalized = normalize_route3_answer_types([str(value or "")])
+    except ValueError:
+        normalized = ()
+    if normalized:
+        return normalized[0]
+    return "Other"
+
+
+def _record_reasoning_type(record: dict) -> str:
+    """Return the Route 3 reasoning type for a JSONL record."""
+    source_metadata = record.get("source_metadata", {})
+    if not isinstance(source_metadata, dict):
+        source_metadata = {}
+    value = (
+        source_metadata.get("reasoning_type")
+        or record.get("relation_or_claim")
+        or source_metadata.get("legacy_composition_type")
+        or source_metadata.get("composition_type")
+    )
+    try:
+        normalized = normalize_route3_reasoning_types([str(value or "")])
+    except ValueError:
+        normalized = ()
+    if normalized:
+        return normalized[0]
+    return str(value or "unknown").strip() or "unknown"
+
+
 def _walkthrough_record_groups(
     *,
     existing_accepted_records: list[dict],
@@ -2262,6 +2677,74 @@ def _load_candidate_inputs(paths: list[Path], *, limit: int) -> list[GeneratedCa
             if len(candidates) >= limit:
                 return candidates
     return candidates
+
+
+def _apply_allowed_reasoning_type_filter(candidate: GeneratedCandidate, allowed_reasoning_types: list[str]) -> None:
+    """Mark a loaded Route 3 candidate rejected when it violates configured reasoning types."""
+    if not allowed_reasoning_types:
+        return
+    metadata = candidate.source_metadata
+    metadata["allowed_reasoning_types"] = list(allowed_reasoning_types)
+    llm_response = metadata.get("llm_response")
+    if not isinstance(llm_response, dict):
+        llm_response = {}
+    raw_reasoning_type = (
+        metadata.get("reasoning_type")
+        or llm_response.get("reasoning_type")
+        or metadata.get("legacy_composition_type")
+        or metadata.get("composition_type")
+    )
+    try:
+        normalized_values = normalize_route3_reasoning_types([str(raw_reasoning_type or "")])
+    except ValueError:
+        normalized_values = ()
+    reasoning_type = normalized_values[0] if normalized_values else ""
+    if reasoning_type in allowed_reasoning_types:
+        return
+    if "wikipedia_infobox_reasoning_type_not_allowed" not in candidate.notes:
+        candidate.notes.append("wikipedia_infobox_reasoning_type_not_allowed")
+    rejected_value = reasoning_type or str(raw_reasoning_type or "<missing>").strip() or "<missing>"
+    metadata["discard_reason"] = (
+        "reasoning_type_not_allowed:"
+        f"{rejected_value}; allowed={','.join(allowed_reasoning_types)}"
+    )
+
+
+def _apply_allowed_answer_type_filter(candidate: GeneratedCandidate, allowed_answer_types: list[str]) -> None:
+    """Mark a loaded Route 3 candidate rejected when it violates configured answer types."""
+    if not allowed_answer_types:
+        return
+    metadata = candidate.source_metadata
+    metadata["allowed_answer_types"] = list(allowed_answer_types)
+    llm_response = metadata.get("llm_response")
+    if not isinstance(llm_response, dict):
+        llm_response = {}
+    answer_type = _normalize_answer_type(
+        llm_response.get("answer_type") or metadata.get("answer_type") or candidate.answer_type,
+        candidate.answer,
+        candidate.question,
+    )
+    candidate.answer_type = answer_type
+    metadata["answer_type"] = answer_type
+    if answer_type in allowed_answer_types:
+        return
+    if "wikipedia_infobox_answer_type_not_allowed" not in candidate.notes:
+        candidate.notes.append("wikipedia_infobox_answer_type_not_allowed")
+    metadata["discard_reason"] = (
+        "answer_type_not_allowed:"
+        f"{answer_type or '<missing>'}; allowed={','.join(allowed_answer_types)}"
+    )
+
+
+def _attach_route3_extra_prompts(candidate: GeneratedCandidate, extra_prompts: list[str]) -> None:
+    """Persist optional stricter prompt rules on a loaded candidate for rewrite prompts."""
+    if extra_prompts:
+        candidate.source_metadata["extra_prompts"] = list(extra_prompts)
+
+
+def _attach_route3_table_filter_modes(candidate: GeneratedCandidate, table_filter_modes: list[str]) -> None:
+    """Persist active Route 3 table filter modes on a loaded candidate."""
+    candidate.source_metadata["table_filter_modes"] = list(table_filter_modes)
 
 
 def _candidate_from_record(record: dict) -> GeneratedCandidate:

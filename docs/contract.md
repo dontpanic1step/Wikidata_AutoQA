@@ -31,7 +31,7 @@ Prefer high precision over high recall. Treat early pilot outputs as candidate g
 - Do not let disambiguation descriptors or question wording leak the answer.
 - Prefer natural category names over pipeline or relation labels.
 - If the answer is temporal, the question must specify the requested precision or unit, such as `what year`, `what month`, `what day`, or `how many months`.
-- If the answer is a full calendar date, ask `what day, month, and year ...` for better answer normalization.
+- If the answer is a full calendar date, ask `what month, day, and year ...` for better answer normalization.
 - If the answer is numeric, the question must specify the counted quantity or unit, such as `how many gallons`, and the reference answer should not include the unit.
 - Avoid generic source phrasing such as `according to the table` or `according to the [source] table` in prompts; Route 3 should also avoid `in the List of ...` wording. Name the actual subject/event/list naturally. This is prompt guidance only, not a surface-rejection gate.
 - Avoid cumulative-statistic questions such as how many goals Messi has scored, total wins, career points, revenue, downloads, citations, or followers unless the statistic is explicitly scoped to a historically settled slice, completed event, completed season, or fixed table/list. This is prompt guidance; the shared surface guard no longer rejects cumulative wording directly.
@@ -42,6 +42,11 @@ Prefer high precision over high recall. Treat early pilot outputs as candidate g
 - Route-specific harvesting and route-specific validation are allowed and expected.
 - Route 1 is template-led and uses templates to construct candidate questions before shared rewriting.
 - Wikidata grounding, Wikidata disambiguation, time-invariance checks, and Wikidata-specific dedupe are Route 1 validators that may be reused only when appropriate.
+- Route 1 multi-hop scale runs use `route1_wikidata_multihop_join`: a QID-first, join-only Wikidata route. It discovers and persists QID seed units, hydrates those QIDs through Wikidata, applies stricter Route 1 validation, and then feeds candidates into the shared rewrite, DuckDuckGo, and optional second-stage grading pipeline.
+- `route1_wikidata_hidden_entity_two_hop` is a disabled legacy route id. It remains only so historical artifacts can be interpreted; it should not be enabled, scaled, or updated.
+- Route 4 runs use `route4_wikidata_two_hop`: a Wikidata route that composes validated single-hop facts around one hidden entity. The answer hop is `(x, r1, a)`, the clue hop is either `(x, r2, c)` or `(c, r2, x)`, and the final answer is `a`.
+- Route 1 multi-hop joins must not use Wikipedia dumps or broad search discovery as candidate sources. Search is the downstream long-tail leakage filter, not the Route 1 candidate harvester.
+- Route 1 and Route 3 intentionally have different route-local contracts. Route 1 requires deterministic Wikidata factual validation before shared filtering; Route 3 stores source provenance and relies on downstream filtering plus manual review rather than proving Wikidata-style uniqueness.
 - Non-Wikidata routes must define their own validation assumptions and failure modes.
 - Route 3 (`route3_wikipedia_infobox`) is Wikipedia-only, uses directly supplied Wikipedia URLs or streamed page IDs, and treats side infoboxes plus article tables as semi-structured sources.
 - Route 3 URL seed files may use `domain<TAB>subdomain<TAB>url`; domains should come from the Domain Axis in `docs/template_catalog_review.md` plus `History`.
@@ -82,7 +87,32 @@ Important optional/audit fields include:
 - `source_metadata`
 - `source_candidate` for Wikidata-backed routes
 
-For numeric answers, store the normalized reference value without units. For temporal answers, make the question text responsible for declaring whether the expected answer is a year, month, full date, duration, or other temporal unit. Route 3 generated candidates must include `answer_type` as `Entity`, `Number`, or `Date`.
+For `route1_wikidata_multihop_join`, `source_candidate` is required before shared processing, and it must carry complete multi-hop provenance:
+
+- `reasoning_style = multi_hop_join`
+- `hop_count >= 2`
+- connected `reasoning_path`
+- `bridge_entities`
+- `derivation_signature`
+- `provenance_complete = true`
+- `source_metadata.required_reasoning_clues`
+- a stable QID seed key in `source_metadata.route1_qid_seed_key` when produced by the scalable runner
+
+For `route4_wikidata_two_hop`, `source_candidate` is also required before shared processing, and it must carry:
+
+- `reasoning_style = multi_hop_hidden_entity`
+- `hop_count = 2`
+- ordered `reasoning_path` with `clue` and `answer` roles
+- `source_metadata.answer_hop`
+- `source_metadata.clue_hop`
+- `source_metadata.clue_orientation`, either `hidden_subject` or `hidden_object`
+- `source_metadata.hidden_entities`
+- `source_metadata.visible_clue_entities_or_values`
+- `source_metadata.required_reasoning_clues`
+- `provenance_complete = true`
+- a stable hidden-entity seed key in `source_metadata.route4_two_hop_seed_key`
+
+For numeric answers, store the normalized reference value without units. For temporal answers, make the question text responsible for declaring whether the expected answer is a year, month, full date, duration, or other temporal unit. Route 3 generated candidates must include a SimpleQA Verified-style `answer_type`: `Person`, `Place`, `Number`, `Date`, or `Other`.
 
 Accepted JSONL records include the final question, answer, aliases, route, source entities, evidence, canonical and rewritten question fields, template key/domain compatibility fields, search metadata, grading metadata, validation metadata, notes, and `source_metadata`.
 
@@ -148,6 +178,25 @@ Route 3 validation is intentionally limited:
 - shared rewrite/surface guards still apply.
 - metadata records `route_local_factual_validation` as false and names the provenance-only policy.
 - the incomplete tied-answer detector is retained for review but is non-blocking; Route 3 records it under `source_metadata.route_guard_warnings.wikipedia_infobox_incomplete_tie_answer`.
+- default table filter modes drop big-number-heavy and social-science-research tables before the Route 3 generation prompt; selected/rejected table metadata records active modes, matched markers, and big-number stats.
+
+Route 1 multi-hop join validation is intentionally stricter than Route 3:
+
+- subject and answer must be Wikidata-grounded when the answer is an entity
+- answer uniqueness and time-invariance must pass before shared filtering
+- subject ambiguity is resolved through Wikidata search/hydration
+- multi-hop reasoning paths must be connected and provenance-complete
+- bridge entities must not leak into the final question unless the template explicitly allows it
+- required reasoning clues must survive rewrite so the question cannot collapse into a shortcut single-hop question
+- ordinal and aggregate/count reasoning styles are excluded from the default `route1_wikidata_multihop_join` scale path
+
+Route 4 two-hop validation reuses the Wikidata strict validation policy where it applies and adds:
+
+- each single-hop fact must pass existing Route 1 validation before composition
+- the hidden entity must participate in both hops
+- the hidden entity label and aliases must not appear in the final question
+- the visible clue must not equal or alias the answer
+- all compatible non-frozen single-hop templates may be attempted, and clue paths that map to multiple hidden entities in the validated pool are pruned before shared filtering
 
 ## Search Contract
 

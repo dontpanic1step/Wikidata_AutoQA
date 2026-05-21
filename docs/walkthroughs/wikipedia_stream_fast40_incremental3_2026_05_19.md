@@ -4,20 +4,20 @@
 
 - Run group ID: `wikipedia_stream_fast40_2026_05_19`
 - Run segment ID: `wikipedia_stream_fast40_incremental3_2026_05_19`
-- Artifact manifest: `D:\Study\AI\My-research\Wikidata_Framework\outputs\run_manifests\wikipedia_stream_fast40_2026_05_19.json`
+- Artifact manifest: `outputs\run_manifests\wikipedia_stream_fast40_2026_05_19.json`
 - Mode: `page_id_stream`
 - Page source: `table-search`
 - Table-search queries: `insource:wikitable`
-- Endpoint resume: 21 accepted and 98 rejected records loaded
-- Existing accepted QAs before run: 21
-- Existing rejected QAs/pages before run: 98
-- Attempted page IDs: 40
-- Accepted QAs: 12
-- Accepted QAs after resume: 33
-- Rejected QAs/pages: 28
-- Rejected QAs/pages after resume: 126
-- Returned to rerun pool without final decision: 0
-- Wall-clock runtime: 330.0469s
+- Endpoint resume: 38 accepted and 140 rejected records loaded
+- Existing accepted QAs before run: 38
+- Existing rejected QAs/pages before run: 140
+- Attempted page IDs: 5
+- Accepted QAs: 3
+- Accepted QAs after resume: 41
+- Rejected QAs/pages: 2
+- Rejected QAs/pages after resume: 142
+- Transient rerun attempts during run: 0
+- Wall-clock runtime: 71.7513s
 - DuckDuckGo top K: 5
 - Generated search queries per QA: 2
 - DuckDuckGo parallel queries: 3
@@ -38,42 +38,34 @@
 
 | Scope | Page IDs/records | Accepted | Rejected | Rerun | Accepted/page rate |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Existing endpoint records | 119 | 21 | 98 | 0 | 17.6% |
-| Incremental run | 40 | 12 | 28 | 0 | 30.0% |
-| Overall displayed | 159 | 33 | 126 | 0 | 20.8% |
+| Existing endpoint records | 178 | 38 | 140 | 0 | 21.3% |
+| Incremental run | 5 | 3 | 2 | 0 | 60.0% |
+| Overall displayed | 183 | 41 | 142 | 0 | 22.4% |
 
 ### Survival By Layer
 
 | Layer | Entered | Failed | Survived | Layer survival | Cumulative survival |
 | --- | ---: | ---: | ---: | ---: | ---: |
-| Page-id reservation | 40 | 0 | 40 | 100.0% | 100.0% |
-| Unresolved or returned to rerun pool | 40 | 0 | 40 | 100.0% | 100.0% |
-| Page extraction, table grading, and QA generation | 40 | 1 | 39 | 97.5% | 97.5% |
-| Rewrite and surface validation | 39 | 1 | 38 | 97.4% | 95.0% |
-| DuckDuckGo long-tail filtering | 38 | 6 | 32 | 84.2% | 80.0% |
-| Second-stage model grading | 32 | 17 | 15 | 46.9% | 37.5% |
-| Shared route-aware validation | 15 | 0 | 15 | 100.0% | 37.5% |
-| Deduplication | 15 | 0 | 15 | 100.0% | 37.5% |
-| Other rejection | 15 | 3 | 12 | 80.0% | 30.0% |
+| Page-id reservation | 5 | 0 | 5 | 100.0% | 100.0% |
+| Unresolved or returned to rerun pool | 5 | 0 | 5 | 100.0% | 100.0% |
+| Page extraction, table grading, and QA generation | 5 | 0 | 5 | 100.0% | 100.0% |
+| Rewrite and surface validation | 5 | 0 | 5 | 100.0% | 100.0% |
+| DuckDuckGo long-tail filtering | 5 | 0 | 5 | 100.0% | 100.0% |
+| Second-stage model grading | 5 | 2 | 3 | 60.0% | 60.0% |
+| Shared route-aware validation | 3 | 0 | 3 | 100.0% | 60.0% |
+| Deduplication | 3 | 0 | 3 | 100.0% | 60.0% |
+| Other rejection | 3 | 0 | 3 | 100.0% | 60.0% |
 
 ### Failure Reasons
 
 | Stage | Exact reason | Count |
 | --- | --- | ---: |
-| `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | 17 |
-| `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | 3 |
-| `other` | `manual_review_rejected:manual_missing_numeric_unit_in_question` | 1 |
-| `other` | `manual_review_rejected:manual_table_header_alignment_error` | 1 |
-| `other` | `manual_review_rejected:manual_underspecified_period_scope` | 1 |
-| `rewrite_surface` | `rewrite_guard_rejected:cutoff_year_exceeded` | 1 |
-| `route_generation` | `wikipedia_infobox_table_score_below_minimum:table_score_below_minimum:min_table_score=0.0000;best_score=-0.1000` | 1 |
-| `search_longtail` | `search_longtail_verifier_error` | 1 |
-| `search_longtail` | `search_longtail_verifier_rejected:full_question:answer_in_title` | 1 |
-| `search_longtail` | `search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded` | 1 |
+| `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | 2 |
 
 ### Rerun Pool After Run
 
 Rerun pool is empty.
+
 
 ### Phase Timings
 
@@ -100,40 +92,40 @@ For incremental walkthroughs, `Incremental run` means only the current segment. 
 
 | Scope | Wall-clock seconds | Page IDs/records | Final decision records | Total generation seconds | Avg generation seconds | Total processing seconds | Avg processing seconds | Total second-stage seconds | Avg second-stage seconds |
 | --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
-| Incremental run | 330.0469 | 40 | 40 | 382.4525 | 9.5613 | 676.4960 | 16.9124 | 381.9556 | 11.9361 |
-| Total displayed run | 2562.1087 | 159 | 159 | 1410.4762 | 8.8709 | 2702.0790 | 16.9942 | 1463.8298 | 14.0753 |
+| Incremental run | 71.7513 | 5 | 5 | 51.9910 | 10.3982 | 129.5812 | 25.9162 | 98.1436 | 19.6287 |
+| Total displayed run | 2862.7252 | 183 | 183 | 1808.5098 | 9.8826 | 3489.4744 | 19.0682 | 1796.6394 | 15.2258 |
 
 #### Incremental Run Phase Timings
 
 | Phase | Count | Total seconds | Average seconds | Max seconds |
 | --- | ---: | ---: | ---: | ---: |
-| `candidate_processing_seconds` | 40 | 676.4960 | 16.9124 | 31.5427 |
-| `duckduckgo_search_seconds` | 38 | 157.8818 | 4.1548 | 18.1817 |
-| `first_paragraph_extract_seconds` | 39 | 6.0829 | 0.1560 | 0.6009 |
-| `llm_question_generation_seconds` | 39 | 207.3080 | 5.3156 | 9.8479 |
-| `number_reference_margin_seconds` | 38 | 0.0005 | 0.0000 | 0.0002 |
-| `page_fetch_seconds` | 40 | 153.7001 | 3.8425 | 7.2911 |
-| `rewrite_seconds` | 39 | 136.6083 | 3.5028 | 9.4547 |
-| `second_stage_grading_seconds` | 32 | 381.9556 | 11.9361 | 26.5370 |
-| `table_parse_seconds` | 40 | 13.6912 | 0.3423 | 1.2888 |
-| `total_generation_seconds` | 40 | 382.4525 | 9.5613 | 13.8396 |
-| `total_processing_seconds` | 40 | 676.4960 | 16.9124 | 31.5427 |
+| `candidate_processing_seconds` | 5 | 129.5812 | 25.9162 | 54.0864 |
+| `duckduckgo_search_seconds` | 5 | 12.4845 | 2.4969 | 3.7948 |
+| `first_paragraph_extract_seconds` | 5 | 4.4206 | 0.8841 | 1.3751 |
+| `llm_question_generation_seconds` | 5 | 30.6509 | 6.1302 | 12.8554 |
+| `number_reference_margin_seconds` | 5 | 0.0003 | 0.0001 | 0.0002 |
+| `page_fetch_seconds` | 5 | 0.7266 | 0.1453 | 0.2972 |
+| `rewrite_seconds` | 5 | 18.9373 | 3.7875 | 4.2984 |
+| `second_stage_grading_seconds` | 5 | 98.1436 | 19.6287 | 47.5780 |
+| `table_parse_seconds` | 5 | 14.5121 | 2.9024 | 4.9610 |
+| `total_generation_seconds` | 5 | 51.9910 | 10.3982 | 17.6132 |
+| `total_processing_seconds` | 5 | 129.5812 | 25.9162 | 54.0864 |
 
 #### Total Displayed Run Phase Timings
 
 | Phase | Count | Total seconds | Average seconds | Max seconds |
 | --- | ---: | ---: | ---: | ---: |
-| `candidate_processing_seconds` | 159 | 2702.0790 | 16.9942 | 56.3197 |
-| `duckduckgo_search_seconds` | 148 | 643.3589 | 4.3470 | 49.9401 |
-| `first_paragraph_extract_seconds` | 157 | 32.9541 | 0.2099 | 1.3109 |
-| `llm_question_generation_seconds` | 157 | 782.1484 | 4.9818 | 16.5706 |
-| `number_reference_margin_seconds` | 148 | 0.0018 | 0.0000 | 0.0004 |
-| `page_fetch_seconds` | 158 | 517.9059 | 3.2779 | 9.1768 |
-| `rewrite_seconds` | 157 | 594.6350 | 3.7875 | 33.2139 |
-| `second_stage_grading_seconds` | 104 | 1463.8298 | 14.0753 | 40.3561 |
-| `table_parse_seconds` | 158 | 65.2819 | 0.4132 | 2.3210 |
-| `total_generation_seconds` | 159 | 1410.4762 | 8.8709 | 23.4883 |
-| `total_processing_seconds` | 159 | 2702.0790 | 16.9942 | 56.3197 |
+| `candidate_processing_seconds` | 183 | 3489.4744 | 19.0682 | 92.4232 |
+| `duckduckgo_search_seconds` | 171 | 913.2937 | 5.3409 | 51.3839 |
+| `first_paragraph_extract_seconds` | 180 | 42.4351 | 0.2358 | 1.3751 |
+| `llm_question_generation_seconds` | 180 | 993.3308 | 5.5185 | 19.5365 |
+| `number_reference_margin_seconds` | 171 | 0.0043 | 0.0000 | 0.0016 |
+| `page_fetch_seconds` | 182 | 667.6063 | 3.6682 | 17.2844 |
+| `rewrite_seconds` | 180 | 779.2406 | 4.3291 | 33.2139 |
+| `second_stage_grading_seconds` | 118 | 1796.6394 | 15.2258 | 47.5780 |
+| `table_parse_seconds` | 182 | 90.0698 | 0.4949 | 4.9610 |
+| `total_generation_seconds` | 183 | 1808.5098 | 9.8826 | 32.2263 |
+| `total_processing_seconds` | 183 | 3489.4744 | 19.0682 | 92.4232 |
 
 ## Accepted Candidates
 
@@ -164,11 +156,6 @@ Existing endpoint records are shown first; incremental records are the records a
 | 67436 | Among pseudoephedrine and related agents, which compound has the lowest EC50 for releasing norepinephrine? | Dextroamphetamine | https://en.wikipedia.org/wiki/Pseudoephedrine |
 | 32551521 | Which FIFA national teams represent the legal nationality of the United Kingdom according to FIFA eligibility rules? | Great Britain; England; Northern Ireland; Scotland; Wales; Anguilla; Bermuda; British Virgin Islands; Cayman Islands; Gibraltar; Montserrat; Turks and Caicos Islands | https://en.wikipedia.org/wiki/FIFA_eligibility_rules |
 | 31940 | Which breadth claim had the greatest number of states claiming territorial waters in 1960 according to the United Nations Convention on the Law of the Sea? | 12-mile limit | https://en.wikipedia.org/wiki/United_Nations_Convention_on_the_Law_of_the_Sea |
-
-### Incremental Records
-
-| Page ID | Question | Answer | Source |
-| ---: | --- | --- | --- |
 | 15606 | Which Japanese dialect had the lowest intelligibility percentage to students from Tokyo and the Kantō region in 1967? | Himi, Toyama | https://en.wikipedia.org/wiki/Japanese_language |
 | 12542 | What song did the Grateful Dead perform live the greatest number of times? | Me and My Uncle | https://en.wikipedia.org/wiki/Grateful_Dead |
 | 30217 | What age group had the largest total population in the Turks and Caicos Islands according to the 1 August 2017 estimates? | 35–39 | https://en.wikipedia.org/wiki/Turks_and_Caicos_Islands |
@@ -181,6 +168,19 @@ Existing endpoint records are shown first; incremental records are the records a
 | 28229246 | At which venue did Paul Pogba score his first goal for the international team? | Central Stadium, Gomel, Belarus | https://en.wikipedia.org/wiki/Paul_Pogba |
 | 563616 | Which Ubisoft subsidiary was established first? | Ubisoft Reflections | https://en.wikipedia.org/wiki/Ubisoft |
 | 101965 | What is the ICD-10 code for Psoriatic arthritis related to Psoriasis? | L40.50 | https://en.wikipedia.org/wiki/Psoriasis |
+| 1024289 | What is the amount of earnings before interest and taxes (EBIT) in the example statement of income? | 3355 | https://en.wikipedia.org/wiki/Earnings_before_interest_and_taxes |
+| 56494 | How many people of Polish ancestry were among minorities in Bergen on 1 January 2024? | 6755 | https://en.wikipedia.org/wiki/Bergen |
+| 227931 | What percentage of protein is found in the original tamarind seed kernel composition? | 7.6% | https://en.wikipedia.org/wiki/Tamarind |
+| 22573 | What degrees are required in education to become an otorhinolaryngologist? | Doctor of Medicine; Doctor of Osteopathic Medicine; Bachelor of Medicine, Bachelor of Surgery | https://en.wikipedia.org/wiki/Otorhinolaryngology |
+| 963152 | What is the estimated population of Spaniards in Mexico? | 120000000 | https://en.wikipedia.org/wiki/Spaniards |
+
+### Incremental Records
+
+| Page ID | Question | Answer | Source |
+| ---: | --- | --- | --- |
+| 11423229 | How many White people were recorded in Cheyenne, Wyoming in the 2020 census? | 51728 | https://en.wikipedia.org/wiki/Cheyenne,_Wyoming |
+| 75698 | What draw type corresponds to having 5 outs in Texas hold 'em? | One Pair to Two Pair or Trips | https://en.wikipedia.org/wiki/Texas_hold_'em |
+| 339183 | What is the traditional Mediterranean wind point name for the compass direction South? | Ostro | https://en.wikipedia.org/wiki/Points_of_the_compass |
 
 ## Second-Stage Filtering Responses
 
@@ -211,6 +211,23 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 67436 | Among pseudoephedrine and related agents, which compound has the lowest EC50 for releasing norepinephrine? | Dextroamphetamine | INCORRECT; predicted_answer: Among pseudoephedrine and related agents, **ephedrine** typically has the lowest EC50 for releasing norepinephrine, indicating it is the most potent at inducing norepinephrine release. | INCORRECT; predicted_answer: Among pseudoephedrine and its related phenethylamine stereoisomers, **(+)-ephedrine** (the (1S, 2R) isomer) typically exhibits the lowest EC50 for releasing norepinephrine.  While all four isomers (pseudoephedrine and ephedrine enantiomers) act as norepinephrine releasing agents, (+)-ephedrine is the most potent, followed by (-)-ephedrine. Pseudoephedrine isomers are significantly less potent in their norepinephrine-releasing capacity. |
 | 32551521 | Which FIFA national teams represent the legal nationality of the United Kingdom according to FIFA eligibility rules? | Great Britain; England; Northern Ireland; Scotland; Wales; Anguilla; Bermuda; British Virgin Islands; Cayman Islands; Gibraltar; Montserrat; Turks and Caicos Islands | INCORRECT; predicted_answer: The FIFA national teams that represent the legal nationality of the United Kingdom according to FIFA eligibility rules are:  - England - Scotland - Wales - Northern Ireland  Each of these teams represents one of the four constituent countries of the UK, and players eligible for the UK can represent any of these teams based on their specific eligibility criteria. | INCORRECT; predicted_answer: According to FIFA eligibility rules, there is no single "United Kingdom" national team. Instead, the legal nationality of the United Kingdom is represented by four distinct national teams:  1.  **England** (The Football Association) 2.  **Scotland** (Scottish Football Association) 3.  **Wales** (Football Association of Wales) 4.  **Northern Ireland** (Irish Football Association)  Under the **Home Nations agreement**, a player holding British nationality is eligible to represent any of these four associations if they (or a parent or grandparent) were born in the relevant territory, or if |
 | 31940 | Which breadth claim had the greatest number of states claiming territorial waters in 1960 according to the United Nations Convention on the Law of the Sea? | 12-mile limit | INCORRECT; predicted_answer: In 1960, the breadth claim of **3 nautical miles** had the greatest number of states claiming territorial waters according to the United Nations Convention on the Law of the Sea. | INCORRECT; predicted_answer: In 1960, the **3-nautical-mile** limit was the breadth claim held by the greatest number of states. |
+| 15606 | Which Japanese dialect had the lowest intelligibility percentage to students from Tokyo and the Kantō region in 1967? | Himi, Toyama | INCORRECT; predicted_answer: In 1967, the Japanese dialect with the lowest intelligibility percentage to students from Tokyo and the Kantō region was the **Tsugaru dialect**. | INCORRECT; predicted_answer: The **Tsugaru dialect** (Aomori Prefecture) had the lowest intelligibility percentage, with students from Tokyo and the Kantō region understanding only approximately **12%** of the speech in a 1967 study. |
+| 12542 | What song did the Grateful Dead perform live the greatest number of times? | Me and My Uncle | INCORRECT; predicted_answer: The Grateful Dead performed the song "Sugar Magnolia" live the greatest number of times. | INCORRECT; predicted_answer: The Grateful Dead performed **"Playing in the Band"** live more than any other song, with 602 documented performances. |
+| 30217 | What age group had the largest total population in the Turks and Caicos Islands according to the 1 August 2017 estimates? | 35–39 | INCORRECT; predicted_answer: The age group 0-14 years had the largest total population in the Turks and Caicos Islands according to the 1 August 2017 estimates. | INCORRECT; predicted_answer: According to the 2017 estimates, the **30–34** age group had the largest total population in the Turks and Caicos Islands. |
+| 384695 | Which program at the University of Illinois Urbana-Champaign has the highest global subject ranking? | Materials Science | INCORRECT; predicted_answer: The University of Illinois Urbana-Champaign's program with the highest global subject ranking is its Engineering program. | INCORRECT; predicted_answer: The University of Illinois Urbana-Champaign’s **Library and Information Science** program has the highest global subject ranking, consistently placing **#1 in the world** according to the *QS World University Rankings by Subject*. |
+| 73199 | Who was the named printer at Cambridge University Press between 1886 and 1916? | Charles Felix Clay | INCORRECT; predicted_answer: The named printer at Cambridge University Press between 1886 and 1916 was John Clay. | INCORRECT; predicted_answer: The named printer at Cambridge University Press between 1886 and 1916 was **John Clay**. |
+| 1564433 | Which state had the highest effective literacy rate for Scheduled Castes according to the 2011 census? | Mizoram | INCORRECT; predicted_answer: According to the 2011 census, Kerala had the highest effective literacy rate for Scheduled Castes. | INCORRECT; predicted_answer: According to the 2011 Census, **Daman and Diu** (a Union Territory) had the highest effective literacy rate for Scheduled Castes at **92.6%**. Among the states, **Mizoram** had the highest rate at **92.4%**. |
+| 52812 | At what temperature in degrees Celsius does Earth's atmosphere at sea level have the highest absolute humidity at 100% relative humidity? | 50 (acceptable range: anything between 49 and 51) | INCORRECT; predicted_answer: At 100% relative humidity, the absolute humidity (maximum water vapor content) increases with temperature because warmer air can hold more moisture.  The highest absolute humidity at sea level occurs at the highest temperature. For example, at around 30°C, the saturation vapor pressure is about 42.4 hPa, corresponding to roughly 30 grams of water vapor per cubic meter of air.  In summary:   **The highest absolute humidity at 100% relative humidity at sea level occurs at the highest temperature present, typically around 30–35°C or higher, where the air can hold the maximum amount of water vapor.** | INCORRECT; predicted_answer: Earth's atmosphere has the highest absolute humidity at the **highest possible ambient temperature** recorded at sea level.  Because the water-holding capacity of air increases exponentially with temperature, the maximum absolute humidity occurs at the highest recorded dew point. The world record dew point is approximately **35°C (95°F)**, recorded in Dhahran, Saudi Arabia. At this temperature and 100% relative humidity, the air contains approximately **39.6 grams of water per cubic meter**. |
+| 56636 | What city has been a twin town or sister city of Colombo since 1874? | Biratnagar | INCORRECT; predicted_answer: Colombo has been a twin town or sister city with Nuremberg, Germany since 1874. | INCORRECT; predicted_answer: No city has been a sister city of Colombo since 1874. The concept of modern sister cities began in the 20th century, and Colombo's oldest such partnership is with **Saint Petersburg**, Russia, established in 1997. |
+| 164390 | What year did John Hurt receive the BAFTA Special Award? | 2011 | INCORRECT; predicted_answer: John Hurt received the BAFTA Special Award in 2013. | INCORRECT; predicted_answer: John Hurt received the BAFTA Special Award (the Outstanding British Contribution to Cinema Award) in **2012**. |
+| 28229246 | At which venue did Paul Pogba score his first goal for the international team? | Central Stadium, Gomel, Belarus | INCORRECT; predicted_answer: Paul Pogba scored his first goal for the France international team at the Stade de France. | INCORRECT; predicted_answer: Paul Pogba scored his first international goal for France at the **Stade de France** in Saint-Denis. It occurred on March 22, 2013, during a World Cup qualifying match against Georgia. |
+| 563616 | Which Ubisoft subsidiary was established first? | Ubisoft Reflections | INCORRECT; predicted_answer: The first Ubisoft subsidiary established was **Ubisoft Montreal**, founded in 1997. | INCORRECT; predicted_answer: **Ubisoft Paris** (originally established simply as Ubisoft) was the first subsidiary, founded in **1986**. |
+| 101965 | What is the ICD-10 code for Psoriatic arthritis related to Psoriasis? | L40.50 | INCORRECT; predicted_answer: The ICD-10 code for Psoriatic arthritis related to Psoriasis is **L40.5**. | INCORRECT; predicted_answer: The primary ICD-10 code for psoriatic arthritis is **L40.50** (Arthropathic psoriasis, unspecified).  Depending on the specific presentation, more specific codes include: *   **L40.51:** Distal interphalangeal psoriatic arthropathy *   **L40.52:** Psoriatic arthritis mutilans *   **L40.53:** Psoriatic spondylitis *   **L40.59:** Other psoriatic arthropathy |
+| 1024289 | What is the amount of earnings before interest and taxes (EBIT) in the example statement of income? | 3355 (acceptable range: anything between 3321 and 3389) | NOT_ATTEMPTED; predicted_answer: Please provide the example statement of income or an image of it so I can identify the EBIT amount. | NOT_ATTEMPTED; predicted_answer: To provide the specific amount, please provide the image or text of the "example statement of income" you are referring to.  In a standard income statement, **EBIT** is calculated as: **Revenue - Cost of Goods Sold (COGS) - Operating Expenses.** |
+| 56494 | How many people of Polish ancestry were among minorities in Bergen on 1 January 2024? | 6755 (acceptable range: anything between 6687 and 6823) | INCORRECT; predicted_answer: On 1 January 2024, there were 2,276 people of Polish ancestry among the minorities in Bergen. | INCORRECT; predicted_answer: As of 1 January 2024, there were **11,147** people of Polish ancestry (immigrants and Norwegian-born to immigrant parents) living in Bergen. They remain the largest minority group in the municipality. |
+| 227931 | What percentage of protein is found in the original tamarind seed kernel composition? | 7.6% | INCORRECT; predicted_answer: The original tamarind seed kernel composition contains approximately 17-30% protein. | INCORRECT; predicted_answer: The original tamarind seed kernel typically contains between **17% and 20%** protein. |
+| 22573 | What degrees are required in education to become an otorhinolaryngologist? | Doctor of Medicine; Doctor of Osteopathic Medicine; Bachelor of Medicine, Bachelor of Surgery | INCORRECT; predicted_answer: To become an otorhinolaryngologist (ENT specialist), you typically need:  1. A bachelor's degree (pre-medical or related field) 2. A medical degree (MD or DO) 3. Completion of a residency program in otorhinolaryngology (ENT)  Additional fellowship training may be pursued for subspecialties. | INCORRECT; predicted_answer: To become an otorhinolaryngologist (ENT doctor), you must complete the following educational steps:  1.  **Bachelor’s Degree:** A four-year undergraduate degree (typically in a science-related field). 2.  **Medical Degree:** A four-year degree from an accredited medical school (either a **Doctor of Medicine [MD]** or a **Doctor of Osteopathic Medicine [DO]**). 3.  **Residency:** A five-year **Residency in Otolaryngology**, which includes one year of general surgery training and four years of specialized ENT training. |
+| 963152 | What is the estimated population of Spaniards in Mexico? | 120000000 (acceptable range: anything between 118800000 and 121200000) | INCORRECT; predicted_answer: The estimated population of Spaniards living in Mexico is around 20,000 to 30,000 people. | INCORRECT; predicted_answer: According to the 2020 Census by INEGI, there are approximately **144,553** Spanish citizens living in Mexico. However, data from Spain’s Register of Spaniards Resident Abroad (PERE) estimates the number to be higher, at approximately **155,000 to 160,000** individuals. |
 | 32611 | What year saw the highest number of military deaths for South Vietnam during the Vietnam War from 1955 to 1975? | 1972 | INCORRECT; predicted_answer: The year with the highest number of military deaths for South Vietnam during the Vietnam War was 1968. | CORRECT; predicted_answer: The year with the highest number of military deaths for South Vietnam (ARVN) was **1972**, during which approximately 39,587 soldiers were killed, largely due to the North Vietnamese Easter Offensive. |
 | 17416221 | Which province in South Africa had the largest population in 2022? | Gauteng | not run | not run |
 | 9316 | What language has the second highest number of native speakers in England? | Polish | not run | not run |
@@ -309,23 +326,6 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 20804 | What nationality had the largest population in Magdeburg in 2022? | Syria | INCORRECT; predicted_answer: In 2022, the largest population by nationality in Magdeburg was German. | INCORRECT; predicted_answer: The largest nationality in Magdeburg in 2022, after Germans, was **Syrian**. |
 | 52374650 | Which king began his reign last according to the list of kings? | Frederik X | NOT_ATTEMPTED; predicted_answer: Please provide the list of kings so I can determine which king began his reign last. | INCORRECT; predicted_answer: To provide the correct answer, I would need to see the specific **list of kings** you are referring to.  However, if you are referring to the **Kings of Israel and Judah** as listed in the Bible, the last king to begin his reign was **Zedekiah**. |
 | 83316 | Which artist had a number 1 hit on the UK Singles Chart with a song written by Ray Davies? | Herman's Hermits | INCORRECT; predicted_answer: The Kinks had a number 1 hit on the UK Singles Chart with a song written by Ray Davies. | INCORRECT; predicted_answer: **The Kinks** had several number 1 hits written by Ray Davies, including "You Really Got Me," "Sunny Afternoon," and "Lola." |
-
-### Incremental Records
-
-| Page ID | Question | Reference answer | openai/gpt-4.1-mini | google/gemini-3-flash-preview |
-| ---: | --- | --- | --- | --- |
-| 15606 | Which Japanese dialect had the lowest intelligibility percentage to students from Tokyo and the Kantō region in 1967? | Himi, Toyama | INCORRECT; predicted_answer: In 1967, the Japanese dialect with the lowest intelligibility percentage to students from Tokyo and the Kantō region was the **Tsugaru dialect**. | INCORRECT; predicted_answer: The **Tsugaru dialect** (Aomori Prefecture) had the lowest intelligibility percentage, with students from Tokyo and the Kantō region understanding only approximately **12%** of the speech in a 1967 study. |
-| 12542 | What song did the Grateful Dead perform live the greatest number of times? | Me and My Uncle | INCORRECT; predicted_answer: The Grateful Dead performed the song "Sugar Magnolia" live the greatest number of times. | INCORRECT; predicted_answer: The Grateful Dead performed **"Playing in the Band"** live more than any other song, with 602 documented performances. |
-| 30217 | What age group had the largest total population in the Turks and Caicos Islands according to the 1 August 2017 estimates? | 35–39 | INCORRECT; predicted_answer: The age group 0-14 years had the largest total population in the Turks and Caicos Islands according to the 1 August 2017 estimates. | INCORRECT; predicted_answer: According to the 2017 estimates, the **30–34** age group had the largest total population in the Turks and Caicos Islands. |
-| 384695 | Which program at the University of Illinois Urbana-Champaign has the highest global subject ranking? | Materials Science | INCORRECT; predicted_answer: The University of Illinois Urbana-Champaign's program with the highest global subject ranking is its Engineering program. | INCORRECT; predicted_answer: The University of Illinois Urbana-Champaign’s **Library and Information Science** program has the highest global subject ranking, consistently placing **#1 in the world** according to the *QS World University Rankings by Subject*. |
-| 73199 | Who was the named printer at Cambridge University Press between 1886 and 1916? | Charles Felix Clay | INCORRECT; predicted_answer: The named printer at Cambridge University Press between 1886 and 1916 was John Clay. | INCORRECT; predicted_answer: The named printer at Cambridge University Press between 1886 and 1916 was **John Clay**. |
-| 1564433 | Which state had the highest effective literacy rate for Scheduled Castes according to the 2011 census? | Mizoram | INCORRECT; predicted_answer: According to the 2011 census, Kerala had the highest effective literacy rate for Scheduled Castes. | INCORRECT; predicted_answer: According to the 2011 Census, **Daman and Diu** (a Union Territory) had the highest effective literacy rate for Scheduled Castes at **92.6%**. Among the states, **Mizoram** had the highest rate at **92.4%**. |
-| 52812 | At what temperature in degrees Celsius does Earth's atmosphere at sea level have the highest absolute humidity at 100% relative humidity? | 50 (acceptable range: anything between 49 and 51) | INCORRECT; predicted_answer: At 100% relative humidity, the absolute humidity (maximum water vapor content) increases with temperature because warmer air can hold more moisture.  The highest absolute humidity at sea level occurs at the highest temperature. For example, at around 30°C, the saturation vapor pressure is about 42.4 hPa, corresponding to roughly 30 grams of water vapor per cubic meter of air.  In summary:   **The highest absolute humidity at 100% relative humidity at sea level occurs at the highest temperature present, typically around 30–35°C or higher, where the air can hold the maximum amount of water vapor.** | INCORRECT; predicted_answer: Earth's atmosphere has the highest absolute humidity at the **highest possible ambient temperature** recorded at sea level.  Because the water-holding capacity of air increases exponentially with temperature, the maximum absolute humidity occurs at the highest recorded dew point. The world record dew point is approximately **35°C (95°F)**, recorded in Dhahran, Saudi Arabia. At this temperature and 100% relative humidity, the air contains approximately **39.6 grams of water per cubic meter**. |
-| 56636 | What city has been a twin town or sister city of Colombo since 1874? | Biratnagar | INCORRECT; predicted_answer: Colombo has been a twin town or sister city with Nuremberg, Germany since 1874. | INCORRECT; predicted_answer: No city has been a sister city of Colombo since 1874. The concept of modern sister cities began in the 20th century, and Colombo's oldest such partnership is with **Saint Petersburg**, Russia, established in 1997. |
-| 164390 | What year did John Hurt receive the BAFTA Special Award? | 2011 | INCORRECT; predicted_answer: John Hurt received the BAFTA Special Award in 2013. | INCORRECT; predicted_answer: John Hurt received the BAFTA Special Award (the Outstanding British Contribution to Cinema Award) in **2012**. |
-| 28229246 | At which venue did Paul Pogba score his first goal for the international team? | Central Stadium, Gomel, Belarus | INCORRECT; predicted_answer: Paul Pogba scored his first goal for the France international team at the Stade de France. | INCORRECT; predicted_answer: Paul Pogba scored his first international goal for France at the **Stade de France** in Saint-Denis. It occurred on March 22, 2013, during a World Cup qualifying match against Georgia. |
-| 563616 | Which Ubisoft subsidiary was established first? | Ubisoft Reflections | INCORRECT; predicted_answer: The first Ubisoft subsidiary established was **Ubisoft Montreal**, founded in 1997. | INCORRECT; predicted_answer: **Ubisoft Paris** (originally established simply as Ubisoft) was the first subsidiary, founded in **1986**. |
-| 101965 | What is the ICD-10 code for Psoriatic arthritis related to Psoriasis? | L40.50 | INCORRECT; predicted_answer: The ICD-10 code for Psoriatic arthritis related to Psoriasis is **L40.5**. | INCORRECT; predicted_answer: The primary ICD-10 code for psoriatic arthritis is **L40.50** (Arthropathic psoriasis, unspecified).  Depending on the specific presentation, more specific codes include: *   **L40.51:** Distal interphalangeal psoriatic arthropathy *   **L40.52:** Psoriatic arthritis mutilans *   **L40.53:** Psoriatic spondylitis *   **L40.59:** Other psoriatic arthropathy |
 | 25445 | Romania |  | not run | not run |
 | 380845 | Which country is forecasted by the IMF to have the highest nominal GDP in 2026? | United States | not run | not run |
 | 11787 | What year did Fleetwood Mac win the American Music Award for Favorite Pop/Rock Band/Duo/Group? | 1978 | not run | not run |
@@ -354,6 +354,30 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 43281 | In which five-year period did the East India Company export the greatest total quantity of textiles to Europe? | 1720-1724 | INCORRECT; predicted_answer: The East India Company exported the greatest total quantity of textiles to Europe during the five-year period 1761-1765. | INCORRECT; predicted_answer: The East India Company exported the greatest total quantity of textiles to Europe during the five-year period of **1721–1725**. |
 | 36896 | What is the maximum head-and-body length measured for male lions? | 208 (acceptable range: anything between 206 and 210) | INCORRECT; predicted_answer: The maximum head-and-body length measured for male lions is about 3.3 meters (approximately 10 feet 10 inches). | INCORRECT; predicted_answer: The maximum head-and-body length measured for a male lion is approximately **250 cm (8 feet 2 inches)**. Including the tail, the total length can reach up to 330 cm (10 feet 10 inches). |
 | 26689 | What nasal consonant sound is classified under the Palatal place of articulation in Swedish language phonology? | ŋ | INCORRECT; predicted_answer: The nasal consonant sound classified under the Palatal place of articulation in Swedish phonology is the voiced palatal nasal, represented as [ɲ]. | INCORRECT; predicted_answer: The nasal consonant classified under the palatal place of articulation in Swedish phonology is the **palatal nasal [ɲ]**.  In Swedish, this sound is an allophone of /n/ that occurs before the voiceless palatal fricative /j/ or /ɕ/ (as in *fransyska* or *punsch*). |
+| 293791 | Revised Romanization of Korean |  | not run | not run |
+| 52738 | What is the highest temperature recorded in Cádiz during August in degrees Celsius? | 43 | not run | not run |
+| 428227 | Who led the Tories (British political party) in the 1685 election? | James II of England | not run | not run |
+| 43910 | Which character did Albert Finney portray in the 1974 film Murder on the Orient Express? | Hercule Poirot | not run | not run |
+| 280738 | Which film directed by John Ford won the Academy Award for Best Director in the year 1935? | The Informer | not run | not run |
+| 277945 | Who performed the role of Odette in the Moscow 1877 performance of Swan Lake? | Pelageya Karpakova | not run | not run |
+| 53762 | In what year did David Niven receive the Academy Award for Best Actor? | 1958 | CORRECT; predicted_answer: David Niven received the Academy Award for Best Actor in 1958. | not run |
+| 363002 | Which character did Sandra Oh portray in the 2014 stage production of Death and the Maiden? | Paulina | not run | not run |
+| 7299 | Which colonial destination imported 3,646,800 slaves between 1450 and 1870? | Brazil | CORRECT; predicted_answer: The colonial destination that imported 3,646,800 slaves between 1450 and 1870 was Brazil. | not run |
+| 81215 | In what year was the Australian 1 dollar coin first minted? | 1984 | not run | not run |
+| 11186 | Who was the first administrator of the Federal Aviation Administration? | Elwood Richard Quesada | CORRECT; predicted_answer: The first administrator of the Federal Aviation Administration (FAA) was Elwood R. Quesada. | not run |
+| 67749 | Which film directed by Mike Nichols was released by Warner Bros. in 1966? | Who's Afraid of Virginia Woolf? | not run | not run |
+| 217696 | Which character was portrayed by Minnie Driver in the 1995 film Circle of Friends? | Bernadette 'Benny' Hogan | CORRECT; predicted_answer: Minnie Driver portrayed the character Benny Hogan in the 1995 film *Circle of Friends*. | not run |
+| 249433 | Which political party is ballot-qualified in the state of California? | Democratic Party; Green Party; Libertarian Party; Republican Party | not run | not run |
+
+### Incremental Records
+
+| Page ID | Question | Reference answer | openai/gpt-4.1-mini | google/gemini-3-flash-preview |
+| ---: | --- | --- | --- | --- |
+| 11423229 | How many White people were recorded in Cheyenne, Wyoming in the 2020 census? | 51728 (acceptable range: anything between 51211 and 52245) | INCORRECT; predicted_answer: In the 2020 census, Cheyenne, Wyoming recorded approximately 84.5% of its population as White. Given Cheyenne's total population of about 65,132, this means roughly 55,000 White people were recorded. | INCORRECT; predicted_answer: According to the 2020 U.S. Census, there were **51,414** people recorded as White alone in Cheyenne, Wyoming. |
+| 75698 | What draw type corresponds to having 5 outs in Texas hold 'em? | One Pair to Two Pair or Trips | INCORRECT; predicted_answer: Having 5 outs in Texas hold 'em typically corresponds to an **open-ended straight draw**. This means you have four consecutive cards and can complete a straight by hitting one of two ranks on either end, giving you 8 outs total. However, if you specifically have 5 outs, it might be a **flush draw with some cards already paired** or a **combo draw** (like a straight draw plus some additional outs).   But strictly speaking, 5 outs often indicate a **flush draw with some cards already paired or a gutshot straight draw plus some extra outs** rather than a pure open-ended straight draw. | INCORRECT; predicted_answer: A **gutshot straight draw** (also known as an inside straight draw) corresponds to 4 outs. There is no standard, named draw that specifically has **5 outs**.  However, 5 outs typically occurs in "overcard" situations, such as holding two overcards against a pair where you have a backdoor draw or one of your cards is partially blocked. |
+| 339183 | What is the traditional Mediterranean wind point name for the compass direction South? | Ostro | INCORRECT; predicted_answer: The traditional Mediterranean wind point name for the compass direction South is "Libeccio." | INCORRECT; predicted_answer: The traditional Mediterranean wind name for South is **Ostro** (or **Mezzogiorno**). |
+| 280746 | What was the official United Nations theme for International Women's Day in the year 1999? | World Free of Violence Against Women | INCORRECT; predicted_answer: The official United Nations theme for International Women's Day in 1999 was "Building Sustainable Peace for All." | CORRECT; predicted_answer: The official United Nations theme for International Women's Day in 1999 was **"World Free of Violence Against Women."** |
+| 20556738 | What was CBS's average primetime viewership in 2019 according to Nielsen Media Research? | 7140000 (acceptable range: anything between 7068600 and 7211400) | INCORRECT; predicted_answer: CBS's average primetime viewership in 2019 was 11.7 million according to Nielsen Media Research. | CORRECT; predicted_answer: According to Nielsen Media Research, CBS averaged **7.14 million** primetime viewers during the 2019 calendar year. |
 
 
 ## Rejected And Rerun Decisions
@@ -460,11 +484,6 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 20804 | `other` | `manual_review_rejected:manual_answer_form_scope_issue` | What nationality had the largest population in Magdeburg in 2022? |
 | 52374650 | `other` | `manual_review_rejected:manual_ambiguous_current_list_scope` | Which king began his reign last according to the list of kings? |
 | 83316 | `other` | `manual_review_rejected:manual_missing_nearby_intro_scope` | Which artist had a number 1 hit on the UK Singles Chart with a song written by Ray Davies? |
-
-### Incremental Records
-
-| Page ID | Stage | Exact reason | Page/question |
-| ---: | --- | --- | --- |
 | 25445 | `route_generation` | `wikipedia_infobox_table_score_below_minimum:table_score_below_minimum:min_table_score=0.0000;best_score=-0.1000` | Romania |
 | 380845 | `rewrite_surface` | `rewrite_guard_rejected:cutoff_year_exceeded` | Which country is forecasted by the IMF to have the highest nominal GDP in 2026? |
 | 11787 | `search_longtail` | `search_longtail_verifier_rejected:full_question:answer_in_title` | What year did Fleetwood Mac win the American Music Award for Favorite Pop/Rock Band/Duo/Group? |
@@ -493,5 +512,26 @@ These are the small-model QA responses used by the second-stage filter: `openai/
 | 43281 | `other` | `manual_review_rejected:manual_underspecified_period_scope` | In which five-year period did the East India Company export the greatest total quantity of textiles to Europe? |
 | 36896 | `other` | `manual_review_rejected:manual_missing_numeric_unit_in_question` | What is the maximum head-and-body length measured for male lions? |
 | 26689 | `other` | `manual_review_rejected:manual_table_header_alignment_error` | What nasal consonant sound is classified under the Palatal place of articulation in Swedish language phonology? |
+| 293791 | `route_generation` | `wikipedia_infobox_table_score_below_minimum:table_score_below_minimum:min_table_score=0.0000;best_score=-0.5500` | Revised Romanization of Korean |
+| 52738 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | What is the highest temperature recorded in Cádiz during August in degrees Celsius? |
+| 428227 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Who led the Tories (British political party) in the 1685 election? |
+| 43910 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Which character did Albert Finney portray in the 1974 film Murder on the Orient Express? |
+| 280738 | `search_longtail` | `search_longtail_verifier_rejected:full_question:answer_in_title` | Which film directed by John Ford won the Academy Award for Best Director in the year 1935? |
+| 277945 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Who performed the role of Odette in the Moscow 1877 performance of Swan Lake? |
+| 53762 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | In what year did David Niven receive the Academy Award for Best Actor? |
+| 363002 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Which character did Sandra Oh portray in the 2014 stage production of Death and the Maiden? |
+| 7299 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Which colonial destination imported 3,646,800 slaves between 1450 and 1870? |
+| 81215 | `search_longtail` | `search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded` | In what year was the Australian 1 dollar coin first minted? |
+| 11186 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Who was the first administrator of the Federal Aviation Administration? |
+| 67749 | `search_longtail` | `search_longtail_verifier_rejected:keyword_query_1:answer_in_title` | Which film directed by Mike Nichols was released by Warner Bros. in 1966? |
+| 217696 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | Which character was portrayed by Minnie Driver in the 1995 film Circle of Friends? |
+| 249433 | `search_longtail` | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` | Which political party is ballot-qualified in the state of California? |
+
+### Incremental Records
+
+| Page ID | Stage | Exact reason | Page/question |
+| ---: | --- | --- | --- |
+| 280746 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | What was the official United Nations theme for International Women's Day in the year 1999? |
+| 20556738 | `second_stage_grading` | `second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1` | What was CBS's average primetime viewership in 2019 according to Nielsen Media Research? |
 
 

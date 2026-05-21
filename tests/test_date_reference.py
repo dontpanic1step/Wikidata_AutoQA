@@ -25,7 +25,7 @@ class DateReferenceTests(unittest.TestCase):
         candidate = GeneratedCandidate(
             source_type="test",
             generation_route="test_route",
-            question="On what day, month, and year did Example open?",
+            question="On what month, day, and year did Example open?",
             answer="January 2, 2020",
             answer_aliases=["2 January 2020"],
             subject_entity=EntityReference(name="Example", qid="Q1"),

@@ -79,11 +79,37 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn("Do not add, remove, narrow, broaden, or change any information", prompt)
         self.assertIn("The rewritten_question must not contain the answer or any answer alias", prompt)
         self.assertIn("Generate exactly 3 answer-blind search queries", prompt)
-        self.assertIn("what day, month, and year", prompt)
+        self.assertIn("May 20, 2024", prompt)
+        self.assertIn("May 2024", prompt)
         self.assertIn("specify the counted quantity or unit", prompt)
         self.assertIn("Do not add units to the reference answer", prompt)
         self.assertIn("Do not phrase questions as `according to the table`", prompt)
         self.assertIn("Do not ask cumulative-statistic questions", prompt)
+        self.assertIn("historically settled and cannot change", prompt)
+
+    def test_route4_two_hop_prompt_includes_hidden_entity_rules(self) -> None:
+        prompt = build_rewrite_prompt(
+            {
+                "task_type": "route1_question_and_queries",
+                "canonical_question": "Who was the director of the film whose based on was Example Book?",
+                "wikidata_triplet_text": "Example Film -- director -- Jane Doe",
+                "route_contract": "route4_two_hop",
+                "answer_hop": {"subject_label": "Example Film", "property_label": "director", "answer_labels": ["Jane Doe"]},
+                "clue_hop": {"subject_label": "Example Film", "property_label": "based on", "answer_labels": ["Example Book"]},
+                "clue_orientation": "hidden_subject",
+                "hidden_entities": [{"qid": "Q1", "label": "Example Film"}],
+                "visible_clue": {"qid": "Q3", "label": "Example Book"},
+                "required_reasoning_clues": ["based on", "Example Book"],
+                "answer_labels": ["Jane Doe"],
+                "forbidden_patterns": ["current", "latest"],
+                "cutoff_year": 2025,
+            }
+        )
+        self.assertIn("hidden-entity two-hop", prompt)
+        self.assertIn("Answer hop", prompt)
+        self.assertIn("Clue hop", prompt)
+        self.assertIn("Hidden entities", prompt)
+        self.assertIn("Do not name any hidden entity", prompt)
 
     def test_route2_prompt_includes_time_and_number_normalization_rules(self) -> None:
         prompt = build_rewrite_prompt(
@@ -96,12 +122,30 @@ class LLMRewriteTests(unittest.TestCase):
             }
         )
         self.assertIn("Evidence text", prompt)
-        self.assertIn("what day, month, and year", prompt)
+        self.assertIn("May 20, 2024", prompt)
+        self.assertIn("May 2024", prompt)
         self.assertIn("how many months", prompt)
         self.assertIn("specify the counted quantity or unit", prompt)
         self.assertIn("Do not add units to the reference answer", prompt)
         self.assertIn("Billboard chart or UNESCO list", prompt)
         self.assertIn("completed event, completed season, or fixed table/list", prompt)
+        self.assertIn("historically settled and cannot change", prompt)
+
+    def test_other_rewrite_prompt_omits_number_and_date_precision_rules(self) -> None:
+        prompt = build_rewrite_prompt(
+            {
+                "canonical_question": "What license did Example use?",
+                "answer_type": "Other",
+                "answer": "MIT License",
+                "forbidden_patterns": ["current", "latest"],
+                "cutoff_year": 2025,
+            }
+        )
+        self.assertIn("Preserve the configured answer_type `Other`", prompt)
+        self.assertNotIn("specify the counted quantity or unit", prompt)
+        self.assertNotIn("Do not add units to the reference answer", prompt)
+        self.assertNotIn("May 20, 2024", prompt)
+        self.assertNotIn("May 2024", prompt)
 
     def test_kelm_prompt_requests_queries_and_discard_reason(self) -> None:
         prompt = build_rewrite_prompt(
@@ -123,11 +167,13 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn("Do not add, remove, narrow, broaden, or change information", prompt)
         self.assertIn("The rewritten_question must not contain the answer or any alias", prompt)
         self.assertIn("generate exactly 3 answer-blind search queries", prompt)
-        self.assertIn("what day, month, and year", prompt)
+        self.assertIn("May 20, 2024", prompt)
+        self.assertIn("May 2024", prompt)
         self.assertIn("Only ask for temporal precision that is actually supported by the source", prompt)
         self.assertIn("Do not add units to the reference answer", prompt)
         self.assertIn("Do not phrase questions as `according to the table`", prompt)
         self.assertIn("Do not ask cumulative-statistic questions", prompt)
+        self.assertIn("historically settled and cannot change", prompt)
 
     def test_openrouter_request_constants_are_defined(self) -> None:
         self.assertTrue(OPENROUTER_REFERER.startswith("https://"))

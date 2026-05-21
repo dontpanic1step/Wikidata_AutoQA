@@ -140,7 +140,7 @@ Shared contract:
 
 Route-specific prompt inputs are allowed as long as the output contract stays shared.
 
-All route rewrite prompts must make answer normalization explicit. If the answer is temporal, the question should specify the requested precision or unit, such as `what year`, `what month`, `what day`, or `how many months`. If the answer is a full calendar date, the prompt should prefer wording like `what day, month, and year ...`. If the answer is numeric, the question must state the counted quantity or unit, while the reference answer and answer aliases should remain unit-free normalized values.
+All route rewrite prompts must make answer normalization explicit. If the answer is temporal, the question should specify the requested precision or unit, such as `what year`, `what month`, `what day`, or `how many months`. If the answer is a full calendar date, the prompt should prefer wording like `what month, day, and year ...`, and the reference answer should use a month-first format such as `May 20, 2024`; month-level answers should use a format such as `May 2024`. If the answer is numeric, the question must state the counted quantity or unit, while the reference answer and answer aliases should remain unit-free normalized values.
 
 ### 3.5 Long-tail filtering changes
 
@@ -193,15 +193,17 @@ More generally:
 
 Route 3 is a Wikipedia-only route for semi-structured public data. It starts from directly supplied English Wikipedia URLs or streamed page IDs, fetches the page through the MediaWiki API, extracts the page title, any first paragraph available in the already-fetched `action=parse` HTML, and structured infobox/table content, then asks a small model to propose one table-grounded SimpleQA-style question per page. REST summary fetching is an explicit opt-in fallback only; it is off by default so a missing paragraph does not add another network failure point.
 
-Route 3 may ask table reasoning questions such as max/min/sum/ordinal questions over structured rows, for example asking which venue in an event table has the largest capacity. It may also ask single fact questions when the answer is a stable, auditable value from an infobox or table and the downstream long-tail filters judge it suitably obscure. The route records the model's `reasoning_type` rather than requiring every accepted question to be compositional. Legacy artifacts may still contain `composition_type`; loaders normalize that field to `reasoning_type` at the compatibility boundary. The route may use first-paragraph aliases to avoid unsuitable temporal wording, such as asking about the `23rd FIFA World Cup` instead of using the page title `2026 FIFA World Cup`.
+Route 3 may ask table reasoning questions such as max/min/sum/count/comparison questions over structured rows, and may ask temporal ordinal questions such as which entity was first or second by date/order of occurrence. Ordinal reasoning is not magnitude ranking such as largest or second largest; use max/min for magnitude comparisons. It may also ask single fact questions when the answer is historically settled, cannot change, and the downstream long-tail filters judge it suitably obscure. By default, the model may choose any supported `reasoning_type`; a run may optionally restrict generation to one or more allowed reasoning types, and Route 3 rejects model outputs whose declared `reasoning_type` is outside that configured list. Legacy artifacts may still contain `composition_type`; loaders normalize that field to `reasoning_type` at the compatibility boundary. The route may use first-paragraph aliases to avoid unsuitable temporal wording, such as asking about the `23rd FIFA World Cup` instead of using the page title `2026 FIFA World Cup`.
 
 Route 3 may emit complete list answers when a table reasoning operation has a tie. The display `answer` remains a string for shared JSONL compatibility, while `source_metadata.answer_items` stores the individual answer elements. For these list answers, search leakage is counted only when every answer element appears in the same result title or snippet, and SimpleQA-style grading treats partial lists as incorrect.
 
-Before prompting the model, Route 3 ranks extracted tables. Prefer article tables over infoboxes, tables with multiple structured rows, headers that expose comparable values such as capacity/rank/count/date/votes, and row values that are not repeated in non-table prose. Penalize short infobox-style summaries, oversized prose-like tables, placeholder/mutable tables such as live standings, and tables whose row values are already easy to recover from article text. A configurable `min_table_score` cutoff drops ranked tables before first-paragraph alias/context extraction and before the Route 3 generation prompt; the default cutoff is `0.0`. If no table survives the score cutoff and live-scope filter, the page is rejected before any generation call. Pass only the top three surviving ranked tables to the small model so it focuses on the most useful evidence. Store the ranking criteria, scores, cutoff, and cutoff decisions as metadata so table choice can be audited.
+Before prompting the model, Route 3 ranks extracted tables. Prefer article tables over infoboxes, tables with multiple structured rows, useful subject/list context, and row values that are not repeated in non-table prose. Numeric/comparable-value bonuses such as capacity/rank/count/date/votes fields are kept in code behind disabled switches for possible reuse, but they should not affect current page or table grading. Penalize short infobox-style summaries, oversized prose-like tables, placeholder/mutable tables such as live standings, and tables whose row values are already easy to recover from article text. Default early table filter modes drop unsuitable tables before any generation prompt: `no_big_numbers` rejects tables with cheap normalized text markers such as `thousands`, `million`, `billion`, or `trillion`, or tables whose parsed numeric cells are too dominated by values over 3000 or 10000; `no_social_science_research` rejects tables whose normalized text contains markers such as `census`, `survey`, `demographic`, `self reported`, `ancestry group`, `ethinic group`, `ethinicity`, `population`, or `language speaker`. A configurable `min_table_score` cutoff drops ranked tables before first-paragraph alias/context extraction and before the Route 3 generation prompt; the default cutoff is `0.0`. If no table survives the score cutoff, live-scope filter, and enabled table filter modes, the page is rejected before any generation call. Pass only the top three surviving ranked tables to the small model so it focuses on the most useful evidence. Store the ranking criteria, scores, cutoff, filter modes, matched markers, and cutoff/filter decisions as metadata so table choice can be audited.
 
-The Route 3 small-model prompt emits `answer_type` as `Entity`, `Number`, or `Date`, and follows the shared answer-normalization wording rule: temporal questions must name the requested precision, full-date answers should be requested as day, month, and year, and numeric questions must put the unit or counted quantity in the question rather than in the reference answer. The prompt passes `subject_anchors` as page/table scope hints rather than required wording. These hints include the page title, title-derived aliases, and the selected tables' captions and nearby section headings. Safe first-paragraph aliases are passed separately as `safe_subject_aliases`; when the page title contains a cutoff-year marker, the model should use one of those aliases if it needs to name the subject. The model should use the scope hints to understand scope, for example that `15 largest commercial banks` supports asking which bank is largest within that table but not how many banks exist in Ukraine.
+The Route 3 small-model prompt emits `answer_type` using SimpleQA Verified-style categories: `Person`, `Place`, `Number`, `Date`, and `Other`; `Other` means the answer is not one of the first four types. A run may optionally restrict generation to one or more allowed answer types, and Route 3 rejects model outputs whose declared or normalized `answer_type` is outside that configured list. The prompt follows the shared answer-normalization wording rule: temporal questions must name the requested precision, full-date answers should be requested as month, day, and year, and numeric questions must put the unit or counted quantity in the question rather than in the reference answer. The prompt passes `subject_anchors` as page/table scope hints rather than required wording. These hints include the page title, title-derived aliases, and the selected tables' captions and nearby section headings. Safe first-paragraph aliases are passed separately as `safe_subject_aliases`; when the page title contains a cutoff-year marker, the model should use one of those aliases if it needs to name the subject. The model should use the scope hints to understand scope, for example that `15 largest commercial banks` supports asking which bank is largest within that table but not how many banks exist in Ukraine.
 
 Route 3 and shared rewriting prompts should avoid generic provenance phrasing such as `according to the table` or `according to the [source] table`, and Route 3 specifically should avoid `in the List of ...` wording. The question should name the actual subject, event, chart, list, or scope naturally. `According to ...` wording is preferred only for well-known named charts or lists such as Billboard charts or UNESCO lists. This is prompt guidance; the shared surface guard does not reject the wording directly.
+
+Route 3 prompts may accept extra stricter prompt rules as literal text. Extra prompt rules are stored in metadata and also passed into the shared rewrite prompt so rewriting does not weaken the stricter run contract. The former `NO_SOCIAL_SCIENCE_RESEARCH_PROMPT` behavior is now represented by the default `no_social_science_research` table filter mode rather than prompt-only guidance.
 
 Route 3 URL discovery should be a separate, auditable step. It should not default to hand-prepared URLs, because those bias pilots toward short-tail facts. Two discovery modes are supported:
 
@@ -218,7 +220,7 @@ Streaming runs should write accepted and rejected JSONL records incrementally af
 
 Scale runs should process page IDs through a page-level worker pool with separate service semaphores for Wikipedia, DuckDuckGo, generation/rewrite OpenRouter calls, and second-stage OpenRouter calls. Accepted/rejected JSONL appends and stream-state updates are one locked commit unit per page so a crash does not split a decision from its page-ID state. Second-stage grading should run panel answer models in parallel, grade the executed predictions in one batched grader call when a grader is configured, and skip remaining panel models when the first answer is already correct enough to reject under the current accuracy threshold.
 
-Long-running Route 3 jobs should be restartable from endpoint files. When endpoint resume is enabled, existing accepted/rejected JSONL outputs are treated as the checkpoint: streaming runs sync page-ID state from those records and process only the remaining requested total, while URL-list runs skip completed source URLs and append new decisions instead of overwriting prior endpoint data. Malformed trailing JSONL lines left by a crash are skipped and reported in the run summary rather than blocking resume.
+Long-running Route 3 jobs should be restartable from endpoint files. When endpoint resume is enabled, existing accepted/rejected JSONL outputs are treated as the checkpoint: streaming runs sync page-ID state from those records and process only the remaining requested total, while URL-list runs skip completed source URLs and append new decisions instead of overwriting prior endpoint data. Malformed trailing JSONL lines left by a crash are skipped and reported in the run summary rather than blocking resume. Fresh streaming runs may explicitly reset the stream-state file at startup. Reruns should be first-class rather than relying on manual record-limit arithmetic: a rerun-pool-only invocation processes the current rerun pool without discovering fresh page IDs, and a normal streaming invocation may optionally perform exactly one immediate rerun-pool pass after the main pass. If that one rerun pass still leaves IDs unresolved, the runner stops and preserves the remaining rerun pool for later review or another explicit rerun.
 
 Resumed Route 3 jobs should use a stable run-group ID and one segment ID per invocation. When a run group is set, each summary updates a small manifest that indexes the accepted JSONL endpoint, rejected JSONL endpoint, summary files, walkthrough files, and stream-state files for all known segments in that group. New records should carry the run group and segment in `source_metadata` so later review can filter appended records without relying only on filename conventions.
 
@@ -255,6 +257,7 @@ For Route 1 specifically:
 - fall back to the light Wikibase API path (`wbsearchentities`, `wbgetentities`) when WDQS fails or returns no candidates, unless the light fallback is disabled
 - construct canonical questions from templates
 - pass enough structured metadata downstream for shared rewrite and route-local validation
+- for multi-hop join scale runs, use QID-first seed units rather than Wikipedia dumps or broad search discovery; hydrate those QIDs through Wikidata and then pass validated candidates into the shared downstream pipeline
 
 The light path is a fallback only. It must repair or reject malformed candidates before validation; a candidate with an empty subject label must not proceed to ambiguity search.
 
@@ -358,6 +361,40 @@ Route 1 heavy WDQS harvest
   -> shared recording and output
 ```
 
+Route 1 multi-hop join scale runs use a stricter QID-first variant:
+
+```text
+Route 1 QID seed discovery
+  -> persistent QID seed state and endpoint resume
+  -> Wikidata hydration and template-led multi-hop join construction
+  -> Route 1 validators before rewrite
+  -> shared LLM rewrite + query generation
+  -> shared DuckDuckGo long-tail filter
+  -> optional shared SimpleQA Verified-style model grading
+  -> shared recording and final selection
+```
+
+This variant is identified as `route1_wikidata_multihop_join`. It reuses the shared DuckDuckGo, rewrite, second-stage grading, phase-timing, and output contracts that Route 3 exercises at scale, but keeps Route 1's stricter Wikidata grounding, disambiguation, time-invariance, uniqueness, bridge-leakage, and shortcut validation before the shared filters. Route 1 multi-hop discovery should not use Wikipedia dumps or heavy search as candidate sources; search is reserved for downstream long-tail leakage filtering.
+
+The former Route 1 hidden-entity two-hop variant is disabled. The route id
+`route1_wikidata_hidden_entity_two_hop` remains only for historical artifact
+compatibility and should not be enabled, scaled, or updated.
+
+Route 4 now owns the hidden-entity two-hop design:
+
+```text
+Route 4 single-hop template harvest
+  -> strict Wikidata validation for each single-hop fact
+  -> compose answer hop `(x, r1, a)` with clue hop `(x, r2, c)` or `(c, r2, x)`
+  -> prune ambiguous clue paths and answer/clue leakage risks
+  -> shared LLM rewrite from structured hop facts
+  -> shared DuckDuckGo long-tail filter
+  -> optional shared SimpleQA Verified-style model grading
+  -> shared recording and final selection
+```
+
+This route is identified as `route4_wikidata_two_hop`. It keeps Route 1's join-template route intact, but uses ordinary single-hop templates as reusable facts. The final question asks for the answer-hop object `a` while identifying the hidden entity `x` only through the clue hop. The hidden entity may be the subject or object of the clue hop, and its label/aliases must not appear in the final question.
+
 ### 5.3 Route 1 validators
 
 Validators for Route 1 should include:
@@ -370,10 +407,15 @@ Validators for Route 1 should include:
 - deduplication
 - subject-label presence before ambiguity search
 - client-level handling for Wikidata API `error` payloads
+- complete multi-hop provenance for multi-hop joins, including connected reasoning paths, hidden bridge leakage checks, and required reasoning clues
 
 Preferred reuse source:
 
 - existing `5-12` validator logic where still compatible, especially for disambiguation and deduplication
+
+For the first scalable Route 1 multi-hop target, include only join-style templates with `reasoning_style = multi_hop_join`. Ordinal questions should stay with Route 3-style semi-structured/table reasoning for now, and aggregate/count templates should stay out of the default Route 1 multi-hop scale path until their stability validators are stronger.
+
+For `route4_wikidata_two_hop`, use validated single-hop templates rather than multi-hop-only templates. All compatible non-frozen single-hop template pairs are attempted by default; deterministic pruning removes same-property pairs, answer/clue alias collisions, missing visible clues, and clue paths that identify more than one hidden entity in the validated pool.
 
 ### 5.4 Route 1 template policy
 
@@ -412,7 +454,9 @@ The template catalog is a first-class planning artifact, not just a list of prom
 - `temporal_mode`
 - `current_status` in reports
 
-`answer_type` is required for every template because downstream validation, number normalization, SimpleQA Verified-style margin handling, and reporting depend on it. Current accepted values are `Person`, `Organization`, `Place`, `Work`, `Date`, `Number`, and `Entity`.
+`answer_type` is required for every template because downstream validation, number normalization, SimpleQA Verified-style margin handling, and reporting depend on it. Legacy Route 1 catalog rows may still contain older values such as `Organization`, `Work`, `Language`, and `Entity`, but new expansion catalogs should normalize to the SimpleQA-style set: `Person`, `Place`, `Number`, `Date`, and `Other`.
+
+The expanded single-hop template catalog is a statusless, route-neutral planning artifact. It extracts current single-hop templates that are not ordinal/count templates, keeps their QIDs/PIDs and candidate search query shape, normalizes answer types to the five-value set, and adds generated templates across 20 domains, including `History`. Canonical questions in this catalog are for human review and future route migration; downstream multi-hop generation may use the QID/PID metadata without using those canonical questions directly.
 
 Older code kept template keys in `DomainTemplate.domain` and broad domains in `DomainTemplate.topic`. Those names are compatibility shims only. Future work should prefer `template.template_key` and `template.template_domain`, and artifact readers should accept old JSONL fields only at the boundary.
 

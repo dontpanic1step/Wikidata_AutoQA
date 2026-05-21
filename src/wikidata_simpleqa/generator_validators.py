@@ -276,6 +276,10 @@ def validate_question_surface(
     source_candidate = candidate.source_candidate
     if source_candidate is not None:
         shortcut_results = shortcut_check(source_candidate, question)
+        source_candidate.shortcut_checks = shortcut_results
+        source_candidate.question_requires_all_hops = bool(
+            shortcut_results.get("question_requires_all_hops", True)
+        )
         if not shortcut_results.get("question_requires_all_hops", True):
             return "lost_required_reasoning_clue"
         if question_leaks_bridge_entities(question, source_candidate):

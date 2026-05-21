@@ -2,7 +2,73 @@
 
 This file is the defaults ledger for the current branch. When a code default changes, update this file in the same change.
 
-Last updated: 2026-05-19.
+Last updated: 2026-05-21.
+
+## Route 1 Multi-Hop Join Runner
+
+These defaults come from `scripts/run_route1_multihop_pipeline.py`.
+
+| Setting | Default | Notes |
+| --- | --- | --- |
+| Route | `route1_wikidata_multihop_join` | QID-first, join-only Route 1 multi-hop scale path. |
+| `--target-time` | `2024` | Conservative pre-2025 default. |
+| `--date-upper-bound` | `2024-12-31` | Keeps candidate facts settled before the default cutoff year. |
+| `--cutoff-year` | `2025` | Shared surface validation rejects question wording that depends on this year or later. |
+| `--record-limit` | `10` | Number of QID seed units to process in one invocation. |
+| `--harvest-limit` | `100` | Candidate harvest limit passed to Route 1 template executors. |
+| `--accepted-target` | `0` | `0` means process the record limit rather than stopping at an accepted count. |
+| `--final-target` | `300` | Final deduplicated/rebalanced review target. |
+| Default templates | join-only | Uses `person_first_degree_university`, `film_source_work_author`, `tv_series_source_work_author`, `company_that_released_product_founder`, `company_that_developed_benchmark_founder`, and `terminal_operator_country`. |
+| Ordinal/aggregate templates | excluded | Ordinals stay out of the default Route 1 multi-hop scale path; number/count templates are not selected by default. |
+| `--duckduckgo-top-k` | `5` | Fast pool-generation default. |
+| `--generated-search-query-count` | `2` | Fast pool-generation default. |
+| `--duckduckgo-parallel-queries` | `3` | Shared search verifier per-candidate parallelism. |
+| `--candidate-workers` | `4` | Concurrent candidate processing workers. |
+| `--wikidata-concurrency-limit` | `1` | Bounded Wikidata calls during generation/validation. |
+| `--duckduckgo-concurrency-limit` | `4` | Shared DuckDuckGo semaphore across candidate workers. |
+| `--openrouter-generation-rewrite-concurrency-limit` | `10` | Shared rewrite semaphore when rewrite is enabled. |
+| `--second-stage-concurrency-limit` | `10` | Shared second-stage grading semaphore when grading is enabled. |
+| `--enable-rewrite` | `False` | Uses the shared rewrite contract when enabled. |
+| `--enable-second-stage-grading` | `False` | Optional SimpleQA Verified-style difficulty review. |
+| `--second-stage-grading-accuracy-threshold` | `0.1` | Rejects candidates solved above the threshold when grading is enabled. |
+| `--start-from-endpoint` | `False` | Loads existing accepted/rejected JSONL as the checkpoint. |
+| `--state` | `outputs/route1_multihop_join_state.json` | Persistent QID seed state with used, in-progress, accepted, rejected, and rerun seed keys. |
+| `--output` | `outputs/route1_multihop_join_accepted.jsonl` | Accepted pool endpoint. |
+| `--rejected-output` | `outputs/route1_multihop_join_rejected.jsonl` | Rejected endpoint. |
+| `--final-output` | `outputs/route1_multihop_join_final.jsonl` | Final deduplicated/rebalanced review candidates. |
+
+## Route 4 Wikidata Two-Hop Runner
+
+These defaults come from `scripts/run_route4_two_hop_pipeline.py`.
+
+| Setting | Default | Notes |
+| --- | --- | --- |
+| Route | `route4_wikidata_two_hop` | Composes validated single-hop facts around one hidden entity. |
+| `--target-time` | `2024` | Conservative pre-2025 default. |
+| `--date-upper-bound` | `2024-12-31` | Keeps candidate facts settled before the default cutoff year. |
+| `--cutoff-year` | `2025` | Shared surface validation rejects question wording that depends on this year or later. |
+| `--record-limit` | `10` | Number of composed seed units to process in one invocation. |
+| `--harvest-limit` | `100` | Candidate harvest limit per single-hop template. |
+| `--final-target` | `300` | Final deduplicated/rebalanced review target. |
+| Default templates | all compatible non-frozen single-hop templates | The route validates single-hop facts first, then composes compatible pairs. |
+| `--duckduckgo-top-k` | `5` | Fast pool-generation default. |
+| `--generated-search-query-count` | `2` | Fast pool-generation default. |
+| `--duckduckgo-parallel-queries` | `3` | Shared search verifier per-candidate parallelism. |
+| `--candidate-workers` | `4` | Concurrent candidate processing workers. |
+| `--wikidata-concurrency-limit` | `1` | Bounded Wikidata calls during generation/validation. |
+| `--duckduckgo-concurrency-limit` | `4` | Shared DuckDuckGo semaphore across candidate workers. |
+| `--openrouter-generation-rewrite-concurrency-limit` | `10` | Shared rewrite semaphore when rewrite is enabled. |
+| `--second-stage-concurrency-limit` | `10` | Shared second-stage grading semaphore when grading is enabled. |
+| `--enable-rewrite` | `False` | Uses the shared rewrite contract when enabled. |
+| `--enable-second-stage-grading` | `False` | Optional SimpleQA Verified-style difficulty review. |
+| `--state` | `outputs/route4_two_hop_state.json` | Persistent seed state with used, in-progress, accepted, rejected, and rerun seed keys. |
+| `--output` | `outputs/route4_two_hop_accepted.jsonl` | Accepted pool endpoint. |
+| `--rejected-output` | `outputs/route4_two_hop_rejected.jsonl` | Rejected endpoint. |
+| `--final-output` | `outputs/route4_two_hop_final.jsonl` | Final deduplicated/rebalanced review candidates. |
+
+## Disabled Route 1 Hidden-Entity Runner
+
+`route1_wikidata_hidden_entity_two_hop` remains only as a disabled legacy route id for historical artifacts. `scripts/run_route1_hidden_entity_two_hop_pipeline.py` is not maintained for new runs and should not be used for scaling.
 
 ## Route 3 Runner
 
@@ -93,6 +159,7 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | DuckDuckGo parallel queries | `3` | `--duckduckgo-parallel-queries`. |
 | Generated search query count | `2` | Route 3 prompt asks for this many answer-blind queries. Fast default for initial Route 3 streaming; run slower survivor review separately when needed. |
 | Minimum table score | `0.0` | `--min-table-score`. The same cutoff is used for URL and streaming Route 3 runs. |
+| Route 3 table filter modes | `no_big_numbers`, `no_social_science_research` | `--route3-table-filter-mode` enables modes and `--disable-route3-table-filter-mode` removes defaults for a run. These filters drop matching tables before the generation prompt. |
 | Search full-question hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search keyword hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search overall hit-rate threshold | `0.3` | Reject when above threshold. |

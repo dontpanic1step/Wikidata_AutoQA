@@ -830,6 +830,124 @@ class GenerationPipelineTests(unittest.TestCase):
         self.assertNotIn("first_paragraph", payload)
         self.assertNotIn("evidence_text", payload)
 
+    def test_route1_multihop_rewrite_payload_includes_reasoning_contract(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.reasoning_style = "multi_hop_join"
+        source_candidate.hop_count = 2
+        source_candidate.reasoning_path = [
+            {
+                "source_qid": "Q1",
+                "source_label": "Example Film",
+                "property_pid": "P144",
+                "property_label": "based on",
+                "target_qid": "Q3",
+                "target_label": "Source Work",
+                "role": "bridge",
+            },
+            {
+                "source_qid": "Q3",
+                "source_label": "Source Work",
+                "property_pid": "P50",
+                "property_label": "author",
+                "target_qid": "Q2",
+                "target_label": "Jane Doe",
+                "role": "answer",
+            },
+        ]
+        source_candidate.bridge_entities = [{"qid": "Q3", "label": "Source Work", "role": "source_work"}]
+        source_candidate.source_metadata["required_reasoning_clues"] = ["based on"]
+        candidate = GeneratedCandidate(
+            source_type="wikidata",
+            generation_route="route1_wikidata_multihop_join",
+            question="Who wrote the work that the film Example Film was based on?",
+            canonical_question="Who wrote the work that the film Example Film was based on?",
+            answer="Jane Doe",
+            answer_aliases=[],
+            subject_entity=EntityReference(name="Example Film", qid="Q1"),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="author of source work",
+            evidence=EvidenceRecord(text="Example Film -- based on -- Source Work; Source Work -- author -- Jane Doe"),
+            answer_type="Person",
+            source_template_domain="film_source_work_author",
+            source_candidate=source_candidate,
+        )
+
+        payload = _build_route_rewrite_payload(
+            candidate,
+            cutoff_year=2025,
+            forbidden_patterns=["current"],
+            search_query_count=2,
+        )
+
+        self.assertEqual(payload["task_type"], "route1_question_and_queries")
+        self.assertEqual(payload["route_contract"], "route1_qid_first_multihop_join")
+        self.assertEqual(payload["reasoning_style"], "multi_hop_join")
+        self.assertEqual(payload["required_reasoning_clues"], ["based on"])
+        self.assertEqual(payload["bridge_entities"][0]["label"], "Source Work")
+
+    def test_route4_two_hop_rewrite_payload_includes_structured_hops(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.reasoning_style = "multi_hop_hidden_entity"
+        source_candidate.hop_count = 2
+        source_candidate.reasoning_path = [
+            {
+                "source_qid": "Q1",
+                "source_label": "Example Film",
+                "property_pid": "P144",
+                "property_label": "based on",
+                "target_qid": "Q3",
+                "target_label": "Example Book",
+                "role": "clue",
+            },
+            {
+                "source_qid": "Q1",
+                "source_label": "Example Film",
+                "property_pid": "P57",
+                "property_label": "director",
+                "target_qid": "Q2",
+                "target_label": "Jane Doe",
+                "role": "answer",
+            },
+        ]
+        source_candidate.source_metadata.update(
+            {
+                "answer_hop": {"template_key": "film_director", "property_label": "director"},
+                "clue_hop": {"template_key": "film_based_on", "property_label": "based on"},
+                "clue_orientation": "hidden_subject",
+                "hidden_entities": [{"qid": "Q1", "label": "Example Film"}],
+                "visible_clue": {"qid": "Q3", "label": "Example Book"},
+                "required_reasoning_clues": ["based on", "Example Book"],
+            }
+        )
+        candidate = GeneratedCandidate(
+            source_type="wikidata",
+            generation_route="route4_wikidata_two_hop",
+            question="Who was the director of the film whose based on was Example Book?",
+            canonical_question="Who was the director of the film whose based on was Example Book?",
+            answer="Jane Doe",
+            answer_aliases=[],
+            subject_entity=EntityReference(name="Example Film", qid="Q1"),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="director",
+            evidence=EvidenceRecord(text="Example Film -- based on -- Example Book; Example Film -- director -- Jane Doe"),
+            answer_type="Person",
+            source_template_domain="film_director__via__film_based_on",
+            source_candidate=source_candidate,
+        )
+
+        payload = _build_route_rewrite_payload(
+            candidate,
+            cutoff_year=2025,
+            forbidden_patterns=["current"],
+            search_query_count=2,
+        )
+
+        self.assertEqual(payload["route_contract"], "route4_two_hop")
+        self.assertEqual(payload["answer_hop"]["template_key"], "film_director")
+        self.assertEqual(payload["clue_orientation"], "hidden_subject")
+        self.assertEqual(payload["hidden_entities"][0]["label"], "Example Film")
+        self.assertEqual(payload["visible_clue"]["label"], "Example Book")
+
     def test_process_generated_candidates_records_second_stage_panel_accuracy(self) -> None:
         source_candidate = make_candidate()
         source_candidate.source_metadata["stable_answer_override"] = True

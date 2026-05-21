@@ -112,6 +112,21 @@ class MultiHopReasoningTests(unittest.TestCase):
         candidate.reasoning_path[0]["target_label"] = "Example Film"
         self.assertFalse(question_leaks_bridge_entities(candidate.canonical_question, candidate))
 
+    def test_bridge_label_inside_subject_title_is_not_treated_as_new_leakage(self) -> None:
+        candidate = make_multi_hop_candidate()
+        candidate.subject_label = "Haikyu!! The Dumpster Battle"
+        candidate.bridge_entities = [{"qid": "Q-book", "label": "Haikyu!!", "role": "source_work"}]
+        candidate.canonical_question = (
+            "Who wrote the work that the film Haikyu!! The Dumpster Battle was based on?"
+        )
+        self.assertFalse(question_leaks_bridge_entities(candidate.canonical_question, candidate))
+        self.assertTrue(
+            question_leaks_bridge_entities(
+                "Who wrote Haikyu!!, the work that Haikyu!! The Dumpster Battle was based on?",
+                candidate,
+            )
+        )
+
     def test_derivation_uniqueness_can_fail_even_with_single_answer_slot(self) -> None:
         candidate = make_multi_hop_candidate()
         self.assertTrue(answer_is_unique(candidate))

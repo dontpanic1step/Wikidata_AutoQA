@@ -10,7 +10,7 @@ from .cheap_model_qa import make_cheap_model_qa_client
 from .entity_normalization import normalize_name
 
 from .config import LLMConfig, Settings
-from .domain_templates import get_stage1_templates
+from .domain_templates import get_all_templates, get_stage1_templates
 from .generation_models import GeneratedCandidate
 from .generator_validators import (
     build_removed_prefilter_stub,
@@ -20,11 +20,18 @@ from .generator_validators import (
     validate_question_surface,
 )
 from .grading import ModelPanelMember, evaluate_model_panel, make_grader_client, summarize_panel_runs
-from .generators import WikidataLightGenerator, WikidataWikipediaHybridGenerator
+from .generators import (
+    WikidataHiddenEntityTwoHopGenerator,
+    WikidataLightGenerator,
+    WikidataMultiHopJoinGenerator,
+    WikidataWikipediaHybridGenerator,
+)
 from .io import write_jsonl
 from .llm_rewrite import make_rewrite_client
 from .number_reference import NUMBER_REFERENCE_MARGIN_KEY, build_number_reference_margin
 from .reasoning import normalize_reasoning_style
+from .route1_multihop import ROUTE1_MULTIHOP_JOIN_ROUTE, get_route1_multihop_join_templates
+from .route4_two_hop import ROUTE4_TWO_HOP_CONTRACT, ROUTE4_WIKIDATA_TWO_HOP_ROUTE
 from .search_client import DuckDuckGoSearchClient
 from .wikipedia_client import WikipediaClient
 from .wikidata_client import WikidataClient
@@ -59,11 +66,7 @@ def run_generation_pipeline(
     pipeline_start = perf_counter()
     phase_timings: dict[str, float] = {}
     if templates is None:
-        templates = [
-            template
-            for template in get_stage1_templates()
-            if normalize_reasoning_style(template.reasoning_style or template.composition_style) == "single_fact"
-        ]
+        templates = _default_templates_for_enabled_routes(settings)
     if wikidata_client is None:
         wikidata_client = WikidataClient(
             user_agent=settings.user_agent,
@@ -97,6 +100,10 @@ def run_generation_pipeline(
         generators.append(WikidataWikipediaHybridGenerator(wikipedia_client=wikipedia_client))
     if "route1_wikidata_light" in settings.enabled_routes:
         generators.append(WikidataLightGenerator())
+    if ROUTE1_MULTIHOP_JOIN_ROUTE in settings.enabled_routes:
+        generators.append(WikidataMultiHopJoinGenerator())
+    if ROUTE4_WIKIDATA_TWO_HOP_ROUTE in settings.enabled_routes:
+        generators.append(WikidataHiddenEntityTwoHopGenerator())
 
     all_generated_candidates: list[GeneratedCandidate] = []
     for generator in generators:
@@ -134,6 +141,30 @@ def run_generation_pipeline(
     telemetry.update(process_telemetry.get("process_generated_candidates", {}))
     result.telemetry = telemetry
     return result
+
+
+def _default_templates_for_enabled_routes(settings: Settings) -> list:
+    """Return default templates compatible with the configured route set."""
+    templates = []
+    if (
+        "route1_wikidata_light" in settings.enabled_routes
+        or "route2_wikidata_wikipedia_hybrid" in settings.enabled_routes
+    ):
+        templates.extend(
+            template
+            for template in get_stage1_templates()
+            if normalize_reasoning_style(template.reasoning_style or template.composition_style) == "single_fact"
+        )
+    if ROUTE1_MULTIHOP_JOIN_ROUTE in settings.enabled_routes:
+        templates.extend(get_route1_multihop_join_templates())
+    if ROUTE4_WIKIDATA_TWO_HOP_ROUTE in settings.enabled_routes:
+        templates.extend(
+            template
+            for template in get_all_templates()
+            if normalize_reasoning_style(template.reasoning_style or template.composition_style) == "single_fact"
+            and template.status != "frozen"
+        )
+    return templates
 
 
 def process_generated_candidates(
@@ -554,6 +585,7 @@ def _build_route_rewrite_payload(
         "canonical_question": candidate.question,
         "answer_labels": [candidate.answer],
         "answer_aliases": candidate.answer_aliases,
+        "answer_type": candidate.answer_type,
         "required_anchors": [candidate.subject_entity.name],
         "domain": candidate.source_template_domain,
         "target_property": candidate.relation_or_claim,
@@ -561,8 +593,15 @@ def _build_route_rewrite_payload(
         "forbidden_patterns": forbidden_patterns,
         "search_query_count": search_query_count,
     }
+    extra_prompts = candidate.source_metadata.get("extra_prompts", [])
+    if isinstance(extra_prompts, list) and extra_prompts:
+        payload["extra_prompts"] = [str(value) for value in extra_prompts if str(value).strip()]
     source_candidate = candidate.source_candidate
-    if candidate.generation_route == "route1_wikidata_light" and source_candidate is not None:
+    if candidate.generation_route in {
+        "route1_wikidata_light",
+        ROUTE1_MULTIHOP_JOIN_ROUTE,
+        ROUTE4_WIKIDATA_TWO_HOP_ROUTE,
+    } and source_candidate is not None:
         payload.update(
             {
                 "task_type": "route1_question_and_queries",
@@ -572,6 +611,42 @@ def _build_route_rewrite_payload(
                 ).strip(),
             }
         )
+        if candidate.generation_route == ROUTE1_MULTIHOP_JOIN_ROUTE:
+            payload.update(
+                {
+                    "reasoning_style": source_candidate.reasoning_style,
+                    "hop_count": source_candidate.hop_count,
+                    "reasoning_path": source_candidate.reasoning_path,
+                    "bridge_entities": source_candidate.bridge_entities,
+                    "required_reasoning_clues": source_candidate.source_metadata.get(
+                        "required_reasoning_clues",
+                        [],
+                    ),
+                    "route_contract": "route1_qid_first_multihop_join",
+                }
+            )
+        if candidate.generation_route == ROUTE4_WIKIDATA_TWO_HOP_ROUTE:
+            payload.update(
+                {
+                    "required_anchors": [
+                        str(source_candidate.source_metadata.get("visible_clue", {}).get("label", "")).strip()
+                    ],
+                    "wikidata_triplet_text": "See structured answer_hop and clue_hop fields.",
+                    "reasoning_style": source_candidate.reasoning_style,
+                    "hop_count": source_candidate.hop_count,
+                    "reasoning_path": source_candidate.reasoning_path,
+                    "answer_hop": source_candidate.source_metadata.get("answer_hop", {}),
+                    "clue_hop": source_candidate.source_metadata.get("clue_hop", {}),
+                    "clue_orientation": source_candidate.source_metadata.get("clue_orientation", ""),
+                    "hidden_entities": source_candidate.source_metadata.get("hidden_entities", []),
+                    "visible_clue": source_candidate.source_metadata.get("visible_clue", {}),
+                    "required_reasoning_clues": source_candidate.source_metadata.get(
+                        "required_reasoning_clues",
+                        [],
+                    ),
+                    "route_contract": ROUTE4_TWO_HOP_CONTRACT,
+                }
+            )
         return payload
     if candidate.generation_route == "route2_wikidata_wikipedia_hybrid":
         payload.update(

@@ -31,6 +31,7 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
 )
 
 DEFAULT_TITLE_DUMP_URL = "https://dumps.wikimedia.org/enwiki/latest/enwiki-latest-all-titles-in-ns0.gz"
+ENABLE_NUMERIC_PAGE_GRADING_POINTS = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -830,10 +831,10 @@ def score_page_text(text: str) -> tuple[float, list[str]]:
     if infobox_count:
         score += min(1.5, infobox_count * 0.5)
         reasons.append(f"infobox_marker:{infobox_count}")
-    if re.search(r"\|\s*(?:capacity|population|area|height|length|votes?|rank|date|year|total|score)\s*=", lowered):
+    if ENABLE_NUMERIC_PAGE_GRADING_POINTS and re.search(r"\|\s*(?:capacity|population|area|height|length|votes?|rank|date|year|total|score)\s*=", lowered):
         score += 1.0
         reasons.append("comparable_infobox_field")
-    if re.search(r"!\s*(?:capacity|population|area|height|length|votes?|rank|date|year|total|score)", lowered):
+    if ENABLE_NUMERIC_PAGE_GRADING_POINTS and re.search(r"!\s*(?:capacity|population|area|height|length|votes?|rank|date|year|total|score)", lowered):
         score += 1.5
         reasons.append("comparable_table_header")
     if len(text) > 250_000:

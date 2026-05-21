@@ -273,15 +273,39 @@ def question_leaks_bridge_entities(question: str, candidate: CandidateFact) -> b
     """Return whether the question exposes bridge entities that should stay latent."""
     if not is_multi_hop_reasoning_style(candidate.reasoning_style):
         return False
+    if normalize_reasoning_style(candidate.reasoning_style) == "multi_hop_hidden_entity":
+        return question_leaks_hidden_entities(question, candidate)
     if candidate.source_metadata.get("surface_bridge_entities", False):
         return False
     normalized_question = normalize_name(question)
     normalized_subject = normalize_name(candidate.subject_label)
+    question_without_subject = normalized_question.replace(normalized_subject, " ")
     for bridge in candidate.bridge_entities:
         label = normalize_name(bridge.get("label", ""))
         if label and label == normalized_subject:
             continue
-        if label and label in normalized_question:
+        if label and label in question_without_subject:
+            return True
+    return False
+
+
+def question_leaks_hidden_entities(question: str, candidate: CandidateFact) -> bool:
+    """Return whether a hidden-entity two-hop question exposes the hidden entity."""
+    normalized_question = normalize_name(question)
+    hidden_entities = candidate.source_metadata.get("hidden_entities", [])
+    if not isinstance(hidden_entities, list):
+        hidden_entities = []
+    values = [candidate.subject_label, *candidate.subject_aliases]
+    for hidden in hidden_entities:
+        if not isinstance(hidden, dict):
+            continue
+        values.append(str(hidden.get("label", "")))
+        aliases = hidden.get("aliases", [])
+        if isinstance(aliases, list):
+            values.extend(str(alias) for alias in aliases)
+    for value in values:
+        normalized_value = normalize_name(str(value))
+        if normalized_value and normalized_value in normalized_question:
             return True
     return False
 
@@ -300,6 +324,8 @@ def reasoning_path_is_connected(candidate: CandidateFact) -> bool:
     """Return whether a multi-hop reasoning path is sequentially connected."""
     if not is_multi_hop_reasoning_style(candidate.reasoning_style):
         return True
+    if normalize_reasoning_style(candidate.reasoning_style) == "multi_hop_hidden_entity":
+        return _hidden_entity_reasoning_path_is_connected(candidate)
     if candidate.hop_count < 2 or len(candidate.reasoning_path) < 2:
         return False
     for current_hop, next_hop in zip(candidate.reasoning_path, candidate.reasoning_path[1:]):
@@ -310,6 +336,23 @@ def reasoning_path_is_connected(candidate: CandidateFact) -> bool:
         if current_target_qid != next_source_qid:
             return False
     return True
+
+
+def _hidden_entity_reasoning_path_is_connected(candidate: CandidateFact) -> bool:
+    """Return whether hidden-entity hops both involve the hidden subject."""
+    if candidate.hop_count != 2 or len(candidate.reasoning_path) != 2:
+        return False
+    hidden_qid = candidate.subject_qid
+    if not hidden_qid:
+        return False
+    clue_hop = next((hop for hop in candidate.reasoning_path if hop.get("role") == "clue"), None)
+    answer_hop = next((hop for hop in candidate.reasoning_path if hop.get("role") == "answer"), None)
+    if clue_hop is None or answer_hop is None:
+        return False
+    answer_source_qid = answer_hop.get("source_qid")
+    if answer_source_qid != hidden_qid:
+        return False
+    return clue_hop.get("source_qid") == hidden_qid or clue_hop.get("target_qid") == hidden_qid
 
 
 def question_requires_all_hops(candidate: CandidateFact, question: str) -> bool:

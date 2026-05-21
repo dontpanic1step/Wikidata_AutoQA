@@ -149,6 +149,20 @@ class GeneratedCandidate:
                     },
                     "subject_resource_url": self.source_candidate.subject_resource_url,
                     "subject_resource_key": self.source_candidate.subject_resource_key,
+                    "reasoning_style": self.source_candidate.reasoning_style,
+                    "hop_count": self.source_candidate.hop_count,
+                    "reasoning_path": self.source_candidate.reasoning_path,
+                    "bridge_entities": self.source_candidate.bridge_entities,
+                    "derivation_signature": self.source_candidate.derivation_signature,
+                    "shortcut_checks": self.source_candidate.shortcut_checks,
+                    "provenance_complete": self.source_candidate.provenance_complete,
+                    "question_requires_all_hops": self.source_candidate.question_requires_all_hops,
+                    "hidden_entities": self.source_candidate.source_metadata.get("hidden_entities", []),
+                    "visible_clue_entities_or_values": self.source_candidate.source_metadata.get(
+                        "visible_clue_entities_or_values",
+                        [],
+                    ),
+                    "clue_orientation": self.source_candidate.source_metadata.get("clue_orientation", ""),
                 }
             )
         return record

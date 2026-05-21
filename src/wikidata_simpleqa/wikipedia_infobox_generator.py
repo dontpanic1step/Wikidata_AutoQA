@@ -8,17 +8,69 @@ from dataclasses import dataclass
 from html import unescape
 from html.parser import HTMLParser
 from time import perf_counter
-from typing import Any
+from typing import Any, Iterable
 
 from .cheap_model_qa import parse_json_object
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .entity_normalization import normalize_name
 from .date_reference import normalize_date_answer
+from .llm_rewrite import NO_SOCIAL_SCIENCE_RESEARCH_PROMPT
 from .number_reference import parse_number_token
 from .wikipedia_client import WikipediaClient, normalize_wikipedia_page_id, normalize_wikipedia_title
 
 ROUTE_NAME = "route3_wikipedia_infobox"
 SOURCE_TYPE = "wikipedia_tables"
+ROUTE3_REASONING_TYPES = (
+    "single_fact",
+    "max",
+    "min",
+    "sum",
+    "count",
+    "comparison",
+    "ordinal",
+    "other",
+)
+ROUTE3_REASONING_TYPE_SET = set(ROUTE3_REASONING_TYPES)
+ROUTE3_ANSWER_TYPES = ("Person", "Place", "Number", "Date", "Other")
+ROUTE3_ANSWER_TYPE_SET = set(ROUTE3_ANSWER_TYPES)
+ROUTE3_REASONING_TYPE_PROMPT_RULES = {
+    "single_fact": "ask a direct single fact lookup from the structured source; do not ask a compositional question such as min, max, count, sum, comparison, or ordinal",
+    "max": "ask for the row or value with the largest value within a fixed historical table scope",
+    "min": "ask for the row or value with the smallest value within a fixed historical table scope",
+    "sum": "ask for a sum over a clearly bounded fixed set of table values",
+    "count": "ask for a count over a clearly bounded fixed set of table rows or values",
+    "comparison": "ask for a comparison between clearly named rows or values in the table",
+    "ordinal": "ask a temporal ordinal question like first or second by date, time, or order of occurrence; do not ask magnitude rankings such as largest or second largest",
+    "other": "ask only if the reasoning is clearly described by the table and does not fit the named reasoning types",
+}
+ROUTE3_ANSWER_TYPE_PROMPT_RULES = {
+    "Person": "answer must be a person's name",
+    "Place": "answer must be a place name, location, or geographic entity",
+    "Number": "answer must be numeric",
+    "Date": "answer must be a date, year, or other time-related value",
+    "Other": "answer must not be a person, place, number, or date; exclude numeric measurements, percentages, counts, scores, indices, rates, temperatures, durations, ranges, dates, years, people, and places",
+}
+ROUTE3_EXTRA_PROMPTS = {
+    "no_social_science_research_prompt": NO_SOCIAL_SCIENCE_RESEARCH_PROMPT,
+}
+ROUTE3_TABLE_FILTER_MODES = ("no_big_numbers", "no_social_science_research")
+ROUTE3_TABLE_FILTER_MODE_SET = set(ROUTE3_TABLE_FILTER_MODES)
+DEFAULT_ROUTE3_TABLE_FILTER_MODES = ROUTE3_TABLE_FILTER_MODES
+BIG_NUMBER_WORD_MARKERS = ("thousands", "million", "billion", "trillion")
+BIG_NUMBER_GT_3000_RATE_THRESHOLD = 0.5
+BIG_NUMBER_GT_10000_RATE_THRESHOLD = 0.2
+SOCIAL_SCIENCE_TABLE_MARKERS = (
+    "census",
+    "survey",
+    "demographic",
+    "self reported",
+    "ancestry group",
+    "ethinic group",
+    "ethinicity",
+    "population",
+    "language speaker",
+)
+ENABLE_NUMERIC_TABLE_RANKING_POINTS = False
 ORDINAL_EVENT_PATTERN = re.compile(
     r"\b\d+(?:st|nd|rd|th)\s+(?:[A-Z][A-Za-z0-9&'()-]*\s+){0,8}(?:World Cup|Olympics|Championship|Tournament)\b"
 )
@@ -62,8 +114,22 @@ LIVE_TABLE_SCOPE_TERMS = ("current", "active", "incumbent", "present", "latest")
 ANSWER_PRECISION_PROMPT_RULES = (
     "- If the answer is a temporal value, the question must specify the requested precision or unit, "
     "such as what year, what month, what day, or how many months.\n"
-    "- If the answer is a full calendar date, ask `what day, month, and year ...` so the expected "
-    "normalization is clear.\n"
+    "- If the answer is a full calendar date, ask `what month, day, and year ...` and format the "
+    "reference answer like `May 20, 2024`; if the answer is a month, ask `what month and year ...` "
+    "and format it like `May 2024`.\n"
+    "- If the answer is a number, specify the counted quantity or unit in the question, such as gallons, "
+    "people, months, authors, tracks, seats, or metres.\n"
+    "- Do not add units to the reference answer or answer_aliases; keep numeric reference answers as "
+    "normalized values only.\n"
+)
+DATE_PRECISION_PROMPT_RULES = (
+    "- If the answer is a temporal value, the question must specify the requested precision or unit, "
+    "such as what year, what month, what day, or how many months.\n"
+    "- If the answer is a full calendar date, ask `what month, day, and year ...` and format the "
+    "reference answer like `May 20, 2024`; if the answer is a month, ask `what month and year ...` "
+    "and format it like `May 2024`.\n"
+)
+NUMBER_PRECISION_PROMPT_RULES = (
     "- If the answer is a number, specify the counted quantity or unit in the question, such as gallons, "
     "people, months, authors, tracks, seats, or metres.\n"
     "- Do not add units to the reference answer or answer_aliases; keep numeric reference answers as "
@@ -130,6 +196,17 @@ class WikipediaInfoboxTableGenerator:
     search_query_count: int = 3
     enable_rest_summary_fallback: bool = False
     min_table_score: float = 0.0
+    allowed_reasoning_types: tuple[str, ...] = ()
+    allowed_answer_types: tuple[str, ...] = ()
+    extra_prompts: tuple[str, ...] = ()
+    table_filter_modes: tuple[str, ...] = DEFAULT_ROUTE3_TABLE_FILTER_MODES
+
+    def __post_init__(self) -> None:
+        """Normalize optional Route 3 prompt restrictions."""
+        self.allowed_reasoning_types = normalize_route3_reasoning_types(self.allowed_reasoning_types)
+        self.allowed_answer_types = normalize_route3_answer_types(self.allowed_answer_types)
+        self.extra_prompts = normalize_route3_extra_prompts(self.extra_prompts)
+        self.table_filter_modes = normalize_route3_table_filter_modes(self.table_filter_modes)
 
     def generate(self, *, run_date: str, cutoff_year: int) -> list[GeneratedCandidate]:
         """Generate candidates from up to ``record_limit`` Wikipedia URLs."""
@@ -154,6 +231,10 @@ class WikipediaInfoboxTableGenerator:
                     timings=timings,
                     content_domain=self._domain_for_url(url, url, normalize_wikipedia_title(url)),
                     error_message=str(exc),
+                    allowed_reasoning_types=self.allowed_reasoning_types,
+                    allowed_answer_types=self.allowed_answer_types,
+                    extra_prompts=self.extra_prompts,
+                    table_filter_modes=self.table_filter_modes,
                 )
             candidate.source_metadata.setdefault("phase_timings_seconds", {}).update(timings)
             candidate.source_metadata["phase_timings_seconds"]["total_generation_seconds"] = _elapsed(candidate_start)
@@ -241,6 +322,10 @@ class WikipediaInfoboxTableGenerator:
                 content_domain=page.content_domain,
                 first_paragraph=page.first_paragraph,
                 min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
             )
         table_selection = rank_wikipedia_tables(
             page.tables,
@@ -248,11 +333,13 @@ class WikipediaInfoboxTableGenerator:
             prose_text=page.prose_text,
         )
         table_selection = _annotate_table_score_cutoff(table_selection, self.min_table_score)
+        table_selection = _annotate_table_filter_modes(table_selection, self.table_filter_modes)
         safe_table_selection = [
             row
             for row in table_selection
             if not str(row.get("live_scope_rejection_reason", "")).strip()
             and not bool(row.get("below_min_table_score"))
+            and not str(row.get("table_filter_rejection_reason", "")).strip()
         ]
         selected_tables = [
             row["table"]
@@ -275,6 +362,17 @@ class WikipediaInfoboxTableGenerator:
                 for row in below_min_rows
                 if not str(row.get("live_scope_rejection_reason", "")).strip()
             ]
+            table_filter_rows = [
+                row
+                for row in table_selection
+                if str(row.get("table_filter_rejection_reason", "")).strip()
+            ]
+            table_filter_non_live_rows = [
+                row
+                for row in table_filter_rows
+                if not str(row.get("live_scope_rejection_reason", "")).strip()
+                and not bool(row.get("below_min_table_score"))
+            ]
             if live_scope_rows and not below_min_non_live_rows:
                 return _rejected_placeholder(
                     url=page.source_url,
@@ -289,8 +387,12 @@ class WikipediaInfoboxTableGenerator:
                     tables=page.tables,
                     table_selection=table_selection,
                     min_table_score=self.min_table_score,
+                    allowed_reasoning_types=self.allowed_reasoning_types,
+                    allowed_answer_types=self.allowed_answer_types,
+                    extra_prompts=self.extra_prompts,
+                    table_filter_modes=self.table_filter_modes,
                 )
-            if below_min_rows:
+            if below_min_rows and not table_filter_non_live_rows:
                 return _rejected_placeholder(
                     url=page.source_url,
                     reason="wikipedia_infobox_table_score_below_minimum",
@@ -304,6 +406,29 @@ class WikipediaInfoboxTableGenerator:
                     tables=page.tables,
                     table_selection=table_selection,
                     min_table_score=self.min_table_score,
+                    allowed_reasoning_types=self.allowed_reasoning_types,
+                    allowed_answer_types=self.allowed_answer_types,
+                    extra_prompts=self.extra_prompts,
+                    table_filter_modes=self.table_filter_modes,
+                )
+            if table_filter_rows:
+                return _rejected_placeholder(
+                    url=page.source_url,
+                    reason="wikipedia_infobox_table_filter_rejected",
+                    run_date=run_date,
+                    timings=timings,
+                    title=page.title,
+                    canonical_url=page.canonical_url,
+                    content_domain=page.content_domain,
+                    first_paragraph=page.first_paragraph,
+                    discard_reason=_table_filter_discard_reason(table_filter_rows),
+                    tables=page.tables,
+                    table_selection=table_selection,
+                    min_table_score=self.min_table_score,
+                    allowed_reasoning_types=self.allowed_reasoning_types,
+                    allowed_answer_types=self.allowed_answer_types,
+                    extra_prompts=self.extra_prompts,
+                    table_filter_modes=self.table_filter_modes,
                 )
             return _rejected_placeholder(
                 url=page.source_url,
@@ -317,6 +442,10 @@ class WikipediaInfoboxTableGenerator:
                 tables=page.tables,
                 table_selection=table_selection,
                 min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
             )
         self._extract_first_paragraph_context(page, timings=timings)
         prompt = build_wikipedia_infobox_prompt(
@@ -333,6 +462,9 @@ class WikipediaInfoboxTableGenerator:
             table_selection=safe_table_selection,
             cutoff_year=cutoff_year,
             search_query_count=self.search_query_count,
+            allowed_reasoning_types=self.allowed_reasoning_types,
+            allowed_answer_types=self.allowed_answer_types,
+            extra_prompts=self.extra_prompts,
         )
         llm_start = perf_counter()
         response = parse_json_object(self.llm_client.complete_text(prompt))
@@ -354,6 +486,10 @@ class WikipediaInfoboxTableGenerator:
                 llm_prompt=prompt,
                 table_selection=table_selection,
                 min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
             )
 
         question = str(response.get("question", "")).strip()
@@ -374,14 +510,98 @@ class WikipediaInfoboxTableGenerator:
                 llm_prompt=prompt,
                 table_selection=table_selection,
                 min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
             )
 
         answer, aliases = _normalize_generated_answer(
             answer_value,
             _string_list(response.get("answer_aliases", [])),
         )
-        answer_type = _normalize_answer_type(response.get("answer_type"), answer, question)
         answer_items = _answer_items(answer_value)
+        source_table_index = _coerce_table_index(response.get("source_table"))
+        source_table = _table_by_index(selected_tables, source_table_index)
+        if self.allowed_reasoning_types == ("single_fact",) and len(answer_items) > 1:
+            return _rejected_placeholder(
+                url=page.source_url,
+                reason="wikipedia_infobox_single_fact_list_answer",
+                run_date=run_date,
+                timings=timings,
+                title=page.title,
+                canonical_url=page.canonical_url,
+                content_domain=page.content_domain,
+                first_paragraph=page.first_paragraph,
+                discard_reason="single_fact_list_answer_not_allowed",
+                tables=page.tables,
+                llm_response=response,
+                llm_prompt=prompt,
+                table_selection=table_selection,
+                source_table=source_table,
+                question=question,
+                answer=answer,
+                min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
+            )
+        social_science_violation = _extra_prompt_violation(
+            extra_prompts=self.extra_prompts,
+            question=question,
+            answer=answer,
+            page=page,
+            source_table=source_table,
+        )
+        if social_science_violation:
+            return _rejected_placeholder(
+                url=page.source_url,
+                reason="wikipedia_infobox_extra_prompt_violation",
+                run_date=run_date,
+                timings=timings,
+                title=page.title,
+                canonical_url=page.canonical_url,
+                content_domain=page.content_domain,
+                first_paragraph=page.first_paragraph,
+                discard_reason=social_science_violation,
+                tables=page.tables,
+                llm_response=response,
+                llm_prompt=prompt,
+                table_selection=table_selection,
+                source_table=source_table,
+                question=question,
+                answer=answer,
+                min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
+            )
+        answer_type = _normalize_answer_type(response.get("answer_type"), answer, question)
+        if self.allowed_answer_types and answer_type not in self.allowed_answer_types:
+            return _rejected_placeholder(
+                url=page.source_url,
+                reason="wikipedia_infobox_answer_type_not_allowed",
+                run_date=run_date,
+                timings=timings,
+                title=page.title,
+                canonical_url=page.canonical_url,
+                content_domain=page.content_domain,
+                first_paragraph=page.first_paragraph,
+                discard_reason=_answer_type_not_allowed_reason(response, self.allowed_answer_types),
+                tables=page.tables,
+                llm_response=response,
+                llm_prompt=prompt,
+                table_selection=table_selection,
+                question=question,
+                answer=answer,
+                min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
+            )
         search_queries = _sanitize_answer_blind_queries(
             response.get("search_queries", []),
             answer=answer,
@@ -389,9 +609,32 @@ class WikipediaInfoboxTableGenerator:
             answer_items=answer_items,
             max_queries=self.search_query_count,
         )
-        source_table_index = _coerce_table_index(response.get("source_table"))
-        source_table = _table_by_index(selected_tables, source_table_index)
-        reasoning_type = _reasoning_type(response)
+        declared_reasoning_type = _declared_reasoning_type(response)
+        if self.allowed_reasoning_types and declared_reasoning_type not in self.allowed_reasoning_types:
+            return _rejected_placeholder(
+                url=page.source_url,
+                reason="wikipedia_infobox_reasoning_type_not_allowed",
+                run_date=run_date,
+                timings=timings,
+                title=page.title,
+                canonical_url=page.canonical_url,
+                content_domain=page.content_domain,
+                first_paragraph=page.first_paragraph,
+                discard_reason=_reasoning_type_not_allowed_reason(response, self.allowed_reasoning_types),
+                tables=page.tables,
+                llm_response=response,
+                llm_prompt=prompt,
+                table_selection=table_selection,
+                source_table=source_table,
+                question=question,
+                answer=answer,
+                min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
+            )
+        reasoning_type = declared_reasoning_type or _reasoning_type(response)
         tie_problem = _tie_completion_problem(
             source_table=source_table,
             reasoning_type=reasoning_type,
@@ -446,6 +689,10 @@ class WikipediaInfoboxTableGenerator:
                     cutoff_year,
                 ),
                 min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
             ),
         )
 
@@ -460,17 +707,26 @@ def build_wikipedia_infobox_prompt(
     table_selection: list[dict[str, Any]],
     cutoff_year: int,
     search_query_count: int = 3,
+    allowed_reasoning_types: Iterable[str] | None = None,
+    allowed_answer_types: Iterable[str] | None = None,
+    extra_prompts: Iterable[str] | str | None = None,
 ) -> str:
     """Build the small-model prompt for Wikipedia table QA generation."""
+    normalized_allowed_reasoning_types = normalize_route3_reasoning_types(allowed_reasoning_types)
+    normalized_allowed_answer_types = normalize_route3_answer_types(allowed_answer_types)
+    normalized_extra_prompts = normalize_route3_extra_prompts(extra_prompts)
     payload = {
         "title": title,
         "canonical_url": canonical_url,
         "first_paragraph": first_paragraph[:2500],
         "safe_subject_aliases": subject_anchors.get("safe_subject_aliases", []),
         "subject_anchors": subject_anchors,
+        "allowed_reasoning_types": list(normalized_allowed_reasoning_types),
+        "allowed_answer_types": list(normalized_allowed_answer_types),
+        "extra_prompt_rules": list(normalized_extra_prompts),
         "table_selection_criteria": [
             "Prefer tables with many structured data rows.",
-            "Prefer tables with numeric, ordinal, date, rank, count, or comparable value columns.",
+            # "Prefer tables with numeric, ordinal, date, rank, count, or comparable value columns.",
             "Prefer tables whose row values are mostly not repeated in non-table prose, because these are less directly answerable from the article text.",
             "Prefer specific article tables over summary infoboxes when both are available.",
         ],
@@ -481,47 +737,271 @@ def build_wikipedia_infobox_prompt(
         "tables": [table.to_metadata(max_rows=40, max_text_chars=2500) for table in tables[:3]],
     }
     return (
-        "Generate one SimpleQA-style factual question from a Wikipedia infobox or table.\n"
+        "Generate one long-tail SimpleQA-style factual question from a Wikipedia table or infobox.\n"
         "Return JSON only.\n\n"
-        "Requirements:\n"
-        "- Use either a single fact lookup from the structured source or a table reasoning operation over rows or values: max, min, sum, count, comparison, or ordinal.\n"
-        "- A single fact question is allowed when it asks for one stable value from an infobox or table and is likely to remain long-tail after search filtering.\n"
-        "- The answer must be a stable entity/value from the provided table content, or a complete list when the reasoning operation has a tie.\n"
-        "- If max/min/ordinal/count has tied answers, return answer as a JSON array containing every tied answer.\n"
-        "- If a table cell has a parenthetical alias, put the plain entity name in answer and the parenthetical text in answer_aliases.\n"
+        "Requirements:\n\n"
+
+        "### Must have a single answer.\n\n"
+        "- The question must have exactly one intended, indisputable answer.\n"
         "- Choose from the top three ranked tables. Prefer rank 1 unless it cannot support a safe question.\n"
-        "- Prefer a high-quality article table over an infobox when both support a safe, long-tail question.\n"
-        "- Prefer table facts that are not easily found in article prose outside tables.\n"
-        f"{ANSWER_PRECISION_PROMPT_RULES}"
-        "- Use subject_anchors only to understand the page/table scope; do not copy anchor text mechanically into the question.\n"
-        "- If the page title contains a cutoff-year marker, use one of safe_subject_aliases when you need to name the subject; do not use the cutoff-year title text.\n"
-        "- Let the table caption, nearby paragraph intro, or nearby section heading define the safe scope. Pay special attention to nearby intros with words like `following` or `above`; they often state which rows are included or excluded. For example, `15 largest commercial banks` supports asking which bank is largest within that listed table, but not how many banks exist in Ukraine. A `1980 chart` table supports asking about facts in that 1980 chart, but not when a song first entered a chart because it may have entered in another year.\n"
-        "- Treat curated list pages such as `List of national parks of the United States` as complete and authoritative for membership within their stated scope. Do not hedge by saying `according to the List of ...`.\n"
-        "- Do not write `according to the table`, `according to the [source] table`, or `in the List of ...`. Name the actual entity, event, chart, list, or scope naturally. Only use `according to ...` when the source is a well-known named chart or list, such as a Billboard chart or UNESCO list.\n"
-        "- Avoid questions with unclear or overly broad answer categories, such as `What equipment ...`. If the answer column is generic, name the domain-specific category in the question, such as telecommunications equipment category, award category, country of birth, or chart entry.\n"
+        "- Avoid questions with unclear or overly broad answer categories, such as `What equipment ...` `What genre ...`. Instead, ask about a more specific and verifiable attribute.\n"
+        f"{_answer_precision_prompt_rule(normalized_allowed_answer_types)}"
+        "- If a table cell has a parenthetical alias, put the plain entity name in answer and the parenthetical text in answer_aliases.\n"
+
+        "### Reasoning type and Answer type rules:\n\n"
+        f"{_reasoning_type_prompt_rule(normalized_allowed_reasoning_types)}"
+        f"{_answer_type_prompt_rule(normalized_allowed_answer_types)}"
+        f"{_tie_answer_prompt_rule(normalized_allowed_reasoning_types)}"
+
+        "### Reference answers should not change over time.\n\n"
+        f"{_route3_stability_prompt_rule()}"
         "- Do not ask cumulative-statistic questions such as how many goals Messi has scored, total wins, career points, revenue, downloads, citations, or followers unless the statistic is explicitly scoped to a historically settled slice, completed event, completed season, or fixed table/list.\n"
-        "- Do not use generic phrases like `the listed table`, `the tournament`, or `the award` without naming the source subject.\n"
         "- Do not ask about current, latest, most recent, or live-status facts.\n"
         "- Avoid mutable-sounding wording such as `total assets`, `total number`, `current`, or `as of`.\n"
         "- For completed historical tables, phrase the comparison as a fixed result within the named event or list.\n"
+
+        "### Use careful wording to avoid ambiguity.\n\n"
+        "- Use subject_anchors only to understand the page/table scope; do not copy anchor text mechanically into the question.\n"
+        "- Let the table caption, nearby paragraph intro, or nearby section heading define the safe scope. Pay special attention to nearby intros with words like `following` or `above`; they often state which rows are included or excluded. For example, `15 largest commercial banks in Ukraine` supports asking which bank is largest in Ukraine, but not how many banks exist in Ukraine. A `1980 chart` table supports asking about facts in that 1980 chart, but not when a song first entered a chart because it may have entered in another year.\n"
+        "- Treat curated list pages such as `List of national parks of the United States` as complete and authoritative for membership within their stated scope. Do not hedge by saying `according to the List of ...`.\n"
+        "- Do not cite the list unless the source is a well-known named chart or list, such as a Billboard chart, UNESCO list or a sports tournament chart. Phrases to avoid: `according to the table`, `according to the [source] table`, or `in the List of ...`. \n"
+        "- Ask about the facts in the table. Do not ask questions about the table itself, such as `What year does the estimate refer to`.\n"
+        "- If the table is only a toy, tutorial, or teaching example rather than real-world factual data, choose another table.\n"
+        "- Avoid vague phrases like `linked to`.\n"
+
+        "### Must be challenging.\n\n"
+        "- Prefer a high-quality article table over an infobox when both support a safe, long-tail question.\n"
+        "- Prefer table facts that are not easily found in article prose outside tables.\n"
+        "- Prefer answers that look unfamiliar to you and are likely to remain long-tail after search filtering.\n"
+        
+        "### Must be answerable (no cut-off year markers).\n\n"
+        "- If the page title contains a cutoff-year marker, use one of safe_subject_aliases when you need to name the subject; do not use the cutoff-year title text.\n"
         f"- Do not make the question text depend on events in {cutoff_year} or later.\n"
+
+        "### Other prompt rules:\n\n"
+        f"{_extra_prompt_rule(normalized_extra_prompts)}"
         "- Do not include the answer or answer aliases in the question or search queries.\n"
         f"- Generate exactly {search_query_count} answer-blind search queries.\n"
-        "- If no safe single fact or table reasoning question is possible, set discard_reason and leave the other fields empty.\n\n"
-        "Output schema:\n"
+        f"{_discard_prompt_rule(normalized_allowed_reasoning_types)}"
+        "\nOutput schema:\n"
         "{\n"
         '  "question": string,\n'
         '  "answer": string | string[],\n'
-        '  "answer_type": "Entity|Number|Date",\n'
+        f'  "answer_type": "{_answer_type_schema(normalized_allowed_answer_types)}",\n'
         '  "answer_aliases": string[],\n'
         '  "search_queries": string[],\n'
-        '  "reasoning_type": "single_fact|max|min|sum|count|comparison|ordinal|other",\n'
+        f'  "reasoning_type": "{_reasoning_type_schema(normalized_allowed_reasoning_types)}",\n'
         '  "source_table": integer,\n'
         '  "derivation_summary": string,\n'
         '  "discard_reason": string | null\n'
         "}\n\n"
         f"Payload:\n{json.dumps(payload, ensure_ascii=False, indent=2)}"
     )
+
+
+def normalize_route3_reasoning_types(values: Iterable[str] | str | None) -> tuple[str, ...]:
+    """Return normalized configured Route 3 reasoning types."""
+    if values is None:
+        return ()
+    raw_values: Iterable[str]
+    if isinstance(values, str):
+        raw_values = [values]
+    else:
+        raw_values = values
+    normalized_values: list[str] = []
+    seen: set[str] = set()
+    for raw_value in raw_values:
+        for part in str(raw_value or "").split(","):
+            normalized = _normalize_reasoning_type_value(part)
+            if not normalized:
+                continue
+            if normalized not in ROUTE3_REASONING_TYPE_SET:
+                allowed = ", ".join(ROUTE3_REASONING_TYPES)
+                raise ValueError(f"Unsupported Route 3 reasoning_type {part!r}. Allowed values: {allowed}.")
+            if normalized not in seen:
+                normalized_values.append(normalized)
+                seen.add(normalized)
+    return tuple(normalized_values)
+
+
+def normalize_route3_answer_types(values: Iterable[str] | str | None) -> tuple[str, ...]:
+    """Return normalized configured Route 3 answer types."""
+    if values is None:
+        return ()
+    raw_values: Iterable[str]
+    if isinstance(values, str):
+        raw_values = [values]
+    else:
+        raw_values = values
+    normalized_values: list[str] = []
+    seen: set[str] = set()
+    for raw_value in raw_values:
+        for part in str(raw_value or "").split(","):
+            normalized = _normalize_answer_type_value(part)
+            if not normalized:
+                continue
+            if normalized not in ROUTE3_ANSWER_TYPE_SET:
+                allowed = ", ".join(ROUTE3_ANSWER_TYPES)
+                raise ValueError(f"Unsupported Route 3 answer_type {part!r}. Allowed values: {allowed}.")
+            if normalized not in seen:
+                normalized_values.append(normalized)
+                seen.add(normalized)
+    return tuple(normalized_values)
+
+
+def normalize_route3_extra_prompts(values: Iterable[str] | str | None) -> tuple[str, ...]:
+    """Return expanded stricter prompt rules for Route 3."""
+    if values is None:
+        return ()
+    raw_values: Iterable[str]
+    if isinstance(values, str):
+        raw_values = [values]
+    else:
+        raw_values = values
+    normalized_values: list[str] = []
+    seen: set[str] = set()
+    for raw_value in raw_values:
+        direct_prompt = _normalize_extra_prompt(raw_value)
+        if direct_prompt and (direct_prompt != str(raw_value or "").strip() or direct_prompt in ROUTE3_EXTRA_PROMPTS.values()):
+            parts = [direct_prompt]
+        else:
+            parts = [
+                _normalize_extra_prompt(part)
+                for part in str(raw_value or "").split(",")
+            ]
+        for prompt in parts:
+            if not prompt:
+                continue
+            if prompt not in seen:
+                normalized_values.append(prompt)
+                seen.add(prompt)
+    return tuple(normalized_values)
+
+
+def normalize_route3_table_filter_modes(values: Iterable[str] | str | None) -> tuple[str, ...]:
+    """Return normalized configured Route 3 table prefilter modes."""
+    if values is None:
+        return ()
+    raw_values: Iterable[str]
+    if isinstance(values, str):
+        raw_values = [values]
+    else:
+        raw_values = values
+    normalized_values: list[str] = []
+    seen: set[str] = set()
+    for raw_value in raw_values:
+        for part in str(raw_value or "").split(","):
+            normalized = _normalize_table_filter_mode(part)
+            if not normalized:
+                continue
+            if normalized not in ROUTE3_TABLE_FILTER_MODE_SET:
+                allowed = ", ".join(ROUTE3_TABLE_FILTER_MODES)
+                raise ValueError(f"Unsupported Route 3 table filter mode {part!r}. Allowed values: {allowed}.")
+            if normalized not in seen:
+                normalized_values.append(normalized)
+                seen.add(normalized)
+    return tuple(normalized_values)
+
+
+def _reasoning_type_prompt_rule(allowed_reasoning_types: tuple[str, ...]) -> str:
+    """Return the Route 3 prompt rule for configured reasoning types."""
+    reasoning_types = allowed_reasoning_types or ROUTE3_REASONING_TYPES
+    if len(reasoning_types) == 1:
+        reasoning_type = reasoning_types[0]
+        return (
+            f"- Use only `{reasoning_type}` reasoning_type: "
+            f"{ROUTE3_REASONING_TYPE_PROMPT_RULES[reasoning_type]}.\n"
+        )
+    if not allowed_reasoning_types:
+        return (
+            "- Choose exactly one reasoning_type from "
+            f"{', '.join(f'`{value}`' for value in ROUTE3_REASONING_TYPES)}. "
+            "Use the matching rule below and no other reasoning_type rule.\n"
+            f"{_type_rule_lines(ROUTE3_REASONING_TYPE_PROMPT_RULES, reasoning_types)}"
+        )
+    allowed_text = ", ".join(f"`{value}`" for value in allowed_reasoning_types)
+    return (
+        f"- Use only these reasoning_type values: {allowed_text}. "
+        "Use the matching rule below and no other reasoning_type rule.\n"
+        f"{_type_rule_lines(ROUTE3_REASONING_TYPE_PROMPT_RULES, reasoning_types)}"
+    )
+
+
+def _route3_stability_prompt_rule() -> str:
+    """Return the Route 3 settled-answer rule without duplicating shared wording."""
+    return (
+        "- Only ask for an answer that is historically settled in the provided table content and cannot change; "
+        "reject mutable statuses, current roles, live affiliations, and other facts whose answer can change over time.\n"
+    )
+
+
+def _answer_type_prompt_rule(allowed_answer_types: tuple[str, ...]) -> str:
+    """Return the Route 3 prompt rule for configured answer types."""
+    answer_types = allowed_answer_types or ROUTE3_ANSWER_TYPES
+    if len(answer_types) == 1:
+        answer_type = answer_types[0]
+        return (
+            f"- Use only `{answer_type}` answer_type: "
+            f"{ROUTE3_ANSWER_TYPE_PROMPT_RULES[answer_type]}.\n"
+        )
+    if not allowed_answer_types:
+        return (
+            "- Choose exactly one SimpleQA Verified answer_type from "
+            f"{', '.join(f'`{value}`' for value in ROUTE3_ANSWER_TYPES)}. "
+            "Use the matching rule below and no other answer_type rule.\n"
+            f"{_type_rule_lines(ROUTE3_ANSWER_TYPE_PROMPT_RULES, answer_types)}"
+        )
+    allowed_text = ", ".join(f"`{value}`" for value in allowed_answer_types)
+    return (
+        f"- Use only these answer_type values: {allowed_text}. "
+        "Use the matching rule below and no other answer_type rule.\n"
+        f"{_type_rule_lines(ROUTE3_ANSWER_TYPE_PROMPT_RULES, answer_types)}"
+    )
+
+
+def _type_rule_lines(rule_map: dict[str, str], values: tuple[str, ...]) -> str:
+    """Return one explanatory rule per configured type."""
+    return "".join(f"- `{value}`: {rule_map[value]}.\n" for value in values)
+
+def _tie_answer_prompt_rule(allowed_reasoning_types: tuple[str, ...]) -> str:
+    """Return tie-answer guidance when a tied reasoning operation is available."""
+    if allowed_reasoning_types and not {"max", "min", "ordinal", "count"}.intersection(allowed_reasoning_types):
+        return ""
+    return "- If max/min/ordinal/count has tied answers, return answer as a JSON array containing every tied answer.\n"
+
+
+def _discard_prompt_rule(allowed_reasoning_types: tuple[str, ...]) -> str:
+    """Return the prompt rule for impossible generation cases."""
+    if allowed_reasoning_types:
+        return "- If no safe question matching the allowed reasoning_type rules is possible, set discard_reason and leave the other fields empty.\n\n"
+    return "- If no safe single fact or table reasoning question is possible, set discard_reason and leave the other fields empty.\n\n"
+
+
+def _reasoning_type_schema(allowed_reasoning_types: tuple[str, ...]) -> str:
+    """Return the prompt schema value for reasoning_type."""
+    return "|".join(allowed_reasoning_types or ROUTE3_REASONING_TYPES)
+
+
+def _answer_type_schema(allowed_answer_types: tuple[str, ...]) -> str:
+    """Return the prompt schema value for answer_type."""
+    return "|".join(allowed_answer_types or ROUTE3_ANSWER_TYPES)
+
+
+def _answer_precision_prompt_rule(allowed_answer_types: tuple[str, ...]) -> str:
+    """Return precision wording only for answer types available in this run."""
+    if not allowed_answer_types:
+        return ANSWER_PRECISION_PROMPT_RULES
+    parts: list[str] = []
+    if "Date" in allowed_answer_types:
+        parts.append(DATE_PRECISION_PROMPT_RULES)
+    if "Number" in allowed_answer_types:
+        parts.append(NUMBER_PRECISION_PROMPT_RULES)
+    return "".join(parts)
+
+
+def _extra_prompt_rule(extra_prompts: tuple[str, ...]) -> str:
+    """Return optional stricter prompt rules."""
+    return "".join(f"- {prompt.rstrip('.')}.\n" for prompt in extra_prompts)
 
 
 def extract_wikipedia_tables(html: str) -> list[WikipediaTable]:
@@ -606,13 +1086,13 @@ def rank_wikipedia_tables(
         if table.headers:
             score += 1.0
             reasons.append("has_headers")
-        if numeric_cell_count:
+        if ENABLE_NUMERIC_TABLE_RANKING_POINTS and numeric_cell_count:
             score += min(numeric_cell_count, 20) * 0.1
             reasons.append("numeric_values")
-        if comparable_header_hits:
+        if ENABLE_NUMERIC_TABLE_RANKING_POINTS and comparable_header_hits:
             score += 3.0
             reasons.append("comparable_headers")
-        else:
+        elif ENABLE_NUMERIC_TABLE_RANKING_POINTS:
             score -= 1.0
             reasons.append("no_comparable_headers")
         if preferred_context_hits:
@@ -624,7 +1104,7 @@ def rank_wikipedia_tables(
         if live_scope_reason:
             score -= 5.0
             reasons.append("live_table_scope")
-        if zero_numeric_rate >= 0.5 and numeric_cell_count >= 6:
+        if ENABLE_NUMERIC_TABLE_RANKING_POINTS and zero_numeric_rate >= 0.5 and numeric_cell_count >= 6:
             score -= 4.0
             reasons.append("zero_dominant_numeric_values")
         if leakage_rate <= 0.2:
@@ -665,7 +1145,7 @@ def rank_wikipedia_tables(
         key=lambda row: (
             float(row["score"]),
             int(row["row_count"]),
-            int(row["numeric_cell_count"]),
+            int(row["numeric_cell_count"]) if ENABLE_NUMERIC_TABLE_RANKING_POINTS else 0,
         ),
         reverse=True,
     )
@@ -692,10 +1172,133 @@ def _annotate_table_score_cutoff(
     return annotated
 
 
+def _annotate_table_filter_modes(
+    table_selection: list[dict[str, Any]],
+    table_filter_modes: Iterable[str] | str | None,
+) -> list[dict[str, Any]]:
+    """Mark ranked tables rejected by configured early table filter modes."""
+    modes = normalize_route3_table_filter_modes(table_filter_modes)
+    annotated: list[dict[str, Any]] = []
+    for row in table_selection:
+        copied = dict(row)
+        reasons: list[str] = []
+        table = copied.get("table")
+        copied["table_filter_modes"] = list(modes)
+        if isinstance(table, WikipediaTable):
+            if "no_big_numbers" in modes:
+                big_number_stats = _big_number_table_stats(table)
+                copied["big_number_stats"] = big_number_stats
+                big_number_reason = _big_number_table_filter_reason(big_number_stats)
+                if big_number_reason:
+                    reasons.append(big_number_reason)
+            if "no_social_science_research" in modes:
+                markers = _table_text_markers(table, SOCIAL_SCIENCE_TABLE_MARKERS)
+                copied["social_science_markers"] = markers
+                if markers:
+                    reasons.append(f"no_social_science_research:{','.join(markers)}")
+        copied["table_filter_rejection_reasons"] = reasons
+        copied["table_filter_rejection_reason"] = ";".join(reasons)
+        if reasons:
+            row_reasons = list(copied.get("reasons", []))
+            for reason in reasons:
+                mode = reason.split(":", 1)[0]
+                if mode not in row_reasons:
+                    row_reasons.append(mode)
+            copied["reasons"] = row_reasons
+        annotated.append(copied)
+    return annotated
+
+
 def _table_score_cutoff_discard_reason(rows: list[dict[str, Any]], min_table_score: float) -> str:
     """Return a concise rejection reason when no table meets the score cutoff."""
     best_score = max((_selection_score(row) for row in rows), default=0.0)
     return f"table_score_below_minimum:min_table_score={float(min_table_score):.4f};best_score={best_score:.4f}"
+
+
+def _table_filter_discard_reason(rows: list[dict[str, Any]]) -> str:
+    """Return a concise rejection reason for table prefilter drops."""
+    for row in rows:
+        reason = str(row.get("table_filter_rejection_reason", "")).strip()
+        if reason:
+            return reason
+    return "route3_table_filter_rejected"
+
+
+def _big_number_table_stats(table: WikipediaTable) -> dict[str, Any]:
+    """Return normalized numeric-cell magnitude stats for the no-big-numbers mode."""
+    word_markers = _table_text_markers(table, BIG_NUMBER_WORD_MARKERS)
+    if word_markers:
+        return {
+            "numeric_cell_count": 0,
+            "gt_3000_count": 0,
+            "gt_3000_rate": 0.0,
+            "gt_10000_count": 0,
+            "gt_10000_rate": 0.0,
+            "word_markers": word_markers,
+        }
+    values = _normalized_numeric_cell_values(table)
+    gt_3000_count = sum(1 for value in values if abs(value) > 3000)
+    gt_10000_count = sum(1 for value in values if abs(value) > 10000)
+    numeric_count = len(values)
+    return {
+        "numeric_cell_count": numeric_count,
+        "gt_3000_count": gt_3000_count,
+        "gt_3000_rate": round(gt_3000_count / numeric_count, 4) if numeric_count else 0.0,
+        "gt_10000_count": gt_10000_count,
+        "gt_10000_rate": round(gt_10000_count / numeric_count, 4) if numeric_count else 0.0,
+        "word_markers": word_markers,
+    }
+
+
+def _big_number_table_filter_reason(stats: dict[str, Any]) -> str:
+    """Return the no-big-numbers rejection reason for one table, if any."""
+    markers = stats.get("word_markers", [])
+    if markers:
+        return f"no_big_numbers:word_marker={','.join(str(marker) for marker in markers)}"
+    numeric_count = int(stats.get("numeric_cell_count", 0) or 0)
+    gt_3000_rate = float(stats.get("gt_3000_rate", 0.0) or 0.0)
+    gt_10000_rate = float(stats.get("gt_10000_rate", 0.0) or 0.0)
+    if numeric_count and gt_3000_rate >= BIG_NUMBER_GT_3000_RATE_THRESHOLD:
+        return (
+            "no_big_numbers:"
+            f"gt_3000_rate={gt_3000_rate:.4f};threshold={BIG_NUMBER_GT_3000_RATE_THRESHOLD:.4f}"
+        )
+    if numeric_count and gt_10000_rate >= BIG_NUMBER_GT_10000_RATE_THRESHOLD:
+        return (
+            "no_big_numbers:"
+            f"gt_10000_rate={gt_10000_rate:.4f};threshold={BIG_NUMBER_GT_10000_RATE_THRESHOLD:.4f}"
+        )
+    return ""
+
+
+def _normalized_numeric_cell_values(table: WikipediaTable) -> list[Any]:
+    """Parse table numeric cells into normalized Decimal values before filtering."""
+    values: list[Any] = []
+    for row in _data_rows(table):
+        for cell in row:
+            cleaned = _strip_footnote_markers(str(cell or ""))
+            if not _is_numeric_value_cell(cleaned):
+                continue
+            parsed = parse_number_token(cleaned)
+            if parsed is not None:
+                values.append(parsed)
+    return values
+
+
+def _table_text_markers(table: WikipediaTable, markers: Iterable[str]) -> list[str]:
+    """Return markers present in normalized table text."""
+    checked_text = normalize_name(
+        " ".join(
+            [
+                table.section_heading,
+                table.caption,
+                table.nearby_intro,
+                " ".join(table.headers),
+                table.normalized_text,
+            ]
+        )
+    )
+    return [marker for marker in markers if marker in checked_text]
 
 
 def _selection_score(row: dict[str, Any]) -> float:
@@ -925,9 +1528,17 @@ def _source_metadata(
     tie_completion_warning: str = "",
     subject_anchors: dict[str, Any] | None = None,
     min_table_score: float = 0.0,
+    allowed_reasoning_types: Iterable[str] | None = None,
+    allowed_answer_types: Iterable[str] | None = None,
+    extra_prompts: Iterable[str] | str | None = None,
+    table_filter_modes: Iterable[str] | str | None = None,
 ) -> dict[str, Any]:
     """Build Route 3 audit metadata."""
     safe_subject_aliases = _first_paragraph_aliases(page.title, page.first_paragraph)
+    normalized_allowed_reasoning_types = normalize_route3_reasoning_types(allowed_reasoning_types)
+    normalized_allowed_answer_types = normalize_route3_answer_types(allowed_answer_types)
+    normalized_extra_prompts = normalize_route3_extra_prompts(extra_prompts)
+    normalized_table_filter_modes = normalize_route3_table_filter_modes(table_filter_modes)
     metadata = {
         "source_url": page.source_url,
         "page_id": normalize_wikipedia_page_id(page.source_url),
@@ -939,6 +1550,10 @@ def _source_metadata(
         "safe_subject_aliases": safe_subject_aliases,
         "subject_anchors": subject_anchors or [],
         "min_table_score": float(min_table_score),
+        "allowed_reasoning_types": list(normalized_allowed_reasoning_types),
+        "allowed_answer_types": list(normalized_allowed_answer_types),
+        "extra_prompts": list(normalized_extra_prompts),
+        "table_filter_modes": list(normalized_table_filter_modes),
         "parsed_tables": [table.to_metadata() for table in tables],
         "table_selection": [_selection_payload(row) for row in table_selection],
         "selected_source_table": source_table.to_metadata() if source_table is not None else {},
@@ -982,8 +1597,16 @@ def _rejected_placeholder(
     question: str = "",
     answer: str = "",
     min_table_score: float = 0.0,
+    allowed_reasoning_types: Iterable[str] | None = None,
+    allowed_answer_types: Iterable[str] | None = None,
+    extra_prompts: Iterable[str] | str | None = None,
+    table_filter_modes: Iterable[str] | str | None = None,
 ) -> GeneratedCandidate:
     """Build a placeholder candidate so shared output records route-local failures."""
+    normalized_allowed_reasoning_types = normalize_route3_reasoning_types(allowed_reasoning_types)
+    normalized_allowed_answer_types = normalize_route3_answer_types(allowed_answer_types)
+    normalized_extra_prompts = normalize_route3_extra_prompts(extra_prompts)
+    normalized_table_filter_modes = normalize_route3_table_filter_modes(table_filter_modes)
     return GeneratedCandidate(
         source_type=SOURCE_TYPE,
         generation_route=ROUTE_NAME,
@@ -1014,6 +1637,10 @@ def _rejected_placeholder(
             "content_domain": content_domain,
             "first_paragraph": first_paragraph,
             "min_table_score": float(min_table_score),
+            "allowed_reasoning_types": list(normalized_allowed_reasoning_types),
+            "allowed_answer_types": list(normalized_allowed_answer_types),
+            "extra_prompts": list(normalized_extra_prompts),
+            "table_filter_modes": list(normalized_table_filter_modes),
             "parsed_tables": [table.to_metadata() for table in tables or []],
             "table_selection": [_selection_payload(row) for row in table_selection or []],
             "selected_source_table": source_table.to_metadata() if source_table is not None else {},
@@ -1080,6 +1707,11 @@ def _selection_payload(row: dict[str, Any]) -> dict[str, Any]:
         "preferred_context_hits": row.get("preferred_context_hits", []),
         "mutable_context_hits": row.get("mutable_context_hits", []),
         "live_scope_rejection_reason": row.get("live_scope_rejection_reason", ""),
+        "table_filter_modes": row.get("table_filter_modes", []),
+        "table_filter_rejection_reason": row.get("table_filter_rejection_reason", ""),
+        "table_filter_rejection_reasons": row.get("table_filter_rejection_reasons", []),
+        "big_number_stats": row.get("big_number_stats", {}),
+        "social_science_markers": row.get("social_science_markers", []),
         "min_table_score": row.get("min_table_score"),
         "below_min_table_score": bool(row.get("below_min_table_score", False)),
         "zero_numeric_rate": row.get("zero_numeric_rate"),
@@ -1134,25 +1766,134 @@ def _sanitize_answer_blind_queries(
     return queries[: max(0, max_queries)]
 
 
-def _reasoning_type(response: dict[str, Any]) -> str:
-    """Return the normalized Route 3 reasoning type, accepting legacy composition_type."""
+def _raw_reasoning_type(response: dict[str, Any]) -> str:
+    """Return the raw Route 3 reasoning type, accepting legacy composition_type."""
     raw_value = response.get("reasoning_type")
     if raw_value in {None, ""}:
         raw_value = response.get("composition_type")
-    normalized = str(raw_value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    return str(raw_value or "").strip()
+
+
+def _normalize_reasoning_type_value(value: Any) -> str:
+    """Normalize one Route 3 reasoning type string."""
+    normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
     if normalized == "simple_fact":
         normalized = "single_fact"
-    allowed = {
-        "single_fact",
-        "max",
-        "min",
-        "sum",
-        "count",
-        "comparison",
-        "ordinal",
-        "other",
+    return normalized
+
+
+def _normalize_answer_type_value(value: Any) -> str:
+    """Normalize one Route 3 answer type string."""
+    normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "person": "Person",
+        "people": "Person",
+        "human": "Person",
+        "place": "Place",
+        "location": "Place",
+        "geographic_entity": "Place",
+        "number": "Number",
+        "numeric": "Number",
+        "date": "Date",
+        "time": "Date",
+        "year": "Date",
+        "other": "Other",
+        "entity": "Other",
+        "organization": "Other",
+        "organisation": "Other",
+        "work": "Other",
+        "value": "Other",
     }
-    return normalized if normalized in allowed else "single_fact"
+    return aliases.get(normalized, str(value or "").strip())
+
+
+def _normalize_extra_prompt(value: Any) -> str:
+    """Normalize one named or literal extra prompt rule."""
+    raw_value = str(value or "").strip()
+    if not raw_value:
+        return ""
+    key = raw_value.lower().replace("-", "_").replace(" ", "_")
+    return ROUTE3_EXTRA_PROMPTS.get(key, raw_value)
+
+
+def _normalize_table_filter_mode(value: Any) -> str:
+    """Normalize one Route 3 table prefilter mode."""
+    normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    aliases = {
+        "big_numbers": "no_big_numbers",
+        "no_big_number": "no_big_numbers",
+        "social_science": "no_social_science_research",
+        "no_social_science": "no_social_science_research",
+        "no_social_science_research_prompt": "no_social_science_research",
+    }
+    return aliases.get(normalized, normalized)
+
+
+def _declared_reasoning_type(response: dict[str, Any]) -> str:
+    """Return the model-declared Route 3 reasoning type when it is supported."""
+    normalized = _normalize_reasoning_type_value(_raw_reasoning_type(response))
+    return normalized if normalized in ROUTE3_REASONING_TYPE_SET else ""
+
+
+def _declared_answer_type(response: dict[str, Any], answer: str, question: str) -> str:
+    """Return the model-declared answer type when supported, with conservative fallback inference."""
+    normalized = _normalize_answer_type(response.get("answer_type"), answer, question)
+    return normalized if normalized in ROUTE3_ANSWER_TYPE_SET else "Other"
+
+
+def _reasoning_type(response: dict[str, Any]) -> str:
+    """Return the normalized Route 3 reasoning type, accepting legacy composition_type."""
+    return _declared_reasoning_type(response) or "single_fact"
+
+
+def _reasoning_type_not_allowed_reason(response: dict[str, Any], allowed_reasoning_types: tuple[str, ...]) -> str:
+    """Return an audit string for a configured reasoning-type rejection."""
+    raw_reasoning_type = _raw_reasoning_type(response)
+    declared_reasoning_type = _declared_reasoning_type(response)
+    rejected_value = declared_reasoning_type or raw_reasoning_type or "<missing>"
+    return (
+        "reasoning_type_not_allowed:"
+        f"{rejected_value}; allowed={','.join(allowed_reasoning_types)}"
+    )
+
+
+def _answer_type_not_allowed_reason(response: dict[str, Any], allowed_answer_types: tuple[str, ...]) -> str:
+    """Return an audit string for a configured answer-type rejection."""
+    raw_answer_type = str(response.get("answer_type") or "").strip()
+    rejected_value = _normalize_answer_type_value(raw_answer_type) or raw_answer_type or "<missing>"
+    return (
+        "answer_type_not_allowed:"
+        f"{rejected_value}; allowed={','.join(allowed_answer_types)}"
+    )
+
+
+def _extra_prompt_violation(
+    *,
+    extra_prompts: tuple[str, ...],
+    question: str,
+    answer: str,
+    page: WikipediaPageTables,
+    source_table: WikipediaTable | None,
+) -> str:
+    """Return a deterministic rejection reason for known stricter extra prompt rules."""
+    if NO_SOCIAL_SCIENCE_RESEARCH_PROMPT not in extra_prompts:
+        return ""
+    checked_text = normalize_name(question)
+    blocked_markers = (
+        "census",
+        "survey",
+        "demographic",
+        "self reported",
+        "ancestry group",
+        "ethinic group",
+        "ethinicity",
+        "population",
+        "language speaker",
+    )
+    for marker in blocked_markers:
+        if marker in checked_text:
+            return f"no_social_science_research_prompt:{marker}"
+    return ""
 
 
 def _tie_completion_problem(
@@ -1207,7 +1948,7 @@ def _simple_grouped_extreme_items(table: WikipediaTable, reasoning_type: str) ->
 
 def _normalize_answer_type(value: Any, answer: str, question: str) -> str:
     """Return a supported answer type with conservative fallback inference."""
-    normalized = str(value or "").strip()
+    normalized = _normalize_answer_type_value(value)
     normalized_question = normalize_name(question)
     normalized_date = normalize_date_answer(answer, "Date")
     looks_like_temporal_answer = normalized_date != answer.strip() or re.fullmatch(
@@ -1219,13 +1960,11 @@ def _normalize_answer_type(value: Any, answer: str, question: str) -> str:
         for token in ("year", "date", "day", "month", "when")
     ):
         return "Date"
-    if normalized in {"Number", "Date"}:
-        return normalized
-    if normalized == "Entity":
+    if normalized in ROUTE3_ANSWER_TYPE_SET:
         return normalized
     if parse_number_token(answer) is not None:
         return "Number"
-    return "Entity"
+    return "Other"
 
 
 def _normalize_generated_answer(answer: Any, aliases: list[str]) -> tuple[str, list[str]]:

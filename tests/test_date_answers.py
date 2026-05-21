@@ -40,7 +40,7 @@ class DateAnswerTests(unittest.TestCase):
             date_property_pid="P571",
             date_value="2026-03-14",
             target_time="2026",
-            canonical_question="On what day, month, and year did the terminal Example Terminal open?",
+            canonical_question="On what month, day, and year did the terminal Example Terminal open?",
             reasoning_style="single_fact",
             hop_count=1,
             reasoning_path=[

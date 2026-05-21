@@ -8,9 +8,11 @@
     5489,
     5615,
     5643,
+    7299,
     8083,
     8957,
     9316,
+    11186,
     11787,
     11857,
     12186,
@@ -31,6 +33,7 @@
     22093,
     22304,
     22461,
+    22573,
     22948,
     23906,
     25286,
@@ -49,9 +52,13 @@
     39776,
     43088,
     43281,
+    43910,
     44635,
     47498,
+    52738,
     52812,
+    53762,
+    56494,
     56636,
     56668,
     57659,
@@ -62,11 +69,14 @@
     66524,
     66958,
     67436,
+    67749,
     67923,
     68761,
     73199,
+    75698,
     76988,
     80482,
+    81215,
     83316,
     84952,
     86224,
@@ -94,26 +104,36 @@
     212472,
     214179,
     217231,
+    217696,
     221478,
     226734,
+    227931,
     229275,
     231156,
     235916,
     235959,
     241717,
     246920,
+    249433,
     250230,
     260996,
     261671,
     262831,
+    277945,
+    280738,
+    280746,
     292259,
+    293791,
     333199,
+    339183,
     342334,
     356375,
+    363002,
     380845,
     384695,
     407239,
     422038,
+    428227,
     438269,
     441357,
     479109,
@@ -122,6 +142,8 @@
     569459,
     683599,
     695780,
+    963152,
+    1024289,
     1069583,
     1146123,
     1161220,
@@ -136,11 +158,13 @@
     3329753,
     4595410,
     7549995,
+    11423229,
     17278765,
     17416221,
     18938412,
     18947898,
     19653842,
+    20556738,
     21355232,
     22852566,
     26457880,
@@ -164,33 +188,41 @@
   "accepted_ids": [
     12542,
     15606,
+    22573,
     30217,
     31940,
     39776,
     52812,
+    56494,
     56636,
     57905,
     67436,
     67923,
     68761,
     73199,
+    75698,
     96875,
     101965,
     105391,
     164390,
     217231,
+    227931,
     235916,
     246920,
     250230,
+    339183,
     342334,
     384695,
     563616,
     569459,
+    963152,
+    1024289,
     1161220,
     1564433,
     1625048,
     2056103,
     2114995,
+    11423229,
     18938412,
     28229246,
     32551521,
@@ -205,9 +237,11 @@
     5489,
     5615,
     5643,
+    7299,
     8083,
     8957,
     9316,
+    11186,
     11787,
     11857,
     12186,
@@ -241,8 +275,11 @@
     36896,
     43088,
     43281,
+    43910,
     44635,
     47498,
+    52738,
+    53762,
     56668,
     57659,
     57877,
@@ -250,8 +287,10 @@
     65433,
     66524,
     66958,
+    67749,
     76988,
     80482,
+    81215,
     83316,
     84952,
     86224,
@@ -274,21 +313,29 @@
     200129,
     212472,
     214179,
+    217696,
     221478,
     226734,
     229275,
     231156,
     235959,
     241717,
+    249433,
     260996,
     261671,
     262831,
+    277945,
+    280738,
+    280746,
     292259,
+    293791,
     333199,
     356375,
+    363002,
     380845,
     407239,
     422038,
+    428227,
     438269,
     441357,
     479109,
@@ -308,6 +355,7 @@
     17416221,
     18947898,
     19653842,
+    20556738,
     21355232,
     22852566,
     26457880,
@@ -327,7 +375,7 @@
   "rerun_pool": [],
   "table_search_offsets": {
     "insource:\"wikitable\"": 600,
-    "insource:wikitable": 200
+    "insource:wikitable": 400
   },
   "failure_reasons": {
     "599": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
@@ -338,9 +386,11 @@
     "5489": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
     "5615": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "5643": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "7299": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "8083": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
     "8957": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "9316": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "11186": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "11787": "search_longtail_verifier_rejected:full_question:answer_in_title",
     "11857": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
     "12186": "rewrite_guard_rejected:answer_leakage",
@@ -363,6 +413,7 @@
     "23906": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "25286": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "25445": "wikipedia_infobox_table_score_below_minimum:table_score_below_minimum:min_table_score=0.0000;best_score=-0.1000",
+    "26689": "manual_review_rejected:manual_table_header_alignment_error",
     "30042": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "30292": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "31730": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
@@ -370,9 +421,14 @@
     "32611": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "34411": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "36646": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "36896": "manual_review_rejected:manual_missing_numeric_unit_in_question",
     "43088": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "43281": "manual_review_rejected:manual_underspecified_period_scope",
+    "43910": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "44635": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "47498": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
+    "52738": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "53762": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "56668": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "57659": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "57877": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
@@ -380,8 +436,10 @@
     "65433": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "66524": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "66958": "rewrite_guard_rejected:cutoff_year_exceeded",
+    "67749": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
     "76988": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
     "80482": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title",
+    "81215": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded",
     "83316": "manual_review_rejected:manual_missing_nearby_intro_scope",
     "84952": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "86224": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
@@ -404,21 +462,29 @@
     "200129": "search_longtail_verifier_error",
     "212472": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "214179": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "217696": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "221478": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "226734": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "229275": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
     "231156": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "235959": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "241717": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "249433": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "260996": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "261671": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "262831": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "277945": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "280738": "search_longtail_verifier_rejected:full_question:answer_in_title",
+    "280746": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "292259": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "293791": "wikipedia_infobox_table_score_below_minimum:table_score_below_minimum:min_table_score=0.0000;best_score=-0.5500",
     "333199": "rewrite_guard_rejected:forbidden_temporal_phrase",
     "356375": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "363002": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "380845": "rewrite_guard_rejected:cutoff_year_exceeded",
     "407239": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "422038": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
+    "428227": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "438269": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "441357": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "479109": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
@@ -438,6 +504,7 @@
     "17416221": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "18947898": "search_longtail_verifier_rejected:full_question:answer_in_title",
     "19653842": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "20556738": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "21355232": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
     "22852566": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
     "26457880": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
@@ -452,460 +519,9 @@
     "52374650": "manual_review_rejected:manual_ambiguous_current_list_scope",
     "55440889": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
     "60382764": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1",
-    "61795854": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
-    "43281": "manual_review_rejected:manual_underspecified_period_scope",
-    "36896": "manual_review_rejected:manual_missing_numeric_unit_in_question",
-    "26689": "manual_review_rejected:manual_table_header_alignment_error"
+    "61795854": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
   },
   "events": [
-    {
-      "event": "advance_table_search_offset",
-      "page_ids": [],
-      "reason": "insource:\"wikitable\":50"
-    },
-    {
-      "event": "reserve_candidate_ids",
-      "page_ids": [
-        32611,
-        17416221,
-        9316,
-        22093,
-        5489,
-        738,
-        13277,
-        14849,
-        19261,
-        11857
-      ],
-      "reason": "table_search:insource:\"wikitable\":offset=0"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        32611
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        17416221
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        9316
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        22093
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        5489
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        738
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        13277
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        14849
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        19261
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        11857
-      ],
-      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
-    },
-    {
-      "event": "advance_table_search_offset",
-      "page_ids": [],
-      "reason": "insource:\"wikitable\":100"
-    },
-    {
-      "event": "reserve_candidate_ids",
-      "page_ids": [
-        199445,
-        21355232,
-        31740,
-        8083,
-        292259,
-        40010153,
-        39776,
-        5488,
-        1640,
-        151603
-      ],
-      "reason": "table_search:insource:\"wikitable\":offset=50"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        199445
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        21355232
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        31740
-      ],
-      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        8083
-      ],
-      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        292259
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        40010153
-      ],
-      "reason": ""
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        39776
-      ],
-      "reason": ""
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        5488
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        1640
-      ],
-      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        151603
-      ],
-      "reason": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title"
-    },
-    {
-      "event": "advance_table_search_offset",
-      "page_ids": [],
-      "reason": "insource:\"wikitable\":150"
-    },
-    {
-      "event": "reserve_candidate_ids",
-      "page_ids": [
-        66958,
-        41853326,
-        60382764,
-        45367389,
-        105908,
-        217231,
-        34411,
-        12186,
-        5643,
-        19653842
-      ],
-      "reason": "table_search:insource:\"wikitable\":offset=100"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        66958
-      ],
-      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        41853326
-      ],
-      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        60382764
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        45367389
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        105908
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        217231
-      ],
-      "reason": ""
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        34411
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        12186
-      ],
-      "reason": "rewrite_guard_rejected:answer_leakage"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        5643
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        19653842
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
-    },
-    {
-      "event": "advance_table_search_offset",
-      "page_ids": [],
-      "reason": "insource:\"wikitable\":200"
-    },
-    {
-      "event": "reserve_candidate_ids",
-      "page_ids": [
-        22948,
-        55440889,
-        84952,
-        235916,
-        2924002,
-        30292,
-        33094374,
-        260996,
-        235959,
-        91195
-      ],
-      "reason": "table_search:insource:\"wikitable\":offset=150"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        22948
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        55440889
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        84952
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        235916
-      ],
-      "reason": ""
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        2924002
-      ],
-      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        30292
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        33094374
-      ],
-      "reason": ""
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        260996
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        235959
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        91195
-      ],
-      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
-    },
-    {
-      "event": "advance_table_search_offset",
-      "page_ids": [],
-      "reason": "insource:\"wikitable\":250"
-    },
-    {
-      "event": "reserve_candidate_ids",
-      "page_ids": [
-        569459,
-        105391,
-        342334,
-        17278765,
-        68761,
-        229275,
-        246920,
-        2114995,
-        96875,
-        1625048
-      ],
-      "reason": "table_search:insource:\"wikitable\":offset=200"
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        569459
-      ],
-      "reason": ""
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        105391
-      ],
-      "reason": ""
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        342334
-      ],
-      "reason": ""
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        17278765
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        68761
-      ],
-      "reason": ""
-    },
-    {
-      "event": "rejected",
-      "page_ids": [
-        229275
-      ],
-      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=1.0;threshold=0.1"
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        246920
-      ],
-      "reason": ""
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        2114995
-      ],
-      "reason": ""
-    },
-    {
-      "event": "accepted",
-      "page_ids": [
-        96875
-      ],
-      "reason": ""
-    },
     {
       "event": "accepted",
       "page_ids": [
@@ -1956,13 +1572,490 @@
         101965
       ],
       "reason": ""
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:wikitable:250"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        56494,
+        1024289,
+        52738,
+        293791,
+        428227,
+        11423229,
+        280746,
+        20556738,
+        81215,
+        227931
+      ],
+      "reason": "table_search:insource:wikitable:offset=200"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        293791
+      ],
+      "reason": "wikipedia_infobox_table_score_below_minimum:table_score_below_minimum:min_table_score=0.0000;best_score=-0.5500"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        52738
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        1024289
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        428227
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        56494
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        280746
+      ],
+      "reason": "search_longtail_verifier_error"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        81215
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        11423229
+      ],
+      "reason": "search_longtail_verifier_error"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        20556738
+      ],
+      "reason": "second_stage_grading_error"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        227931
+      ],
+      "reason": ""
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        81215,
+        11186,
+        7299,
+        363002,
+        339183,
+        277945,
+        280738,
+        67749,
+        53762,
+        43910
+      ],
+      "reason": "rerun_pool"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:wikitable:300"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        11186,
+        7299,
+        363002,
+        339183,
+        277945,
+        280738,
+        67749,
+        53762,
+        43910
+      ],
+      "reason": "table_search:insource:wikitable:offset=250"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        11186
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        7299
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        363002
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        81215
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        339183
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        280738
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        277945
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        67749
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        53762
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        43910
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        11186,
+        7299,
+        363002,
+        81215,
+        339183,
+        280738,
+        277945,
+        67749,
+        53762,
+        217696
+      ],
+      "reason": "rerun_pool"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:wikitable:350"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        217696
+      ],
+      "reason": "table_search:insource:wikitable:offset=300"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        11186
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        363002
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        7299
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        81215
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        67749
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        280738
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:answer_in_title"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        217696
+      ],
+      "reason": "wikipedia_infobox_generation_error:URLError:<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] EOF occurred in violation of protocol (_ssl.c:1017)>"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        277945
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        53762
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        339183
+      ],
+      "reason": "second_stage_grading_error"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        11186,
+        363002,
+        7299,
+        81215,
+        67749,
+        217696,
+        22573,
+        963152,
+        75698,
+        249433
+      ],
+      "reason": "rerun_pool"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:wikitable:400"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        22573,
+        963152,
+        75698,
+        249433
+      ],
+      "reason": "table_search:insource:wikitable:offset=350"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        363002
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        7299
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        81215
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        11186
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        67749
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_query_1:answer_in_title"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        217696
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        22573
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        963152
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        249433
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        75698
+      ],
+      "reason": "second_stage_grading_error"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        280746
+      ],
+      "reason": "search_longtail_verifier_error"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        11423229
+      ],
+      "reason": "search_longtail_verifier_error"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        20556738
+      ],
+      "reason": "second_stage_grading_error"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        339183
+      ],
+      "reason": "second_stage_grading_error"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        75698
+      ],
+      "reason": "second_stage_grading_error"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        280746,
+        11423229,
+        20556738,
+        339183,
+        75698
+      ],
+      "reason": "rerun_pool"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        280746
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        20556738
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        11423229
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        75698
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        339183
+      ],
+      "reason": ""
     }
   ],
   "stats": {
-    "used": 159,
+    "used": 183,
     "in_progress": 0,
-    "accepted": 36,
-    "rejected": 123,
+    "accepted": 41,
+    "rejected": 142,
     "rerun_pool": 0,
     "table_search_queries": 2
   }
