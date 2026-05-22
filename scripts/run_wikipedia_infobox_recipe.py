@@ -25,18 +25,17 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     normalize_route3_reasoning_types,
     normalize_route3_table_filter_modes,
 )
-from wikidata_simpleqa.wikipedia_streaming import PageIdStreamState
-
 from run_wikipedia_infobox_pipeline import (
     _aggregate_phase_timings,
+    _effective_stream_random_seed,
     _failure_reason_counts,
     _load_endpoint_jsonl,
     _phase_timing_stats,
     _safe_artifact_id,
+    _stable_stream_seed,
     _survival_by_layer,
     _write_stream_walkthrough,
 )
-
 
 @dataclass(frozen=True, slots=True)
 class RecipeItem:
@@ -121,7 +120,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--enable-broad-table-search", action="store_true")
     parser.add_argument("--stream-search-limit", type=int, default=50)
     parser.add_argument("--stream-search-max-rounds", type=int, default=10)
-    parser.add_argument("--stream-random-seed", type=int, default=42)
+    parser.add_argument(
+        "--stream-random-seed",
+        type=int,
+        default=None,
+        help=(
+            "Base seed for recipe streaming. When omitted, each segment gets a deterministic "
+            "run/segment-specific seed."
+        ),
+    )
     parser.add_argument("--stream-batch-size", type=int, default=10)
     parser.add_argument("--stream-page-workers", type=int, default=4)
     parser.add_argument("--wikipedia-concurrency-limit", type=int, default=4)
@@ -163,7 +170,7 @@ def main() -> int:
     rejected_output = args.rejected_output or ROOT / "outputs" / f"{run_id}_rejected.jsonl"
     summary_output = args.summary_output or ROOT / "outputs" / f"{run_id}_summary.json"
     walkthrough_output = args.walkthrough_output or ROOT / "docs" / "walkthroughs" / f"{run_id}.md"
-    stream_state = args.stream_state or ROOT / "outputs" / f"{run_id}_state.json"
+    stream_state_base = args.stream_state or segment_dir / "stream_state.json"
 
     segment_dir.mkdir(parents=True, exist_ok=True)
     segment_summaries: list[dict] = []
@@ -174,7 +181,8 @@ def main() -> int:
             index=index,
             run_id=run_id,
             segment_dir=segment_dir,
-            stream_state=stream_state,
+            stream_state_base=stream_state_base,
+            stream_search_initial_offset=_segment_stream_search_initial_offset(recipe_items, index, args.stream_search_limit),
             reasoning_types=reasoning_types,
             table_filter_modes=table_filter_modes,
         )
@@ -220,7 +228,7 @@ def main() -> int:
         rejected_output=rejected_output,
         summary_output=summary_output,
         walkthrough_output=walkthrough_output,
-        stream_state=stream_state,
+        stream_state_base=stream_state_base,
         wall_clock_seconds=round(perf_counter() - run_started, 4),
     )
     summary_output.parent.mkdir(parents=True, exist_ok=True)
@@ -301,6 +309,59 @@ def _recipe_run_id(args: argparse.Namespace, recipe_items: list[RecipeItem], rea
     )
 
 
+def _segment_stream_state(stream_state_base: Path, *, segment_dir: Path, segment_id: str) -> Path:
+    """Return the isolated stream-state path for one recipe segment."""
+    base = Path(stream_state_base)
+    if base.name == "stream_state.json":
+        return segment_dir / f"{segment_id}_state.json"
+    suffix = base.suffix or ".json"
+    return base.with_name(f"{base.stem}_{segment_id}{suffix}")
+
+
+def _recipe_segment_seed(
+    *,
+    args: argparse.Namespace,
+    run_id: str,
+    segment_id: str,
+    answer_type: str,
+    index: int,
+) -> int:
+    """Return a deterministic seed for one recipe segment."""
+    if args.stream_random_seed is not None:
+        return _stable_stream_seed(
+            "wikipedia_stream_recipe",
+            int(args.stream_random_seed),
+            run_id,
+            segment_id,
+            answer_type,
+            index,
+        )
+    seed_args = argparse.Namespace(
+        stream_random_seed=None,
+        run_group_id=run_id,
+        run_segment_id=segment_id,
+        summary_output=segment_id,
+        stream_state=f"{run_id}:{segment_id}",
+        start_from_endpoint=False,
+        stream_rerun_pool_only=False,
+    )
+    return _effective_stream_random_seed(seed_args)
+
+
+def _segment_stream_search_initial_offset(
+    recipe_items: list[RecipeItem],
+    index: int,
+    stream_search_limit: int,
+) -> int:
+    """Return a disjoint table-search starting offset for one recipe segment."""
+    search_limit = max(1, int(stream_search_limit))
+    offset = 0
+    for item in recipe_items[:index]:
+        chunks = max(1, (int(item.record_limit) + search_limit - 1) // search_limit)
+        offset += chunks * search_limit
+    return offset
+
+
 def _segment_command(
     *,
     args: argparse.Namespace,
@@ -308,7 +369,8 @@ def _segment_command(
     index: int,
     run_id: str,
     segment_dir: Path,
-    stream_state: Path,
+    stream_state_base: Path,
+    stream_search_initial_offset: int,
     reasoning_types: list[str],
     table_filter_modes: list[str],
 ) -> tuple[list[str], dict[str, Path]]:
@@ -318,6 +380,14 @@ def _segment_command(
     accepted = segment_dir / f"{segment_id}_accepted.jsonl"
     rejected = segment_dir / f"{segment_id}_rejected.jsonl"
     summary = segment_dir / f"{segment_id}_summary.json"
+    stream_state = _segment_stream_state(stream_state_base, segment_dir=segment_dir, segment_id=segment_id)
+    stream_random_seed = _recipe_segment_seed(
+        args=args,
+        run_id=run_id,
+        segment_id=segment_id,
+        answer_type=item.answer_type,
+        index=index,
+    )
     command = [
         sys.executable,
         str(ROOT / "scripts" / "run_wikipedia_infobox_pipeline.py"),
@@ -374,8 +444,10 @@ def _segment_command(
         str(args.stream_search_limit),
         "--stream-search-max-rounds",
         str(args.stream_search_max_rounds),
+        "--stream-search-initial-offset",
+        str(max(0, int(stream_search_initial_offset))),
         "--stream-random-seed",
-        str(args.stream_random_seed),
+        str(stream_random_seed),
         "--stream-batch-size",
         str(args.stream_batch_size),
         "--stream-page-workers",
@@ -411,13 +483,12 @@ def _segment_command(
         )
     if not args.disable_auto_rerun_once:
         command.append("--stream-auto-rerun-once")
-    if index == 0:
-        command.append("--reset-stream-state")
+    command.append("--reset-stream-state")
     for query in args.stream_search_query:
         command.extend(["--stream-search-query", str(query)])
     if args.enable_broad_table_search:
         command.append("--enable-broad-table-search")
-    return command, {"accepted": accepted, "rejected": rejected, "summary": summary}
+    return command, {"accepted": accepted, "rejected": rejected, "summary": summary, "stream_state": stream_state}
 
 
 def _segment_complete(paths: dict[str, Path]) -> bool:
@@ -467,7 +538,7 @@ def _recipe_summary(
     rejected_output: Path,
     summary_output: Path,
     walkthrough_output: Path,
-    stream_state: Path,
+    stream_state_base: Path,
     wall_clock_seconds: float,
 ) -> dict:
     """Build the combined recipe summary."""
@@ -477,13 +548,24 @@ def _recipe_summary(
         for summary in segment_summaries
         for page_id in summary.get("page_ids", [])
     ]
-    state_stats = PageIdStreamState.load(stream_state).stats() if stream_state.exists() else {}
-    rerun_pool_ids = []
-    rerun_reasons = {}
-    if stream_state.exists():
-        state = PageIdStreamState.load(stream_state)
-        rerun_pool_ids = state.rerun_pool.copy()
-        rerun_reasons = {str(page_id): state.failure_reasons.get(page_id, "") for page_id in rerun_pool_ids}
+    stream_states = _segment_stream_states(segment_summaries)
+    state_stats = _aggregate_stream_state_stats(segment_summaries)
+    rerun_pool_by_segment = _rerun_pool_by_segment(segment_summaries)
+    rerun_reasons_by_segment = _rerun_reasons_by_segment(segment_summaries)
+    rerun_pool_ids = sorted(
+        {
+            int(page_id)
+            for page_ids in rerun_pool_by_segment.values()
+            for page_id in page_ids
+            if _coerce_int(page_id)
+        }
+    )
+    rerun_reasons = _flatten_rerun_reasons(rerun_reasons_by_segment)
+    segment_wall_clock_seconds = round(
+        sum(float(summary.get("wall_clock_seconds", 0.0) or 0.0) for summary in segment_summaries),
+        4,
+    )
+    displayed_wall_clock_seconds = round(max(segment_wall_clock_seconds, wall_clock_seconds), 4)
     return {
         "run_group_id": run_id,
         "run_segment_id": "recipe_combined",
@@ -500,6 +582,9 @@ def _recipe_summary(
                 "accepted": summary.get("accepted", 0),
                 "rejected": summary.get("rejected", 0),
                 "rerun": summary.get("rerun", 0),
+                "wall_clock_seconds": summary.get("wall_clock_seconds"),
+                "random_seed": summary.get("random_seed"),
+                "stream_state": summary.get("stream_state", ""),
                 "summary_output": summary.get("summary_output", ""),
                 "accepted_output": summary.get("segment_accepted_output", ""),
                 "rejected_output": summary.get("segment_rejected_output", ""),
@@ -513,12 +598,16 @@ def _recipe_summary(
         "stream_page_source": args.stream_page_source,
         "stream_search_queries": segment_summaries[0].get("stream_search_queries", []) if segment_summaries else [],
         "run_date": args.run_date or (segment_summaries[0].get("run_date") if segment_summaries else ""),
-        "stream_state": str(stream_state),
+        "stream_state": "separate_segment_stream_states",
+        "stream_state_base": str(stream_state_base),
+        "stream_states": stream_states,
         "stream_state_stats": state_stats,
         "stream_state_reset": True,
         "stream_auto_rerun_once": not args.disable_auto_rerun_once,
         "rerun_pool_ids_after_run": rerun_pool_ids,
+        "rerun_pool_ids_after_run_by_segment": rerun_pool_by_segment,
         "rerun_pool_failure_reasons_after_run": rerun_reasons,
+        "rerun_pool_failure_reasons_after_run_by_segment": rerun_reasons_by_segment,
         "record_limit": sum(item.record_limit for item in recipe_items),
         "attempted_page_ids": attempted,
         "attempted_page_ids_unique": len({_coerce_int(page_id) for page_id in page_ids if _coerce_int(page_id)}),
@@ -528,7 +617,9 @@ def _recipe_summary(
         "rejected": len(rejected_records),
         "rejected_total": len(rejected_records),
         "rerun": sum(int(summary.get("rerun", 0) or 0) for summary in segment_summaries),
-        "wall_clock_seconds": wall_clock_seconds,
+        "wall_clock_seconds": displayed_wall_clock_seconds,
+        "recipe_segment_wall_clock_seconds": segment_wall_clock_seconds,
+        "recipe_runner_wall_clock_seconds": wall_clock_seconds,
         "output_path": str(output),
         "rejected_output_path": str(rejected_output),
         "summary_output": str(summary_output),
@@ -556,6 +647,83 @@ def _recipe_summary(
         "accepted_by_recipe_answer_type": _records_by_recipe_answer_type(accepted_records),
         "rejected_by_recipe_answer_type": _records_by_recipe_answer_type(rejected_records),
     }
+
+
+def _segment_stream_states(segment_summaries: list[dict]) -> list[str]:
+    """Return stream-state paths used by recipe segments."""
+    states: list[str] = []
+    seen: set[str] = set()
+    for summary in segment_summaries:
+        state = str(summary.get("stream_state", "") or "")
+        if state and state not in seen:
+            states.append(state)
+            seen.add(state)
+    return states
+
+
+def _aggregate_stream_state_stats(segment_summaries: list[dict]) -> dict[str, int]:
+    """Aggregate per-segment stream-state stats for the combined recipe summary."""
+    totals = {
+        "used": 0,
+        "in_progress": 0,
+        "accepted": 0,
+        "rejected": 0,
+        "rerun_pool": 0,
+        "table_search_queries": 0,
+    }
+    for summary in segment_summaries:
+        stats = summary.get("stream_state_stats", {})
+        if not isinstance(stats, dict):
+            continue
+        for key in totals:
+            totals[key] += int(stats.get(key, 0) or 0)
+    return totals
+
+
+def _rerun_pool_by_segment(segment_summaries: list[dict]) -> dict[str, list[int]]:
+    """Return final rerun-pool page IDs per recipe segment."""
+    pools: dict[str, list[int]] = {}
+    for summary in segment_summaries:
+        segment_id = str(summary.get("run_segment_id", "") or "")
+        if not segment_id:
+            continue
+        pools[segment_id] = [
+            page_id
+            for page_id in (_coerce_int(value) for value in summary.get("rerun_pool_ids_after_run", []))
+            if page_id is not None
+        ]
+    return pools
+
+
+def _rerun_reasons_by_segment(segment_summaries: list[dict]) -> dict[str, dict[str, str]]:
+    """Return final rerun-pool reasons per recipe segment."""
+    reasons_by_segment: dict[str, dict[str, str]] = {}
+    for summary in segment_summaries:
+        segment_id = str(summary.get("run_segment_id", "") or "")
+        reasons = summary.get("rerun_pool_failure_reasons_after_run", {})
+        if not segment_id or not isinstance(reasons, dict):
+            continue
+        reasons_by_segment[segment_id] = {str(page_id): str(reason) for page_id, reason in reasons.items()}
+    return reasons_by_segment
+
+
+def _flatten_rerun_reasons(reasons_by_segment: dict[str, dict[str, str]]) -> dict[str, str]:
+    """Return a compatibility map for final rerun-pool reasons."""
+    flattened: dict[str, str] = {}
+    seen_pages: set[str] = set()
+    duplicate_pages: set[str] = set()
+    for reasons in reasons_by_segment.values():
+        for page_id in reasons:
+            if page_id in seen_pages:
+                duplicate_pages.add(page_id)
+            seen_pages.add(page_id)
+    for segment_id, reasons in reasons_by_segment.items():
+        for page_id, reason in reasons.items():
+            key = f"{segment_id}:{page_id}" if page_id in duplicate_pages else page_id
+            flattened[key] = reason
+            if page_id in duplicate_pages:
+                flattened.setdefault(page_id, "multiple_segment_rerun_reasons")
+    return flattened
 
 
 def _records_by_recipe_answer_type(records: list[dict]) -> dict[str, int]:

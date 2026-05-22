@@ -7,6 +7,7 @@ compatibility alias for historical artifacts.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from typing import Any, Iterable
 
 from .entity_normalization import normalize_name
@@ -21,6 +22,7 @@ HIDDEN_ENTITY_REASONING_STYLE = "multi_hop_hidden_entity"
 
 CLUE_HIDDEN_SUBJECT = "hidden_subject"
 CLUE_HIDDEN_OBJECT = "hidden_object"
+ROUTE4_DEFAULT_CUTOFF_YEAR = 2025
 
 
 @dataclass(slots=True)
@@ -91,7 +93,7 @@ class Route1HiddenEntityTwoHopComposer:
                 continue
             by_subject.setdefault(candidate.subject_qid, []).append(candidate)
             answer_qid = _first_answer_qid(candidate)
-            if answer_qid and not answer_qid.startswith("VALUE:"):
+            if answer_qid and not _is_literal_value_id(answer_qid):
                 by_answer_qid.setdefault(answer_qid, []).append(candidate)
 
         provisional: list[CandidateFact] = []
@@ -208,7 +210,11 @@ def _compose_pair(
     clue_target_label = clue_hop.answer_labels[0] if clue_hop.answer_labels else ""
     answer_hop_record = _hop_metadata(answer_hop, answer_template)
     clue_hop_record = _hop_metadata(clue_hop, clue_template)
-    required_clues = _required_reasoning_clues(clue_hop, visible_label)
+    hidden_time_anchors = _safe_time_disambiguation_anchors(answer_hop)
+    required_clues = [
+        *_required_reasoning_clues(clue_hop, visible_label),
+        *hidden_time_anchors,
+    ]
     source_metadata = {
         "wikidata_access_date": answer_hop.source_metadata.get("wikidata_access_date", ""),
         "retrieval_method": "validated Wikidata single-hop fact composition for Route 4",
@@ -225,6 +231,7 @@ def _compose_pair(
         ],
         "visible_clue": visible_clue,
         "visible_clue_entities_or_values": [visible_clue],
+        "hidden_entity_disambiguation_anchors": hidden_time_anchors,
         "required_reasoning_clues": required_clues,
         "answer_template_key": answer_template.template_key,
         "clue_template_key": clue_template.template_key,
@@ -242,6 +249,7 @@ def _compose_pair(
         clue_hop=clue_hop,
         clue_orientation=clue_orientation,
         visible_label=visible_label,
+        hidden_time_anchors=hidden_time_anchors,
     )
     composed = CandidateFact(
         subject_qid=answer_hop.subject_qid,
@@ -340,6 +348,7 @@ def _usable_single_hop(candidate: CandidateFact) -> bool:
         normalize_reasoning_style(candidate.reasoning_style) == "single_fact"
         and candidate.provenance_complete
         and bool(candidate.subject_qid)
+        and not _is_literal_value_id(candidate.subject_qid)
         and bool(candidate.subject_label)
         and len(candidate.answer_qids) == 1
         and len(candidate.answer_labels) == 1
@@ -348,6 +357,10 @@ def _usable_single_hop(candidate: CandidateFact) -> bool:
 
 def _first_answer_qid(candidate: CandidateFact) -> str:
     return candidate.answer_qids[0] if candidate.answer_qids else ""
+
+
+def _is_literal_value_id(value: str) -> bool:
+    return value.startswith("VALUE:")
 
 
 def _visible_clue(
@@ -411,6 +424,23 @@ def _required_reasoning_clues(clue_hop: CandidateFact, visible_label: str) -> li
     return clues
 
 
+def _safe_time_disambiguation_anchors(candidate: CandidateFact) -> list[str]:
+    """Return pre-cutoff temporal anchors from disambiguation or hidden labels."""
+    anchors: list[str] = []
+    for value in [*candidate.disambiguation_signature, candidate.subject_label, *candidate.subject_aliases]:
+        text = str(value).strip()
+        if not text:
+            continue
+        for match in re.finditer(r"\b\d{4}-\d{2}-\d{2}\b|\b(?:17|18|19|20|21)\d{2}\b", text):
+            anchor = match.group(0)
+            year = int(anchor[:4])
+            if year >= ROUTE4_DEFAULT_CUTOFF_YEAR:
+                continue
+            if anchor not in anchors:
+                anchors.append(anchor)
+    return anchors
+
+
 def _build_hidden_entity_canonical_question(
     *,
     answer_hop: CandidateFact,
@@ -418,6 +448,7 @@ def _build_hidden_entity_canonical_question(
     clue_hop: CandidateFact,
     clue_orientation: str,
     visible_label: str,
+    hidden_time_anchors: list[str] | None = None,
 ) -> str:
     wh = _wh_phrase(answer_hop.answer_type)
     subject_kind = str(
@@ -426,11 +457,12 @@ def _build_hidden_entity_canonical_question(
             answer_template.subject_type_label,
         )
     ).strip() or answer_template.subject_type_label
+    subject_phrase = " ".join([*(hidden_time_anchors or []), subject_kind]).strip()
     answer_relation = answer_hop.target_property_label
     clue_relation = clue_hop.target_property_label
     if clue_orientation == CLUE_HIDDEN_OBJECT:
-        return f"{wh} was the {answer_relation} of the {subject_kind} that was the {clue_relation} of {visible_label}?"
-    return f"{wh} was the {answer_relation} of the {subject_kind} whose {clue_relation} was {visible_label}?"
+        return f"{wh} was the {answer_relation} of the {subject_phrase} that was the {clue_relation} of {visible_label}?"
+    return f"{wh} was the {answer_relation} of the {subject_phrase} whose {clue_relation} was {visible_label}?"
 
 
 def _wh_phrase(answer_type: str) -> str:

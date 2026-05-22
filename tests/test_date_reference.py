@@ -13,8 +13,12 @@ class DateReferenceTests(unittest.TestCase):
     """Check shared date normalization."""
 
     def test_normalize_date_answer_handles_common_formats(self) -> None:
-        self.assertEqual(normalize_date_answer("January 2, 2020", "Date"), "2020-01-02")
-        self.assertEqual(normalize_date_answer("2 January 2020", "Date"), "2020-01-02")
+        self.assertEqual(normalize_date_answer("January 2, 2020", "Date"), "January 2, 2020")
+        self.assertEqual(normalize_date_answer("2 January 2020", "Date"), "January 2, 2020")
+        self.assertEqual(normalize_date_answer("2026-5-21", "Date"), "May 21, 2026")
+        self.assertEqual(normalize_date_answer("2026-05-21", "Date"), "May 21, 2026")
+        self.assertEqual(normalize_date_answer("2026/5/21", "Date"), "May 21, 2026")
+        self.assertEqual(normalize_date_answer("5/21/2026", "Date"), "May 21, 2026")
         self.assertEqual(normalize_date_answer("January 2020", "Date"), "2020-01")
         self.assertEqual(normalize_date_answer("2020", "Date"), "2020")
         self.assertEqual(normalize_date_answer("2024-2025", "Date"), "2024-2025")
@@ -33,9 +37,9 @@ class DateReferenceTests(unittest.TestCase):
             relation_or_claim="opening date",
             answer_type="Date",
         )
-        self.assertEqual(candidate.answer, "2020-01-02")
-        self.assertEqual(candidate.answer_aliases, ["2020-01-02"])
-        self.assertEqual(candidate.answer_entity.name, "2020-01-02")
+        self.assertEqual(candidate.answer, "January 2, 2020")
+        self.assertEqual(candidate.answer_aliases, ["January 2, 2020"])
+        self.assertEqual(candidate.answer_entity.name, "January 2, 2020")
 
 
 if __name__ == "__main__":

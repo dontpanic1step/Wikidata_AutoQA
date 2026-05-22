@@ -50,7 +50,7 @@ These defaults come from `scripts/run_route4_two_hop_pipeline.py`.
 | `--record-limit` | `10` | Number of composed seed units to process in one invocation. |
 | `--harvest-limit` | `100` | Candidate harvest limit per single-hop template. |
 | `--final-target` | `300` | Final deduplicated/rebalanced review target. |
-| Default templates | all compatible non-frozen single-hop templates | The route validates single-hop facts first, then composes compatible pairs. |
+| Default templates | reviewed Route 4 one-hop templates that appear in the two-hop pair catalog | The route validates single-hop facts first, then composes compatible pairs. Current catalog coverage: 329 combinable one-hop templates and 25 uncombined one-hop templates. |
 | `--duckduckgo-top-k` | `5` | Fast pool-generation default. |
 | `--generated-search-query-count` | `2` | Fast pool-generation default. |
 | `--duckduckgo-parallel-queries` | `3` | Shared search verifier per-candidate parallelism. |
@@ -65,6 +65,34 @@ These defaults come from `scripts/run_route4_two_hop_pipeline.py`.
 | `--output` | `outputs/route4_two_hop_accepted.jsonl` | Accepted pool endpoint. |
 | `--rejected-output` | `outputs/route4_two_hop_rejected.jsonl` | Rejected endpoint. |
 | `--final-output` | `outputs/route4_two_hop_final.jsonl` | Final deduplicated/rebalanced review candidates. |
+
+The current reviewed Route 4 catalog has 25 one-hop templates that do not join on either side of the two-hop template catalog:
+
+- `existing_product_release_date`
+- `existing_policy_department`
+- `existing_event_venue`
+- `existing_novella_original_language`
+- `existing_animation_studio`
+- `existing_spacecraft_operator`
+- `existing_framework_license`
+- `existing_port_operator`
+- `existing_beverage_manufacturer`
+- `existing_crop_variety_developer`
+- `existing_kitchen_appliance_manufacturer`
+- `existing_database_system_developer`
+- `generated_computer_science_and_ai_computer_hardware_interfaces_number`
+- `generated_food_agriculture_and_daily_life_beverages_date`
+- `generated_architecture_and_transportation_rail_systems_number`
+- `generated_sports_and_recreation_games_and_recreation_date`
+- `generated_arts_and_media_television_date`
+- `generated_people_public_offices_number`
+- `generated_physical_sciences_scientific_instruments_number`
+- `generated_society_and_culture_libraries_and_archives_date`
+- `generated_computer_science_and_ai_databases_number`
+- `generated_language_and_literature_periodicals_number`
+- `generated_economy_and_business_products_date`
+- `generated_geography_rivers_and_lakes_date`
+- `route4_rocket_diameter`
 
 ## Disabled Route 1 Hidden-Entity Runner
 
@@ -124,7 +152,7 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | `--stream-search-query` | `[]` | Explicit queries replace the default query list. |
 | `--stream-search-limit` | `50` | MediaWiki search limit per query/offset. |
 | `--stream-search-max-rounds` | `10` | Max query-offset rounds while reserving IDs. |
-| `--stream-random-seed` | `42` | Random page ID sampling seed. |
+| `--stream-random-seed` | derived | Random page ID sampling seed. When omitted, the runner derives a deterministic seed from the run/segment identity so incremental runs do not reuse the same default stream. |
 | `--stream-batch-size` | `10` | Page IDs reserved per streaming batch. |
 | `--stream-page-workers` | `4` | Concurrent page IDs processed in streaming mode. Runs with `--stream-accepted-target` stay sequential to avoid overshooting the accepted target. |
 | `--wikipedia-concurrency-limit` | `4` | Max concurrent Wikipedia API calls across streaming workers. |
@@ -159,7 +187,7 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | DuckDuckGo parallel queries | `3` | `--duckduckgo-parallel-queries`. |
 | Generated search query count | `2` | Route 3 prompt asks for this many answer-blind queries. Fast default for initial Route 3 streaming; run slower survivor review separately when needed. |
 | Minimum table score | `0.0` | `--min-table-score`. The same cutoff is used for URL and streaming Route 3 runs. |
-| Route 3 table filter modes | `no_big_numbers`, `no_social_science_research` | `--route3-table-filter-mode` enables modes and `--disable-route3-table-filter-mode` removes defaults for a run. These filters drop matching tables before the generation prompt. |
+| Route 3 table filter modes | `no_incomplete_tables`, `not_number_dominant`, `no_social_science_research` | `--route3-table-filter-mode` enables modes and `--disable-route3-table-filter-mode` removes defaults for a run. These filters drop matching tables before the generation prompt. |
 | Search full-question hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search keyword hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search overall hit-rate threshold | `0.3` | Reject when above threshold. |

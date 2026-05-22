@@ -526,6 +526,28 @@ def _extract_unique_answer_value(
                 "alias": iso_value,
             }
             continue
+        if template.answer_format == "number":
+            number_value = _format_quantity_or_literal_value(value)
+            if not number_value:
+                continue
+            values[f"VALUE:number:{number_value}"] = {
+                "record_qid": f"VALUE:number:{number_value}",
+                "label": number_value,
+                "label_source": "wikidata_numeric_literal",
+                "alias": number_value,
+            }
+            continue
+        if template.answer_format == "value":
+            literal_value = _format_quantity_or_literal_value(value)
+            if not literal_value:
+                continue
+            values[f"VALUE:literal:{literal_value}"] = {
+                "record_qid": f"VALUE:literal:{literal_value}",
+                "label": literal_value,
+                "label_source": "wikidata_literal",
+                "alias": literal_value,
+            }
+            continue
         qid = value.get("id") if isinstance(value, dict) else None
         if not qid:
             continue
@@ -698,6 +720,11 @@ def _seed_row_to_candidate(
         answer_label_source = answer_value["label_source"]
         answer_aliases = [answer_value["alias"]]
         answer_record_qid = answer_value["record_qid"]
+    elif template.answer_format in {"number", "value"}:
+        answer_label = answer_value["label"]
+        answer_label_source = answer_value["label_source"]
+        answer_aliases = [answer_value["alias"]]
+        answer_record_qid = answer_value["record_qid"]
     else:
         answer_label, answer_label_source = _select_label(answer_entity, None)
         answer_aliases = _extract_aliases(answer_entity)
@@ -847,6 +874,22 @@ def _extract_answer_fields(
             [iso_value],
             f"VALUE:date:{iso_value}",
         )
+    if template.answer_format == "number":
+        number_value = _format_quantity_or_literal_value(answer_binding.get("value", ""))
+        return (
+            number_value,
+            "wdqs_numeric_literal",
+            [number_value] if number_value else [],
+            _answer_key(answer_binding),
+        )
+    if template.answer_format == "value":
+        literal_value = _format_quantity_or_literal_value(answer_binding.get("value", ""))
+        return (
+            literal_value,
+            "wdqs_literal",
+            [literal_value] if literal_value else [],
+            _answer_key(answer_binding),
+        )
 
     answer_label, answer_label_source = _select_label(answer_entity, answer_label_binding)
     return (
@@ -908,6 +951,24 @@ def _extract_claim_qids(entity: dict[str, Any], pid: str) -> list[str]:
         if qid:
             qids.append(qid)
     return qids
+
+
+def _format_quantity_or_literal_value(value: Any) -> str:
+    """Return a concise literal answer string from a Wikidata value payload."""
+    if isinstance(value, dict):
+        if "amount" in value:
+            amount = str(value.get("amount", "")).strip()
+            return amount.removeprefix("+")
+        if {"latitude", "longitude"}.issubset(value):
+            latitude = str(value.get("latitude", "")).strip()
+            longitude = str(value.get("longitude", "")).strip()
+            if latitude and longitude:
+                return f"{latitude}, {longitude}"
+        if "text" in value:
+            return str(value.get("text", "")).strip()
+        if "id" in value:
+            return str(value.get("id", "")).strip()
+    return str(value).strip()
 
 
 def _extract_entity_qid(binding: dict[str, Any]) -> str | None:

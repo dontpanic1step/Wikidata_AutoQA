@@ -19,8 +19,8 @@ class DateAnswerTests(unittest.TestCase):
             "1988-01-22",
         )
 
-    def test_formats_iso_date_as_day_month_year(self) -> None:
-        self.assertEqual(format_iso_date_for_answer("1988-01-22"), "22 January 1988")
+    def test_formats_iso_date_as_month_day_year(self) -> None:
+        self.assertEqual(format_iso_date_for_answer("1988-01-22"), "January 22, 1988")
 
     def test_date_answer_candidate_allows_temporal_answer_hop_label(self) -> None:
         candidate = CandidateFact(
@@ -35,7 +35,7 @@ class DateAnswerTests(unittest.TestCase):
             target_property_pid="P571",
             target_property_label="inception",
             answer_qids=["VALUE:date:2026-03-14"],
-            answer_labels=["14 March 2026"],
+            answer_labels=["March 14, 2026"],
             answer_aliases=["2026-03-14"],
             date_property_pid="P571",
             date_value="2026-03-14",
@@ -50,7 +50,7 @@ class DateAnswerTests(unittest.TestCase):
                     "property_pid": "P571",
                     "property_label": "inception",
                     "target_qid": "VALUE:date:2026-03-14",
-                    "target_label": "14 March 2026",
+                    "target_label": "March 14, 2026",
                     "role": "answer",
                 }
             ],

@@ -44,7 +44,7 @@ Prefer high precision over high recall. Treat early pilot outputs as candidate g
 - Wikidata grounding, Wikidata disambiguation, time-invariance checks, and Wikidata-specific dedupe are Route 1 validators that may be reused only when appropriate.
 - Route 1 multi-hop scale runs use `route1_wikidata_multihop_join`: a QID-first, join-only Wikidata route. It discovers and persists QID seed units, hydrates those QIDs through Wikidata, applies stricter Route 1 validation, and then feeds candidates into the shared rewrite, DuckDuckGo, and optional second-stage grading pipeline.
 - `route1_wikidata_hidden_entity_two_hop` is a disabled legacy route id. It remains only so historical artifacts can be interpreted; it should not be enabled, scaled, or updated.
-- Route 4 runs use `route4_wikidata_two_hop`: a Wikidata route that composes validated single-hop facts around one hidden entity. The answer hop is `(x, r1, a)`, the clue hop is either `(x, r2, c)` or `(c, r2, x)`, and the final answer is `a`.
+- Route 4 runs use `route4_wikidata_two_hop`: a Wikidata route that composes validated single-hop facts around one hidden entity. The answer hop is `(x, r1, a)`, the clue hop is either `(x, r2, c)` or `(c, r2, x)`, and the final answer is `a`. Its default template source is the reviewed Route 4 one-hop catalog; the two-hop template catalog enumerates every ordered compatible answer/clue pair and excludes one-hop templates that cannot join on either side of the triples. Same-property pairs are skipped except for explicit place-relation chains such as `P17 -> P17` for country and `P131 -> P131` for administrative area. Object-side bridge inference is limited to human-to-human joins and place joins proven either by same-level labels or by the same place relation. Generic `Place` clue properties such as `location` do not imply every place subtype for object-side joins, and `Other` bridge rules are not inferred yet. The shared bridge/hidden entity `x` must be an entity, not a date, number, coordinate, or other literal value; date and number values may still be final answers or visible clues when their own templates are otherwise valid.
 - Route 1 multi-hop joins must not use Wikipedia dumps or broad search discovery as candidate sources. Search is the downstream long-tail leakage filter, not the Route 1 candidate harvester.
 - Route 1 and Route 3 intentionally have different route-local contracts. Route 1 requires deterministic Wikidata factual validation before shared filtering; Route 3 stores source provenance and relies on downstream filtering plus manual review rather than proving Wikidata-style uniqueness.
 - Non-Wikidata routes must define their own validation assumptions and failure modes.
@@ -193,10 +193,11 @@ Route 1 multi-hop join validation is intentionally stricter than Route 3:
 Route 4 two-hop validation reuses the Wikidata strict validation policy where it applies and adds:
 
 - each single-hop fact must pass existing Route 1 validation before composition
-- the hidden entity must participate in both hops
+- the hidden bridge entity must participate in both hops and must not be a literal date, number, coordinate, or other value
 - the hidden entity label and aliases must not appear in the final question
 - the visible clue must not equal or alias the answer
-- all compatible non-frozen single-hop templates may be attempted, and clue paths that map to multiple hidden entities in the validated pool are pruned before shared filtering
+- all compatible non-frozen reviewed single-hop templates may be attempted, with static template-pair coverage for both hidden-subject and hidden-object clue orientations
+- clue paths that map to multiple hidden entities in the validated pool are pruned before shared filtering
 
 ## Search Contract
 

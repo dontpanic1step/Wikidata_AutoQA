@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import random
 import re
@@ -54,6 +55,8 @@ from wikidata_simpleqa.wikipedia_streaming import (
     PageIdStreamState,
     build_pageid_url,
 )
+
+DEFAULT_STREAM_RANDOM_SEED = 42
 
 
 @dataclass(slots=True)
@@ -172,6 +175,34 @@ def _run_artifact_summary(args: argparse.Namespace) -> dict[str, str]:
     }
 
 
+def _stable_stream_seed(*parts: object, default: int = DEFAULT_STREAM_RANDOM_SEED) -> int:
+    """Return a deterministic non-zero 31-bit seed from stable run identity parts."""
+    text = "|".join(str(part) for part in parts if str(part or "").strip())
+    if not text:
+        return default
+    digest = hashlib.blake2s(text.encode("utf-8"), digest_size=8).hexdigest()
+    seed = int(digest, 16) & 0x7FFFFFFF
+    return seed or default
+
+
+def _effective_stream_random_seed(args: argparse.Namespace, endpoint_resume: EndpointResumeState | None = None) -> int:
+    """Return the configured seed, or derive a run-specific default seed."""
+    configured_seed = getattr(args, "stream_random_seed", None)
+    if configured_seed is not None:
+        return int(configured_seed)
+    resume_count = endpoint_resume.final_decision_count if endpoint_resume is not None else 0
+    return _stable_stream_seed(
+        "wikipedia_stream",
+        _run_group_id(args),
+        _run_segment_id(args),
+        getattr(args, "summary_output", ""),
+        getattr(args, "stream_state", ""),
+        "endpoint_resume" if getattr(args, "start_from_endpoint", False) else "",
+        resume_count if getattr(args, "start_from_endpoint", False) else "",
+        "rerun_pool_only" if getattr(args, "stream_rerun_pool_only", False) else "",
+    )
+
+
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments for the Wikipedia table route."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -209,7 +240,24 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--stream-search-limit", type=int, default=50)
     parser.add_argument("--stream-search-max-rounds", type=int, default=10)
-    parser.add_argument("--stream-random-seed", type=int, default=42)
+    parser.add_argument(
+        "--stream-search-initial-offset",
+        type=int,
+        default=0,
+        help=(
+            "Initial Wikipedia search offset for table-search streaming. "
+            "Useful for recipe segments with separate stream states."
+        ),
+    )
+    parser.add_argument(
+        "--stream-random-seed",
+        type=int,
+        default=None,
+        help=(
+            "Seed for random-page-id streaming. When omitted, a deterministic seed is derived "
+            "from the run/segment identity so resumed or incremental runs do not reuse the same stream."
+        ),
+    )
     parser.add_argument("--stream-batch-size", type=int, default=10)
     parser.add_argument(
         "--stream-page-workers",
@@ -367,7 +415,7 @@ def parse_args() -> argparse.Namespace:
         default=list(DEFAULT_ROUTE3_TABLE_FILTER_MODES),
         help=(
             "Enable one or more early Route 3 table filter modes. Repeat the flag or pass comma-separated "
-            "values. Defaults: no_big_numbers,no_social_science_research."
+            "values. Defaults: no_incomplete_tables,not_number_dominant,no_social_science_research."
         ),
     )
     parser.add_argument(
@@ -416,6 +464,8 @@ def main() -> int:
     """Run the Wikipedia table route and persist outputs."""
     args = parse_args()
     endpoint_resume = _load_endpoint_resume(args)
+    args.stream_random_seed_was_explicit = args.stream_random_seed is not None
+    args.stream_random_seed = _effective_stream_random_seed(args, endpoint_resume)
     url_entries = _load_url_entries(args.url, args.url_file)
     skipped_endpoint_urls: list[str] = []
     effective_record_limit = args.record_limit
@@ -940,6 +990,7 @@ def _run_streaming_page_id_pipeline(
         state.save()
     else:
         state = PageIdStreamState.load(args.stream_state)
+    _initialize_table_search_offsets(state, args)
     endpoint_sync = {"accepted_ids_synced": 0, "rejected_ids_synced": 0}
     if args.start_from_endpoint:
         endpoint_sync = state.sync_decided_ids(
@@ -1100,6 +1151,7 @@ def _run_streaming_page_id_pipeline(
             "max": args.stream_page_id_max,
         },
         "random_seed": args.stream_random_seed,
+        "random_seed_was_explicit": bool(getattr(args, "stream_random_seed_was_explicit", False)),
         "record_limit": args.record_limit,
         "record_limit_remaining_at_start": initial_ids_remaining,
         "stream_batch_size": args.stream_batch_size,
@@ -1184,6 +1236,22 @@ def _stream_rerun_pool_run_limit(state: PageIdStreamState, args: argparse.Namesp
     if configured_limit:
         return min(pool_size, configured_limit)
     return pool_size
+
+
+def _initialize_table_search_offsets(state: PageIdStreamState, args: argparse.Namespace) -> None:
+    """Seed table-search offsets for fresh segmented stream states."""
+    initial_offset = max(0, int(getattr(args, "stream_search_initial_offset", 0) or 0))
+    if not initial_offset or getattr(args, "stream_page_source", "") != "table-search":
+        return
+    changed = False
+    for query in _stream_search_queries(args):
+        if state.table_search_offset(query) >= initial_offset:
+            continue
+        state.table_search_offsets[query] = initial_offset
+        state._record_event("initialize_table_search_offset", [], f"{query}:{initial_offset}")
+        changed = True
+    if changed:
+        state.save()
 
 
 def _build_streaming_second_stage_model_panel(
@@ -1562,10 +1630,10 @@ def _survival_by_layer(
 
 
 def _failure_reason_counts(rejected_records: list[dict], rerun_records: list[dict]) -> list[dict[str, object]]:
-    """Return exact failure reasons grouped by stage."""
+    """Return reviewer-facing failure reasons grouped by stage."""
     counts: Counter[tuple[str, str]] = Counter()
     for record in rejected_records:
-        counts[(_rejection_stage(record), _exact_failure_reason(record))] += 1
+        counts[(_rejection_stage(record), _summary_failure_reason(record))] += 1
     for record in rerun_records:
         counts[(_rerun_stage(record), str(record.get("reason", "unresolved")))] += 1
     return [
@@ -1762,6 +1830,25 @@ def _exact_failure_reason(record: dict) -> str:
     return reason
 
 
+def _summary_failure_reason(record: dict) -> str:
+    """Return the coarser failure reason used in aggregate stats tables."""
+    exact_reason = _exact_failure_reason(record)
+    reason = str(record.get("rejection_reason", "")).strip() or "unknown_rejection"
+    if reason == "search_longtail_verifier_rejected":
+        return reason
+    if reason == "second_stage_grading_accuracy_threshold_exceeded":
+        return reason
+    if reason == "wikipedia_infobox_table_filter_rejected":
+        table_filter_reason = exact_reason.partition(":")[2]
+        if "no_incomplete_tables" in table_filter_reason:
+            return f"{reason}:no_incomplete_tables"
+        if "no_social_science_research" in table_filter_reason:
+            return f"{reason}:no_social_science_research"
+        if "not_number_dominant" in table_filter_reason or "no_big_numbers" in table_filter_reason:
+            return f"{reason}:not_number_dominant"
+    return exact_reason
+
+
 def _rate(numerator: int, denominator: int) -> float:
     """Return a rounded rate, guarding against division by zero."""
     if denominator <= 0:
@@ -1914,7 +2001,7 @@ def _write_stream_walkthrough(
     lines.append("")
     lines.append("### Failure Reasons")
     lines.append("")
-    lines.append("| Stage | Exact reason | Count |")
+    lines.append("| Stage | Reason | Count |")
     lines.append("| --- | --- | ---: |")
     for row in summary.get("failure_reason_counts", []):
         lines.append(f"| `{row.get('stage', '')}` | `{_escape_table_text(str(row.get('reason', '')))}` | {row.get('count', 0)} |")
@@ -2488,6 +2575,10 @@ def _record_reasoning_type(record: dict) -> str:
         or source_metadata.get("legacy_composition_type")
         or source_metadata.get("composition_type")
     )
+    if str(value or "").strip() in {"", "wikipedia_table_fact"}:
+        allowed_reasoning_types = source_metadata.get("allowed_reasoning_types")
+        if isinstance(allowed_reasoning_types, list) and len(allowed_reasoning_types) == 1:
+            value = allowed_reasoning_types[0]
     try:
         normalized = normalize_route3_reasoning_types([str(value or "")])
     except ValueError:

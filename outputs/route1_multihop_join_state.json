@@ -1,0 +1,37 @@
+{
+  "used_keys": [
+    "film_source_work_author|Q130598234|2024-01-27|Q62065509|Q97013100"
+  ],
+  "in_progress_keys": [],
+  "accepted_keys": [],
+  "rejected_keys": [
+    "film_source_work_author|Q130598234|2024-01-27|Q62065509|Q97013100"
+  ],
+  "rerun_pool": [],
+  "failure_reasons": {
+    "film_source_work_author|Q130598234|2024-01-27|Q62065509|Q97013100": "search_longtail_verifier_rejected"
+  },
+  "events": [
+    {
+      "event": "reserve_seed_units",
+      "seed_keys": [
+        "film_source_work_author|Q130598234|2024-01-27|Q62065509|Q97013100"
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "seed_keys": [
+        "film_source_work_author|Q130598234|2024-01-27|Q62065509|Q97013100"
+      ],
+      "reason": "search_longtail_verifier_rejected"
+    }
+  ],
+  "stats": {
+    "used": 1,
+    "in_progress": 0,
+    "accepted": 0,
+    "rejected": 1,
+    "rerun_pool": 0
+  }
+}

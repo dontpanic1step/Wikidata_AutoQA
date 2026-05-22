@@ -47,7 +47,7 @@ def validate_route1_candidate(
         return RejectedCandidate(reason="topic_constraints_failed", candidate=candidate)
     if not reasoning_path_is_connected(candidate):
         return RejectedCandidate(reason="reasoning_path_not_connected", candidate=candidate)
-    if not reasoning_path_is_temporally_safe(candidate):
+    if not reasoning_path_is_temporally_safe(candidate, cutoff_year=settings.cutoff_year):
         return RejectedCandidate(reason="reasoning_path_temporally_unsafe", candidate=candidate)
     if not reasoning_provenance_is_complete(candidate):
         return RejectedCandidate(reason="provenance_incomplete", candidate=candidate)

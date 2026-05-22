@@ -40,6 +40,12 @@ EARLY_REJECTION_REASONS = {
     "unsupported_relation_record",
     "entity_grounding_failed",
 }
+POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS = (
+    ("list", re.compile(r"\blist\b", flags=re.IGNORECASE)),
+    ("listed", re.compile(r"\blisted\b", flags=re.IGNORECASE)),
+    ("example", re.compile(r"\bexample\b", flags=re.IGNORECASE)),
+    ("in_the_table", re.compile(r"\bin\s+the\s+table\b", flags=re.IGNORECASE)),
+)
 
 
 @dataclass(slots=True)
@@ -223,6 +229,26 @@ def process_generated_candidates(
                 candidate.to_rejected_record(
                     reason="llm_rewrite_discarded",
                     notes={"discard_reason": llm_discard_reason},
+                )
+            )
+            continue
+        self_containment_reason = _post_rewrite_self_containment_failure(candidate)
+        if self_containment_reason is not None:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            candidate.source_metadata["surface_validation_failure_reason"] = self_containment_reason
+            candidate.source_metadata["post_rewrite_self_containment_failure_reason"] = self_containment_reason
+            candidate.validation = {
+                "rewrite_guard_passed": False,
+                "surface_validation_failure_reason": self_containment_reason,
+            }
+            _record_candidate_timings(candidate, candidate_timings)
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason="rewrite_guard_rejected",
+                    notes={
+                        "failure_reason": self_containment_reason,
+                        "surface_validation_failure_reason": self_containment_reason,
+                    },
                 )
             )
             continue
@@ -468,6 +494,17 @@ def _looks_like_year_answer_to_temporal_question(answer: str, question: str) -> 
     if re.fullmatch(r"\d{4}(?:\s*\W+\s*\d{2,4})?", answer.strip()) is None:
         return False
     return re.search(r"\b(year|date|day|month|when)\b", normalize_name(question)) is not None
+
+
+def _post_rewrite_self_containment_failure(candidate: GeneratedCandidate) -> str | None:
+    """Return a post-rewrite self-containment failure reason for table/list wording."""
+    rewritten_question = str(candidate.rewritten_question or "").strip()
+    if not rewritten_question:
+        return None
+    for label, pattern in POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS:
+        if pattern.search(rewritten_question):
+            return f"post_rewrite_self_containment_forbidden_phrase:{label}"
+    return None
 
 
 def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, settings: Settings) -> None:

@@ -5,6 +5,21 @@ from __future__ import annotations
 from datetime import date
 import re
 
+MONTH_NAMES = {
+    1: "January",
+    2: "February",
+    3: "March",
+    4: "April",
+    5: "May",
+    6: "June",
+    7: "July",
+    8: "August",
+    9: "September",
+    10: "October",
+    11: "November",
+    12: "December",
+}
+
 MONTH_INDEX = {
     "january": 1,
     "jan": 1,
@@ -32,7 +47,9 @@ MONTH_INDEX = {
     "dec": 12,
 }
 
-ISO_DATE_PATTERN = re.compile(r"^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})$")
+ISO_DATE_PATTERN = re.compile(r"^(?P<year>\d{4})-(?P<month>\d{1,2})-(?P<day>\d{1,2})$")
+YMD_SLASH_PATTERN = re.compile(r"^(?P<year>\d{4})/(?P<month>\d{1,2})/(?P<day>\d{1,2})$")
+MDY_SLASH_PATTERN = re.compile(r"^(?P<month>\d{1,2})/(?P<day>\d{1,2})/(?P<year>\d{4})$")
 ISO_MONTH_PATTERN = re.compile(r"^(?P<year>\d{4})-(?P<month>\d{2})$")
 YEAR_PATTERN = re.compile(r"^\d{4}$")
 YEAR_RANGE_PATTERN = re.compile(r"^(?P<start>\d{4})\s*[-–—/]\s*(?P<end>\d{2,4})$")
@@ -60,6 +77,9 @@ def normalize_date_answer(answer: str, answer_type: str) -> str:
     iso_date = _normalize_iso_date(text)
     if iso_date is not None:
         return iso_date
+    slash_date = _normalize_slash_date(text)
+    if slash_date is not None:
+        return slash_date
     iso_month = _normalize_iso_month(text)
     if iso_month is not None:
         return iso_month
@@ -102,7 +122,7 @@ def _normalize_year_range(text: str) -> str | None:
 
 
 def _normalize_iso_date(text: str) -> str | None:
-    """Return a valid ISO date or None."""
+    """Return a valid full-date reference answer or None."""
     match = ISO_DATE_PATTERN.fullmatch(text)
     if not match:
         return None
@@ -111,6 +131,22 @@ def _normalize_iso_date(text: str) -> str | None:
         int(match.group("month")),
         int(match.group("day")),
     )
+
+
+def _normalize_slash_date(text: str) -> str | None:
+    """Return a valid slash-date reference answer or None."""
+    for pattern in (YMD_SLASH_PATTERN, MDY_SLASH_PATTERN):
+        match = pattern.fullmatch(text)
+        if not match:
+            continue
+        normalized = _format_date(
+            int(match.group("year")),
+            int(match.group("month")),
+            int(match.group("day")),
+        )
+        if normalized is not None:
+            return normalized
+    return None
 
 
 def _normalize_iso_month(text: str) -> str | None:
@@ -126,13 +162,14 @@ def _normalize_iso_month(text: str) -> str | None:
 
 
 def _format_date(year: int, month: int | None, day: int) -> str | None:
-    """Return an ISO date if the parts form a real date."""
+    """Return `Month D, YYYY` if the parts form a real date."""
     if month is None:
         return None
     try:
-        return date(year, month, day).isoformat()
+        parsed = date(year, month, day)
     except ValueError:
         return None
+    return f"{MONTH_NAMES[parsed.month]} {parsed.day}, {parsed.year}"
 
 
 def _month_number(value: str) -> int | None:

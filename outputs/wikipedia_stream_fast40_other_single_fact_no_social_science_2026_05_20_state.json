@@ -1,0 +1,524 @@
+{
+  "used_ids": [
+    738,
+    1640,
+    5488,
+    5489,
+    5643,
+    8083,
+    9316,
+    11857,
+    12186,
+    13277,
+    14849,
+    19261,
+    22093,
+    22948,
+    30292,
+    31740,
+    32611,
+    34411,
+    39776,
+    66958,
+    84952,
+    91195,
+    105908,
+    151603,
+    199445,
+    217231,
+    235916,
+    235959,
+    260996,
+    292259,
+    2924002,
+    17416221,
+    19653842,
+    21355232,
+    33094374,
+    40010153,
+    41853326,
+    45367389,
+    55440889,
+    60382764
+  ],
+  "in_progress_ids": [],
+  "accepted_ids": [
+    738,
+    12186,
+    13277,
+    19261,
+    217231,
+    292259,
+    33094374,
+    40010153
+  ],
+  "rejected_ids": [
+    1640,
+    5488,
+    5489,
+    5643,
+    8083,
+    9316,
+    11857,
+    14849,
+    22093,
+    22948,
+    30292,
+    31740,
+    32611,
+    34411,
+    39776,
+    66958,
+    84952,
+    91195,
+    105908,
+    199445,
+    235916,
+    235959,
+    260996,
+    2924002,
+    17416221,
+    19653842,
+    21355232,
+    41853326,
+    45367389,
+    55440889,
+    60382764
+  ],
+  "rerun_pool": [
+    151603
+  ],
+  "table_search_offsets": {
+    "insource:\"wikitable\"": 200
+  },
+  "failure_reasons": {
+    "1640": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "5488": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "5489": "rewrite_guard_rejected:answer_leakage",
+    "5643": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "8083": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "9316": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "11857": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "14849": "wikipedia_infobox_extra_prompt_violation:no_social_science_research_prompt:census",
+    "22093": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded",
+    "22948": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "30292": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "31740": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "32611": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "34411": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "39776": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "66958": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "84952": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "91195": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "105908": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "151603": "search_longtail_verifier_error",
+    "199445": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "235916": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "235959": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "260996": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "2924002": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "17416221": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+    "19653842": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "21355232": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "41853326": "rewrite_guard_rejected:cutoff_year_exceeded",
+    "45367389": "wikipedia_infobox_extra_prompt_violation:no_social_science_research_prompt:census",
+    "55440889": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+    "60382764": "rewrite_guard_rejected:cutoff_year_exceeded"
+  },
+  "events": [
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":50"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        32611,
+        17416221,
+        9316,
+        22093,
+        5489,
+        738,
+        13277,
+        14849,
+        19261,
+        11857
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=0"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        17416221
+      ],
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        22093
+      ],
+      "reason": "search_longtail_verifier_rejected:keyword_queries:hit_rate_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        5489
+      ],
+      "reason": "rewrite_guard_rejected:answer_leakage"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        32611
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        14849
+      ],
+      "reason": "wikipedia_infobox_extra_prompt_violation:no_social_science_research_prompt:census"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        9316
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        738
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        13277
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        11857
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        19261
+      ],
+      "reason": ""
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":100"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        199445,
+        21355232,
+        31740,
+        8083,
+        292259,
+        40010153,
+        39776,
+        5488,
+        1640,
+        151603
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=50"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        21355232
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        8083
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        199445
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        31740
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        292259
+      ],
+      "reason": ""
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        40010153
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        5488
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        39776
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        1640
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        151603
+      ],
+      "reason": "search_longtail_verifier_error"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":150"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        66958,
+        41853326,
+        60382764,
+        45367389,
+        105908,
+        217231,
+        34411,
+        12186,
+        5643,
+        19653842
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=100"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        45367389
+      ],
+      "reason": "wikipedia_infobox_extra_prompt_violation:no_social_science_research_prompt:census"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        60382764
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        41853326
+      ],
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        34411
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        66958
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        105908
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        217231
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        5643
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        12186
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        19653842
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "advance_table_search_offset",
+      "page_ids": [],
+      "reason": "insource:\"wikitable\":200"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        22948,
+        55440889,
+        84952,
+        235916,
+        2924002,
+        30292,
+        33094374,
+        260996,
+        235959,
+        91195
+      ],
+      "reason": "table_search:insource:\"wikitable\":offset=150"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        22948
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        84952
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        55440889
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        235916
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        30292
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        2924002
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "accepted",
+      "page_ids": [
+        33094374
+      ],
+      "reason": ""
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        260996
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        235959
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        91195
+      ],
+      "reason": "search_longtail_verifier_error"
+    },
+    {
+      "event": "reserve_candidate_ids",
+      "page_ids": [
+        151603,
+        91195
+      ],
+      "reason": "rerun_pool_only"
+    },
+    {
+      "event": "rerun",
+      "page_ids": [
+        151603
+      ],
+      "reason": "search_longtail_verifier_error"
+    },
+    {
+      "event": "rejected",
+      "page_ids": [
+        91195
+      ],
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1"
+    }
+  ],
+  "stats": {
+    "used": 40,
+    "in_progress": 0,
+    "accepted": 8,
+    "rejected": 31,
+    "rerun_pool": 1,
+    "table_search_queries": 1
+  }
+}

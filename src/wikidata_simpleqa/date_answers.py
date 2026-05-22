@@ -26,6 +26,6 @@ def normalize_wikidata_date_literal(value: str) -> str:
 
 
 def format_iso_date_for_answer(value: str) -> str:
-    """Format an ISO date as `22 January 1988`."""
+    """Format an ISO date as `January 22, 1988`."""
     parsed = date.fromisoformat(normalize_wikidata_date_literal(value))
-    return f"{parsed.day} {MONTH_NAMES[parsed.month]} {parsed.year}"
+    return f"{MONTH_NAMES[parsed.month]} {parsed.day}, {parsed.year}"

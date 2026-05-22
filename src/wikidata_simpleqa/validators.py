@@ -292,6 +292,11 @@ def question_leaks_bridge_entities(question: str, candidate: CandidateFact) -> b
 def question_leaks_hidden_entities(question: str, candidate: CandidateFact) -> bool:
     """Return whether a hidden-entity two-hop question exposes the hidden entity."""
     normalized_question = normalize_name(question)
+    allowed_anchors = {
+        normalize_name(str(value))
+        for value in candidate.source_metadata.get("hidden_entity_disambiguation_anchors", [])
+        if normalize_name(str(value))
+    }
     hidden_entities = candidate.source_metadata.get("hidden_entities", [])
     if not isinstance(hidden_entities, list):
         hidden_entities = []
@@ -305,6 +310,8 @@ def question_leaks_hidden_entities(question: str, candidate: CandidateFact) -> b
             values.extend(str(alias) for alias in aliases)
     for value in values:
         normalized_value = normalize_name(str(value))
+        if normalized_value in allowed_anchors:
+            continue
         if normalized_value and normalized_value in normalized_question:
             return True
     return False
@@ -380,16 +387,19 @@ def shortcut_check(candidate: CandidateFact, question: str) -> dict[str, bool | 
     }
 
 
-def reasoning_path_is_temporally_safe(candidate: CandidateFact) -> bool:
+def reasoning_path_is_temporally_safe(candidate: CandidateFact, *, cutoff_year: int = 2025) -> bool:
     """Return whether hop labels do not force temporal disambiguation."""
-    if has_forbidden_temporal_text(candidate.subject_label):
+    check_temporal = has_forbidden_temporal_text
+    if normalize_reasoning_style(candidate.reasoning_style) == "multi_hop_hidden_entity":
+        check_temporal = lambda text: violates_cutoff_year_policy(text, cutoff_year)
+    if check_temporal(candidate.subject_label):
         return False
     for hop in candidate.reasoning_path:
-        if _hop_source_requires_temporal_ban(candidate, hop) and has_forbidden_temporal_text(
+        if _hop_source_requires_temporal_ban(candidate, hop) and check_temporal(
             hop.get("source_label", "")
         ):
             return False
-        if _hop_target_requires_temporal_ban(candidate, hop) and has_forbidden_temporal_text(
+        if _hop_target_requires_temporal_ban(candidate, hop) and check_temporal(
             hop.get("target_label", "")
         ):
             return False

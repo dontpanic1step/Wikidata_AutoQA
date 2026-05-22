@@ -82,10 +82,10 @@ class FakeRewriteClient:
                 "discard_reason": None,
             }
         return {
-            "rewritten_question": f"Who directed Example Film according to rewrite {payload['target_property']}?",
+            "rewritten_question": f"Who directed Moonlit Harbor according to rewrite {payload['target_property']}?",
             "search_queries": [
                 f"{payload.get('canonical_question', '')} context",
-                f"{payload['target_property']} Example Film production",
+                f"{payload['target_property']} Moonlit Harbor production",
             ],
             "answer_aliases": ["J. Doe", "Jane D."],
             "discard_reason": None,
@@ -273,7 +273,7 @@ class GenerationPipelineTests(unittest.TestCase):
         )
         search_client = FakeSearchClient(
             {
-                "Who directed Example Film according to rewrite director?": [],
+                "Who directed Moonlit Harbor according to rewrite director?": [],
                 "Example Film director": [],
                 "Example Film director Jane Doe": [],
             }
@@ -295,21 +295,92 @@ class GenerationPipelineTests(unittest.TestCase):
         self.assertEqual(len(result.accepted), 1)
         self.assertEqual(
             result.accepted[0]["rewritten_question"],
-            "Who directed Example Film according to rewrite director?",
+            "Who directed Moonlit Harbor according to rewrite director?",
         )
         self.assertEqual(
             result.accepted[0]["search_queries"],
             [
                 "Who directed the film Example Film? context",
-                "director Example Film production",
+                "director Moonlit Harbor production",
             ],
         )
         self.assertEqual(result.accepted[0]["answer_aliases"], ["J. Doe", "Jane D."])
         self.assertEqual(
             result.accepted[0]["source_metadata"]["small_model_rewrite_response"]["rewritten_question"],
-            "Who directed Example Film according to rewrite director?",
+            "Who directed Moonlit Harbor according to rewrite director?",
         )
         self.assertNotIn("rewrite_disabled", result.accepted[0]["notes"])
+
+    def test_process_generated_candidates_rejects_non_self_contained_rewrite_before_search(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="Who directed the film Harbor Lights?",
+            canonical_question="Who directed the film Harbor Lights?",
+            answer="Jane Doe",
+            answer_aliases=["J. Doe"],
+            subject_entity=EntityReference(
+                name="Harbor Lights",
+                qid="Q1",
+                wikipedia_title="Harbor_Lights",
+                url="https://en.wikipedia.org/wiki/Harbor_Lights",
+            ),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="director",
+            evidence=EvidenceRecord(
+                text="Harbor Lights is a 2020 drama film directed by Jane Doe.",
+                url="https://en.wikipedia.org/wiki/Harbor_Lights",
+                source_title="Harbor Lights",
+                retrieved_at="2026-05-12",
+            ),
+            question_family="who_directed_film",
+            answer_type="Person",
+            topic="Arts and Media",
+            target_time="2020",
+            source_template_domain="film_director",
+            source_metadata={
+                "subject_wikipedia_title": "Harbor_Lights",
+                "subject_wikipedia_url": "https://en.wikipedia.org/wiki/Harbor_Lights",
+                "stable_answer_override": True,
+            },
+            source_candidate=source_candidate,
+        )
+
+        class ListedRewriteClient:
+            def rewrite_question(self, payload: dict) -> dict:
+                return {
+                    "rewritten_question": "Which Director is Listed in the Table?",
+                    "search_queries": ["listed table director"],
+                    "discard_reason": None,
+                }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                rewrite_enabled=True,
+            )
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=ErrorSearchClient(),
+                rewrite_client=ListedRewriteClient(),
+            )
+
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+        self.assertEqual(
+            result.rejected[0]["rejection_rule"],
+            "post_rewrite_self_containment_forbidden_phrase:listed",
+        )
+        self.assertEqual(
+            result.rejected[0]["source_metadata"]["post_rewrite_self_containment_failure_reason"],
+            "post_rewrite_self_containment_forbidden_phrase:listed",
+        )
 
     def test_route1_rewrite_payload_uses_triplet_text_contract(self) -> None:
         source_candidate = make_candidate()

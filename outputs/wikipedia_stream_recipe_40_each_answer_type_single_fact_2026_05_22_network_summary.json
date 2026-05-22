@@ -1,0 +1,669 @@
+{
+  "run_group_id": "wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network",
+  "run_segment_id": "recipe_combined",
+  "recipe_id": "wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network",
+  "recipe_items": [
+    {
+      "answer_type": "Person",
+      "record_limit": 40
+    },
+    {
+      "answer_type": "Place",
+      "record_limit": 40
+    },
+    {
+      "answer_type": "Other",
+      "record_limit": 40
+    },
+    {
+      "answer_type": "Date",
+      "record_limit": 40
+    },
+    {
+      "answer_type": "Number",
+      "record_limit": 40
+    }
+  ],
+  "recipe_segments": [
+    {
+      "answer_type": "Person",
+      "record_limit": 40,
+      "attempted_page_ids": 43,
+      "accepted": 1,
+      "rejected": 39,
+      "rerun": 3,
+      "wall_clock_seconds": 246.446,
+      "random_seed": 883847711,
+      "stream_state": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\01_person_40_state.json",
+      "summary_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\01_person_40_summary.json",
+      "accepted_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\01_person_40_accepted.jsonl",
+      "rejected_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\01_person_40_rejected.jsonl"
+    },
+    {
+      "answer_type": "Place",
+      "record_limit": 40,
+      "attempted_page_ids": 41,
+      "accepted": 1,
+      "rejected": 38,
+      "rerun": 2,
+      "wall_clock_seconds": 349.271,
+      "random_seed": 1788291503,
+      "stream_state": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\02_place_40_state.json",
+      "summary_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\02_place_40_summary.json",
+      "accepted_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\02_place_40_accepted.jsonl",
+      "rejected_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\02_place_40_rejected.jsonl"
+    },
+    {
+      "answer_type": "Other",
+      "record_limit": 40,
+      "attempted_page_ids": 44,
+      "accepted": 6,
+      "rejected": 34,
+      "rerun": 4,
+      "wall_clock_seconds": 445.0046,
+      "random_seed": 20369212,
+      "stream_state": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\03_other_40_state.json",
+      "summary_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\03_other_40_summary.json",
+      "accepted_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\03_other_40_accepted.jsonl",
+      "rejected_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\03_other_40_rejected.jsonl"
+    },
+    {
+      "answer_type": "Date",
+      "record_limit": 40,
+      "attempted_page_ids": 45,
+      "accepted": 4,
+      "rejected": 36,
+      "rerun": 5,
+      "wall_clock_seconds": 449.6113,
+      "random_seed": 1031796111,
+      "stream_state": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\04_date_40_state.json",
+      "summary_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\04_date_40_summary.json",
+      "accepted_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\04_date_40_accepted.jsonl",
+      "rejected_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\04_date_40_rejected.jsonl"
+    },
+    {
+      "answer_type": "Number",
+      "record_limit": 40,
+      "attempted_page_ids": 50,
+      "accepted": 4,
+      "rejected": 35,
+      "rerun": 11,
+      "wall_clock_seconds": 482.5455,
+      "random_seed": 761662247,
+      "stream_state": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\05_number_40_state.json",
+      "summary_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\05_number_40_summary.json",
+      "accepted_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\05_number_40_accepted.jsonl",
+      "rejected_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\05_number_40_rejected.jsonl"
+    }
+  ],
+  "start_stage": "generate",
+  "start_from_endpoint": false,
+  "endpoint_resume": {
+    "enabled": false
+  },
+  "streaming_mode": "page_id_stream_recipe",
+  "stream_page_source": "table-search",
+  "stream_search_queries": [
+    "insource:\"wikitable\""
+  ],
+  "run_date": "2026-05-22",
+  "stream_state": "separate_segment_stream_states",
+  "stream_state_base": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\stream_state.json",
+  "stream_states": [
+    "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\01_person_40_state.json",
+    "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\02_place_40_state.json",
+    "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\03_other_40_state.json",
+    "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\04_date_40_state.json",
+    "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network\\05_number_40_state.json"
+  ],
+  "stream_state_stats": {
+    "used": 200,
+    "in_progress": 0,
+    "accepted": 16,
+    "rejected": 182,
+    "rerun_pool": 2,
+    "table_search_queries": 5
+  },
+  "stream_state_reset": true,
+  "stream_auto_rerun_once": true,
+  "rerun_pool_ids_after_run": [
+    1640,
+    41853326
+  ],
+  "rerun_pool_ids_after_run_by_segment": {
+    "01_person_40": [],
+    "02_place_40": [
+      1640
+    ],
+    "03_other_40": [],
+    "04_date_40": [],
+    "05_number_40": [
+      41853326
+    ]
+  },
+  "rerun_pool_failure_reasons_after_run": {
+    "1640": "search_longtail_verifier_error",
+    "41853326": "second_stage_grading_error"
+  },
+  "rerun_pool_failure_reasons_after_run_by_segment": {
+    "01_person_40": {},
+    "02_place_40": {
+      "1640": "search_longtail_verifier_error"
+    },
+    "03_other_40": {},
+    "04_date_40": {},
+    "05_number_40": {
+      "41853326": "second_stage_grading_error"
+    }
+  },
+  "record_limit": 200,
+  "attempted_page_ids": 223,
+  "attempted_page_ids_unique": 40,
+  "page_ids": [
+    32611,
+    17416221,
+    9316,
+    22093,
+    5489,
+    738,
+    13277,
+    14849,
+    19261,
+    11857,
+    199445,
+    21355232,
+    31740,
+    8083,
+    292259,
+    40010153,
+    39776,
+    5488,
+    1640,
+    151603,
+    66958,
+    41853326,
+    60382764,
+    45367389,
+    105908,
+    217231,
+    34411,
+    12186,
+    5643,
+    19653842,
+    22948,
+    55440889,
+    84952,
+    235916,
+    2924002,
+    30292,
+    33094374,
+    260996,
+    235959,
+    91195,
+    21355232,
+    45367389,
+    19653842,
+    32611,
+    17416221,
+    9316,
+    22093,
+    5489,
+    738,
+    13277,
+    14849,
+    19261,
+    11857,
+    199445,
+    21355232,
+    31740,
+    8083,
+    292259,
+    40010153,
+    39776,
+    5488,
+    1640,
+    151603,
+    66958,
+    41853326,
+    60382764,
+    45367389,
+    105908,
+    217231,
+    34411,
+    12186,
+    5643,
+    19653842,
+    22948,
+    55440889,
+    84952,
+    235916,
+    2924002,
+    30292,
+    33094374,
+    260996,
+    235959,
+    91195,
+    1640,
+    32611,
+    17416221,
+    9316,
+    22093,
+    5489,
+    738,
+    13277,
+    14849,
+    19261,
+    11857,
+    199445,
+    21355232,
+    31740,
+    8083,
+    292259,
+    40010153,
+    39776,
+    5488,
+    1640,
+    151603,
+    66958,
+    41853326,
+    60382764,
+    45367389,
+    105908,
+    217231,
+    34411,
+    12186,
+    5643,
+    19653842,
+    22948,
+    55440889,
+    84952,
+    235916,
+    2924002,
+    30292,
+    33094374,
+    260996,
+    235959,
+    91195,
+    738,
+    8083,
+    66958,
+    19653842,
+    32611,
+    17416221,
+    9316,
+    22093,
+    5489,
+    738,
+    13277,
+    14849,
+    19261,
+    11857,
+    199445,
+    21355232,
+    31740,
+    8083,
+    292259,
+    40010153,
+    39776,
+    5488,
+    1640,
+    151603,
+    66958,
+    41853326,
+    60382764,
+    45367389,
+    105908,
+    217231,
+    34411,
+    12186,
+    5643,
+    19653842,
+    22948,
+    55440889,
+    84952,
+    235916,
+    2924002,
+    30292,
+    33094374,
+    260996,
+    235959,
+    91195,
+    8083,
+    60382764,
+    217231,
+    2924002,
+    260996,
+    32611,
+    17416221,
+    9316,
+    22093,
+    5489,
+    738,
+    13277,
+    14849,
+    19261,
+    11857,
+    199445,
+    21355232,
+    31740,
+    8083,
+    292259,
+    40010153,
+    39776,
+    5488,
+    1640,
+    151603,
+    66958,
+    41853326,
+    60382764,
+    45367389,
+    105908,
+    217231,
+    34411,
+    12186,
+    5643,
+    19653842,
+    22948,
+    55440889,
+    84952,
+    235916,
+    2924002,
+    30292,
+    33094374,
+    260996,
+    235959,
+    91195,
+    19261,
+    738,
+    1640,
+    41853326,
+    34411,
+    217231,
+    30292,
+    2924002,
+    235916,
+    260996
+  ],
+  "accepted": 16,
+  "accepted_total": 16,
+  "rejected": 182,
+  "rejected_total": 182,
+  "rerun": 25,
+  "wall_clock_seconds": 1976.6681,
+  "recipe_segment_wall_clock_seconds": 1972.8784,
+  "recipe_runner_wall_clock_seconds": 1976.6681,
+  "output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network_accepted.jsonl",
+  "rejected_output_path": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network_rejected.jsonl",
+  "summary_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network_summary.json",
+  "walkthrough_output": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\docs\\walkthroughs\\wikipedia_stream_recipe_40_each_answer_type_single_fact_2026_05_22_network.md",
+  "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_top_k": 5,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "route3_reasoning_types": [
+    "single_fact"
+  ],
+  "route3_answer_types": [
+    "Person",
+    "Place",
+    "Other",
+    "Date",
+    "Number"
+  ],
+  "route3_extra_prompts": [],
+  "route3_table_filter_modes": [
+    "no_big_numbers",
+    "no_social_science_research"
+  ],
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "entered": 223,
+      "failed": 0,
+      "survived": 223,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "entered": 223,
+      "failed": 0,
+      "survived": 223,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Page extraction, table grading, and QA generation",
+      "entered": 223,
+      "failed": 75,
+      "survived": 148,
+      "survival_rate_from_layer_input": 0.6637,
+      "cumulative_survival_rate": 0.6637
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "entered": 148,
+      "failed": 14,
+      "survived": 134,
+      "survival_rate_from_layer_input": 0.9054,
+      "cumulative_survival_rate": 0.6009
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "entered": 134,
+      "failed": 24,
+      "survived": 110,
+      "survival_rate_from_layer_input": 0.8209,
+      "cumulative_survival_rate": 0.4933
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "entered": 110,
+      "failed": 64,
+      "survived": 46,
+      "survival_rate_from_layer_input": 0.4182,
+      "cumulative_survival_rate": 0.2063
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared route-aware validation",
+      "entered": 46,
+      "failed": 5,
+      "survived": 41,
+      "survival_rate_from_layer_input": 0.8913,
+      "cumulative_survival_rate": 0.1839
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "entered": 41,
+      "failed": 0,
+      "survived": 41,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.1839
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "entered": 41,
+      "failed": 0,
+      "survived": 41,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.1839
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "second_stage_grading",
+      "reason": "second_stage_grading_accuracy_threshold_exceeded",
+      "count": 64
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_table_filter_rejected:no_social_science_research",
+      "count": 35
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_table_filter_rejected:no_big_numbers",
+      "count": 30
+    },
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected",
+      "count": 24
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "rewrite_guard_rejected:answer_leakage",
+      "count": 7
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_answer_type_not_allowed:answer_type_not_allowed:Number; allowed=Number",
+      "count": 6
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "rewrite_guard_rejected:cutoff_year_exceeded",
+      "count": 5
+    },
+    {
+      "stage": "shared_validation",
+      "reason": "shared_validation_failed:answer_in_evidence,route_local_factual_validation",
+      "count": 5
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "rewrite_guard_rejected:forbidden_temporal_phrase",
+      "count": 2
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_answer_type_not_allowed:answer_type_not_allowed:Other; allowed=Other",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:No person name is provided or implied in the twin cities table; thus no single person answer can be safely extracted.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:No person names are present in the twin cities table to form a valid single_fact question with a Person answer.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_single_fact_list_answer:single_fact_list_answer_not_allowed",
+      "count": 1
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 198,
+      "total": 3279.6349,
+      "average": 16.5638,
+      "max": 105.8556
+    },
+    "duckduckgo_search_seconds": {
+      "count": 109,
+      "total": 1679.1877,
+      "average": 15.4054,
+      "max": 51.773
+    },
+    "first_paragraph_extract_seconds": {
+      "count": 133,
+      "total": 47.3375,
+      "average": 0.3559,
+      "max": 1.4563
+    },
+    "llm_question_generation_seconds": {
+      "count": 133,
+      "total": 948.1342,
+      "average": 7.1288,
+      "max": 22.9969
+    },
+    "number_reference_margin_seconds": {
+      "count": 109,
+      "total": 0.0013,
+      "average": 0.0,
+      "max": 0.0003
+    },
+    "page_fetch_seconds": {
+      "count": 198,
+      "total": 15.8208,
+      "average": 0.0799,
+      "max": 0.5113
+    },
+    "rewrite_seconds": {
+      "count": 123,
+      "total": 0.0001,
+      "average": 0.0,
+      "max": 0.0001
+    },
+    "second_stage_grading_seconds": {
+      "count": 85,
+      "total": 1600.3268,
+      "average": 18.8274,
+      "max": 54.0768
+    },
+    "table_parse_seconds": {
+      "count": 198,
+      "total": 208.7832,
+      "average": 1.0545,
+      "max": 4.2219
+    },
+    "total_generation_seconds": {
+      "count": 198,
+      "total": 1265.6538,
+      "average": 6.3922,
+      "max": 25.8004
+    },
+    "total_processing_seconds": {
+      "count": 198,
+      "total": 3279.6349,
+      "average": 16.5638,
+      "max": 105.8556
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 15.8208,
+    "table_parse_seconds": 208.7832,
+    "first_paragraph_extract_seconds": 47.3375,
+    "llm_question_generation_seconds": 948.1342,
+    "total_generation_seconds": 1265.6538,
+    "rewrite_seconds": 0.0001,
+    "number_reference_margin_seconds": 0.0013,
+    "duckduckgo_search_seconds": 1679.1877,
+    "second_stage_grading_seconds": 1600.3268,
+    "total_processing_seconds": 3279.6349,
+    "candidate_processing_seconds": 3279.6349
+  },
+  "accepted_by_recipe_answer_type": {
+    "Person": 1,
+    "Place": 1,
+    "Other": 6,
+    "Date": 4,
+    "Number": 4
+  },
+  "rejected_by_recipe_answer_type": {
+    "Person": 39,
+    "Place": 38,
+    "Other": 34,
+    "Date": 36,
+    "Number": 35
+  }
+}

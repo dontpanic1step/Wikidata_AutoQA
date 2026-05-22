@@ -1,0 +1,1497 @@
+{
+  "run_group_id": "wikipedia_stream_fast40_date_single_fact_no_social_science_2026_05_20",
+  "run_segment_id": "fresh40_date_single_fact_no_social_science_2026_05_20",
+  "run_artifact_manifest": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\run_manifests\\wikipedia_stream_fast40_date_single_fact_no_social_science_2026_05_20.json",
+  "start_stage": "generate",
+  "start_from_endpoint": false,
+  "endpoint_resume": {
+    "enabled": false,
+    "accepted_records_loaded": 0,
+    "rejected_records_loaded": 0,
+    "final_decisions_loaded": 0,
+    "skipped_malformed_lines": 0,
+    "skipped_line_details": [],
+    "accepted_ids_synced": 0,
+    "rejected_ids_synced": 0
+  },
+  "streaming_mode": "page_id_stream",
+  "stream_page_source": "table-search",
+  "stream_search_queries": [
+    "insource:\"wikitable\""
+  ],
+  "stream_broad_table_search_enabled": false,
+  "stream_search_offsets": {
+    "insource:\"wikitable\"": 200
+  },
+  "run_date": "2026-05-20",
+  "stream_state": "outputs\\wikipedia_stream_fast40_date_single_fact_no_social_science_2026_05_20_state.json",
+  "stream_state_stats": {
+    "used": 40,
+    "in_progress": 0,
+    "accepted": 6,
+    "rejected": 31,
+    "rerun_pool": 3,
+    "table_search_queries": 1
+  },
+  "stream_state_reset": true,
+  "stream_rerun_pool_only": false,
+  "stream_rerun_pool_limit": 0,
+  "stream_auto_rerun_once": true,
+  "auto_rerun_pool_ids_at_start": [
+    66958,
+    105908,
+    235959
+  ],
+  "auto_rerun_processed_page_ids": [
+    66958,
+    105908,
+    235959
+  ],
+  "auto_rerun_attempted_page_ids": 3,
+  "rerun_pool_ids_after_run": [
+    105908,
+    66958,
+    235959
+  ],
+  "rerun_pool_failure_reasons_after_run": {
+    "105908": "search_longtail_verifier_error",
+    "66958": "search_longtail_verifier_error",
+    "235959": "search_longtail_verifier_error"
+  },
+  "recovered_stale_in_progress_ids": [],
+  "page_id_bounds": {
+    "min": 1,
+    "max": 80000000
+  },
+  "random_seed": 42,
+  "record_limit": 40,
+  "record_limit_remaining_at_start": 40,
+  "stream_batch_size": 10,
+  "stream_page_workers": 4,
+  "wikipedia_concurrency_limit": 4,
+  "duckduckgo_concurrency_limit": 4,
+  "openrouter_generation_rewrite_concurrency_limit": 10,
+  "second_stage_concurrency_limit": 10,
+  "stream_accepted_target": 0,
+  "stream_accepted_target_remaining_at_start": 0,
+  "attempted_page_ids": 43,
+  "attempted_page_ids_unique": 40,
+  "page_ids": [
+    32611,
+    17416221,
+    9316,
+    22093,
+    5489,
+    738,
+    13277,
+    14849,
+    19261,
+    11857,
+    199445,
+    21355232,
+    31740,
+    8083,
+    292259,
+    40010153,
+    39776,
+    5488,
+    1640,
+    151603,
+    66958,
+    41853326,
+    60382764,
+    45367389,
+    105908,
+    217231,
+    34411,
+    12186,
+    5643,
+    19653842,
+    22948,
+    55440889,
+    84952,
+    235916,
+    2924002,
+    30292,
+    33094374,
+    260996,
+    235959,
+    91195,
+    66958,
+    105908,
+    235959
+  ],
+  "accepted": 6,
+  "accepted_total": 6,
+  "rejected": 31,
+  "rejected_total": 31,
+  "rerun": 6,
+  "wall_clock_seconds": 400.53,
+  "output_path": "outputs\\wikipedia_stream_fast40_date_single_fact_no_social_science_2026_05_20_accepted.jsonl",
+  "rejected_output_path": "outputs\\wikipedia_stream_fast40_date_single_fact_no_social_science_2026_05_20_rejected.jsonl",
+  "summary_output": "outputs\\wikipedia_stream_fast40_date_single_fact_no_social_science_2026_05_20_summary.json",
+  "walkthrough_output": "docs\\walkthroughs\\wikipedia_stream_fast40_date_single_fact_no_social_science_2026_05_20.md",
+  "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "rest_summary_fallback_enabled": false,
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": true,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_top_k": 5,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 3,
+  "min_table_score": 0.0,
+  "route3_reasoning_types": [
+    "single_fact"
+  ],
+  "route3_answer_types": [
+    "Date"
+  ],
+  "route3_extra_prompts": [
+    "Ask factual questions, not questions about the findings or conclusions of social science research, such as results derived from census studies."
+  ],
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "entered": 43,
+      "failed": 0,
+      "survived": 43,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "entered": 43,
+      "failed": 0,
+      "survived": 43,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Page extraction, table grading, and QA generation",
+      "entered": 43,
+      "failed": 3,
+      "survived": 40,
+      "survival_rate_from_layer_input": 0.9302,
+      "cumulative_survival_rate": 0.9302
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "entered": 40,
+      "failed": 0,
+      "survived": 40,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.9302
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "entered": 40,
+      "failed": 9,
+      "survived": 31,
+      "survival_rate_from_layer_input": 0.775,
+      "cumulative_survival_rate": 0.7209
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "entered": 31,
+      "failed": 24,
+      "survived": 7,
+      "survival_rate_from_layer_input": 0.2258,
+      "cumulative_survival_rate": 0.1628
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared route-aware validation",
+      "entered": 7,
+      "failed": 1,
+      "survived": 6,
+      "survival_rate_from_layer_input": 0.8571,
+      "cumulative_survival_rate": 0.1395
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "entered": 6,
+      "failed": 0,
+      "survived": 6,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.1395
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "entered": 6,
+      "failed": 0,
+      "survived": 6,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.1395
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "second_stage_grading",
+      "reason": "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+      "count": 24
+    },
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_error",
+      "count": 6
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_extra_prompt_violation:no_social_science_research_prompt:census",
+      "count": 2
+    },
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected:full_question:hit_rate_exceeded",
+      "count": 2
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:No date or year information is present in the table to form a valid Date answer_type question.",
+      "count": 1
+    },
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected:keyword_query_2:answer_in_title",
+      "count": 1
+    },
+    {
+      "stage": "shared_validation",
+      "reason": "shared_validation_failed:answer_in_evidence,route_local_factual_validation",
+      "count": 1
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 37,
+      "total": 736.7328,
+      "average": 19.9117,
+      "max": 35.9757
+    },
+    "duckduckgo_search_seconds": {
+      "count": 34,
+      "total": 214.269,
+      "average": 6.302,
+      "max": 15.1042
+    },
+    "first_paragraph_extract_seconds": {
+      "count": 37,
+      "total": 31.2643,
+      "average": 0.845,
+      "max": 2.683
+    },
+    "llm_question_generation_seconds": {
+      "count": 37,
+      "total": 212.9153,
+      "average": 5.7545,
+      "max": 14.9919
+    },
+    "number_reference_margin_seconds": {
+      "count": 34,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "page_fetch_seconds": {
+      "count": 37,
+      "total": 2.6017,
+      "average": 0.0703,
+      "max": 0.4502
+    },
+    "rewrite_seconds": {
+      "count": 34,
+      "total": 143.0057,
+      "average": 4.206,
+      "max": 11.3553
+    },
+    "second_stage_grading_seconds": {
+      "count": 31,
+      "total": 379.4222,
+      "average": 12.2394,
+      "max": 25.7323
+    },
+    "table_parse_seconds": {
+      "count": 37,
+      "total": 102.4703,
+      "average": 2.7695,
+      "max": 9.5182
+    },
+    "total_generation_seconds": {
+      "count": 37,
+      "total": 359.8367,
+      "average": 9.7253,
+      "max": 25.92
+    },
+    "total_processing_seconds": {
+      "count": 37,
+      "total": 736.7328,
+      "average": 19.9117,
+      "max": 35.9757
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 2.6017,
+    "table_parse_seconds": 102.4703,
+    "first_paragraph_extract_seconds": 31.2643,
+    "llm_question_generation_seconds": 212.9153,
+    "total_generation_seconds": 359.8367,
+    "rewrite_seconds": 143.0057,
+    "number_reference_margin_seconds": 0.0,
+    "duckduckgo_search_seconds": 214.269,
+    "second_stage_grading_seconds": 379.4222,
+    "total_processing_seconds": 736.7328,
+    "candidate_processing_seconds": 736.7328
+  },
+  "telemetry": {
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=0&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=32611",
+        "cache_hit": true,
+        "duration_ms": 16
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=17416221",
+        "cache_hit": true,
+        "duration_ms": 106
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=9316",
+        "cache_hit": true,
+        "duration_ms": 146
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=22093",
+        "cache_hit": true,
+        "duration_ms": 224
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=5489",
+        "cache_hit": true,
+        "duration_ms": 19
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=738",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=13277",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=14849",
+        "cache_hit": true,
+        "duration_ms": 14
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=19261",
+        "cache_hit": true,
+        "duration_ms": 13
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=11857",
+        "cache_hit": true,
+        "duration_ms": 16
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=50&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=199445",
+        "cache_hit": true,
+        "duration_ms": 25
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=21355232",
+        "cache_hit": true,
+        "duration_ms": 44
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=31740",
+        "cache_hit": true,
+        "duration_ms": 181
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=8083",
+        "cache_hit": true,
+        "duration_ms": 233
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=292259",
+        "cache_hit": true,
+        "duration_ms": 9
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=40010153",
+        "cache_hit": true,
+        "duration_ms": 22
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=39776",
+        "cache_hit": true,
+        "duration_ms": 8
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=5488",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=1640",
+        "cache_hit": true,
+        "duration_ms": 112
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=151603",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=100&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 2
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=66958",
+        "cache_hit": true,
+        "duration_ms": 12
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=41853326",
+        "cache_hit": true,
+        "duration_ms": 37
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=60382764",
+        "cache_hit": true,
+        "duration_ms": 77
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=45367389",
+        "cache_hit": true,
+        "duration_ms": 367
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=105908",
+        "cache_hit": true,
+        "duration_ms": 8
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=217231",
+        "cache_hit": true,
+        "duration_ms": 14
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=34411",
+        "cache_hit": true,
+        "duration_ms": 81
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=12186",
+        "cache_hit": true,
+        "duration_ms": 251
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=5643",
+        "cache_hit": true,
+        "duration_ms": 7
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=19653842",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=150&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 1
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=55440889",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=22948",
+        "cache_hit": true,
+        "duration_ms": 37
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=84952",
+        "cache_hit": true,
+        "duration_ms": 79
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=235916",
+        "cache_hit": true,
+        "duration_ms": 116
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=2924002",
+        "cache_hit": true,
+        "duration_ms": 14
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=30292",
+        "cache_hit": true,
+        "duration_ms": 11
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=33094374",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=260996",
+        "cache_hit": true,
+        "duration_ms": 4
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=235959",
+        "cache_hit": true,
+        "duration_ms": 3
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=91195",
+        "cache_hit": true,
+        "duration_ms": 10
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=105908",
+        "cache_hit": true,
+        "duration_ms": 34
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=235959",
+        "cache_hit": true,
+        "duration_ms": 44
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=66958",
+        "cache_hit": true,
+        "duration_ms": 60
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+the+original+Baltimore+Bullets+win+their+only+National+Basketball+Association+championship%3F",
+        "cache_hit": false,
+        "duration_ms": 3345,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Baltimore+Bullets+won+only+NBA+title",
+        "cache_hit": false,
+        "duration_ms": 3875,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Baltimore+Bullets+original+NBA+championship+year",
+        "cache_hit": false,
+        "duration_ms": 5398,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=original+Baltimore+Bullets+National+Basketball+Association+championship+date",
+        "cache_hit": false,
+        "duration_ms": 2642,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+of+population+statistics+for+South+African+provinces",
+        "cache_hit": false,
+        "duration_ms": 3117,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+does+the+population+data+for+the+provinces+of+South+Africa+in+the+administrative+divisions+table+come+from%3F",
+        "cache_hit": false,
+        "duration_ms": 3742,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+were+the+Arica+and+Parinacota+and+Los+R%C3%ADos+regions+established+in+Chile%3F",
+        "cache_hit": false,
+        "duration_ms": 1439,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=population+data+year+for+South+Africa+provinces+administrative+divisions",
+        "cache_hit": false,
+        "duration_ms": 4529,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Los+R%C3%ADos+region+establishment+year+Chile",
+        "cache_hit": false,
+        "duration_ms": 1469,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Arica+and+Parinacota+region+created+Chile",
+        "cache_hit": false,
+        "duration_ms": 1617,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=South+Africa+provinces+population+data+year+in+administrative+table",
+        "cache_hit": false,
+        "duration_ms": 1378,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+were+Arica+and+Parinacota+and+Los+R%C3%ADos+regions+formed+in+Chile",
+        "cache_hit": false,
+        "duration_ms": 1821,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=South+Vietnam+highest+military+deaths+year+Vietnam+War",
+        "cache_hit": false,
+        "duration_ms": 1264,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+saw+the+highest+number+of+military+deaths+in+South+Vietnam+during+the+Vietnam+War%3F",
+        "cache_hit": false,
+        "duration_ms": 1833,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+with+most+South+Vietnamese+military+casualties+Vietnam+War",
+        "cache_hit": false,
+        "duration_ms": 3065,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Vietnam+War+peak+military+deaths+South+Vietnam+year",
+        "cache_hit": false,
+        "duration_ms": 2089,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Albania+municipal+system+unification+year",
+        "cache_hit": false,
+        "duration_ms": 1461,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+urban+and+rural+municipalities+unified+into+municipalities+Albania",
+        "cache_hit": false,
+        "duration_ms": 1598,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+was+the+system+of+urban+and+rural+municipalities+unified+and+simplified+into+municipalities+in+Albania%3F",
+        "cache_hit": false,
+        "duration_ms": 2068,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+were+urban+and+rural+municipalities+merged+into+municipalities+in+Albania",
+        "cache_hit": false,
+        "duration_ms": 2500,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Thirty+Years%27+War+ended+Holy+Roman+Empire+territorial+divisions",
+        "cache_hit": false,
+        "duration_ms": 1382,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+did+the+Thirty+Years%27+War+end%2C+defining+the+territorial+divisions+of+the+Holy+Roman+Empire%3F",
+        "cache_hit": false,
+        "duration_ms": 1807,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=end+date+of+Thirty+Years%27+War+and+Holy+Roman+Empire+territories",
+        "cache_hit": false,
+        "duration_ms": 2056,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+did+Thirty+Years%27+War+conclude+affecting+Holy+Roman+Empire",
+        "cache_hit": false,
+        "duration_ms": 2196,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+American+Graffiti+film+directed+by+George+Lucas",
+        "cache_hit": false,
+        "duration_ms": 1566,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+was+the+film+American+Graffiti%2C+directed+by+George+Lucas%2C+released%3F",
+        "cache_hit": false,
+        "duration_ms": 2048,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+range+is+covered+by+the+climate+data+averages+and+extremes+for+Monaco+in+the+table+titled+%27Climate+data+for+Monaco+%281981%E2%80%932010+averages%2C+extremes+1966%E2%80%93present%29%27%3F",
+        "cache_hit": false,
+        "duration_ms": 1336,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+was+American+Graffiti+directed+by+George+Lucas+released",
+        "cache_hit": false,
+        "duration_ms": 1931,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=American+Graffiti+release+year+George+Lucas",
+        "cache_hit": false,
+        "duration_ms": 4318,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Monaco+climate+data+averages+and+extremes+year+coverage",
+        "cache_hit": false,
+        "duration_ms": 2645,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=On+what+day%2C+month%2C+and+year+was+Grand+Teton+National+Park+designated+as+a+national+park%3F",
+        "cache_hit": false,
+        "duration_ms": 2374,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=date+Grand+Teton+became+a+national+park",
+        "cache_hit": false,
+        "duration_ms": 2482,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Grand+Teton+National+Park+establishment+date",
+        "cache_hit": false,
+        "duration_ms": 3558,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+was+Grand+Teton+National+Park+created",
+        "cache_hit": false,
+        "duration_ms": 3070,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+Dr.+Dre+receive+the+Grammy+Lifetime+Achievement+Award+as+a+member+of+N.W.A.%3F",
+        "cache_hit": false,
+        "duration_ms": 2256,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=During+which+academic+year+did+the+University+of+Michigan-Ann+Arbor+have+a+total+enrollment+of+50%2C278+students%3F",
+        "cache_hit": false,
+        "duration_ms": 2423,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Year+Dr.+Dre+won+Grammy+Lifetime+Achievement+Award+with+N.W.A.",
+        "cache_hit": false,
+        "duration_ms": 3072,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Dr.+Dre+Grammy+Lifetime+Achievement+Award+year+N.W.A.",
+        "cache_hit": false,
+        "duration_ms": 3151,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=University+of+Michigan+total+enrollment+50%2C278+academic+year",
+        "cache_hit": false,
+        "duration_ms": 1608,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=On+what+day%2C+month%2C+and+year+did+Wayne+Rooney+begin+managing+Derby+County%3F",
+        "cache_hit": false,
+        "duration_ms": 1191,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=When+did+Wayne+Rooney+become+manager+of+Derby+County",
+        "cache_hit": false,
+        "duration_ms": 1068,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=University+of+Michigan+enrollment+numbers+50%2C000+plus",
+        "cache_hit": false,
+        "duration_ms": 2333,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=When+did+Dr.+Dre+get+Grammy+Lifetime+Achievement+Award+as+N.W.A.+member",
+        "cache_hit": false,
+        "duration_ms": 1220,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wayne+Rooney+managerial+tenure+start+Derby+County+date",
+        "cache_hit": false,
+        "duration_ms": 1065,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wayne+Rooney+start+date+as+Derby+County+manager",
+        "cache_hit": false,
+        "duration_ms": 3201,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=University+of+Michigan-Ann+Arbor+student+enrollment+by+year",
+        "cache_hit": false,
+        "duration_ms": 2303,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+did+Deutsche+Welle+start+broadcasting+in+Pashto%3F",
+        "cache_hit": false,
+        "duration_ms": 1250,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Deutsche+Welle+Pashto+language+broadcast+start+year",
+        "cache_hit": false,
+        "duration_ms": 1925,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=When+did+Deutsche+Welle+begin+Pashto+broadcasts",
+        "cache_hit": false,
+        "duration_ms": 1904,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Year+Deutsche+Welle+launched+Pashto+language+service",
+        "cache_hit": false,
+        "duration_ms": 1980,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Goa+tourist+arrivals+2%2C302%2C146+year",
+        "cache_hit": false,
+        "duration_ms": 1134,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+Goa+have+a+total+tourist+arrival+of+2%2C302%2C146%3F",
+        "cache_hit": false,
+        "duration_ms": 1173,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Year+when+Goa+recorded+2%2C302%2C146+tourists",
+        "cache_hit": false,
+        "duration_ms": 1531,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Goa+total+tourist+arrivals+2%2C302%2C146+date",
+        "cache_hit": false,
+        "duration_ms": 1118,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+libuTP+BitTorrent+protocol+amplification+vulnerability+fixed",
+        "cache_hit": false,
+        "duration_ms": 1590,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+was+the+amplification+vulnerability+in+the+BitTorrent+protocol%27s+libuTP+fixed+to+prevent+denial-of-service+attacks%3F",
+        "cache_hit": false,
+        "duration_ms": 1881,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=BitTorrent+protocol+libuTP+denial-of-service+attack+fix+year",
+        "cache_hit": false,
+        "duration_ms": 2195,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+was+libuTP+amplification+vulnerability+in+BitTorrent+fixed",
+        "cache_hit": false,
+        "duration_ms": 3422,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+did+Alfred+the+Great+conquer+London+and+proclaim+himself+king+of+the+Anglo-Saxons%3F",
+        "cache_hit": false,
+        "duration_ms": 1502,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Alfred+the+Great+conquer+London+year",
+        "cache_hit": false,
+        "duration_ms": 2357,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+did+Alfred+the+Great+take+London+and+become+king+of+Anglo-Saxons",
+        "cache_hit": false,
+        "duration_ms": 1040,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Alfred+the+Great+declared+himself+king+of+the+Anglo-Saxons",
+        "cache_hit": false,
+        "duration_ms": 2683,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=On+what+day%2C+month%2C+and+year+did+Dean+Martin+appear+in+episode+7+of+The+Frank+Sinatra+Show%3F",
+        "cache_hit": false,
+        "duration_ms": 1656,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Dean+Martin+episode+7+appearance+date+The+Frank+Sinatra+Show",
+        "cache_hit": false,
+        "duration_ms": 2413,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=When+did+Dean+Martin+appear+on+episode+7+of+The+Frank+Sinatra+Show",
+        "cache_hit": false,
+        "duration_ms": 1167,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=The+Frank+Sinatra+Show+episode+7+air+date+with+Dean+Martin",
+        "cache_hit": false,
+        "duration_ms": 3244,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+Luis+Suarez+become+the+top+goalscorer+for+Inter+Miami+CF+with+25+goals%3F",
+        "cache_hit": false,
+        "duration_ms": 5018,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Luis+Suarez+top+goalscorer+Inter+Miami+CF+year+25+goals",
+        "cache_hit": false,
+        "duration_ms": 1265,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+did+Reiwa+era+begin+in+Gregorian+calendar",
+        "cache_hit": false,
+        "duration_ms": 8504,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=start+year+of+Reiwa+era+in+Gregorian+calendar",
+        "cache_hit": false,
+        "duration_ms": 8672,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Inter+Miami+CF+leading+scorer+Luis+Suarez+25+goals+year",
+        "cache_hit": false,
+        "duration_ms": 1102,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=When+was+the+twin+city+agreement+between+Greater+London+and+Berlin+signed%3F",
+        "cache_hit": false,
+        "duration_ms": 1305,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+did+Greater+London+form+its+twin+city+partnership+with+Berlin%2C+Germany%3F",
+        "cache_hit": false,
+        "duration_ms": 1948,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Greater+London+twin+city+relationship+Berlin+year+established",
+        "cache_hit": false,
+        "duration_ms": 2009,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+did+the+Reiwa+era+start+according+to+the+Gregorian+calendar%3F",
+        "cache_hit": false,
+        "duration_ms": 11466,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=renminbi+8.5%25+daily+volume+global+foreign+exchange+market+year",
+        "cache_hit": false,
+        "duration_ms": 1613,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Year+Luis+Suarez+scored+25+goals+as+top+scorer+for+Inter+Miami+CF",
+        "cache_hit": false,
+        "duration_ms": 2430,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+did+the+renminbi+account+for+8.5%25+of+the+daily+volume+in+global+foreign+exchange+market+turnover%3F",
+        "cache_hit": false,
+        "duration_ms": 4014,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Gregorian+calendar+year+for+beginning+of+Reiwa+era",
+        "cache_hit": false,
+        "duration_ms": 2905,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=global+foreign+exchange+market+renminbi+8.5%25+daily+volume+date",
+        "cache_hit": false,
+        "duration_ms": 1218,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Year+Greater+London+and+Berlin+became+twin+cities",
+        "cache_hit": false,
+        "duration_ms": 2378,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Ford+Mustang+US+sales+385%2C993+units+model+year",
+        "cache_hit": false,
+        "duration_ms": 1596,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Ford+Mustang+annual+sales+385%2C993+units",
+        "cache_hit": false,
+        "duration_ms": 3136,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Year+Ford+Mustang+sold+385%2C993+units+in+US",
+        "cache_hit": false,
+        "duration_ms": 2818,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+are+the+approximate+start+and+end+dates+of+the+Sun%27s+passage+through+the+constellation+Ophiuchus+according+to+the+1977+IAU+boundaries%3F",
+        "cache_hit": false,
+        "duration_ms": 2168,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Sun+dates+in+Ophiuchus+constellation+1977+IAU+boundaries",
+        "cache_hit": false,
+        "duration_ms": 2384,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=solar+transit+period+Ophiuchus+according+to+1977+IAU",
+        "cache_hit": false,
+        "duration_ms": 2935,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Curb+Your+Enthusiasm+pilot+episode+release+date",
+        "cache_hit": false,
+        "duration_ms": 1757,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=first+episode+release+date+of+Curb+Your+Enthusiasm",
+        "cache_hit": false,
+        "duration_ms": 1301,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+day%2C+month%2C+and+year+was+the+first+episode+of+Curb+Your+Enthusiasm+first+released%3F",
+        "cache_hit": false,
+        "duration_ms": 3110,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+does+the+population+estimate+for+the+major+cities+of+Guinea-Bissau+refer+to%3F",
+        "cache_hit": false,
+        "duration_ms": 1370,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=population+estimate+year+major+cities+Guinea-Bissau",
+        "cache_hit": false,
+        "duration_ms": 1627,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+of+population+data+for+Guinea-Bissau+cities",
+        "cache_hit": false,
+        "duration_ms": 3134,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=original+air+date+of+Curb+Your+Enthusiasm+pilot",
+        "cache_hit": false,
+        "duration_ms": 3230,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Zodiac+dates+for+Ophiuchus+based+on+1977+IAU+constellation+boundaries",
+        "cache_hit": false,
+        "duration_ms": 5166,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Guinea-Bissau+major+cities+population+estimate+date",
+        "cache_hit": false,
+        "duration_ms": 2809,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Bailiwick+of+Jersey+established+as+Crown+Dependency+Channel+Islands",
+        "cache_hit": false,
+        "duration_ms": 8682,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+was+Bailiwick+of+Jersey+made+Crown+Dependency+Channel+Islands",
+        "cache_hit": false,
+        "duration_ms": 9575,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=establishment+year+of+Bailiwick+of+Jersey+as+Crown+Dependency+in+Channel+Islands",
+        "cache_hit": false,
+        "duration_ms": 1287,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+was+the+Bailiwick+of+Jersey+established+as+a+Crown+Dependency+within+the+Channel+Islands%3F",
+        "cache_hit": false,
+        "duration_ms": 10279,
+        "used_direct_fallback": true
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+Queller+and+Strassmann+publish+their+perspective+on+organisms+as+cooperating+entities+at+different+levels+of+biological+organization%3F",
+        "cache_hit": false,
+        "duration_ms": 1427,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Queller+Strassmann+view+organisms+cooperating+biological+levels+published",
+        "cache_hit": false,
+        "duration_ms": 1502,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Queller+and+Strassmann+publication+year+on+organisms+as+cooperating+entities",
+        "cache_hit": false,
+        "duration_ms": 1721,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=publication+date+Queller+Strassmann+organisms+cooperation+levels+biology",
+        "cache_hit": false,
+        "duration_ms": 1341,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=3G+CDMA+EVDO+Rev+A+introduction+year",
+        "cache_hit": false,
+        "duration_ms": 1389,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+3G+CDMA+EVDO+Rev+A+standard+launched",
+        "cache_hit": false,
+        "duration_ms": 1461,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+was+the+3G+CDMA+EVDO+Rev+A+cellular+network+standard+introduced%3F",
+        "cache_hit": false,
+        "duration_ms": 1579,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+was+3G+CDMA+EVDO+Rev+A+network+standard+introduced",
+        "cache_hit": false,
+        "duration_ms": 1236,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Jada+Pinkett+Smith+debuted+in+Moe%27s+World",
+        "cache_hit": false,
+        "duration_ms": 1663,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+Jada+Pinkett+Smith+make+her+first+appearance+in+the+film+%27Moe%27s+World%27%3F",
+        "cache_hit": false,
+        "duration_ms": 2635,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=On+what+day%2C+month%2C+and+year+did+Marvelous+Marvin+Hagler+defeat+Alan+Minter+to+win+the+WBA%2C+WBC%2C+and+The+Ring+middleweight+titles%3F",
+        "cache_hit": false,
+        "duration_ms": 1352,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Jada+Pinkett+Smith+first+appearance+Moe%27s+World+year",
+        "cache_hit": false,
+        "duration_ms": 3634,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+did+Jada+Pinkett+Smith+appear+in+Moe%27s+World",
+        "cache_hit": false,
+        "duration_ms": 2166,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Marvelous+Marvin+Hagler+date+won+middleweight+titles+defeating+Alan+Minter",
+        "cache_hit": false,
+        "duration_ms": 1542,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Date+Marvelous+Marvin+Hagler+won+middleweight+championship+vs+Alan+Minter",
+        "cache_hit": false,
+        "duration_ms": 2025,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=When+did+Marvelous+Marvin+Hagler+beat+Alan+Minter+for+WBA+WBC+The+Ring+middleweight+titles",
+        "cache_hit": false,
+        "duration_ms": 2468,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=earliest+source+date+for+Poseidon%27s+offspring+Triton+by+Amphitrite",
+        "cache_hit": false,
+        "duration_ms": 1833,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+was+the+earliest+record+of+Triton+son+of+Poseidon+and+Amphitrite",
+        "cache_hit": false,
+        "duration_ms": 1953,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+century+is+the+earliest+source+that+records+Poseidon%27s+offspring+Triton+by+Amphitrite+dated%3F",
+        "cache_hit": false,
+        "duration_ms": 2540,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=date+of+earliest+source+mentioning+Triton+child+of+Poseidon+and+Amphitrite",
+        "cache_hit": false,
+        "duration_ms": 1583,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+was+the+novel+The+Hobbit+first+published%3F",
+        "cache_hit": false,
+        "duration_ms": 4385,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+was+the+first+and+only+Electronic+Dance+Music+Awards+held+by+Project+X+Magazine%3F",
+        "cache_hit": false,
+        "duration_ms": 9384,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+of+first+Electronic+Dance+Music+Awards+by+Project+X+Magazine",
+        "cache_hit": false,
+        "duration_ms": 10185,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+was+the+only+Electronic+Dance+Music+Awards+held+by+Project+X+Magazine",
+        "cache_hit": false,
+        "duration_ms": 10832,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=The+Hobbit+first+publication+year",
+        "cache_hit": false,
+        "duration_ms": 1889,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+worldwide+cell+phone+sales+reach+180+million+units%3F",
+        "cache_hit": false,
+        "duration_ms": 1411,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+The+Hobbit+novel+was+published",
+        "cache_hit": false,
+        "duration_ms": 2780,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+did+global+cell+phone+sales+hit+180+million",
+        "cache_hit": false,
+        "duration_ms": 1403,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=publication+date+of+The+Hobbit+novel",
+        "cache_hit": false,
+        "duration_ms": 1269,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=date+of+first+Electronic+Dance+Music+Awards+organized+by+Project+X+Magazine",
+        "cache_hit": false,
+        "duration_ms": 1162,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Christian+Slater+Winthrop+Paroo+The+Music+Man+New+York+City+Center+year",
+        "cache_hit": false,
+        "duration_ms": 1366,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+worldwide+cell+phone+sales+reached+180+million+units",
+        "cache_hit": false,
+        "duration_ms": 3594,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Christian+Slater+performed+Winthrop+Paroo+The+Music+Man+NYC+Center",
+        "cache_hit": false,
+        "duration_ms": 1322,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+cell+phone+sales+worldwide+reached+180+million",
+        "cache_hit": false,
+        "duration_ms": 1110,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+Christian+Slater+play+Winthrop+Paroo+in+the+stage+production+of+The+Music+Man+at+New+York+City+Center%3F",
+        "cache_hit": false,
+        "duration_ms": 5863,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Christian+Slater+The+Music+Man+stage+production+date",
+        "cache_hit": false,
+        "duration_ms": 3950,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Farrah+Fawcett+years+on+Charlie%27s+Angels",
+        "cache_hit": false,
+        "duration_ms": 1174,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+did+the+Wimbledon+Championships+first+give+prize+money+to+professional+players%3F",
+        "cache_hit": false,
+        "duration_ms": 1074,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=year+Wimbledon+Championships+started+awarding+prize+money+to+professionals",
+        "cache_hit": false,
+        "duration_ms": 1165,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+did+Wimbledon+first+pay+prize+money+to+professional+tennis+players",
+        "cache_hit": false,
+        "duration_ms": 1248,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Charlie%27s+Angels+cast+Farrah+Fawcett+timeline",
+        "cache_hit": false,
+        "duration_ms": 1612,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Farrah+Fawcett+Jill+Munroe+TV+series+dates",
+        "cache_hit": false,
+        "duration_ms": 3953,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Wimbledon+prize+money+introduction+year+for+professionals",
+        "cache_hit": false,
+        "duration_ms": 1118,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Ford+Mustang+annual+sales+385%2C993+units",
+        "cache_hit": true,
+        "duration_ms": 226
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Ford+Mustang+US+sales+385%2C993+units+model+year",
+        "cache_hit": true,
+        "duration_ms": 263
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Year+Ford+Mustang+sold+385%2C993+units+in+US",
+        "cache_hit": true,
+        "duration_ms": 59
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+did+the+renminbi+account+for+8.5%25+of+the+daily+volume+in+global+foreign+exchange+market+turnover%3F",
+        "cache_hit": true,
+        "duration_ms": 171
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=renminbi+8.5+percent+share+daily+foreign+exchange+turnover+year",
+        "cache_hit": false,
+        "duration_ms": 1822,
+        "used_direct_fallback": false
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Farrah+Fawcett+years+on+Charlie%27s+Angels",
+        "cache_hit": true,
+        "duration_ms": 43
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Farrah+Fawcett+Jill+Munroe+TV+series+dates",
+        "cache_hit": true,
+        "duration_ms": 36
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=When+did+Farrah+Fawcett+star+in+Charlie%27s+Angels",
+        "cache_hit": false,
+        "duration_ms": 3559,
+        "used_direct_fallback": false
+      }
+    ]
+  }
+}

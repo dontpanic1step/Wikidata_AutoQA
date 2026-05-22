@@ -18,7 +18,6 @@ if str(SRC) not in sys.path:
 
 from wikidata_simpleqa.concurrency import SemaphoreWrappedClient, build_shared_pipeline_concurrency
 from wikidata_simpleqa.config import LLMConfig, Settings
-from wikidata_simpleqa.domain_templates import get_all_templates, get_template_by_key
 from wikidata_simpleqa.final_selection import select_final_records
 from wikidata_simpleqa.generation_pipeline import (
     build_second_stage_grader_client,
@@ -32,6 +31,10 @@ from wikidata_simpleqa.llm_rewrite import make_rewrite_client
 from wikidata_simpleqa.reasoning import normalize_reasoning_style
 from wikidata_simpleqa.route4_two_hop import (
     ROUTE4_WIKIDATA_TWO_HOP_ROUTE,
+    get_route4_combinable_single_hop_templates,
+    get_route4_reviewed_single_hop_templates,
+    get_route4_reviewed_template_by_key,
+    get_route4_two_hop_template_summary,
     route4_two_hop_seed_key_from_record,
     route4_two_hop_seed_unit_from_candidate,
 )
@@ -214,6 +217,10 @@ def main() -> int:
     grading_grader_client = _build_second_stage_grader_client(settings, concurrency.second_stage_semaphore)
 
     templates = _selected_single_hop_templates(args.template_keys)
+    selected_two_hop_template_summary = get_route4_two_hop_template_summary(templates)
+    reviewed_two_hop_template_summary = get_route4_two_hop_template_summary(
+        get_route4_reviewed_single_hop_templates()
+    )
     generated_candidates = WikidataHiddenEntityTwoHopGenerator().generate(
         templates=templates,
         settings=settings,
@@ -278,6 +285,8 @@ def main() -> int:
         "date_upper_bound": settings.date_upper_bound,
         "cutoff_year": settings.cutoff_year,
         "template_keys": [template.template_key for template in templates],
+        "two_hop_template_catalog": selected_two_hop_template_summary,
+        "reviewed_two_hop_template_catalog": reviewed_two_hop_template_summary,
         "record_limit": args.record_limit,
         "record_limit_remaining_at_start": remaining_limit,
         "generated_candidates": len(generated_candidates),
@@ -383,15 +392,10 @@ def _process_one_candidate(
 
 def _selected_single_hop_templates(template_keys: list[str]) -> list:
     if not template_keys:
-        return [
-            template
-            for template in get_all_templates()
-            if normalize_reasoning_style(template.reasoning_style or template.composition_style) == "single_fact"
-            and template.status != "frozen"
-        ]
+        return get_route4_combinable_single_hop_templates(get_route4_reviewed_single_hop_templates())
     templates = []
     for key in template_keys:
-        template = get_template_by_key(key)
+        template = get_route4_reviewed_template_by_key(key)
         if (
             template is not None
             and normalize_reasoning_style(template.reasoning_style or template.composition_style) == "single_fact"

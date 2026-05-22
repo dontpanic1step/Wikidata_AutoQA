@@ -17,6 +17,7 @@ from wikidata_simpleqa.validators import (
     question_leaks_bridge_entities,
     question_requires_all_hops,
     reasoning_path_is_connected,
+    reasoning_path_is_temporally_safe,
 )
 
 
@@ -169,6 +170,37 @@ class Route4TwoHopTests(unittest.TestCase):
         self.assertIn("Example Studio", composed[0].canonical_question)
         self.assertTrue(reasoning_path_is_connected(composed[0]))
 
+    def test_literal_value_cannot_be_bridge_entity(self) -> None:
+        answer_template = make_template("date_award_winner", property_pid="P166", property_label="award received")
+        clue_template = make_template("date_point_in_time", property_pid="P585", property_label="point in time", answer_type="Date")
+        answer_hop = make_fact(
+            template=answer_template,
+            subject_qid="VALUE:date:2020-01-01",
+            subject_label="January 1, 2020",
+            answer_qid="Q-award",
+            answer_label="Example Award",
+        )
+        clue_hop = make_fact(
+            template=clue_template,
+            subject_qid="VALUE:date:2020-01-01",
+            subject_label="January 1, 2020",
+            answer_qid="VALUE:date:2020-01-01",
+            answer_label="January 1, 2020",
+        )
+
+        composed = Route4TwoHopComposer().compose(
+            {
+                answer_template.template_key: [answer_hop],
+                clue_template.template_key: [clue_hop],
+            },
+            {
+                answer_template.template_key: answer_template,
+                clue_template.template_key: clue_template,
+            },
+        )
+
+        self.assertEqual(composed, [])
+
     def test_duplicate_clue_path_prunes_ambiguous_hidden_entities(self) -> None:
         director = make_template("film_director", property_pid="P57", property_label="director")
         based_on = make_template("film_based_on", property_pid="P144", property_label="based on", answer_type="Other")
@@ -228,6 +260,85 @@ class Route4TwoHopTests(unittest.TestCase):
         )
         self.assertFalse(question_requires_all_hops(candidate, "Who directed the film?"))
         self.assertTrue(question_requires_all_hops(candidate, "Who directed the film that was based on Example Book?"))
+
+    def test_pre_cutoff_year_in_hidden_subject_label_can_be_anchor(self) -> None:
+        director = make_template("film_director", property_pid="P57", property_label="director")
+        based_on = make_template("film_based_on", property_pid="P144", property_label="based on", answer_type="Other")
+        candidate = Route4TwoHopComposer().compose(
+            {
+                director.template_key: [
+                    make_fact(
+                        template=director,
+                        subject_qid="Q-film",
+                        subject_label="Example Film (2020)",
+                        answer_qid="Q-director",
+                        answer_label="Jane Director",
+                    )
+                ],
+                based_on.template_key: [
+                    make_fact(
+                        template=based_on,
+                        subject_qid="Q-film",
+                        subject_label="Example Film (2020)",
+                        answer_qid="Q-book",
+                        answer_label="Example Book",
+                    )
+                ],
+            },
+            {
+                director.template_key: director,
+                based_on.template_key: based_on,
+            },
+        )[0]
+
+        self.assertIn("2020 film", candidate.canonical_question)
+        self.assertIn("2020", candidate.source_metadata["hidden_entity_disambiguation_anchors"])
+        self.assertFalse(
+            question_leaks_bridge_entities(
+                "Who directed the 2020 film that was based on Example Book?",
+                candidate,
+            )
+        )
+        self.assertTrue(
+            question_requires_all_hops(
+                candidate,
+                "Who directed the 2020 film that was based on Example Book?",
+            )
+        )
+        self.assertTrue(reasoning_path_is_temporally_safe(candidate, cutoff_year=2025))
+
+    def test_cutoff_year_in_hidden_subject_label_is_not_safe(self) -> None:
+        director = make_template("film_director", property_pid="P57", property_label="director")
+        based_on = make_template("film_based_on", property_pid="P144", property_label="based on", answer_type="Other")
+        candidate = Route4TwoHopComposer().compose(
+            {
+                director.template_key: [
+                    make_fact(
+                        template=director,
+                        subject_qid="Q-film",
+                        subject_label="Example Film (2025)",
+                        answer_qid="Q-director",
+                        answer_label="Jane Director",
+                    )
+                ],
+                based_on.template_key: [
+                    make_fact(
+                        template=based_on,
+                        subject_qid="Q-film",
+                        subject_label="Example Film (2025)",
+                        answer_qid="Q-book",
+                        answer_label="Example Book",
+                    )
+                ],
+            },
+            {
+                director.template_key: director,
+                based_on.template_key: based_on,
+            },
+        )[0]
+
+        self.assertNotIn("2025", candidate.source_metadata["hidden_entity_disambiguation_anchors"])
+        self.assertFalse(reasoning_path_is_temporally_safe(candidate, cutoff_year=2025))
 
 
 if __name__ == "__main__":

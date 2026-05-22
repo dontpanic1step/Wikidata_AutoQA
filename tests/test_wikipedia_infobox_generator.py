@@ -32,6 +32,7 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     rank_wikipedia_tables,
     _normalize_answer_type,
     _normalize_generated_answer,
+    _rejected_placeholder,
     _subject_anchor_context,
     _tie_completion_problem,
 )
@@ -44,10 +45,12 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     EndpointResumeState,
     _candidate_from_record,
     _filter_endpoint_url_entries,
+    _failure_reason_counts,
     _load_endpoint_jsonl,
     _load_url_entries,
     _load_urls,
     _remaining_after_endpoint,
+    _record_reasoning_type,
     _reserve_stream_page_ids,
     _run_artifact_summary,
     _should_rerun_stream_rejection,
@@ -739,14 +742,145 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 [str(root / "fresh.md"), str(root / "incremental.md")],
             )
 
+    def test_failure_reason_stats_collapse_noisy_details(self) -> None:
+        records = [
+            {
+                "rejection_reason": "search_longtail_verifier_rejected",
+                "rejection_notes": {
+                    "search_verification_features": {"triggered_rule": "full_question:hit_rate_exceeded"}
+                },
+            },
+            {
+                "rejection_reason": "search_longtail_verifier_rejected",
+                "rejection_notes": {
+                    "search_verification_features": {"triggered_rule": "keyword_query_1:answer_in_title"}
+                },
+            },
+            {
+                "rejection_reason": "second_stage_grading_accuracy_threshold_exceeded",
+                "rejection_notes": {"panel_grading_features": {"accuracy": 0.5, "accuracy_threshold": 0.1}},
+            },
+            {
+                "rejection_reason": "wikipedia_infobox_table_filter_rejected",
+                "source_metadata": {
+                    "discard_reason": (
+                        "not_number_dominant:comma_number_count=2;"
+                        "no_social_science_research:population"
+                    )
+                },
+            },
+            {
+                "rejection_reason": "wikipedia_infobox_table_filter_rejected",
+                "source_metadata": {"discard_reason": "no_social_science_research:census,population"},
+            },
+            {
+                "rejection_reason": "wikipedia_infobox_llm_discarded",
+                "source_metadata": {"discard_reason": "No date or year information is present."},
+            },
+        ]
+
+        counts = {
+            (row["stage"], row["reason"]): row["count"]
+            for row in _failure_reason_counts(records, [])
+        }
+
+        self.assertEqual(counts[("search_longtail", "search_longtail_verifier_rejected")], 2)
+        self.assertEqual(
+            counts[("second_stage_grading", "second_stage_grading_accuracy_threshold_exceeded")],
+            1,
+        )
+        self.assertEqual(
+            counts[("route_generation", "wikipedia_infobox_table_filter_rejected:no_social_science_research")],
+            2,
+        )
+        self.assertEqual(
+            counts[("route_generation", "wikipedia_infobox_llm_discarded:No date or year information is present.")],
+            1,
+        )
+        self.assertFalse(any("hit_rate_exceeded" in reason for _, reason in counts))
+        self.assertFalse(any("accuracy=" in reason or "threshold=" in reason for _, reason in counts))
+        self.assertFalse(any("population" in reason or "comma_number_count" in reason for _, reason in counts))
+
+    def test_rejection_placeholder_uses_single_allowed_reasoning_type(self) -> None:
+        candidate = _rejected_placeholder(
+            url="https://en.wikipedia.org/wiki/Example",
+            title="Example",
+            canonical_url="https://en.wikipedia.org/wiki/Example",
+            question="Example",
+            answer="",
+            first_paragraph="Example paragraph.",
+            run_date="2026-05-21",
+            timings={},
+            reason="wikipedia_infobox_table_filter_rejected",
+            allowed_reasoning_types=("single_fact",),
+            allowed_answer_types=("Person",),
+        )
+
+        self.assertEqual(candidate.relation_or_claim, "single_fact")
+        self.assertEqual(candidate.source_metadata["reasoning_type"], "single_fact")
+
+    def test_walkthrough_reasoning_type_uses_single_allowed_reasoning_type_for_legacy_placeholder(self) -> None:
+        record = {
+            "relation_or_claim": "wikipedia_table_fact",
+            "source_metadata": {"allowed_reasoning_types": ["single_fact"]},
+        }
+
+        self.assertEqual(_record_reasoning_type(record), "single_fact")
+
     def test_table_extraction_preserves_infobox_and_wikitable_rows(self) -> None:
         tables = extract_wikipedia_tables(FIXTURE_HTML)
         self.assertEqual(len(tables), 2)
         self.assertEqual(tables[0].table_type, "infobox")
-        self.assertEqual(tables[0].row_dicts[0], {"Edition": "23rd"})
+        self.assertEqual(tables[0].row_dicts, [])
+        self.assertIn("| Example event | Example event |", tables[0].markdown)
+        self.assertIn("| Edition | 23rd |", tables[0].markdown)
         self.assertEqual(tables[1].caption, "List of tournament venues")
         self.assertEqual(tables[1].section_heading, "Venues")
-        self.assertEqual(tables[1].row_dicts[0]["Venue"], "AT&T Stadium")
+        self.assertEqual(tables[1].row_dicts, [])
+        self.assertIn("| Venue | City | Capacity |", tables[1].markdown)
+        self.assertIn("| AT&T Stadium | Arlington | 80,000 |", tables[1].markdown)
+        self.assertFalse(tables[1].structure["legacy_row_dict_parser_enabled"])
+
+    def test_table_extraction_renders_complex_spanning_table_as_markdown(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <table class="wikitable">
+        <caption>DVD releases of Curb Your Enthusiasm</caption>
+        <tr><th rowspan="2">Season</th><th colspan="2">Release dates</th><th rowspan="2">Bonus features</th></tr>
+        <tr><th>Region 1</th><th>Region 2</th></tr>
+        <tr><td>1</td><td>January 13, 2004</td><td>May 17, 2004</td><td>Commentary by Larry David</td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+
+        self.assertEqual(
+            table.headers,
+            ["Season", "Release dates / Region 1", "Release dates / Region 2", "Bonus features"],
+        )
+        self.assertIn(
+            "| Season | Release dates / Region 1 | Release dates / Region 2 | Bonus features |",
+            table.markdown,
+        )
+        self.assertIn("| 1 | January 13, 2004 | May 17, 2004 | Commentary by Larry David |", table.markdown)
+        self.assertEqual(table.structure["span_cell_count"], 3)
+
+    def test_table_extraction_preserves_empty_cells_in_markdown_alignment(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <table class="wikitable">
+        <tr><th>Place Manner</th><th>Labial</th><th>Dental / Alveolar</th><th>Palatal</th><th>Velar</th><th>Glottal</th></tr>
+        <tr><th>Nasal</th><td>m</td><td>n</td><td></td><td>ng</td><td></td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+
+        self.assertEqual(table.rows[1], ["Nasal", "m", "n", "", "ng", ""])
+        self.assertIn("| Nasal | m | n |  | ng |  |", table.markdown)
+        self.assertEqual(table.structure["empty_cell_count"], 2)
 
     def test_table_extraction_captures_nearby_intro_paragraph(self) -> None:
         html = """
@@ -877,8 +1011,8 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertNotIn('"preferred_subject_anchors"', generator.llm_client.prompts[0])
         self.assertIn("If the page title contains a cutoff-year marker", generator.llm_client.prompts[0])
         self.assertIn("do not copy anchor text mechanically", generator.llm_client.prompts[0])
-        self.assertIn("Phrases to avoid: `according to the table`", generator.llm_client.prompts[0])
-        self.assertIn("`in the List of ...`", generator.llm_client.prompts[0])
+        self.assertIn("The question must be self-contained", generator.llm_client.prompts[0])
+        self.assertIn("Treat curated list pages such as `List of national parks of the United States`", generator.llm_client.prompts[0])
         self.assertNotIn("For the 2026 FIFA World Cup page", generator.llm_client.prompts[0])
         self.assertIn("Do not ask cumulative-statistic questions", generator.llm_client.prompts[0])
         self.assertIn('"answer_type": "Person|Place|Number|Date|Other"', generator.llm_client.prompts[0])
@@ -1023,7 +1157,16 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 return {
                     "parse": {
                         "title": "Population example",
-                        "text": FIXTURE_HTML.replace("Capacity", "Population"),
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Population example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Venue</th><th>City</th><th>Population</th></tr>
+                        <tr><td>Alpha</td><td>Arlington</td><td>800</td></tr>
+                        <tr><td>Beta</td><td>East Rutherford</td><td>825</td></tr>
+                        </table>
+                        </div>
+                        """,
                     }
                 }
 
@@ -1042,16 +1185,86 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("no_social_science_research:population", candidate.source_metadata["discard_reason"])
         self.assertEqual(
             candidate.source_metadata["table_filter_modes"],
-            ["no_big_numbers", "no_social_science_research"],
+            ["no_incomplete_tables", "not_number_dominant", "no_social_science_research"],
         )
 
-    def test_no_big_numbers_mode_rejects_normalized_numeric_tables_before_llm_generation(self) -> None:
+    def test_no_incomplete_tables_mode_rejects_unknown_markers_before_llm_generation(self) -> None:
+        class UnknownWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Unknown example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Unknown example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Status</th></tr>
+                        <tr><td>Alpha</td><td>Unknown</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Unknown_example"],
+            wikipedia_client=UnknownWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn("no_incomplete_tables:unknown", candidate.source_metadata["discard_reason"])
+        self.assertIn("unknown", candidate.source_metadata["table_selection"][0]["incomplete_table_markers"])
+
+    def test_no_incomplete_tables_mode_can_be_disabled(self) -> None:
+        class UnknownWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Unknown example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Unknown example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Status</th></tr>
+                        <tr><td>Alpha</td><td>Unknown</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Unknown_example"],
+            wikipedia_client=UnknownWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_filter_modes=("not_number_dominant", "no_social_science_research"),
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertNotIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(len(llm_client.prompts), 1)
+
+    def test_not_number_dominant_mode_rejects_comma_grouped_numbers_before_llm_generation(self) -> None:
         class BigNumberWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:
                 return {
                     "parse": {
                         "title": "Big number example",
-                        "text": FIXTURE_HTML,
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Big number example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Venue</th><th>City</th><th>Capacity</th></tr>
+                        <tr><td>AT&amp;T Stadium</td><td>Arlington</td><td>80,000</td></tr>
+                        <tr><td>MetLife Stadium</td><td>East Rutherford</td><td>82,500</td></tr>
+                        </table>
+                        </div>
+                        """,
                     }
                 }
 
@@ -1065,13 +1278,13 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
         self.assertEqual(llm_client.prompts, [])
-        self.assertIn("no_big_numbers:gt_3000_rate=1.0000", candidate.source_metadata["discard_reason"])
+        self.assertIn("not_number_dominant:comma_number_count=2", candidate.source_metadata["discard_reason"])
         self.assertEqual(
-            candidate.source_metadata["table_selection"][0]["big_number_stats"]["gt_3000_count"],
+            candidate.source_metadata["table_selection"][0]["number_dominance_stats"]["comma_number_count"],
             2,
         )
 
-    def test_no_big_numbers_mode_does_not_reject_year_heavy_tables(self) -> None:
+    def test_not_number_dominant_mode_does_not_reject_year_heavy_tables(self) -> None:
         class YearTableWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:
                 return {
@@ -1082,8 +1295,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <p>Year example is a settled historical list.</p>
                         <table class="wikitable">
                         <tr><th>Event</th><th>Year</th></tr>
+                        <tr><td>Gamma</td><td>1500</td></tr>
                         <tr><td>Alpha</td><td>1998</td></tr>
                         <tr><td>Beta</td><td>2004</td></tr>
+                        <tr><td>Delta</td><td>2040</td></tr>
                         </table>
                         </div>
                         """,
@@ -1101,8 +1316,296 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertNotIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
         self.assertEqual(len(llm_client.prompts), 1)
         self.assertEqual(
-            candidate.source_metadata["table_selection"][0]["big_number_stats"]["gt_3000_count"],
+            candidate.source_metadata["table_selection"][0]["number_dominance_stats"][
+                "out_of_allowed_no_comma_range_count"
+            ],
             0,
+        )
+        self.assertEqual(
+            candidate.source_metadata["table_selection"][0]["number_dominance_stats"]["numeric_token_count"],
+            4,
+        )
+
+    def test_not_number_dominant_mode_rejects_no_comma_number_between_1000_and_1500(self) -> None:
+        class ThresholdWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Threshold example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Threshold example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Score</th></tr>
+                        <tr><td>Alpha</td><td>999</td></tr>
+                        <tr><td>Beta</td><td>1001</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Threshold_example"],
+            wikipedia_client=ThresholdWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn(
+            "not_number_dominant:out_of_allowed_no_comma_range_count=1",
+            candidate.source_metadata["discard_reason"],
+        )
+
+    def test_not_number_dominant_mode_rejects_comma_separated_year_like_number(self) -> None:
+        class CommaYearWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Comma year example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Comma year example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Value</th></tr>
+                        <tr><td>Alpha</td><td>2,024</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Comma_year_example"],
+            wikipedia_client=CommaYearWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn("not_number_dominant:comma_number_count=1", candidate.source_metadata["discard_reason"])
+
+    def test_not_number_dominant_mode_rejects_no_comma_number_above_2040(self) -> None:
+        class FutureYearWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Future year example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Future year example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Year</th></tr>
+                        <tr><td>Alpha</td><td>2041</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Future_year_example"],
+            wikipedia_client=FutureYearWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn(
+            "not_number_dominant:out_of_allowed_no_comma_range_count=1",
+            candidate.source_metadata["discard_reason"],
+        )
+
+    def test_not_number_dominant_mode_rejects_decimal_numbers(self) -> None:
+        class DecimalWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Decimal example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Decimal example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Ratio</th></tr>
+                        <tr><td>Alpha</td><td>1.2</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Decimal_example"],
+            wikipedia_client=DecimalWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn("not_number_dominant:decimal_number_count=1", candidate.source_metadata["discard_reason"])
+
+    def test_not_number_dominant_mode_rejects_low_alpha_character_coverage(self) -> None:
+        class LowAlphaWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Low alpha example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Low alpha example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>#</th><th>%</th></tr>
+                        <tr><td>12</td><td>34</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Low_alpha_example"],
+            wikipedia_client=LowAlphaWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn("not_number_dominant:alpha_character_rate=0.0000", candidate.source_metadata["discard_reason"])
+
+    def test_not_number_dominant_mode_rejects_unit_markers_before_llm_generation(self) -> None:
+        class UnitWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Unit example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Unit example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Production (kt)</th></tr>
+                        <tr><td>Alpha</td><td>261</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Unit_example"],
+            wikipedia_client=UnitWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn("not_number_dominant:unit_marker=kt", candidate.source_metadata["discard_reason"])
+        self.assertIn("kt", candidate.source_metadata["table_selection"][0]["number_dominance_stats"]["unit_markers"])
+
+    def test_not_number_dominant_mode_rejects_kilo_prefixed_unit_words(self) -> None:
+        class KiloUnitWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Kilo unit example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Kilo unit example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Output in kilocalories</th></tr>
+                        <tr><td>Alpha</td><td>261</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Kilo_unit_example"],
+            wikipedia_client=KiloUnitWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn("not_number_dominant:unit_marker=kilocalories", candidate.source_metadata["discard_reason"])
+
+    def test_not_number_dominant_mode_rejects_ambiguous_unit_marker_with_context(self) -> None:
+        class MeterWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Meter example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Meter example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Length (m)</th></tr>
+                        <tr><td>Alpha</td><td>42</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Meter_example"],
+            wikipedia_client=MeterWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn("not_number_dominant:unit_marker=m", candidate.source_metadata["discard_reason"])
+
+    def test_not_number_dominant_mode_does_not_treat_points_as_unit_marker(self) -> None:
+        class PointsWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Points example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Points example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Points</th></tr>
+                        <tr><td>Alpha</td><td>42</td></tr>
+                        <tr><td>Beta</td><td>73</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Points_example"],
+            wikipedia_client=PointsWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertNotIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(len(llm_client.prompts), 1)
+        self.assertEqual(
+            candidate.source_metadata["table_selection"][0]["number_dominance_stats"]["unit_markers"],
+            [],
         )
 
     def test_single_fact_restriction_rejects_list_answer(self) -> None:

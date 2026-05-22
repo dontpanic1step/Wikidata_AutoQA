@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 import re
-from dataclasses import dataclass
+import unicodedata
+from dataclasses import dataclass, field
 from html import unescape
 from html.parser import HTMLParser
 from time import perf_counter
@@ -53,12 +54,139 @@ ROUTE3_ANSWER_TYPE_PROMPT_RULES = {
 ROUTE3_EXTRA_PROMPTS = {
     "no_social_science_research_prompt": NO_SOCIAL_SCIENCE_RESEARCH_PROMPT,
 }
-ROUTE3_TABLE_FILTER_MODES = ("no_big_numbers", "no_social_science_research")
+ROUTE3_TABLE_FILTER_MODES = ("no_incomplete_tables", "not_number_dominant", "no_social_science_research")
 ROUTE3_TABLE_FILTER_MODE_SET = set(ROUTE3_TABLE_FILTER_MODES)
 DEFAULT_ROUTE3_TABLE_FILTER_MODES = ROUTE3_TABLE_FILTER_MODES
-BIG_NUMBER_WORD_MARKERS = ("thousands", "million", "billion", "trillion")
-BIG_NUMBER_GT_3000_RATE_THRESHOLD = 0.5
-BIG_NUMBER_GT_10000_RATE_THRESHOLD = 0.2
+NUMBER_DOMINANCE_WORD_MARKERS = ("thousand", "million", "billion", "trillion")
+NUMBER_DOMINANCE_LOW_NUMERIC_THRESHOLD = 1000
+NUMBER_DOMINANCE_YEAR_LIKE_MIN = 1500
+NUMBER_DOMINANCE_YEAR_LIKE_MAX = 2040
+NUMBER_DOMINANCE_MIN_ALPHA_RATE = 0.5
+INCOMPLETE_TABLE_MARKERS = ("unlisted", "incomplete", "unknown")
+NUMBER_DOMINANCE_UNIT_MARKERS = (
+    "acre",
+    "acres",
+    "barrel",
+    "barrels",
+    "bbl",
+    "bytes",
+    "centimeter",
+    "centimeters",
+    "centimetre",
+    "centimetres",
+    "cm",
+    "cubic feet",
+    "cubic foot",
+    "cubic meter",
+    "cubic meters",
+    "cubic metre",
+    "cubic metres",
+    "degree celsius",
+    "degree fahrenheit",
+    "degrees",
+    "feet",
+    "foot",
+    "ft",
+    "gal",
+    "gallon",
+    "gallons",
+    "gigabyte",
+    "gigabytes",
+    "gigawatt",
+    "gigawatts",
+    "gram",
+    "grams",
+    "gw",
+    "ha",
+    "hectare",
+    "hectares",
+    "hz",
+    "joule",
+    "joules",
+    "kb",
+    "kg",
+    "kilobyte",
+    "kilobytes",
+    "kilogram",
+    "kilograms",
+    "kilometer",
+    "kilometers",
+    "kilometre",
+    "kilometres",
+    "kilotonne",
+    "kilotonnes",
+    "kilowatt",
+    "kilowatt hours",
+    "kilowatts",
+    "km",
+    "km2",
+    "kmh",
+    "kph",
+    "kt",
+    "kw",
+    "kwh",
+    "lb",
+    "lbs",
+    "liter",
+    "liters",
+    "litre",
+    "litres",
+    "m2",
+    "mb",
+    "megabyte",
+    "megabytes",
+    "megawatt",
+    "megawatt hours",
+    "megawatts",
+    "meter",
+    "meters",
+    "metre",
+    "metres",
+    "mg",
+    "mi",
+    "mile",
+    "miles",
+    "milligram",
+    "milligrams",
+    "millimeter",
+    "millimeters",
+    "millimetre",
+    "millimetres",
+    "ml",
+    "mph",
+    "mw",
+    "mwh",
+    "ounce",
+    "ounces",
+    "oz",
+    "pascal",
+    "pascals",
+    "pound",
+    "pounds",
+    "psi",
+    "sq km",
+    "square feet",
+    "square foot",
+    "square kilometer",
+    "square kilometers",
+    "square kilometre",
+    "square kilometres",
+    "square meter",
+    "square meters",
+    "square metre",
+    "square metres",
+    "ton",
+    "tons",
+    "tonne",
+    "tonnes",
+    "watt",
+    "watts",
+    "yard",
+    "yards",
+    "yd",
+)
+NUMBER_DOMINANCE_AMBIGUOUS_UNIT_MARKERS = ("g", "m")
+NUMBER_DOMINANCE_UNIT_REGEX_PATTERNS = (re.compile(r"(?<!\w)kilo[a-z]+(?!\w)"),)
 SOCIAL_SCIENCE_TABLE_MARKERS = (
     "census",
     "survey",
@@ -150,6 +278,8 @@ class WikipediaTable:
     rows: list[list[str]]
     row_dicts: list[dict[str, str]]
     normalized_text: str
+    markdown: str = ""
+    structure: dict[str, Any] = field(default_factory=dict)
 
     def to_metadata(self, *, max_rows: int = 50, max_text_chars: int = 4000) -> dict[str, Any]:
         """Return a compact audit representation for output metadata."""
@@ -161,8 +291,9 @@ class WikipediaTable:
             "nearby_intro": self.nearby_intro[:1000],
             "headers": self.headers,
             "rows": self.rows[:max_rows],
-            "row_dicts": self.row_dicts[:max_rows],
+            "markdown": self.markdown[:max_text_chars],
             "normalized_text": self.normalized_text[:max_text_chars],
+            "structure": self.structure,
             "truncated": len(self.rows) > max_rows or len(self.normalized_text) > max_text_chars,
         }
 
@@ -728,7 +859,6 @@ def build_wikipedia_infobox_prompt(
             "Prefer tables with many structured data rows.",
             # "Prefer tables with numeric, ordinal, date, rank, count, or comparable value columns.",
             "Prefer tables whose row values are mostly not repeated in non-table prose, because these are less directly answerable from the article text.",
-            "Prefer specific article tables over summary infoboxes when both are available.",
         ],
         "ranked_table_selection": [
             _selection_payload(row)
@@ -737,7 +867,7 @@ def build_wikipedia_infobox_prompt(
         "tables": [table.to_metadata(max_rows=40, max_text_chars=2500) for table in tables[:3]],
     }
     return (
-        "Generate one long-tail SimpleQA-style factual question from a Wikipedia table or infobox.\n"
+        "Generate one long-tail SimpleQA-style factual question from a Wikipedia infobox or table.\n"
         "Return JSON only.\n\n"
         "Requirements:\n\n"
 
@@ -758,26 +888,25 @@ def build_wikipedia_infobox_prompt(
         "- Do not ask cumulative-statistic questions such as how many goals Messi has scored, total wins, career points, revenue, downloads, citations, or followers unless the statistic is explicitly scoped to a historically settled slice, completed event, completed season, or fixed table/list.\n"
         "- Do not ask about current, latest, most recent, or live-status facts.\n"
         "- Avoid mutable-sounding wording such as `total assets`, `total number`, `current`, or `as of`.\n"
-        "- For completed historical tables, phrase the comparison as a fixed result within the named event or list.\n"
+        # "- For completed historical tables, phrase the comparison as a fixed result within the named event or list.\n"
 
         "### Use careful wording to avoid ambiguity.\n\n"
         "- Use subject_anchors only to understand the page/table scope; do not copy anchor text mechanically into the question.\n"
         "- Let the table caption, nearby paragraph intro, or nearby section heading define the safe scope. Pay special attention to nearby intros with words like `following` or `above`; they often state which rows are included or excluded. For example, `15 largest commercial banks in Ukraine` supports asking which bank is largest in Ukraine, but not how many banks exist in Ukraine. A `1980 chart` table supports asking about facts in that 1980 chart, but not when a song first entered a chart because it may have entered in another year.\n"
-        "- Treat curated list pages such as `List of national parks of the United States` as complete and authoritative for membership within their stated scope. Do not hedge by saying `according to the List of ...`.\n"
-        "- Do not cite the list unless the source is a well-known named chart or list, such as a Billboard chart, UNESCO list or a sports tournament chart. Phrases to avoid: `according to the table`, `according to the [source] table`, or `in the List of ...`. \n"
-        "- Ask about the facts in the table. Do not ask questions about the table itself, such as `What year does the estimate refer to`.\n"
-        "- If the table is only a toy, tutorial, or teaching example rather than real-world factual data, choose another table.\n"
         "- Avoid vague phrases like `linked to`.\n"
 
         "### Must be challenging.\n\n"
-        "- Prefer a high-quality article table over an infobox when both support a safe, long-tail question.\n"
         "- Prefer table facts that are not easily found in article prose outside tables.\n"
         "- Prefer answers that look unfamiliar to you and are likely to remain long-tail after search filtering.\n"
         
-        "### Must be answerable (no cut-off year markers).\n\n"
+        "### Must be answerable.\n\n"
         "- If the page title contains a cutoff-year marker, use one of safe_subject_aliases when you need to name the subject; do not use the cutoff-year title text.\n"
         f"- Do not make the question text depend on events in {cutoff_year} or later.\n"
-
+        "- The question must be self-contained. It should be answerable without seeing the list or the table. Do not ask `What is ... in the list(table)?`.\n"
+        # "- Do not cite the list unless the source is a well-known named chart or list, such as a Billboard chart, UNESCO list or a sports tournament chart. Phrases to avoid: `according to the table`, `according to the [source] table`, or `in the List of ...`. \n"
+        # "- Ask about the facts in the table. Do not ask questions about the table itself, such as `What year does the estimate refer to`.\n"
+        "- If the table is only a toy, tutorial, or teaching example rather than real-world factual data, choose another table.\n"
+        "- Treat curated list pages such as `List of national parks of the United States` as complete and authoritative for membership within their stated scope. Do not hedge by saying `according to the List of ...`.\n"
         "### Other prompt rules:\n\n"
         f"{_extra_prompt_rule(normalized_extra_prompts)}"
         "- Do not include the answer or answer aliases in the question or search queries.\n"
@@ -1074,9 +1203,6 @@ def rank_wikipedia_tables(
         if table.table_type == "wikitable":
             score += 2.0
             reasons.append("article_table")
-        if table.table_type == "infobox":
-            score -= 2.0
-            reasons.append("infobox_penalty")
         if row_count >= 3:
             score += min(row_count, 12) * 0.15
             reasons.append("multi_row")
@@ -1185,13 +1311,18 @@ def _annotate_table_filter_modes(
         table = copied.get("table")
         copied["table_filter_modes"] = list(modes)
         if isinstance(table, WikipediaTable):
-            if "no_big_numbers" in modes:
-                big_number_stats = _big_number_table_stats(table)
-                copied["big_number_stats"] = big_number_stats
-                big_number_reason = _big_number_table_filter_reason(big_number_stats)
-                if big_number_reason:
-                    reasons.append(big_number_reason)
-            if "no_social_science_research" in modes:
+            if "no_incomplete_tables" in modes:
+                incomplete_markers = _incomplete_table_markers(table)
+                copied["incomplete_table_markers"] = incomplete_markers
+                if incomplete_markers:
+                    reasons.append(f"no_incomplete_tables:{','.join(incomplete_markers)}")
+            if not reasons and "not_number_dominant" in modes:
+                number_dominance_stats = _number_dominance_table_stats(table)
+                copied["number_dominance_stats"] = number_dominance_stats
+                number_dominance_reason = _number_dominance_table_filter_reason(number_dominance_stats)
+                if number_dominance_reason:
+                    reasons.append(number_dominance_reason)
+            if not reasons and "no_social_science_research" in modes:
                 markers = _table_text_markers(table, SOCIAL_SCIENCE_TABLE_MARKERS)
                 copied["social_science_markers"] = markers
                 if markers:
@@ -1224,65 +1355,202 @@ def _table_filter_discard_reason(rows: list[dict[str, Any]]) -> str:
     return "route3_table_filter_rejected"
 
 
-def _big_number_table_stats(table: WikipediaTable) -> dict[str, Any]:
-    """Return normalized numeric-cell magnitude stats for the no-big-numbers mode."""
-    word_markers = _table_text_markers(table, BIG_NUMBER_WORD_MARKERS)
-    if word_markers:
-        return {
-            "numeric_cell_count": 0,
-            "gt_3000_count": 0,
-            "gt_3000_rate": 0.0,
-            "gt_10000_count": 0,
-            "gt_10000_rate": 0.0,
-            "word_markers": word_markers,
-        }
-    values = _normalized_numeric_cell_values(table)
-    gt_3000_count = sum(1 for value in values if abs(value) > 3000)
-    gt_10000_count = sum(1 for value in values if abs(value) > 10000)
-    numeric_count = len(values)
+def _incomplete_table_markers(table: WikipediaTable) -> list[str]:
+    """Return incomplete-data markers present in table-owned text."""
+    checked_text = _table_marker_text(table)
+    return _text_exact_markers(checked_text, INCOMPLETE_TABLE_MARKERS)
+
+
+def _number_dominance_table_stats(table: WikipediaTable) -> dict[str, Any]:
+    """Return audit stats for the not-number-dominant table prefilter."""
+    marker_text = _table_marker_text(table)
+    word_markers = _text_exact_markers(marker_text, NUMBER_DOMINANCE_WORD_MARKERS)
+    unit_markers = _dedupe_preserving_order(
+        [
+            *_text_exact_markers(marker_text, NUMBER_DOMINANCE_UNIT_MARKERS),
+            *_text_regex_markers(marker_text, NUMBER_DOMINANCE_UNIT_REGEX_PATTERNS),
+            *_ambiguous_unit_markers(table),
+        ]
+    )
+    numeric_entries = _number_dominance_numeric_entries(table)
+    comma_entries = [entry for entry in numeric_entries if bool(entry["has_comma"])]
+    decimal_entries = [entry for entry in numeric_entries if bool(entry["has_decimal"])]
+    out_of_range_entries = [
+        entry for entry in numeric_entries if bool(entry["is_out_of_allowed_no_comma_range"])
+    ]
+    alpha_count, total_count, alpha_rate = _table_alpha_coverage(table)
     return {
-        "numeric_cell_count": numeric_count,
-        "gt_3000_count": gt_3000_count,
-        "gt_3000_rate": round(gt_3000_count / numeric_count, 4) if numeric_count else 0.0,
-        "gt_10000_count": gt_10000_count,
-        "gt_10000_rate": round(gt_10000_count / numeric_count, 4) if numeric_count else 0.0,
+        "numeric_token_count": len(numeric_entries),
         "word_markers": word_markers,
+        "unit_markers": unit_markers,
+        "comma_number_count": len(comma_entries),
+        "comma_number_values": [str(entry["token"]) for entry in comma_entries[:20]],
+        "decimal_number_count": len(decimal_entries),
+        "decimal_number_values": [str(entry["token"]) for entry in decimal_entries[:20]],
+        "out_of_allowed_no_comma_range_count": len(out_of_range_entries),
+        "out_of_allowed_no_comma_range_values": [str(entry["token"]) for entry in out_of_range_entries[:20]],
+        "alpha_character_count": alpha_count,
+        "total_character_count": total_count,
+        "alpha_character_rate": round(alpha_rate, 4),
+        "alpha_character_threshold": NUMBER_DOMINANCE_MIN_ALPHA_RATE,
     }
 
 
-def _big_number_table_filter_reason(stats: dict[str, Any]) -> str:
-    """Return the no-big-numbers rejection reason for one table, if any."""
+def _number_dominance_table_filter_reason(stats: dict[str, Any]) -> str:
+    """Return the not-number-dominant rejection reason for one table, if any."""
     markers = stats.get("word_markers", [])
     if markers:
-        return f"no_big_numbers:word_marker={','.join(str(marker) for marker in markers)}"
-    numeric_count = int(stats.get("numeric_cell_count", 0) or 0)
-    gt_3000_rate = float(stats.get("gt_3000_rate", 0.0) or 0.0)
-    gt_10000_rate = float(stats.get("gt_10000_rate", 0.0) or 0.0)
-    if numeric_count and gt_3000_rate >= BIG_NUMBER_GT_3000_RATE_THRESHOLD:
-        return (
-            "no_big_numbers:"
-            f"gt_3000_rate={gt_3000_rate:.4f};threshold={BIG_NUMBER_GT_3000_RATE_THRESHOLD:.4f}"
-        )
-    if numeric_count and gt_10000_rate >= BIG_NUMBER_GT_10000_RATE_THRESHOLD:
-        return (
-            "no_big_numbers:"
-            f"gt_10000_rate={gt_10000_rate:.4f};threshold={BIG_NUMBER_GT_10000_RATE_THRESHOLD:.4f}"
-        )
+        return f"not_number_dominant:word_marker={','.join(str(marker) for marker in markers)}"
+    unit_markers = stats.get("unit_markers", [])
+    if unit_markers:
+        return f"not_number_dominant:unit_marker={','.join(str(marker) for marker in unit_markers)}"
+    comma_count = int(stats.get("comma_number_count", 0) or 0)
+    if comma_count:
+        return f"not_number_dominant:comma_number_count={comma_count}"
+    decimal_count = int(stats.get("decimal_number_count", 0) or 0)
+    if decimal_count:
+        return f"not_number_dominant:decimal_number_count={decimal_count}"
+    out_of_range_count = int(stats.get("out_of_allowed_no_comma_range_count", 0) or 0)
+    if out_of_range_count:
+        return f"not_number_dominant:out_of_allowed_no_comma_range_count={out_of_range_count}"
+    alpha_rate = float(stats.get("alpha_character_rate", 1.0) or 0.0)
+    if alpha_rate <= NUMBER_DOMINANCE_MIN_ALPHA_RATE:
+        return f"not_number_dominant:alpha_character_rate={alpha_rate:.4f}"
     return ""
 
 
-def _normalized_numeric_cell_values(table: WikipediaTable) -> list[Any]:
-    """Parse table numeric cells into normalized Decimal values before filtering."""
-    values: list[Any] = []
-    for row in _data_rows(table):
-        for cell in row:
-            cleaned = _strip_footnote_markers(str(cell or ""))
-            if not _is_numeric_value_cell(cleaned):
+def _number_dominance_numeric_entries(table: WikipediaTable) -> list[dict[str, Any]]:
+    """Return numeric tokens from the table for number-dominance filtering."""
+    entries: list[dict[str, Any]] = []
+    for text in _table_number_texts(table):
+        cleaned = _strip_footnote_markers(str(text or ""))
+        for match in NUMBER_PATTERN.finditer(cleaned):
+            token = match.group(0)
+            parsed = parse_number_token(token)
+            if parsed is None:
                 continue
-            parsed = parse_number_token(cleaned)
-            if parsed is not None:
-                values.append(parsed)
-    return values
+            has_comma = "," in token
+            has_decimal = "." in token
+            entries.append(
+                {
+                    "token": token,
+                    "value": parsed,
+                    "has_comma": has_comma,
+                    "has_decimal": has_decimal,
+                    "is_out_of_allowed_no_comma_range": (
+                        not has_comma
+                        and not has_decimal
+                        and _is_out_of_allowed_no_comma_number(parsed)
+                    ),
+                }
+            )
+    return entries
+
+
+def _is_out_of_allowed_no_comma_number(value: Any) -> bool:
+    """Return whether a no-comma integer sits outside the allowed year-like window."""
+    if abs(value) <= NUMBER_DOMINANCE_LOW_NUMERIC_THRESHOLD:
+        return False
+    return not (
+        NUMBER_DOMINANCE_YEAR_LIKE_MIN <= abs(value) <= NUMBER_DOMINANCE_YEAR_LIKE_MAX
+    )
+
+
+def _table_alpha_coverage(table: WikipediaTable) -> tuple[int, int, float]:
+    """Return alphabetic character coverage over table-owned non-whitespace text."""
+    text = "".join(str(part or "") for part in _table_number_texts(table))
+    alpha_count = sum(1 for char in text if char.isalpha())
+    total_count = sum(1 for char in text if not char.isspace())
+    if total_count <= 0:
+        return alpha_count, total_count, 1.0
+    return alpha_count, total_count, alpha_count / total_count
+
+
+def _table_number_texts(table: WikipediaTable) -> list[str]:
+    """Return table-owned text fields to scan for numeric table filters."""
+    texts = [table.section_heading, table.caption]
+    texts.extend(cell for row in table.rows for cell in row)
+    return texts
+
+
+def _table_marker_text(table: WikipediaTable) -> str:
+    """Return normalized table/context text for exact marker checks."""
+    return _normalize_marker_text(
+        " ".join(
+            [
+                table.section_heading,
+                table.caption,
+                table.nearby_intro,
+                " ".join(table.headers),
+                table.normalized_text,
+            ]
+        )
+    )
+
+
+def _normalize_marker_text(text: str) -> str:
+    """Normalize marker text without deleting parenthetical content."""
+    normalized = unicodedata.normalize("NFKD", text)
+    normalized = "".join(ch for ch in normalized if not unicodedata.combining(ch))
+    normalized = normalized.lower()
+    normalized = re.sub(r"[^a-z0-9\s]", " ", normalized)
+    return re.sub(r"\s+", " ", normalized).strip()
+
+
+def _text_exact_markers(checked_text: str, markers: Iterable[str]) -> list[str]:
+    """Return exact word/phrase markers present in normalized text."""
+    hits: list[str] = []
+    for marker in markers:
+        normalized_marker = _normalize_marker_text(marker)
+        if not normalized_marker:
+            continue
+        pattern = rf"(?<!\w){re.escape(normalized_marker)}(?!\w)"
+        if re.search(pattern, checked_text):
+            hits.append(marker)
+    return hits
+
+
+def _text_regex_markers(checked_text: str, patterns: Iterable[re.Pattern[str]]) -> list[str]:
+    """Return normalized marker hits captured by regex patterns."""
+    hits: list[str] = []
+    for pattern in patterns:
+        hits.extend(match.group(0) for match in pattern.finditer(checked_text))
+    return hits
+
+
+def _ambiguous_unit_markers(table: WikipediaTable) -> list[str]:
+    """Return short unit markers only when raw text gives unit-like context."""
+    texts = _table_number_texts(table)
+    hits: list[str] = []
+    for marker in NUMBER_DOMINANCE_AMBIGUOUS_UNIT_MARKERS:
+        escaped = re.escape(marker)
+        number_unit_pattern = re.compile(
+            rf"(?<![\w.])-?(?:\d{{1,3}}(?:,\d{{3}})+|\d+)(?:\.\d+)?\s*{escaped}(?!\w)",
+            flags=re.IGNORECASE,
+        )
+        parenthetical_pattern = re.compile(rf"[\(\[]\s*{escaped}\s*[\)\]]", flags=re.IGNORECASE)
+        slash_pattern = re.compile(rf"(?<!\w){escaped}\s*/\s*[a-z]+", flags=re.IGNORECASE)
+        if any(
+            number_unit_pattern.search(text)
+            or parenthetical_pattern.search(text)
+            or slash_pattern.search(text)
+            for text in texts
+        ):
+            hits.append(marker)
+    return hits
+
+
+def _dedupe_preserving_order(values: Iterable[str]) -> list[str]:
+    """Return unique non-empty strings in first-seen order."""
+    deduped: list[str] = []
+    seen: set[str] = set()
+    for value in values:
+        text = str(value).strip()
+        if not text or text in seen:
+            continue
+        deduped.append(text)
+        seen.add(text)
+    return deduped
 
 
 def _table_text_markers(table: WikipediaTable, markers: Iterable[str]) -> list[str]:
@@ -1364,6 +1632,15 @@ class _NonTableProseParser(HTMLParser):
             self.parts.append(text)
 
 
+def _positive_cell_span(value: Any, *, default: int = 1) -> int:
+    """Return a positive HTML table cell span."""
+    try:
+        parsed = int(str(value or "").strip())
+    except (TypeError, ValueError):
+        return default
+    return parsed if parsed > 0 else default
+
+
 class _WikipediaTableParser(HTMLParser):
     """Small HTML parser for Wikipedia infoboxes and wikitables."""
 
@@ -1395,6 +1672,7 @@ class _WikipediaTableParser(HTMLParser):
         if tag == "table":
             if self._active_table is not None:
                 self._table_depth += 1
+                self._active_table["nested_table_count"] = int(self._active_table.get("nested_table_count", 0)) + 1
                 return
             class_text = attr_map.get("class", "")
             table_type = _table_type(class_text)
@@ -1406,6 +1684,7 @@ class _WikipediaTableParser(HTMLParser):
                 "caption": "",
                 "nearby_intro": self._last_paragraph,
                 "rows": [],
+                "nested_table_count": 0,
             }
             self._table_depth = 1
             return
@@ -1416,7 +1695,12 @@ class _WikipediaTableParser(HTMLParser):
         elif tag == "tr":
             self._active_row = []
         elif tag in {"th", "td"} and self._active_row is not None:
-            self._active_cell = {"text_parts": [], "header": tag == "th"}
+            self._active_cell = {
+                "text_parts": [],
+                "header": tag == "th",
+                "rowspan": _positive_cell_span(attr_map.get("rowspan", ""), default=1),
+                "colspan": _positive_cell_span(attr_map.get("colspan", ""), default=1),
+            }
 
     def handle_endtag(self, tag: str) -> None:
         if tag == self._heading_tag:
@@ -1449,11 +1733,13 @@ class _WikipediaTableParser(HTMLParser):
             return
         if tag in {"th", "td"} and self._active_cell is not None:
             text = _clean_text(" ".join(self._active_cell["text_parts"]))
-            if text:
+            if self._active_row is not None:
                 self._active_row.append(
                     {
                         "text": text,
                         "header": bool(self._active_cell["header"]),
+                        "rowspan": int(self._active_cell.get("rowspan", 1)),
+                        "colspan": int(self._active_cell.get("colspan", 1)),
                     }
                 )
             self._active_cell = None
@@ -1478,28 +1764,169 @@ class _WikipediaTableParser(HTMLParser):
             self._active_caption.append(data)
 
 
+def _expand_table_grid(raw_rows: list[list[dict[str, Any]]]) -> tuple[list[list[str]], list[list[bool]]]:
+    """Expand HTML rowspan/colspan cells into a rectangular text grid."""
+    grid: list[list[str]] = []
+    header_grid: list[list[bool]] = []
+    pending: dict[int, dict[str, Any]] = {}
+
+    def consume_pending(column: int, row_values: list[str], row_headers: list[bool]) -> bool:
+        pending_cell = pending.get(column)
+        if pending_cell is None:
+            return False
+        row_values.append(str(pending_cell.get("text", "")).strip())
+        row_headers.append(bool(pending_cell.get("header", False)))
+        pending_cell["remaining"] = int(pending_cell.get("remaining", 0)) - 1
+        if int(pending_cell.get("remaining", 0)) <= 0:
+            pending.pop(column, None)
+        return True
+
+    for raw_row in raw_rows:
+        row_values: list[str] = []
+        row_headers: list[bool] = []
+        column = 0
+        for cell in raw_row:
+            while consume_pending(column, row_values, row_headers):
+                column += 1
+            text = str(cell.get("text", "")).strip()
+            is_header = bool(cell.get("header"))
+            rowspan = _positive_cell_span(cell.get("rowspan", 1), default=1)
+            colspan = _positive_cell_span(cell.get("colspan", 1), default=1)
+            for offset in range(colspan):
+                row_values.append(text)
+                row_headers.append(is_header)
+                if rowspan > 1:
+                    pending[column + offset] = {
+                        "text": text,
+                        "header": is_header,
+                        "remaining": rowspan - 1,
+                    }
+            column += colspan
+        while pending and column <= max(pending):
+            if not consume_pending(column, row_values, row_headers):
+                row_values.append("")
+                row_headers.append(False)
+            column += 1
+        if row_values:
+            grid.append(row_values)
+            header_grid.append(row_headers)
+
+    width = max((len(row) for row in grid), default=0)
+    for row, header_row in zip(grid, header_grid):
+        if len(row) < width:
+            row.extend([""] * (width - len(row)))
+            header_row.extend([False] * (width - len(header_row)))
+    return grid, header_grid
+
+
+def _header_row_count(grid: list[list[str]], header_grid: list[list[bool]]) -> int:
+    """Return the number of consecutive top rows that are table headers."""
+    count = 0
+    for row, header_row in zip(grid, header_grid):
+        if row and any(cell.strip() for cell in row) and all(header_row):
+            count += 1
+            continue
+        break
+    return count
+
+
+def _combined_markdown_headers(grid: list[list[str]], header_row_count: int) -> list[str]:
+    """Combine one or more expanded header rows into Markdown column names."""
+    if not grid:
+        return []
+    width = len(grid[0])
+    if header_row_count <= 0:
+        return [f"Column {index + 1}" for index in range(width)]
+    headers: list[str] = []
+    for column in range(width):
+        parts: list[str] = []
+        seen: set[str] = set()
+        for row in grid[:header_row_count]:
+            value = row[column].strip()
+            normalized = normalize_name(value)
+            if value and normalized not in seen:
+                parts.append(value)
+                seen.add(normalized)
+        headers.append(" / ".join(parts) if parts else f"Column {column + 1}")
+    return headers
+
+
+def _markdown_cell(value: str) -> str:
+    """Escape a table cell for GitHub-flavored Markdown."""
+    cleaned = _clean_text(str(value).replace("\r", " ").replace("\n", " "))
+    return cleaned.replace("|", "\\|")
+
+
+def _grid_to_markdown(headers: list[str], data_rows: list[list[str]]) -> str:
+    """Render a rectangular grid as a GitHub-flavored Markdown table."""
+    if not headers:
+        return ""
+    width = len(headers)
+    lines = [
+        "| " + " | ".join(_markdown_cell(header) for header in headers) + " |",
+        "| " + " | ".join("---" for _ in range(width)) + " |",
+    ]
+    for row in data_rows:
+        padded = [*row[:width], *([""] * max(0, width - len(row)))]
+        lines.append("| " + " | ".join(_markdown_cell(cell) for cell in padded[:width]) + " |")
+    return "\n".join(lines)
+
+
+def _table_structure_stats(
+    raw_rows: list[list[dict[str, Any]]],
+    grid: list[list[str]],
+    header_row_count: int,
+    frame: dict[str, Any],
+) -> dict[str, Any]:
+    """Return cheap audit stats about the original and expanded table shape."""
+    raw_row_cell_counts = [len(row) for row in raw_rows]
+    span_cells: list[dict[str, int]] = []
+    empty_cells: list[dict[str, int]] = []
+    for row_index, row in enumerate(raw_rows):
+        for column_index, cell in enumerate(row):
+            rowspan = _positive_cell_span(cell.get("rowspan", 1), default=1)
+            colspan = _positive_cell_span(cell.get("colspan", 1), default=1)
+            if rowspan > 1 or colspan > 1:
+                span_cells.append(
+                    {
+                        "row": row_index,
+                        "column": column_index,
+                        "rowspan": rowspan,
+                        "colspan": colspan,
+                    }
+                )
+            if not str(cell.get("text", "")).strip():
+                empty_cells.append({"row": row_index, "column": column_index})
+    return {
+        "parser": "expanded_markdown_table",
+        "legacy_row_dict_parser_enabled": False,
+        "row_count": len(grid),
+        "expanded_width": len(grid[0]) if grid else 0,
+        "raw_row_cell_counts": raw_row_cell_counts,
+        "header_row_count": header_row_count,
+        "empty_cell_count": len(empty_cells),
+        "empty_cells": empty_cells[:20],
+        "span_cell_count": len(span_cells),
+        "span_cells": span_cells[:20],
+        "nested_table_count": int(frame.get("nested_table_count", 0) or 0),
+    }
+
+
 def _build_wikipedia_table(table_index: int, frame: dict[str, Any]) -> WikipediaTable:
     """Convert one parser frame into a table model."""
     raw_rows = frame.get("rows", [])
-    rows = [[str(cell.get("text", "")).strip() for cell in row] for row in raw_rows]
-    headers: list[str] = []
-    row_dicts: list[dict[str, str]] = []
-    if raw_rows and frame.get("table_type") == "infobox":
-        for row in rows:
-            if len(row) >= 2:
-                row_dicts.append({row[0]: " | ".join(row[1:])})
-    elif raw_rows:
-        first_row = raw_rows[0]
-        if first_row and all(bool(cell.get("header")) for cell in first_row):
-            headers = [str(cell.get("text", "")).strip() for cell in first_row]
-            for row in rows[1:]:
-                if len(row) >= 2:
-                    row_dicts.append(dict(zip(headers[: len(row)], row)))
+    grid, header_grid = _expand_table_grid(raw_rows)
+    header_rows = _header_row_count(grid, header_grid)
+    headers = _combined_markdown_headers(grid, header_rows)
+    data_rows = grid[header_rows:] if header_rows else grid
+    rows = [headers, *data_rows] if headers else data_rows
+    markdown = _grid_to_markdown(headers, data_rows)
+    structure = _table_structure_stats(raw_rows, grid, header_rows, frame)
     normalized_parts = [
         str(frame.get("section_heading", "")).strip(),
         str(frame.get("caption", "")).strip(),
+        markdown,
     ]
-    normalized_parts.extend(" | ".join(row) for row in rows)
     return WikipediaTable(
         table_index=table_index,
         table_type=str(frame.get("table_type", "")).strip(),
@@ -1508,8 +1935,10 @@ def _build_wikipedia_table(table_index: int, frame: dict[str, Any]) -> Wikipedia
         nearby_intro=str(frame.get("nearby_intro", "")).strip(),
         headers=headers,
         rows=rows,
-        row_dicts=row_dicts,
+        row_dicts=[],
         normalized_text="\n".join(part for part in normalized_parts if part),
+        markdown=markdown,
+        structure=structure,
     )
 
 
@@ -1607,6 +2036,9 @@ def _rejected_placeholder(
     normalized_allowed_answer_types = normalize_route3_answer_types(allowed_answer_types)
     normalized_extra_prompts = normalize_route3_extra_prompts(extra_prompts)
     normalized_table_filter_modes = normalize_route3_table_filter_modes(table_filter_modes)
+    placeholder_reasoning_type = (
+        normalized_allowed_reasoning_types[0] if len(normalized_allowed_reasoning_types) == 1 else "wikipedia_table_fact"
+    )
     return GeneratedCandidate(
         source_type=SOURCE_TYPE,
         generation_route=ROUTE_NAME,
@@ -1620,7 +2052,7 @@ def _rejected_placeholder(
             url=canonical_url or url,
         ),
         answer_entity=EntityReference(name=answer),
-        relation_or_claim="wikipedia_table_fact",
+        relation_or_claim=placeholder_reasoning_type,
         evidence=EvidenceRecord(
             text=first_paragraph,
             url=canonical_url or url,
@@ -1639,6 +2071,7 @@ def _rejected_placeholder(
             "min_table_score": float(min_table_score),
             "allowed_reasoning_types": list(normalized_allowed_reasoning_types),
             "allowed_answer_types": list(normalized_allowed_answer_types),
+            "reasoning_type": placeholder_reasoning_type if placeholder_reasoning_type != "wikipedia_table_fact" else "",
             "extra_prompts": list(normalized_extra_prompts),
             "table_filter_modes": list(normalized_table_filter_modes),
             "parsed_tables": [table.to_metadata() for table in tables or []],
@@ -1710,7 +2143,8 @@ def _selection_payload(row: dict[str, Any]) -> dict[str, Any]:
         "table_filter_modes": row.get("table_filter_modes", []),
         "table_filter_rejection_reason": row.get("table_filter_rejection_reason", ""),
         "table_filter_rejection_reasons": row.get("table_filter_rejection_reasons", []),
-        "big_number_stats": row.get("big_number_stats", {}),
+        "incomplete_table_markers": row.get("incomplete_table_markers", []),
+        "number_dominance_stats": row.get("number_dominance_stats", {}),
         "social_science_markers": row.get("social_science_markers", []),
         "min_table_score": row.get("min_table_score"),
         "below_min_table_score": bool(row.get("below_min_table_score", False)),
@@ -1820,8 +2254,13 @@ def _normalize_table_filter_mode(value: Any) -> str:
     """Normalize one Route 3 table prefilter mode."""
     normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
     aliases = {
-        "big_numbers": "no_big_numbers",
-        "no_big_number": "no_big_numbers",
+        "incomplete_tables": "no_incomplete_tables",
+        "no_incomplete": "no_incomplete_tables",
+        "incomplete": "no_incomplete_tables",
+        "big_numbers": "not_number_dominant",
+        "no_big_number": "not_number_dominant",
+        "no_big_numbers": "not_number_dominant",
+        "number_dominant": "not_number_dominant",
         "social_science": "no_social_science_research",
         "no_social_science": "no_social_science_research",
         "no_social_science_research_prompt": "no_social_science_research",
@@ -1935,8 +2374,9 @@ def _simple_grouped_extreme_items(table: WikipediaTable, reasoning_type: str) ->
             if item:
                 groups.setdefault(current_value, []).append(item)
             continue
-        if current_value is not None and len(row) == 1:
-            item = _strip_footnote_markers(row[0])
+        non_empty_cells = [cell for cell in row if str(cell).strip()]
+        if current_value is not None and len(non_empty_cells) == 1:
+            item = _strip_footnote_markers(non_empty_cells[0])
             if item:
                 groups.setdefault(current_value, []).append(item)
                 saw_continuation = True
