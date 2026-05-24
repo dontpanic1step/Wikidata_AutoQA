@@ -44,6 +44,16 @@ class RecipeItem:
     record_limit: int
 
 
+def _apply_recipe_big_batch_mode(args: argparse.Namespace) -> None:
+    """Apply recipe-level large-run defaults before segment commands are built."""
+    if not getattr(args, "big_batch_mode", False):
+        return
+    args.compact_output = True
+    args.compact_rejected_output = True
+    if getattr(args, "stream_page_source", "") == "table-search":
+        args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
+
+
 def parse_args() -> argparse.Namespace:
     """Parse recipe runner arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
@@ -138,6 +148,9 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument("--stream-batch-size", type=int, default=10)
+    parser.add_argument("--stream-discovery-max-retries", type=int, default=5)
+    parser.add_argument("--stream-discovery-retry-backoff-seconds", type=float, default=10.0)
+    parser.add_argument("--stream-discovery-retry-max-sleep-seconds", type=float, default=60.0)
     parser.add_argument("--stream-page-workers", type=int, default=4)
     parser.add_argument("--wikipedia-concurrency-limit", type=int, default=4)
     parser.add_argument("--duckduckgo-concurrency-limit", type=int, default=4)
@@ -154,6 +167,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--walkthrough-output", type=Path, default=None)
     parser.add_argument("--stream-state", type=Path, default=None)
     parser.add_argument("--segment-dir", type=Path, default=None)
+    parser.add_argument("--compact-rejected-output", action="store_true")
+    parser.add_argument("--compact-output", action="store_true")
+    parser.add_argument("--big-batch-mode", action="store_true")
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
@@ -161,6 +177,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     """Run the recipe segments and combine their artifacts."""
     args = parse_args()
+    _apply_recipe_big_batch_mode(args)
     run_started = perf_counter()
     recipe_items, reasoning_types = _parse_recipe(args)
     if not recipe_items:
@@ -212,6 +229,12 @@ def main() -> int:
             continue
         subprocess.run(command, cwd=ROOT, check=True)
         summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+        if not _segment_reached_record_limit(summary):
+            raise RuntimeError(
+                "Recipe segment stopped before using its requested page budget: "
+                f"{summary.get('run_segment_id', paths['summary'].stem)} "
+                f"used={_segment_used_count(summary)} record_limit={summary.get('record_limit', 0)}"
+            )
         summary["recipe_answer_type"] = item.answer_type
         summary["recipe_record_limit"] = item.record_limit
         summary["segment_accepted_output"] = str(paths["accepted"])
@@ -471,6 +494,12 @@ def _segment_command(
         str(args.stream_search_limit),
         "--stream-search-max-rounds",
         str(args.stream_search_max_rounds),
+        "--stream-discovery-max-retries",
+        str(args.stream_discovery_max_retries),
+        "--stream-discovery-retry-backoff-seconds",
+        str(args.stream_discovery_retry_backoff_seconds),
+        "--stream-discovery-retry-max-sleep-seconds",
+        str(args.stream_discovery_retry_max_sleep_seconds),
         "--stream-search-initial-offset",
         str(max(0, int(stream_search_initial_offset))),
         "--stream-exclude-page-id-file",
@@ -516,6 +545,12 @@ def _segment_command(
         command.append("--route3-llm-choose-table")
     else:
         command.append("--no-route3-llm-choose-table")
+    if args.compact_output:
+        command.append("--compact-output")
+    elif args.compact_rejected_output:
+        command.append("--compact-rejected-output")
+    if args.big_batch_mode:
+        command.append("--big-batch-mode")
     command.append("--reset-stream-state")
     for query in args.stream_search_query:
         command.extend(["--stream-search-query", str(query)])
@@ -526,7 +561,27 @@ def _segment_command(
 
 def _segment_complete(paths: dict[str, Path]) -> bool:
     """Return whether a recipe segment already has reusable artifacts."""
-    return all(paths[name].exists() for name in ("accepted", "rejected", "summary"))
+    if not all(paths[name].exists() for name in ("accepted", "rejected", "summary")):
+        return False
+    try:
+        summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False
+    return _segment_reached_record_limit(summary)
+
+
+def _segment_reached_record_limit(summary: dict) -> bool:
+    """Return whether one segment used its requested page budget."""
+    record_limit = int(summary.get("recipe_record_limit", summary.get("record_limit", 0)) or 0)
+    return record_limit < 1 or _segment_used_count(summary) >= record_limit
+
+
+def _segment_used_count(summary: dict) -> int:
+    """Return the most reliable used page count from a segment summary."""
+    used = int(summary.get("stream_state_stats", {}).get("used", 0) or 0)
+    if not used:
+        used = int(summary.get("attempted_page_ids_unique", summary.get("attempted_page_ids", 0)) or 0)
+    return used
 
 
 def _combine_segment_records(
@@ -543,6 +598,8 @@ def _combine_segment_records(
         accepted, _ = _load_endpoint_jsonl(Path(str(summary.get("segment_accepted_output"))), label="accepted")
         rejected, _ = _load_endpoint_jsonl(Path(str(summary.get("segment_rejected_output"))), label="rejected")
         for record in [*accepted, *rejected]:
+            if _is_compact_big_batch_record(record):
+                continue
             metadata = record.setdefault("source_metadata", {})
             if isinstance(metadata, dict):
                 metadata["recipe_id"] = run_id
@@ -555,6 +612,13 @@ def _combine_segment_records(
     for index, record in enumerate(accepted_records, start=1):
         record["id"] = f"simpleqa_candidate_{index:06d}"
     return accepted_records, rejected_records
+
+
+def _is_compact_big_batch_record(record: dict) -> bool:
+    """Return whether a segment record is already in compact production shape."""
+    if "failing_reason" in record:
+        return True
+    return "reasoning_type" in record and "relation_or_claim" not in record
 
 
 def _recipe_summary(
@@ -670,6 +734,12 @@ def _recipe_summary(
         "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": table_filter_modes,
         "route3_llm_choose_table": bool(args.route3_llm_choose_table),
+        "compact_output": bool(args.compact_output),
+        "compact_rejected_output": bool(args.compact_rejected_output or args.compact_output),
+        "big_batch_mode": bool(args.big_batch_mode),
+        "stream_discovery_max_retries": args.stream_discovery_max_retries,
+        "stream_discovery_retry_backoff_seconds": args.stream_discovery_retry_backoff_seconds,
+        "stream_discovery_retry_max_sleep_seconds": args.stream_discovery_retry_max_sleep_seconds,
         "survival_by_layer": _survival_by_layer(
             attempted_count=attempted,
             rejected_records=rejected_records,

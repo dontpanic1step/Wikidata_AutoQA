@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from json import JSONDecodeError
 from pathlib import Path
 from threading import Lock, Semaphore
-from time import perf_counter
+from time import perf_counter, sleep
 
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / "src"
@@ -57,6 +57,16 @@ from wikidata_simpleqa.wikipedia_streaming import (
 )
 
 DEFAULT_STREAM_RANDOM_SEED = 42
+
+
+def _apply_big_batch_mode(args: argparse.Namespace) -> None:
+    """Apply large-run defaults that keep 10k-style recipes resumable and compact."""
+    if not getattr(args, "big_batch_mode", False):
+        return
+    args.compact_output = True
+    args.compact_rejected_output = True
+    if getattr(args, "stream_random_page_ids", False) and getattr(args, "stream_page_source", "") == "table-search":
+        args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
 
 
 @dataclass(slots=True)
@@ -270,6 +280,24 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--stream-batch-size", type=int, default=10)
     parser.add_argument(
+        "--stream-discovery-max-retries",
+        type=int,
+        default=5,
+        help="Retry count for transient table-search discovery errors before ending a streaming segment.",
+    )
+    parser.add_argument(
+        "--stream-discovery-retry-backoff-seconds",
+        type=float,
+        default=10.0,
+        help="Initial sleep before retrying a failed table-search discovery request.",
+    )
+    parser.add_argument(
+        "--stream-discovery-retry-max-sleep-seconds",
+        type=float,
+        default=60.0,
+        help="Maximum sleep between table-search discovery retries.",
+    )
+    parser.add_argument(
         "--stream-page-workers",
         type=int,
         default=4,
@@ -444,6 +472,24 @@ def parse_args() -> argparse.Namespace:
             "By default only the single top-ranked table is passed."
         ),
     )
+    parser.add_argument(
+        "--compact-rejected-output",
+        action="store_true",
+        help="Write compact rejected JSONL records.",
+    )
+    parser.add_argument(
+        "--compact-output",
+        action="store_true",
+        help="Write compact accepted and rejected JSONL records for large production runs.",
+    )
+    parser.add_argument(
+        "--big-batch-mode",
+        action="store_true",
+        help=(
+            "Large-run convenience mode: compact accepted/rejected JSONL records and align stream batch size "
+            "with the table-search page size."
+        ),
+    )
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--small-model-provider", type=str, default="openrouter")
     parser.add_argument("--small-model", type=str, default="openai/gpt-4.1-mini")
@@ -483,6 +529,7 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     """Run the Wikipedia table route and persist outputs."""
     args = parse_args()
+    _apply_big_batch_mode(args)
     endpoint_resume = _load_endpoint_resume(args)
     args.stream_random_seed_was_explicit = args.stream_random_seed is not None
     args.stream_random_seed = _effective_stream_random_seed(args, endpoint_resume)
@@ -501,6 +548,12 @@ def main() -> int:
         raise ValueError("--stream-search-limit must be at least 1.")
     if args.stream_random_page_ids and args.stream_search_max_rounds < 1:
         raise ValueError("--stream-search-max-rounds must be at least 1.")
+    if args.stream_random_page_ids and args.stream_discovery_max_retries < 0:
+        raise ValueError("--stream-discovery-max-retries must be non-negative.")
+    if args.stream_random_page_ids and args.stream_discovery_retry_backoff_seconds < 0:
+        raise ValueError("--stream-discovery-retry-backoff-seconds must be non-negative.")
+    if args.stream_random_page_ids and args.stream_discovery_retry_max_sleep_seconds < 0:
+        raise ValueError("--stream-discovery-retry-max-sleep-seconds must be non-negative.")
     if args.stream_random_page_ids and args.stream_page_workers < 1:
         raise ValueError("--stream-page-workers must be at least 1.")
     if args.stream_random_page_ids and args.wikipedia_concurrency_limit < 1:
@@ -637,11 +690,11 @@ def main() -> int:
     )
     _renumber_accepted_records(result.accepted, offset=endpoint_resume.accepted_count if args.start_from_endpoint else 0)
     if args.start_from_endpoint:
-        append_jsonl(args.output, result.accepted)
-        append_jsonl(args.rejected_output, result.rejected)
+        append_jsonl(args.output, _accepted_output_records(result.accepted, args))
+        append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
     else:
-        write_jsonl(args.output, result.accepted)
-        write_jsonl(args.rejected_output, result.rejected)
+        write_jsonl(args.output, _accepted_output_records(result.accepted, args))
+        write_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
     summary = {
         **_run_artifact_summary(args),
         "start_stage": args.start_stage,
@@ -683,6 +736,8 @@ def main() -> int:
         "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": args.route3_table_filter_mode,
         "route3_llm_choose_table": bool(args.route3_llm_choose_table),
+        "compact_output": bool(args.compact_output),
+        "compact_rejected_output": bool(args.compact_rejected_output or args.compact_output),
         "aggregate_phase_timings_seconds": _aggregate_phase_timings(result.accepted, result.rejected),
         "telemetry": {
             **result.telemetry,
@@ -969,6 +1024,119 @@ def _renumber_accepted_records(records: list[dict], *, offset: int) -> None:
         record["id"] = f"simpleqa_candidate_{index:06d}"
 
 
+def _accepted_output_records(records: list[dict], args: argparse.Namespace) -> list[dict]:
+    """Return accepted records in the configured output shape."""
+    if not getattr(args, "compact_output", False):
+        return records
+    return [_compact_accepted_record(record) for record in records]
+
+
+def _rejected_output_records(records: list[dict], args: argparse.Namespace) -> list[dict]:
+    """Return rejected records in the configured output shape."""
+    if not (getattr(args, "compact_output", False) or getattr(args, "compact_rejected_output", False)):
+        return records
+    return [_compact_rejected_record(record) for record in records]
+
+
+def _compact_accepted_record(record: dict) -> dict:
+    """Keep the accepted QA fields needed for large-batch review."""
+    metadata = record.get("source_metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+    subject = record.get("subject_entity", {})
+    if not isinstance(subject, dict):
+        subject = {}
+    notes = record.get("rejection_notes", {})
+    if not isinstance(notes, dict):
+        notes = {}
+    panel = record.get("panel_grading_features")
+    if panel is None:
+        panel = record.get("panel_grading_features", notes.get("panel_grading_features", {}))
+    return {
+        "id": record.get("id", ""),
+        "question": record.get("question", record.get("canonical_question", "")),
+        "answer": record.get("answer", ""),
+        "answer_aliases": record.get("answer_aliases", []),
+        "source_type": record.get("source_type", ""),
+        "generation_route": record.get("generation_route", ""),
+        "subject_entity": {
+            "name": subject.get("name", ""),
+            "wikipedia_title": subject.get("wikipedia_title", ""),
+            "url": subject.get("url", ""),
+        },
+        "reasoning_type": record.get("relation_or_claim", metadata.get("reasoning_type", "")),
+        "answer_type": record.get("answer_type", ""),
+        "panel_grading_features": panel if isinstance(panel, dict) else {},
+        "source_metadata": {
+            "page_title": metadata.get("page_title", ""),
+            "first_paragraph": metadata.get("first_paragraph", ""),
+            "subject_anchors": metadata.get("subject_anchors", {}),
+            "parsed_tables": metadata.get("parsed_tables", []),
+            "phase_timings_seconds": metadata.get("phase_timings_seconds", {}),
+        },
+    }
+
+
+def _compact_rejected_record(record: dict) -> dict:
+    """Keep enough rejected metadata for failure analysis without large evidence blobs."""
+    metadata = record.get("source_metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+    notes = record.get("rejection_notes", {})
+    if not isinstance(notes, dict):
+        notes = {}
+    page_id = _record_page_id(record)
+    return {
+        "page_url": (
+            metadata.get("stream_source_url")
+            or metadata.get("source_url")
+            or metadata.get("canonical_url")
+            or record.get("source_url", "")
+        ),
+        "page_id": page_id,
+        "id": record.get("id", ""),
+        "question": record.get("question", record.get("canonical_question", "")),
+        "answer": record.get("answer", ""),
+        "rejection_reason": record.get("rejection_reason", ""),
+        "failing_reason": _exact_failure_reason(record),
+        "failure_metrics": _failure_metrics(record),
+        "source_metadata": {
+            "page_title": metadata.get("page_title", ""),
+            "phase_timings_seconds": metadata.get("phase_timings_seconds", {}),
+        },
+    }
+
+
+def _failure_metrics(record: dict) -> dict[str, object]:
+    """Return compact accuracy or search hit-rate metrics for a rejected record."""
+    notes = record.get("rejection_notes", {})
+    if not isinstance(notes, dict):
+        return {}
+    search_features = notes.get("search_verification_features", {})
+    if isinstance(search_features, dict) and search_features:
+        rates = search_features.get("category_hit_rates", {})
+        thresholds = search_features.get("thresholds", {})
+        metrics = {
+            "triggered_rule": search_features.get("triggered_rule", ""),
+            "thresholds": thresholds if isinstance(thresholds, dict) else {},
+        }
+        if isinstance(rates, dict):
+            metrics["hit_rates"] = {
+                key: value.get("answer_hit_rate")
+                for key, value in rates.items()
+                if isinstance(value, dict) and "answer_hit_rate" in value
+            }
+        return {key: value for key, value in metrics.items() if value not in ({}, "", None)}
+    panel = notes.get("panel_grading_features", {})
+    if isinstance(panel, dict):
+        return {
+            key: panel.get(key)
+            for key in ("accuracy", "accuracy_threshold", "attempt_rate", "correct_count", "model_count")
+            if panel.get(key) is not None
+        }
+    return {}
+
+
 def _run_streaming_page_id_pipeline(
     *,
     args: argparse.Namespace,
@@ -1184,6 +1352,9 @@ def _run_streaming_page_id_pipeline(
         "record_limit": args.record_limit,
         "record_limit_remaining_at_start": initial_ids_remaining,
         "stream_batch_size": args.stream_batch_size,
+        "stream_discovery_max_retries": args.stream_discovery_max_retries,
+        "stream_discovery_retry_backoff_seconds": args.stream_discovery_retry_backoff_seconds,
+        "stream_discovery_retry_max_sleep_seconds": args.stream_discovery_retry_max_sleep_seconds,
         "stream_page_workers": page_workers,
         "wikipedia_concurrency_limit": args.wikipedia_concurrency_limit,
         "duckduckgo_concurrency_limit": args.duckduckgo_concurrency_limit,
@@ -1219,6 +1390,8 @@ def _run_streaming_page_id_pipeline(
         "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": args.route3_table_filter_mode,
         "route3_llm_choose_table": bool(args.route3_llm_choose_table),
+        "compact_output": bool(args.compact_output),
+        "compact_rejected_output": bool(args.compact_rejected_output or args.compact_output),
         "survival_by_layer": _survival_by_layer(
             attempted_count=len(processed_ids),
             rejected_records=rejected_records,
@@ -1428,7 +1601,7 @@ def _process_one_stream_page_id(
                 for index, record in enumerate(result.accepted):
                     record["id"] = f"wikipedia_stream_{len(state.accepted_ids) + index + 1:06d}"
                     _attach_stream_record_metadata(record, page_id=page_id, url=url, args=args)
-                append_jsonl(args.output, result.accepted)
+                append_jsonl(args.output, _accepted_output_records(result.accepted, args))
                 state.mark_accepted(page_id)
             return {
                 "status": "accepted",
@@ -1453,7 +1626,7 @@ def _process_one_stream_page_id(
                     "reason": reason,
                 }
             with concurrency.commit_lock:
-                append_jsonl(args.rejected_output, result.rejected)
+                append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
                 state.mark_rejected(page_id, reason=reason)
             return {
                 "status": "rejected",
@@ -1512,6 +1685,8 @@ def _should_rerun_stream_rejection(record: dict) -> bool:
         "timed out",
         "ConnectionResetError",
         "Temporary failure",
+        "HTTP Error 429",
+        "Too Many Requests",
     )
     return any(marker in error_text for marker in retryable_markers)
 
@@ -1559,18 +1734,16 @@ def _reserve_stream_page_ids(
         made_progress = False
         for query in queries:
             offset = state.table_search_offset(query)
-            try:
-                hits = wikipedia_client.search_page_ids(
-                    query,
-                    namespace=0,
-                    limit=args.stream_search_limit,
-                    offset=offset,
-                )
-            except Exception as exc:  # noqa: BLE001
-                state.record_discovery_error(
-                    source=f"table_search:{query}:offset={offset}",
-                    error=f"{type(exc).__name__}:{exc}",
-                )
+            hits = _search_page_ids_with_retries(
+                wikipedia_client,
+                query=query,
+                namespace=0,
+                limit=args.stream_search_limit,
+                offset=offset,
+                args=args,
+                state=state,
+            )
+            if hits is None:
                 continue
             state.advance_table_search_offset(query, args.stream_search_limit)
             candidate_ids = [hit.page_id for hit in hits]
@@ -1588,6 +1761,40 @@ def _reserve_stream_page_ids(
         if not made_progress:
             break
     return selected
+
+
+def _search_page_ids_with_retries(
+    wikipedia_client: WikipediaClient,
+    *,
+    query: str,
+    namespace: int,
+    limit: int,
+    offset: int,
+    args: argparse.Namespace,
+    state: PageIdStreamState,
+) -> list | None:
+    """Search page IDs with retry/backoff for transient discovery failures."""
+    max_retries = max(0, int(getattr(args, "stream_discovery_max_retries", 0) or 0))
+    base_sleep = max(0.0, float(getattr(args, "stream_discovery_retry_backoff_seconds", 0.0) or 0.0))
+    max_sleep = max(0.0, float(getattr(args, "stream_discovery_retry_max_sleep_seconds", 0.0) or 0.0))
+    source = f"table_search:{query}:offset={offset}"
+    for attempt in range(max_retries + 1):
+        try:
+            return wikipedia_client.search_page_ids(
+                query,
+                namespace=namespace,
+                limit=limit,
+                offset=offset,
+            )
+        except Exception as exc:  # noqa: BLE001
+            error = f"{type(exc).__name__}:{exc}"
+            if attempt >= max_retries:
+                state.record_discovery_error(source=source, error=f"{error};retries_exhausted={max_retries}")
+                return None
+            sleep_seconds = min(max_sleep, base_sleep * (2 ** attempt)) if max_sleep else base_sleep * (2 ** attempt)
+            state.record_discovery_error(source=source, error=f"{error};retry={attempt + 1}/{max_retries};sleep={sleep_seconds:.2f}")
+            if sleep_seconds > 0:
+                sleep(sleep_seconds)
 
 
 def _extend_unique_page_ids(selected: list[int], reserved: list[int]) -> None:
@@ -1880,6 +2087,9 @@ def _rejection_stage(record: dict) -> str:
 
 def _exact_failure_reason(record: dict) -> str:
     """Return a precise, reviewer-facing failure reason for one rejected record."""
+    compact_reason = str(record.get("failing_reason", "")).strip()
+    if compact_reason:
+        return compact_reason
     reason = str(record.get("rejection_reason", "")).strip() or "unknown_rejection"
     notes = record.get("rejection_notes", {})
     if not isinstance(notes, dict):
@@ -2785,6 +2995,8 @@ def _has_second_stage_model_responses(features: dict) -> bool:
 
 
 def _record_page_id(record: dict) -> int | str:
+    if record.get("page_id"):
+        return record.get("page_id")
     metadata = record.get("source_metadata", {})
     if isinstance(metadata, dict):
         page_id = metadata.get("page_id")

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import sys
+import json
 import tempfile
 import unittest
 from pathlib import Path
@@ -17,7 +18,9 @@ if str(SCRIPTS) not in sys.path:
 from run_wikipedia_infobox_pipeline import EndpointResumeState, _effective_stream_random_seed  # noqa: E402
 from run_wikipedia_infobox_recipe import (  # noqa: E402
     RecipeItem,
+    _apply_recipe_big_batch_mode,
     _recipe_summary,
+    _segment_complete,
     _segment_stream_search_initial_offset,
     _segment_command,
 )
@@ -47,6 +50,9 @@ def _recipe_args(**overrides):
         "stream_search_limit": 50,
         "stream_search_max_rounds": 10,
         "stream_batch_size": 10,
+        "stream_discovery_max_retries": 5,
+        "stream_discovery_retry_backoff_seconds": 10.0,
+        "stream_discovery_retry_max_sleep_seconds": 60.0,
         "stream_page_workers": 4,
         "wikipedia_concurrency_limit": 4,
         "duckduckgo_concurrency_limit": 4,
@@ -62,6 +68,9 @@ def _recipe_args(**overrides):
         "disable_auto_rerun_once": False,
         "stream_search_query": ['insource:"wikitable"'],
         "enable_broad_table_search": False,
+        "compact_output": False,
+        "compact_rejected_output": False,
+        "big_batch_mode": False,
     }
     values.update(overrides)
     return SimpleNamespace(**values)
@@ -174,6 +183,47 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
         self.assertIn("--route3-llm-choose-table", command)
         self.assertNotIn("--no-route3-llm-choose-table", command)
+
+    def test_big_batch_mode_aligns_batch_size_and_compacts_outputs(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            args = _recipe_args(big_batch_mode=True, stream_search_limit=50)
+            _apply_recipe_big_batch_mode(args)
+
+            command, _paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Person", record_limit=2000),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=0,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+            )
+
+        self.assertEqual(_command_value(command, "--stream-batch-size"), "50")
+        self.assertIn("--compact-output", command)
+        self.assertIn("--big-batch-mode", command)
+        self.assertEqual(_command_value(command, "--stream-discovery-max-retries"), "5")
+
+    def test_incomplete_existing_segment_is_not_reused(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            paths = {
+                "accepted": root / "accepted.jsonl",
+                "rejected": root / "rejected.jsonl",
+                "summary": root / "summary.json",
+            }
+            paths["accepted"].write_text("", encoding="utf-8")
+            paths["rejected"].write_text("", encoding="utf-8")
+            paths["summary"].write_text(
+                json.dumps({"record_limit": 2000, "stream_state_stats": {"used": 190}}),
+                encoding="utf-8",
+            )
+
+            self.assertFalse(_segment_complete(paths))
 
     def test_recipe_segments_use_disjoint_table_search_offsets(self) -> None:
         recipe_items = [

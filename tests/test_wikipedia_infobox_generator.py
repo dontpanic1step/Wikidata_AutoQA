@@ -44,6 +44,8 @@ if str(SCRIPTS) not in sys.path:
 from run_wikipedia_infobox_pipeline import (  # noqa: E402
     EndpointResumeState,
     _candidate_from_record,
+    _compact_accepted_record,
+    _compact_rejected_record,
     _filter_endpoint_url_entries,
     _failure_reason_counts,
     _load_endpoint_jsonl,
@@ -672,6 +674,44 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(state.table_search_offset('insource:"wikitable"'), 100)
         self.assertTrue({101, 102, 201}.issubset(state.used_ids))
 
+    def test_table_search_discovery_retries_transient_errors_before_stopping(self) -> None:
+        class FlakyWikipediaSearchClient:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
+                self.calls += 1
+                if self.calls == 1:
+                    raise RuntimeError("HTTP Error 429: Too Many Requests")
+                return [SimpleNamespace(page_id=501)]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = PageIdStreamState.load(Path(tmpdir) / "state.json")
+            args = SimpleNamespace(
+                stream_page_source="table-search",
+                stream_search_max_rounds=1,
+                stream_search_limit=50,
+                stream_search_query=[],
+                enable_broad_table_search=False,
+                stream_discovery_max_retries=2,
+                stream_discovery_retry_backoff_seconds=0.0,
+                stream_discovery_retry_max_sleep_seconds=0.0,
+            )
+            client = FlakyWikipediaSearchClient()
+
+            selected = _reserve_stream_page_ids(
+                state=state,
+                args=args,
+                wikipedia_client=client,
+                rng=random.Random(1),
+                count=1,
+            )
+
+        self.assertEqual(selected, [501])
+        self.assertEqual(client.calls, 2)
+        self.assertEqual(state.table_search_offset('insource:"wikitable"'), 50)
+        self.assertTrue(any(event.get("event") == "discovery_error" for event in state.events))
+
     def test_rerun_pool_limit_defaults_to_whole_pool(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             state = PageIdStreamState.load(Path(tmpdir) / "state.json")
@@ -838,6 +878,88 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertFalse(any("hit_rate_exceeded" in reason for _, reason in counts))
         self.assertFalse(any("accuracy=" in reason or "threshold=" in reason for _, reason in counts))
         self.assertFalse(any("population" in reason or "comma_number_count" in reason for _, reason in counts))
+
+    def test_compact_big_batch_records_keep_review_fields(self) -> None:
+        accepted = {
+            "id": "wikipedia_stream_000001",
+            "question": "Who acted in the example?",
+            "answer": "Jane Doe",
+            "answer_aliases": ["J. Doe"],
+            "source_type": "wikipedia_tables",
+            "generation_route": "route3_wikipedia_infobox",
+            "subject_entity": {
+                "name": "Example page",
+                "qid": "Q1",
+                "wikipedia_title": "Example_page",
+                "url": "https://en.wikipedia.org/wiki/Example_page",
+            },
+            "relation_or_claim": "single_fact",
+            "answer_type": "Person",
+            "panel_grading_features": {"accuracy": 0.0, "models": [{"model": "m"}]},
+            "source_metadata": {
+                "page_title": "Example page",
+                "first_paragraph": "Intro.",
+                "subject_anchors": {"page_title": "Example page"},
+                "parsed_tables": [{"table_index": 1}],
+                "phase_timings_seconds": {"total_generation_seconds": 1.2},
+                "discard_reason": "large field should not leak",
+            },
+            "evidence": {"text": "large evidence should not leak"},
+        }
+        compact_accepted = _compact_accepted_record(accepted)
+
+        self.assertEqual(
+            set(compact_accepted),
+            {
+                "id",
+                "question",
+                "answer",
+                "answer_aliases",
+                "source_type",
+                "generation_route",
+                "subject_entity",
+                "reasoning_type",
+                "answer_type",
+                "panel_grading_features",
+                "source_metadata",
+            },
+        )
+        self.assertEqual(compact_accepted["reasoning_type"], "single_fact")
+        self.assertEqual(set(compact_accepted["subject_entity"]), {"name", "wikipedia_title", "url"})
+        self.assertEqual(
+            set(compact_accepted["source_metadata"]),
+            {"page_title", "first_paragraph", "subject_anchors", "parsed_tables", "phase_timings_seconds"},
+        )
+
+        rejected = {
+            "id": "bad",
+            "question": "Who acted in the easy example?",
+            "answer": "Jane Doe",
+            "rejection_reason": "second_stage_grading_accuracy_threshold_exceeded",
+            "rejection_notes": {
+                "panel_grading_features": {
+                    "accuracy": 0.5,
+                    "accuracy_threshold": 0.1,
+                    "model_count": 2,
+                }
+            },
+            "source_metadata": {
+                "page_id": 123,
+                "stream_source_url": "https://en.wikipedia.org/w/index.php?pageid=123",
+                "page_title": "Example page",
+                "phase_timings_seconds": {"total_processing_seconds": 2.3},
+            },
+            "evidence": {"text": "large evidence should not leak"},
+        }
+        compact_rejected = _compact_rejected_record(rejected)
+
+        self.assertEqual(compact_rejected["page_id"], 123)
+        self.assertEqual(
+            compact_rejected["failing_reason"],
+            "second_stage_grading_accuracy_threshold_exceeded:accuracy=0.5;threshold=0.1",
+        )
+        self.assertEqual(compact_rejected["failure_metrics"]["accuracy_threshold"], 0.1)
+        self.assertNotIn("evidence", compact_rejected)
 
     def test_rejection_placeholder_uses_single_allowed_reasoning_type(self) -> None:
         candidate = _rejected_placeholder(
