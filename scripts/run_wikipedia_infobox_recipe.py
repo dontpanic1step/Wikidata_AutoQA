@@ -481,6 +481,8 @@ def _append_stream_search_initial_offset(*, segment_dir: Path, base_segment_id: 
     if not segment_dir.exists():
         return offset
     for state_path in segment_dir.glob(f"{base_segment_id}*_state.json"):
+        if not _state_has_attempted_pages(state_path):
+            continue
         try:
             state = json.loads(state_path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError):
@@ -494,6 +496,18 @@ def _append_stream_search_initial_offset(*, segment_dir: Path, base_segment_id: 
             except (TypeError, ValueError):
                 continue
     return offset
+
+
+def _state_has_attempted_pages(state_path: Path) -> bool:
+    """Return whether a stream state belongs to a segment that attempted fresh pages."""
+    summary_path = state_path.with_name(state_path.name.removesuffix("_state.json") + "_summary.json")
+    if not summary_path.exists():
+        return True
+    try:
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return True
+    return int(summary.get("attempted_page_ids_unique", summary.get("attempted_page_ids", 0)) or 0) > 0
 
 
 def _page_ids_from_json_path(path: Path) -> set[int]:
@@ -715,7 +729,8 @@ def _segment_reached_record_limit(summary: dict) -> bool:
 
 def _segment_used_count(summary: dict) -> int:
     """Return the most reliable used page count from a segment summary."""
-    used = int(summary.get("stream_state_stats", {}).get("used", 0) or 0)
+    stream_excluded = int(summary.get("stream_excluded_page_ids", 0) or 0)
+    used = max(0, int(summary.get("stream_state_stats", {}).get("used", 0) or 0) - stream_excluded)
     if not used:
         used = int(summary.get("attempted_page_ids_unique", summary.get("attempted_page_ids", 0)) or 0)
     return used

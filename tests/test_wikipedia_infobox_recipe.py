@@ -24,6 +24,7 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _existing_recipe_page_ids,
     _recipe_summary,
     _segment_complete,
+    _segment_used_count,
     _segment_stream_search_initial_offset,
     _segment_command,
 )
@@ -255,6 +256,40 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertTrue(str(paths["stream_state"]).endswith("01_person_2000_topup1_state.json"))
         self.assertEqual(_command_value(command, "--stream-search-initial-offset"), "2400")
         self.assertIn("--reset-stream-state", command)
+
+    def test_append_recipe_offset_ignores_zero_attempt_topup_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            segment_dir.mkdir()
+            (segment_dir / "01_person_2000_state.json").write_text(
+                json.dumps({"table_search_offsets": {'insource:"wikitable"': 2400}}),
+                encoding="utf-8",
+            )
+            (segment_dir / "01_person_2000_topup_1_state.json").write_text(
+                json.dumps({"table_search_offsets": {'insource:"wikitable"': 5250}}),
+                encoding="utf-8",
+            )
+            (segment_dir / "01_person_2000_topup_1_summary.json").write_text(
+                json.dumps({"attempted_page_ids": 0, "stream_state_stats": {"used": 6153}}),
+                encoding="utf-8",
+            )
+
+            offset = _append_stream_search_initial_offset(
+                segment_dir=segment_dir,
+                base_segment_id="01_person_2000",
+                base_offset=0,
+            )
+
+        self.assertEqual(offset, 2400)
+
+    def test_segment_used_count_subtracts_append_exclusions(self) -> None:
+        summary = {
+            "attempted_page_ids": 0,
+            "stream_excluded_page_ids": 6153,
+            "stream_state_stats": {"used": 6153},
+        }
+
+        self.assertEqual(_segment_used_count(summary), 0)
 
     def test_existing_recipe_page_ids_reads_exclusion_summaries_and_states(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -1143,6 +1143,46 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertNotIn("comparable_headers", ranked[0]["reasons"])
         self.assertIn("low_prose_leakage", ranked[0]["reasons"])
 
+    def test_table_ranking_does_not_prefer_wikitable_by_type(self) -> None:
+        rows = [
+            ["Field", "Value"],
+            ["Founded", "1912"],
+            ["Architect", "Mabel Harris"],
+            ["Style", "Art Deco"],
+        ]
+        infobox = WikipediaTable(
+            table_index=1,
+            table_type="infobox",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Field", "Value"],
+            rows=rows,
+            row_dicts=[],
+            normalized_text="Founded 1912 Architect Mabel Harris Style Art Deco",
+        )
+        wikitable = WikipediaTable(
+            table_index=2,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Field", "Value"],
+            rows=rows,
+            row_dicts=[],
+            normalized_text="Founded 1912 Architect Mabel Harris Style Art Deco",
+        )
+
+        ranked = rank_wikipedia_tables(
+            [infobox, wikitable],
+            first_paragraph="",
+            prose_text="",
+        )
+
+        self.assertEqual(ranked[0]["table_type"], "infobox")
+        self.assertEqual(ranked[0]["score"], ranked[1]["score"])
+        self.assertNotIn("article_table", ranked[1]["reasons"])
+
     def test_current_scope_tables_are_rejected_before_llm_generation(self) -> None:
         class CurrentOnlyWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:

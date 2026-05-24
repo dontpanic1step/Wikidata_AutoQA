@@ -1246,9 +1246,6 @@ def rank_wikipedia_tables(
         leakage_rate = leaked_values / checked_values if checked_values else 0.0
         score = 0.0
         reasons: list[str] = []
-        if table.table_type == "wikitable":
-            score += 2.0
-            reasons.append("article_table")
         if row_count >= 3:
             score += min(row_count, 12) * 0.15
             reasons.append("multi_row")
