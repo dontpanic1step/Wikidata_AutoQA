@@ -8,7 +8,7 @@ import re
 import subprocess
 import sys
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timezone
 from pathlib import Path
 from time import perf_counter
 
@@ -17,7 +17,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from wikidata_simpleqa.io import write_jsonl
+from wikidata_simpleqa.io import append_jsonl, write_jsonl
 from wikidata_simpleqa.wikipedia_infobox_generator import (
     DEFAULT_ROUTE3_TABLE_FILTER_MODES,
     normalize_route3_answer_types,
@@ -151,6 +151,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stream-discovery-max-retries", type=int, default=5)
     parser.add_argument("--stream-discovery-retry-backoff-seconds", type=float, default=10.0)
     parser.add_argument("--stream-discovery-retry-max-sleep-seconds", type=float, default=60.0)
+    parser.add_argument("--wikipedia-429-backoff-seconds", type=float, default=30.0)
+    parser.add_argument("--wikipedia-429-max-backoff-seconds", type=float, default=300.0)
+    parser.add_argument("--wikipedia-429-recovery-seconds", type=float, default=120.0)
     parser.add_argument("--stream-page-workers", type=int, default=4)
     parser.add_argument("--wikipedia-concurrency-limit", type=int, default=4)
     parser.add_argument("--duckduckgo-concurrency-limit", type=int, default=4)
@@ -170,6 +173,19 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--compact-rejected-output", action="store_true")
     parser.add_argument("--compact-output", action="store_true")
     parser.add_argument("--big-batch-mode", action="store_true")
+    parser.add_argument(
+        "--append-to-existing-run",
+        action="store_true",
+        help=(
+            "Top up an existing recipe run without overwriting prior segment artifacts. "
+            "Creates suffixed segment files, appends combined outputs, and seeds page-ID exclusions from prior state."
+        ),
+    )
+    parser.add_argument(
+        "--append-run-label",
+        default="",
+        help="Path-safe suffix for --append-to-existing-run segment artifacts. Defaults to a UTC timestamp.",
+    )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
@@ -197,12 +213,18 @@ def main() -> int:
     walkthrough_output = args.walkthrough_output or ROOT / "docs" / "walkthroughs" / f"{run_id}.md"
     stream_state_base = args.stream_state or segment_dir / "stream_state.json"
     stream_exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
+    append_label = _recipe_append_label(args)
 
     segment_dir.mkdir(parents=True, exist_ok=True)
     segment_summaries: list[dict] = []
-    stream_excluded_page_ids: set[int] = set()
+    stream_excluded_page_ids: set[int] = _existing_recipe_page_ids(segment_dir, stream_exclusion_file) if append_label else set()
     for index, item in enumerate(recipe_items):
         _write_stream_exclusion_file(stream_exclusion_file, stream_excluded_page_ids)
+        base_stream_search_initial_offset = _segment_stream_search_initial_offset(
+            recipe_items,
+            index,
+            args.stream_search_limit,
+        )
         command, paths = _segment_command(
             args=args,
             item=item,
@@ -211,9 +233,16 @@ def main() -> int:
             segment_dir=segment_dir,
             stream_state_base=stream_state_base,
             stream_exclusion_file=stream_exclusion_file,
-            stream_search_initial_offset=_segment_stream_search_initial_offset(recipe_items, index, args.stream_search_limit),
+            stream_search_initial_offset=_append_stream_search_initial_offset(
+                segment_dir=segment_dir,
+                base_segment_id=_base_segment_id(item, index),
+                base_offset=base_stream_search_initial_offset,
+            )
+            if append_label
+            else base_stream_search_initial_offset,
             reasoning_types=reasoning_types,
             table_filter_modes=table_filter_modes,
+            append_label=append_label,
         )
         if _segment_complete(paths):
             summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
@@ -245,12 +274,21 @@ def main() -> int:
     if args.dry_run:
         return 0
 
+    accepted_id_offset = 0
+    if append_label:
+        existing_accepted_records, _ = _load_endpoint_jsonl(output, label="accepted")
+        accepted_id_offset = len(existing_accepted_records)
     accepted_records, rejected_records = _combine_segment_records(
         run_id=run_id,
         segment_summaries=segment_summaries,
+        accepted_id_offset=accepted_id_offset,
     )
-    write_jsonl(output, accepted_records)
-    write_jsonl(rejected_output, rejected_records)
+    if append_label:
+        append_jsonl(output, accepted_records)
+        append_jsonl(rejected_output, rejected_records)
+    else:
+        write_jsonl(output, accepted_records)
+        write_jsonl(rejected_output, rejected_records)
 
     summary = _recipe_summary(
         args=args,
@@ -266,6 +304,7 @@ def main() -> int:
         summary_output=summary_output,
         walkthrough_output=walkthrough_output,
         stream_state_base=stream_state_base,
+        append_label=append_label,
         wall_clock_seconds=round(perf_counter() - run_started, 4),
     )
     summary_output.parent.mkdir(parents=True, exist_ok=True)
@@ -346,6 +385,21 @@ def _recipe_run_id(args: argparse.Namespace, recipe_items: list[RecipeItem], rea
     )
 
 
+def _recipe_append_label(args: argparse.Namespace) -> str:
+    """Return the segment suffix for recipe append/top-up mode."""
+    if not getattr(args, "append_to_existing_run", False):
+        return ""
+    raw_label = str(getattr(args, "append_run_label", "") or "").strip()
+    if not raw_label:
+        raw_label = "append_" + datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    return _safe_artifact_id(raw_label, fallback="append")
+
+
+def _base_segment_id(item: RecipeItem, index: int) -> str:
+    """Return the unsuffixed deterministic segment ID for one recipe item."""
+    return f"{index + 1:02d}_{item.answer_type.lower()}_{item.record_limit}"
+
+
 def _segment_stream_state(stream_state_base: Path, *, segment_dir: Path, segment_id: str) -> Path:
     """Return the isolated stream-state path for one recipe segment."""
     base = Path(stream_state_base)
@@ -398,6 +452,81 @@ def _write_stream_exclusion_file(path: Path, page_ids: set[int]) -> None:
     path.write_text(json.dumps(sorted(page_ids), indent=2) + "\n", encoding="utf-8")
 
 
+def _existing_recipe_page_ids(segment_dir: Path, stream_exclusion_file: Path) -> set[int]:
+    """Return page IDs already touched by previous recipe invocations."""
+    page_ids: set[int] = set()
+    page_ids.update(_page_ids_from_json_path(stream_exclusion_file))
+    if segment_dir.exists():
+        for summary_path in segment_dir.glob("*_summary.json"):
+            try:
+                summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            page_ids.update(_summary_page_ids(summary))
+        for state_path in segment_dir.glob("*_state.json"):
+            try:
+                state = json.loads(state_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            page_ids.update(_positive_ints(state.get("used_ids", [])))
+            page_ids.update(_positive_ints(state.get("accepted_ids", [])))
+            page_ids.update(_positive_ints(state.get("rejected_ids", [])))
+            page_ids.update(_positive_ints(state.get("rerun_pool", [])))
+    return page_ids
+
+
+def _append_stream_search_initial_offset(*, segment_dir: Path, base_segment_id: str, base_offset: int) -> int:
+    """Return a top-up table-search offset after prior runs of the same segment."""
+    offset = max(0, int(base_offset))
+    if not segment_dir.exists():
+        return offset
+    for state_path in segment_dir.glob(f"{base_segment_id}*_state.json"):
+        try:
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        offsets = state.get("table_search_offsets", {})
+        if not isinstance(offsets, dict):
+            continue
+        for value in offsets.values():
+            try:
+                offset = max(offset, int(value))
+            except (TypeError, ValueError):
+                continue
+    return offset
+
+
+def _page_ids_from_json_path(path: Path) -> set[int]:
+    """Return positive page IDs stored in a JSON page-ID helper file."""
+    if not path.exists():
+        return set()
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    return _positive_ints(payload)
+
+
+def _positive_ints(values: object) -> set[int]:
+    """Return positive integer values from a JSON-like payload."""
+    if isinstance(values, dict):
+        values = values.values()
+    elif isinstance(values, (str, bytes)) or not hasattr(values, "__iter__"):
+        values = [values]
+    result: set[int] = set()
+    for value in values:
+        if isinstance(value, (list, tuple, set, dict)):
+            result.update(_positive_ints(value))
+            continue
+        try:
+            page_id = int(value)
+        except (TypeError, ValueError):
+            continue
+        if page_id > 0:
+            result.add(page_id)
+    return result
+
+
 def _summary_page_ids(summary: dict) -> set[int]:
     """Return attempted page IDs recorded by one segment summary."""
     page_ids: set[int] = set()
@@ -423,10 +552,12 @@ def _segment_command(
     stream_search_initial_offset: int,
     reasoning_types: list[str],
     table_filter_modes: list[str],
+    append_label: str = "",
 ) -> tuple[list[str], dict[str, Path]]:
     """Build the pipeline subprocess command for one recipe segment."""
-    safe_answer_type = item.answer_type.lower()
-    segment_id = f"{index + 1:02d}_{safe_answer_type}_{item.record_limit}"
+    segment_id = _base_segment_id(item, index)
+    if append_label:
+        segment_id = f"{segment_id}_{append_label}"
     accepted = segment_dir / f"{segment_id}_accepted.jsonl"
     rejected = segment_dir / f"{segment_id}_rejected.jsonl"
     summary = segment_dir / f"{segment_id}_summary.json"
@@ -500,6 +631,12 @@ def _segment_command(
         str(args.stream_discovery_retry_backoff_seconds),
         "--stream-discovery-retry-max-sleep-seconds",
         str(args.stream_discovery_retry_max_sleep_seconds),
+        "--wikipedia-429-backoff-seconds",
+        str(args.wikipedia_429_backoff_seconds),
+        "--wikipedia-429-max-backoff-seconds",
+        str(args.wikipedia_429_max_backoff_seconds),
+        "--wikipedia-429-recovery-seconds",
+        str(args.wikipedia_429_recovery_seconds),
         "--stream-search-initial-offset",
         str(max(0, int(stream_search_initial_offset))),
         "--stream-exclude-page-id-file",
@@ -588,6 +725,7 @@ def _combine_segment_records(
     *,
     run_id: str,
     segment_summaries: list[dict],
+    accepted_id_offset: int = 0,
 ) -> tuple[list[dict], list[dict]]:
     """Load segment JSONLs, attach recipe metadata, and renumber accepted rows."""
     accepted_records: list[dict] = []
@@ -609,7 +747,7 @@ def _combine_segment_records(
                 metadata["recipe_segment_summary"] = summary.get("summary_output", "")
         accepted_records.extend(accepted)
         rejected_records.extend(rejected)
-    for index, record in enumerate(accepted_records, start=1):
+    for index, record in enumerate(accepted_records, start=max(0, int(accepted_id_offset)) + 1):
         record["id"] = f"simpleqa_candidate_{index:06d}"
     return accepted_records, rejected_records
 
@@ -636,6 +774,7 @@ def _recipe_summary(
     summary_output: Path,
     walkthrough_output: Path,
     stream_state_base: Path,
+    append_label: str,
     wall_clock_seconds: float,
 ) -> dict:
     """Build the combined recipe summary."""
@@ -700,6 +839,8 @@ def _recipe_summary(
         "stream_states": stream_states,
         "stream_state_stats": state_stats,
         "stream_state_reset": True,
+        "append_to_existing_run": bool(getattr(args, "append_to_existing_run", False)),
+        "append_run_label": append_label,
         "stream_auto_rerun_once": not args.disable_auto_rerun_once,
         "rerun_pool_ids_after_run": rerun_pool_ids,
         "rerun_pool_ids_after_run_by_segment": rerun_pool_by_segment,
@@ -740,6 +881,9 @@ def _recipe_summary(
         "stream_discovery_max_retries": args.stream_discovery_max_retries,
         "stream_discovery_retry_backoff_seconds": args.stream_discovery_retry_backoff_seconds,
         "stream_discovery_retry_max_sleep_seconds": args.stream_discovery_retry_max_sleep_seconds,
+        "wikipedia_429_backoff_seconds": args.wikipedia_429_backoff_seconds,
+        "wikipedia_429_max_backoff_seconds": args.wikipedia_429_max_backoff_seconds,
+        "wikipedia_429_recovery_seconds": args.wikipedia_429_recovery_seconds,
         "survival_by_layer": _survival_by_layer(
             attempted_count=attempted,
             rejected_records=rejected_records,

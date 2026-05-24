@@ -490,6 +490,24 @@ def parse_args() -> argparse.Namespace:
             "with the table-search page size."
         ),
     )
+    parser.add_argument(
+        "--wikipedia-429-backoff-seconds",
+        type=float,
+        default=30.0,
+        help="Shared polite sleep after Wikipedia returns HTTP 429 before later Wikipedia requests continue.",
+    )
+    parser.add_argument(
+        "--wikipedia-429-max-backoff-seconds",
+        type=float,
+        default=300.0,
+        help="Maximum shared Wikipedia HTTP 429 backoff sleep.",
+    )
+    parser.add_argument(
+        "--wikipedia-429-recovery-seconds",
+        type=float,
+        default=120.0,
+        help="Quiet period after which successful Wikipedia requests reset the shared HTTP 429 backoff.",
+    )
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--small-model-provider", type=str, default="openrouter")
     parser.add_argument("--small-model", type=str, default="openai/gpt-4.1-mini")
@@ -564,6 +582,12 @@ def main() -> int:
         raise ValueError("--openrouter-generation-rewrite-concurrency-limit must be at least 1.")
     if args.stream_random_page_ids and args.second_stage_concurrency_limit < 1:
         raise ValueError("--second-stage-concurrency-limit must be at least 1.")
+    if args.wikipedia_429_backoff_seconds < 0:
+        raise ValueError("--wikipedia-429-backoff-seconds must be non-negative.")
+    if args.wikipedia_429_max_backoff_seconds < 0:
+        raise ValueError("--wikipedia-429-max-backoff-seconds must be non-negative.")
+    if args.wikipedia_429_recovery_seconds < 0:
+        raise ValueError("--wikipedia-429-recovery-seconds must be non-negative.")
     if args.stream_random_page_ids and args.stream_rerun_pool_limit < 0:
         raise ValueError("--stream-rerun-pool-limit must be non-negative.")
     if args.reset_stream_state and not args.stream_random_page_ids:
@@ -630,6 +654,9 @@ def main() -> int:
         proxy=settings.proxy,
         timeout_seconds=settings.timeout_seconds,
         cache_dir=settings.cache_dir,
+        rate_limit_backoff_seconds=args.wikipedia_429_backoff_seconds,
+        rate_limit_max_backoff_seconds=args.wikipedia_429_max_backoff_seconds,
+        rate_limit_recovery_seconds=args.wikipedia_429_recovery_seconds,
     )
     search_client = DuckDuckGoSearchClient(
         user_agent=settings.user_agent,
@@ -738,6 +765,9 @@ def main() -> int:
         "route3_llm_choose_table": bool(args.route3_llm_choose_table),
         "compact_output": bool(args.compact_output),
         "compact_rejected_output": bool(args.compact_rejected_output or args.compact_output),
+        "wikipedia_429_backoff_seconds": args.wikipedia_429_backoff_seconds,
+        "wikipedia_429_max_backoff_seconds": args.wikipedia_429_max_backoff_seconds,
+        "wikipedia_429_recovery_seconds": args.wikipedia_429_recovery_seconds,
         "aggregate_phase_timings_seconds": _aggregate_phase_timings(result.accepted, result.rejected),
         "telemetry": {
             **result.telemetry,
@@ -1355,6 +1385,9 @@ def _run_streaming_page_id_pipeline(
         "stream_discovery_max_retries": args.stream_discovery_max_retries,
         "stream_discovery_retry_backoff_seconds": args.stream_discovery_retry_backoff_seconds,
         "stream_discovery_retry_max_sleep_seconds": args.stream_discovery_retry_max_sleep_seconds,
+        "wikipedia_429_backoff_seconds": args.wikipedia_429_backoff_seconds,
+        "wikipedia_429_max_backoff_seconds": args.wikipedia_429_max_backoff_seconds,
+        "wikipedia_429_recovery_seconds": args.wikipedia_429_recovery_seconds,
         "stream_page_workers": page_workers,
         "wikipedia_concurrency_limit": args.wikipedia_concurrency_limit,
         "duckduckgo_concurrency_limit": args.duckduckgo_concurrency_limit,
@@ -2237,6 +2270,13 @@ def _write_stream_walkthrough(
     if summary.get("stream_page_workers") is not None:
         lines.append(f"- Stream page workers: {summary.get('stream_page_workers', '')}")
         lines.append(f"- Wikipedia concurrency limit: {summary.get('wikipedia_concurrency_limit', '')}")
+        if "wikipedia_429_backoff_seconds" in summary:
+            lines.append(
+                "- Wikipedia 429 backoff: "
+                f"{summary.get('wikipedia_429_backoff_seconds', '')}s base, "
+                f"{summary.get('wikipedia_429_max_backoff_seconds', '')}s max, "
+                f"{summary.get('wikipedia_429_recovery_seconds', '')}s recovery"
+            )
         lines.append(f"- DuckDuckGo service concurrency limit: {summary.get('duckduckgo_concurrency_limit', '')}")
         lines.append(
             "- OpenRouter generation/rewrite concurrency limit: "

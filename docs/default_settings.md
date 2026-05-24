@@ -134,6 +134,9 @@ These defaults come from `scripts/run_wikipedia_infobox_pipeline.py`.
 | Wikipedia retry initial sleep | `0.5` seconds | Exponential backoff base. |
 | Wikipedia retry max sleep | `4.0` seconds | Per retry sleep cap. |
 | Wikipedia retry jitter | `0.25` seconds | Random jitter added to retry sleep. |
+| Wikipedia 429 shared backoff | `30.0` seconds | `--wikipedia-429-backoff-seconds`. A 429 from Wikipedia pauses all workers sharing the client before later network attempts. |
+| Wikipedia 429 max shared backoff | `300.0` seconds | `--wikipedia-429-max-backoff-seconds`. Consecutive 429s double the shared pause up to this cap. |
+| Wikipedia 429 recovery window | `120.0` seconds | `--wikipedia-429-recovery-seconds`. A successful quiet window resets the shared backoff to the base delay. |
 | Wikipedia request headers | `Accept: application/json`, `Accept-Encoding: identity`, `Connection: close` | Used to reduce flaky compressed/kept-alive fetch behavior. |
 
 ## Route 3 Streaming
@@ -161,6 +164,7 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | `--second-stage-concurrency-limit` | `10` | Max concurrent OpenRouter calls used by second-stage answer models and grader calls. Can be raised, for example to `20`, for larger runs. |
 | `--stream-accepted-target` | `0` | `0` means process `--record-limit` IDs rather than stopping at an accepted count. |
 | `--run-group-id` | empty | When set, summaries update a run-group manifest so resumed segments can be found together without mixing with other runs. |
+| Recipe append/top-up mode | disabled | `scripts/run_wikipedia_infobox_recipe.py --append-to-existing-run` creates suffixed segment artifacts, appends combined outputs, and seeds the shared recipe page-ID exclusion file from prior summaries/states. Use `--append-run-label` for a stable suffix. |
 | `--run-segment-id` | summary filename stem | Unique invocation label inside a run group. |
 | `--run-artifact-manifest` | `outputs/run_manifests/<run-group-id>.json` | Manifest path used when `--run-group-id` is set. |
 | `--run-artifact-include-summary` | `[]` | Existing segment summaries to backfill into the manifest. Can be repeated. |

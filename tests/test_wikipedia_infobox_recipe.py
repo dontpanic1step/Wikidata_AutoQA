@@ -19,6 +19,9 @@ from run_wikipedia_infobox_pipeline import EndpointResumeState, _effective_strea
 from run_wikipedia_infobox_recipe import (  # noqa: E402
     RecipeItem,
     _apply_recipe_big_batch_mode,
+    _append_stream_search_initial_offset,
+    _combine_segment_records,
+    _existing_recipe_page_ids,
     _recipe_summary,
     _segment_complete,
     _segment_stream_search_initial_offset,
@@ -53,6 +56,9 @@ def _recipe_args(**overrides):
         "stream_discovery_max_retries": 5,
         "stream_discovery_retry_backoff_seconds": 10.0,
         "stream_discovery_retry_max_sleep_seconds": 60.0,
+        "wikipedia_429_backoff_seconds": 30.0,
+        "wikipedia_429_max_backoff_seconds": 300.0,
+        "wikipedia_429_recovery_seconds": 120.0,
         "stream_page_workers": 4,
         "wikipedia_concurrency_limit": 4,
         "duckduckgo_concurrency_limit": 4,
@@ -71,6 +77,8 @@ def _recipe_args(**overrides):
         "compact_output": False,
         "compact_rejected_output": False,
         "big_batch_mode": False,
+        "append_to_existing_run": False,
+        "append_run_label": "",
     }
     values.update(overrides)
     return SimpleNamespace(**values)
@@ -207,6 +215,65 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertIn("--compact-output", command)
         self.assertIn("--big-batch-mode", command)
         self.assertEqual(_command_value(command, "--stream-discovery-max-retries"), "5")
+        self.assertEqual(_command_value(command, "--wikipedia-429-backoff-seconds"), "30.0")
+
+    def test_append_recipe_segment_uses_suffixed_artifacts_and_prior_offsets(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            segment_dir.mkdir()
+            (segment_dir / "01_person_2000_state.json").write_text(
+                json.dumps(
+                    {
+                        "used_ids": [101, 102],
+                        "table_search_offsets": {'insource:"wikitable"': 2400},
+                    }
+                ),
+                encoding="utf-8",
+            )
+            args = _recipe_args(append_to_existing_run=True, append_run_label="topup1")
+            offset = _append_stream_search_initial_offset(
+                segment_dir=segment_dir,
+                base_segment_id="01_person_2000",
+                base_offset=0,
+            )
+
+            command, paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Person", record_limit=2000),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=offset,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+                append_label="topup1",
+            )
+
+        self.assertTrue(str(paths["accepted"]).endswith("01_person_2000_topup1_accepted.jsonl"))
+        self.assertTrue(str(paths["stream_state"]).endswith("01_person_2000_topup1_state.json"))
+        self.assertEqual(_command_value(command, "--stream-search-initial-offset"), "2400")
+        self.assertIn("--reset-stream-state", command)
+
+    def test_existing_recipe_page_ids_reads_exclusion_summaries_and_states(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            segment_dir.mkdir()
+            exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
+            exclusion_file.write_text(json.dumps([101]), encoding="utf-8")
+            (segment_dir / "01_person_2000_summary.json").write_text(
+                json.dumps({"page_ids": [201, "202"]}),
+                encoding="utf-8",
+            )
+            (segment_dir / "01_person_2000_state.json").write_text(
+                json.dumps({"used_ids": [301], "rerun_pool": [401], "accepted_ids": [501]}),
+                encoding="utf-8",
+            )
+
+            page_ids = _existing_recipe_page_ids(segment_dir, exclusion_file)
+
+        self.assertEqual(page_ids, {101, 201, 202, 301, 401, 501})
 
     def test_incomplete_existing_segment_is_not_reused(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -224,6 +291,33 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             )
 
             self.assertFalse(_segment_complete(paths))
+
+    def test_combine_segment_records_offsets_ids_for_append_output(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            accepted_path = root / "accepted.jsonl"
+            rejected_path = root / "rejected.jsonl"
+            accepted_path.write_text('{"id": "old", "question": "q", "source_metadata": {}}\n', encoding="utf-8")
+            rejected_path.write_text("", encoding="utf-8")
+            summaries = [
+                {
+                    "recipe_answer_type": "Person",
+                    "recipe_record_limit": 10,
+                    "segment_accepted_output": str(accepted_path),
+                    "segment_rejected_output": str(rejected_path),
+                    "run_segment_id": "01_person_10_topup1",
+                    "summary_output": str(root / "summary.json"),
+                }
+            ]
+
+            accepted, rejected = _combine_segment_records(
+                run_id="recipe",
+                segment_summaries=summaries,
+                accepted_id_offset=48,
+            )
+
+        self.assertEqual(rejected, [])
+        self.assertEqual(accepted[0]["id"], "simpleqa_candidate_000049")
 
     def test_recipe_segments_use_disjoint_table_search_offsets(self) -> None:
         recipe_items = [
@@ -298,6 +392,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             summary_output=Path("summary.json"),
             walkthrough_output=Path("walkthrough.md"),
             stream_state_base=Path("stream_state.json"),
+            append_label="",
             wall_clock_seconds=0.5,
         )
 

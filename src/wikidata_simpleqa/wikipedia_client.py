@@ -9,6 +9,7 @@ import ssl
 from http.client import RemoteDisconnected
 from dataclasses import dataclass, field
 from pathlib import Path
+from threading import Lock
 from time import perf_counter, sleep
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -42,13 +43,24 @@ class WikipediaClient:
     proxy: str | None = None
     timeout_seconds: float = 30.0
     cache_dir: Path | None = None
+    rate_limit_backoff_seconds: float = 0.0
+    rate_limit_max_backoff_seconds: float = 0.0
+    rate_limit_recovery_seconds: float = 120.0
     request_events: list[dict[str, Any]] = field(init=False, default_factory=list)
+    _rate_limit_lock: Lock = field(init=False, repr=False)
+    _rate_limit_resume_at: float = field(init=False, default=0.0, repr=False)
+    _rate_limit_current_sleep: float = field(init=False, default=0.0, repr=False)
+    _rate_limit_last_429_at: float = field(init=False, default=0.0, repr=False)
 
     def __post_init__(self) -> None:
         install_proxy(self.proxy)
         if self.cache_dir is not None:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
         self.request_events = []
+        self._rate_limit_lock = Lock()
+        self.rate_limit_backoff_seconds = max(0.0, float(self.rate_limit_backoff_seconds or 0.0))
+        self.rate_limit_max_backoff_seconds = max(0.0, float(self.rate_limit_max_backoff_seconds or 0.0))
+        self.rate_limit_recovery_seconds = max(0.0, float(self.rate_limit_recovery_seconds or 0.0))
 
     def fetch_summary(self, title: str) -> dict[str, Any]:
         """Return the MediaWiki REST page summary payload for one title."""
@@ -173,6 +185,7 @@ class WikipediaClient:
                     clear_proxy()
                 for attempt in range(WIKIPEDIA_REQUEST_ATTEMPTS_PER_PATH):
                     attempts += 1
+                    waited_seconds = self._wait_for_rate_limit()
                     request = Request(
                         url,
                         headers={
@@ -184,6 +197,16 @@ class WikipediaClient:
                     )
                     try:
                         with urlopen(request, timeout=self.timeout_seconds) as response:
+                            self._record_rate_limit_success()
+                            if waited_seconds > 0:
+                                self.request_events.append(
+                                    {
+                                        "url": url,
+                                        "cache_hit": False,
+                                        "rate_limit_wait_seconds": round(waited_seconds, 4),
+                                        "event": "wikipedia_429_shared_wait",
+                                    }
+                                )
                             return (
                                 json.loads(response.read().decode("utf-8")),
                                 not use_proxy and bool(self.proxy),
@@ -191,6 +214,8 @@ class WikipediaClient:
                             )
                     except HTTPError as exc:
                         last_error = exc
+                        if exc.code == 429:
+                            self._record_rate_limit_429(exc)
                         if 400 <= exc.code < 500 and exc.code != 429:
                             raise
                         if attempt == WIKIPEDIA_REQUEST_ATTEMPTS_PER_PATH - 1:
@@ -216,6 +241,60 @@ class WikipediaClient:
             return None
         digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
         return self.cache_dir / f"wikipedia_{digest}.json"
+
+    def _wait_for_rate_limit(self) -> float:
+        """Block until the shared Wikipedia 429 backoff window has passed."""
+        waited = 0.0
+        while True:
+            with self._rate_limit_lock:
+                delay = self._rate_limit_resume_at - perf_counter()
+            if delay <= 0:
+                return waited
+            sleep(delay)
+            waited += delay
+
+    def _record_rate_limit_429(self, exc: HTTPError) -> None:
+        """Extend the shared Wikipedia 429 backoff window."""
+        base_delay = self._rate_limit_retry_after_seconds(exc)
+        if base_delay <= 0:
+            return
+        now = perf_counter()
+        with self._rate_limit_lock:
+            if (
+                self._rate_limit_current_sleep > 0
+                and self.rate_limit_recovery_seconds > 0
+                and now - self._rate_limit_last_429_at > self.rate_limit_recovery_seconds
+            ):
+                self._rate_limit_current_sleep = 0.0
+            if self._rate_limit_current_sleep <= 0:
+                sleep_seconds = base_delay
+            else:
+                sleep_seconds = max(base_delay, self._rate_limit_current_sleep * 2)
+            if self.rate_limit_max_backoff_seconds > 0:
+                sleep_seconds = min(sleep_seconds, self.rate_limit_max_backoff_seconds)
+            self._rate_limit_current_sleep = sleep_seconds
+            self._rate_limit_last_429_at = now
+            self._rate_limit_resume_at = max(self._rate_limit_resume_at, now + sleep_seconds)
+
+    def _record_rate_limit_success(self) -> None:
+        """Reset the shared 429 backoff after a quiet recovery window."""
+        if self.rate_limit_recovery_seconds <= 0:
+            return
+        now = perf_counter()
+        with self._rate_limit_lock:
+            if self._rate_limit_last_429_at and now - self._rate_limit_last_429_at >= self.rate_limit_recovery_seconds:
+                self._rate_limit_current_sleep = 0.0
+
+    def _rate_limit_retry_after_seconds(self, exc: HTTPError) -> float:
+        """Return the polite shared wait after a Wikipedia 429."""
+        retry_after = ""
+        try:
+            retry_after = str(exc.headers.get("Retry-After", "")).strip()
+        except AttributeError:
+            retry_after = ""
+        if retry_after.isdigit():
+            return max(float(retry_after), self.rate_limit_backoff_seconds)
+        return self.rate_limit_backoff_seconds
 
 
 def _sleep_before_retry(attempt: int) -> None:
