@@ -425,7 +425,7 @@ def parse_args() -> argparse.Namespace:
         default=list(DEFAULT_ROUTE3_TABLE_FILTER_MODES),
         help=(
             "Enable one or more early Route 3 table filter modes. Repeat the flag or pass comma-separated "
-            "values. Defaults: no_picture_heavy_tables,no_approximate_tables,no_incomplete_tables,"
+            "values. Defaults: no_picture_heavy_tables,no_incomplete_tables,"
             "not_number_dominant,no_social_science_research."
         ),
     )
@@ -434,6 +434,15 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=[],
         help="Disable a default Route 3 table filter mode for this run. Can be repeated.",
+    )
+    parser.add_argument(
+        "--route3-llm-choose-table",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Let the Route 3 generation LLM choose among the top three surviving ranked tables. "
+            "By default only the single top-ranked table is passed."
+        ),
     )
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--small-model-provider", type=str, default="openrouter")
@@ -614,6 +623,7 @@ def main() -> int:
             allowed_answer_types=tuple(args.route3_answer_type),
             extra_prompts=tuple(args.route3_extra_prompt),
             table_filter_modes=tuple(args.route3_table_filter_mode),
+            llm_choose_table=args.route3_llm_choose_table,
         )
         generated_candidates = generator.generate(
             run_date=settings.run_date,
@@ -672,6 +682,7 @@ def main() -> int:
         "route3_answer_types": args.route3_answer_type,
         "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": args.route3_table_filter_mode,
+        "route3_llm_choose_table": bool(args.route3_llm_choose_table),
         "aggregate_phase_timings_seconds": _aggregate_phase_timings(result.accepted, result.rejected),
         "telemetry": {
             **result.telemetry,
@@ -1207,6 +1218,7 @@ def _run_streaming_page_id_pipeline(
         "route3_answer_types": args.route3_answer_type,
         "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": args.route3_table_filter_mode,
+        "route3_llm_choose_table": bool(args.route3_llm_choose_table),
         "survival_by_layer": _survival_by_layer(
             attempted_count=len(processed_ids),
             rejected_records=rejected_records,
@@ -1386,6 +1398,7 @@ def _process_one_stream_page_id(
             allowed_answer_types=tuple(args.route3_answer_type),
             extra_prompts=tuple(args.route3_extra_prompt),
             table_filter_modes=tuple(args.route3_table_filter_mode),
+            llm_choose_table=args.route3_llm_choose_table,
         )
         generated_candidates = generator.generate(
             run_date=settings.run_date,
@@ -1914,8 +1927,6 @@ def _summary_failure_reason(record: dict) -> str:
         table_filter_reason = exact_reason.partition(":")[2]
         if "no_picture_heavy_tables" in table_filter_reason:
             return f"{reason}:no_picture_heavy_tables"
-        if "no_approximate_tables" in table_filter_reason:
-            return f"{reason}:no_approximate_tables"
         if "no_incomplete_tables" in table_filter_reason:
             return f"{reason}:no_incomplete_tables"
         if "no_social_science_research" in table_filter_reason:
@@ -2008,6 +2019,11 @@ def _write_stream_walkthrough(
         lines.append(f"- Route 3 extra prompt rules: `{'; '.join(summary.get('route3_extra_prompts', []))}`")
     if summary.get("route3_table_filter_modes"):
         lines.append(f"- Route 3 table filter modes: `{', '.join(summary.get('route3_table_filter_modes', []))}`")
+    if "route3_llm_choose_table" in summary:
+        lines.append(
+            "- Route 3 LLM table choice: "
+            f"`{'enabled' if summary.get('route3_llm_choose_table') else 'disabled'}`"
+        )
     if summary.get("stream_page_workers") is not None:
         lines.append(f"- Stream page workers: {summary.get('stream_page_workers', '')}")
         lines.append(f"- Wikipedia concurrency limit: {summary.get('wikipedia_concurrency_limit', '')}")

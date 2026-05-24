@@ -53,6 +53,7 @@ def _recipe_args(**overrides):
         "openrouter_generation_rewrite_concurrency_limit": 10,
         "second_stage_concurrency_limit": 10,
         "route3_extra_prompt": [],
+        "route3_llm_choose_table": False,
         "disable_route3_table_filter_mode": [],
         "enable_rewrite": True,
         "rewrite_model": "openai/gpt-4.1-mini",
@@ -132,6 +133,47 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             _command_value(second_command, "--stream-exclude-page-id-file"),
             str(segment_dir / "recipe_page_id_exclusions.json"),
         )
+
+    def test_recipe_segment_disables_route3_llm_table_choice_by_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            args = _recipe_args()
+
+            command, _paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Person", record_limit=40),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=0,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+            )
+
+        self.assertIn("--no-route3-llm-choose-table", command)
+
+    def test_recipe_segment_can_enable_route3_llm_table_choice(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            args = _recipe_args(route3_llm_choose_table=True)
+
+            command, _paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Person", record_limit=40),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=0,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+            )
+
+        self.assertIn("--route3-llm-choose-table", command)
+        self.assertNotIn("--no-route3-llm-choose-table", command)
 
     def test_recipe_segments_use_disjoint_table_search_offsets(self) -> None:
         recipe_items = [

@@ -93,6 +93,15 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help="Disable one shared default Route 3 table filter mode.",
     )
+    parser.add_argument(
+        "--route3-llm-choose-table",
+        action=argparse.BooleanOptionalAction,
+        default=False,
+        help=(
+            "Let each segment's Route 3 generation LLM choose among the top three surviving ranked tables. "
+            "By default only the single top-ranked table is passed."
+        ),
+    )
     parser.add_argument("--run-id", default="", help="Path-safe batch ID. Defaults to a dated recipe ID.")
     parser.add_argument("--run-date", default=None)
     parser.add_argument("--target-time", default="2024")
@@ -503,6 +512,10 @@ def _segment_command(
         )
     if not args.disable_auto_rerun_once:
         command.append("--stream-auto-rerun-once")
+    if args.route3_llm_choose_table:
+        command.append("--route3-llm-choose-table")
+    else:
+        command.append("--no-route3-llm-choose-table")
     command.append("--reset-stream-state")
     for query in args.stream_search_query:
         command.extend(["--stream-search-query", str(query)])
@@ -656,6 +669,7 @@ def _recipe_summary(
         "route3_answer_types": [item.answer_type for item in recipe_items],
         "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": table_filter_modes,
+        "route3_llm_choose_table": bool(args.route3_llm_choose_table),
         "survival_by_layer": _survival_by_layer(
             attempted_count=attempted,
             rejected_records=rejected_records,

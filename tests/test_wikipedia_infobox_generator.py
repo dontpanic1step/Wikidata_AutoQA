@@ -1107,7 +1107,8 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             candidate.source_metadata["subject_anchors"]["table_scopes"][0]["table_title"],
             "List of tournament venues",
         )
-        self.assertIn("top three ranked tables", generator.llm_client.prompts[0])
+        self.assertNotIn("top three ranked tables", generator.llm_client.prompts[0])
+        self.assertIn("Use the provided top-ranked table as the only structured evidence table", generator.llm_client.prompts[0])
         self.assertIn("May 20, 2024", generator.llm_client.prompts[0])
         self.assertIn("May 2024", generator.llm_client.prompts[0])
         self.assertIn("specify the counted quantity or unit", generator.llm_client.prompts[0])
@@ -1127,10 +1128,55 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("`single_fact`: ask a direct single fact lookup", generator.llm_client.prompts[0])
         self.assertIn("historically settled in the provided table content", generator.llm_client.prompts[0])
         self.assertIn("cannot change", generator.llm_client.prompts[0])
+        self.assertFalse(candidate.source_metadata["llm_choose_table"])
         self.assertNotIn('"composition_type"', generator.llm_client.prompts[0])
         self.assertNotIn("preferred_subject_anchor exactly", generator.llm_client.prompts[0])
         self.assertNotIn("local, bounded facts", generator.llm_client.prompts[0])
         self.assertEqual(len(candidate.search_queries), 3)
+
+    def test_route3_passes_only_top_ranked_table_to_generation_llm_by_default(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=FakeLLMClient(),
+            record_limit=1,
+            table_filter_modes=(),
+        )
+
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        prompt = generator.llm_client.prompts[0]
+        payload = json.loads(prompt.partition("Payload:\n")[2])
+
+        self.assertFalse(candidate.source_metadata["llm_choose_table"])
+        self.assertEqual(len(payload["tables"]), 1)
+        self.assertEqual(len(payload["ranked_table_selection"]), 1)
+        self.assertFalse(payload["llm_choose_table"])
+        self.assertNotIn("table_selection_criteria", payload)
+        self.assertNotIn("Choose from the top three ranked tables", prompt)
+        self.assertNotIn("choose another table", prompt)
+        self.assertIn("Use the provided top-ranked table as the only structured evidence table", prompt)
+        self.assertIn("If the provided table is only a toy", prompt)
+
+    def test_route3_can_let_llm_choose_among_ranked_tables(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=FakeLLMClient(),
+            record_limit=1,
+            table_filter_modes=(),
+            llm_choose_table=True,
+        )
+
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        prompt = generator.llm_client.prompts[0]
+        payload = json.loads(prompt.partition("Payload:\n")[2])
+
+        self.assertTrue(candidate.source_metadata["llm_choose_table"])
+        self.assertGreaterEqual(len(payload["tables"]), 2)
+        self.assertTrue(payload["llm_choose_table"])
+        self.assertIn("table_selection_criteria", payload)
+        self.assertIn("Choose from the top three ranked tables", prompt)
+        self.assertIn("choose another table", prompt)
 
     def test_route3_single_fact_reasoning_type_restriction_rejects_max_output(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
@@ -1294,7 +1340,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             candidate.source_metadata["table_filter_modes"],
             [
                 "no_picture_heavy_tables",
-                "no_approximate_tables",
                 "no_incomplete_tables",
                 "not_number_dominant",
                 "no_social_science_research",
@@ -1460,7 +1505,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(llm_client.prompts, [])
         self.assertIn("no_picture_heavy_tables:image_cell_rate=0.3333", candidate.source_metadata["discard_reason"])
 
-    def test_no_approximate_tables_mode_rejects_precision_markers_before_llm_generation(self) -> None:
+    def test_no_incomplete_tables_mode_rejects_precision_and_citation_markers_before_llm_generation(self) -> None:
         class ApproximateWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:
                 return {
@@ -1473,6 +1518,8 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <tr><th>Name</th><th>Approx. status</th></tr>
                         <tr><td>Alpha</td><td>Approximate status</td></tr>
                         <tr><td>Beta</td><td>Approximately recorded</td></tr>
+                        <tr><td>Gamma</td><td>[ citation needed ]</td></tr>
+                        <tr><td>Delta</td><td>Citing needed</td></tr>
                         </table>
                         </div>
                         """,
@@ -1490,12 +1537,12 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
         self.assertEqual(llm_client.prompts, [])
         self.assertIn(
-            "no_approximate_tables:approx.,approximate,approximately",
+            "no_incomplete_tables:approx.,approximate,approximately,citation needed,citing needed",
             candidate.source_metadata["discard_reason"],
         )
         self.assertEqual(
-            candidate.source_metadata["table_selection"][0]["approximate_table_markers"],
-            ["approx.", "approximate", "approximately"],
+            candidate.source_metadata["table_selection"][0]["incomplete_table_markers"],
+            ["approx.", "approximate", "approximately", "citation needed", "citing needed"],
         )
 
     def test_not_number_dominant_mode_rejects_comma_grouped_numbers_before_llm_generation(self) -> None:
@@ -1879,6 +1926,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             record_limit=1,
             min_table_score=-999.0,
             table_filter_modes=(),
+            llm_choose_table=True,
         )
         candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
         self.assertEqual(len(candidates), 1)

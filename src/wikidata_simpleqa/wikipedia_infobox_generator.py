@@ -56,7 +56,6 @@ ROUTE3_EXTRA_PROMPTS = {
 }
 ROUTE3_TABLE_FILTER_MODES = (
     "no_picture_heavy_tables",
-    "no_approximate_tables",
     "no_incomplete_tables",
     "not_number_dominant",
     "no_social_science_research",
@@ -64,17 +63,21 @@ ROUTE3_TABLE_FILTER_MODES = (
 ROUTE3_TABLE_FILTER_MODE_SET = set(ROUTE3_TABLE_FILTER_MODES)
 DEFAULT_ROUTE3_TABLE_FILTER_MODES = ROUTE3_TABLE_FILTER_MODES
 PICTURE_HEAVY_TABLE_MAX_IMAGE_CELL_RATE = 0.25
-APPROXIMATE_TABLE_MARKER_PATTERNS = (
-    ("approx.", re.compile(r"(?<!\w)approx\.", flags=re.IGNORECASE)),
-    ("approximate", re.compile(r"(?<!\w)approximate(?!\w)", flags=re.IGNORECASE)),
-    ("approximately", re.compile(r"(?<!\w)approximately(?!\w)", flags=re.IGNORECASE)),
-)
 NUMBER_DOMINANCE_WORD_MARKERS = ("thousand", "million", "billion", "trillion")
 NUMBER_DOMINANCE_LOW_NUMERIC_THRESHOLD = 1000
 NUMBER_DOMINANCE_YEAR_LIKE_MIN = 1500
 NUMBER_DOMINANCE_YEAR_LIKE_MAX = 2040
 NUMBER_DOMINANCE_MIN_ALPHA_RATE = 0.5
-INCOMPLETE_TABLE_MARKERS = ("unlisted", "incomplete", "unknown")
+INCOMPLETE_TABLE_MARKERS = (
+    "unlisted",
+    "incomplete",
+    "unknown",
+    "approx.",
+    "approximate",
+    "approximately",
+    "citation needed",
+    "citing needed",
+)
 NUMBER_DOMINANCE_UNIT_MARKERS = (
     "acre",
     "acres",
@@ -347,6 +350,7 @@ class WikipediaInfoboxTableGenerator:
     allowed_answer_types: tuple[str, ...] = ()
     extra_prompts: tuple[str, ...] = ()
     table_filter_modes: tuple[str, ...] = DEFAULT_ROUTE3_TABLE_FILTER_MODES
+    llm_choose_table: bool = False
 
     def __post_init__(self) -> None:
         """Normalize optional Route 3 prompt restrictions."""
@@ -383,6 +387,7 @@ class WikipediaInfoboxTableGenerator:
                     extra_prompts=self.extra_prompts,
                     table_filter_modes=self.table_filter_modes,
                 )
+            candidate.source_metadata["llm_choose_table"] = bool(self.llm_choose_table)
             candidate.source_metadata.setdefault("phase_timings_seconds", {}).update(timings)
             candidate.source_metadata["phase_timings_seconds"]["total_generation_seconds"] = _elapsed(candidate_start)
             generated.append(candidate)
@@ -488,11 +493,13 @@ class WikipediaInfoboxTableGenerator:
             and not bool(row.get("below_min_table_score"))
             and not str(row.get("table_filter_rejection_reason", "")).strip()
         ]
+        llm_table_limit = 3 if self.llm_choose_table else 1
         selected_tables = [
             row["table"]
             for row in safe_table_selection
             if isinstance(row.get("table"), WikipediaTable)
-        ][:3]
+        ][:llm_table_limit]
+        selected_table_selection = safe_table_selection[:llm_table_limit]
         if not selected_tables:
             live_scope_rows = [
                 row
@@ -606,12 +613,13 @@ class WikipediaInfoboxTableGenerator:
                 cutoff_year,
             ),
             tables=selected_tables,
-            table_selection=safe_table_selection,
+            table_selection=selected_table_selection,
             cutoff_year=cutoff_year,
             search_query_count=self.search_query_count,
             allowed_reasoning_types=self.allowed_reasoning_types,
             allowed_answer_types=self.allowed_answer_types,
             extra_prompts=self.extra_prompts,
+            llm_choose_table=self.llm_choose_table,
         )
         llm_start = perf_counter()
         response = parse_json_object(self.llm_client.complete_text(prompt))
@@ -840,6 +848,7 @@ class WikipediaInfoboxTableGenerator:
                 allowed_answer_types=self.allowed_answer_types,
                 extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
+                llm_choose_table=self.llm_choose_table,
             ),
         )
 
@@ -857,11 +866,13 @@ def build_wikipedia_infobox_prompt(
     allowed_reasoning_types: Iterable[str] | None = None,
     allowed_answer_types: Iterable[str] | None = None,
     extra_prompts: Iterable[str] | str | None = None,
+    llm_choose_table: bool = False,
 ) -> str:
     """Build the small-model prompt for Wikipedia table QA generation."""
     normalized_allowed_reasoning_types = normalize_route3_reasoning_types(allowed_reasoning_types)
     normalized_allowed_answer_types = normalize_route3_answer_types(allowed_answer_types)
     normalized_extra_prompts = normalize_route3_extra_prompts(extra_prompts)
+    table_limit = 3 if llm_choose_table else 1
     payload = {
         "title": title,
         "canonical_url": canonical_url,
@@ -871,17 +882,29 @@ def build_wikipedia_infobox_prompt(
         "allowed_reasoning_types": list(normalized_allowed_reasoning_types),
         "allowed_answer_types": list(normalized_allowed_answer_types),
         "extra_prompt_rules": list(normalized_extra_prompts),
-        "table_selection_criteria": [
+        "llm_choose_table": bool(llm_choose_table),
+        "ranked_table_selection": [
+            _selection_payload(row)
+            for row in table_selection[:table_limit]
+        ],
+        "tables": [table.to_metadata(max_rows=40, max_text_chars=2500) for table in tables[:table_limit]],
+    }
+    if llm_choose_table:
+        payload["table_selection_criteria"] = [
             "Prefer tables with many structured data rows.",
             # "Prefer tables with numeric, ordinal, date, rank, count, or comparable value columns.",
             "Prefer tables whose row values are mostly not repeated in non-table prose, because these are less directly answerable from the article text.",
-        ],
-        "ranked_table_selection": [
-            _selection_payload(row)
-            for row in table_selection[:3]
-        ],
-        "tables": [table.to_metadata(max_rows=40, max_text_chars=2500) for table in tables[:3]],
-    }
+        ]
+    table_instruction = (
+        "- Choose from the top three ranked tables. Prefer rank 1 unless it cannot support a safe question.\n"
+        if llm_choose_table
+        else "- Use the provided top-ranked table as the only structured evidence table.\n"
+    )
+    toy_table_instruction = (
+        "- If the table is only a toy, tutorial, or teaching example rather than real-world factual data, choose another table.\n"
+        if llm_choose_table
+        else "- If the provided table is only a toy, tutorial, or teaching example rather than real-world factual data, discard it.\n"
+    )
     return (
         "Generate one long-tail SimpleQA-style factual question from a Wikipedia infobox or table.\n"
         "Return JSON only.\n\n"
@@ -889,12 +912,13 @@ def build_wikipedia_infobox_prompt(
 
         "### Must have a single answer.\n\n"
         "- The question must have exactly one intended, indisputable answer.\n"
-        "- Choose from the top three ranked tables. Prefer rank 1 unless it cannot support a safe question.\n"
+        f"{table_instruction}"
         "- Avoid questions with unclear or overly broad answer categories, such as `What equipment ...` `What genre ...`. Instead, ask about a more specific and verifiable attribute.\n"
         f"{_answer_precision_prompt_rule(normalized_allowed_answer_types)}"
         "- If a table cell has a parenthetical alias, put the plain entity name in answer and the parenthetical text in answer_aliases.\n"
 
         "### Reasoning type and Answer type rules:\n\n"
+        "- Your question must match the reasoning type and answer type.\n"
         f"{_reasoning_type_prompt_rule(normalized_allowed_reasoning_types)}"
         f"{_answer_type_prompt_rule(normalized_allowed_answer_types)}"
         f"{_tie_answer_prompt_rule(normalized_allowed_reasoning_types)}"
@@ -924,12 +948,13 @@ def build_wikipedia_infobox_prompt(
         # "- Ask about the facts in the table. Do not ask questions about the table itself, such as `What year does the estimate refer to`.\n"
         "- Rendered markdown preserves table layout: a non-empty cell followed by blank cells may represent an HTML colspan cell. Treat it as one spanned cell, not as repeated field values.\n"
         "- Full-width or partial-width spanned rows can appear anywhere in a table. Use them as local visual/context labels for nearby rows, not as direct answers to unrelated fields.\n"
-        "- If the table is only a toy, tutorial, or teaching example rather than real-world factual data, choose another table.\n"
+        f"{toy_table_instruction}"
         "- Treat curated list pages such as `List of national parks of the United States` as complete and authoritative for membership within their stated scope. Do not hedge by saying `according to the List of ...`.\n"
         "### Other prompt rules:\n\n"
         f"{_extra_prompt_rule(normalized_extra_prompts)}"
         "- Do not include the answer or answer aliases in the question or search queries.\n"
         f"- Generate exactly {search_query_count} answer-blind search queries.\n"
+        f"- Verify whether the generated question and answer match the allowed answer type {', '.join(normalized_allowed_answer_types)}. If not, discard the question, set other fields empty, and write `discard_reason` in your response.\n"
         f"{_discard_prompt_rule(normalized_allowed_reasoning_types)}"
         "\nOutput schema:\n"
         "{\n"
@@ -1338,11 +1363,6 @@ def _annotate_table_filter_modes(
                 picture_reason = _picture_heavy_table_filter_reason(table, picture_stats)
                 if picture_reason:
                     reasons.append(picture_reason)
-            if "no_approximate_tables" in modes:
-                approximate_markers = _approximate_table_markers(table)
-                copied["approximate_table_markers"] = approximate_markers
-                if approximate_markers:
-                    reasons.append(f"no_approximate_tables:{','.join(approximate_markers)}")
             if "no_incomplete_tables" in modes:
                 incomplete_markers = _incomplete_table_markers(table)
                 copied["incomplete_table_markers"] = incomplete_markers
@@ -1420,21 +1440,6 @@ def _picture_heavy_table_filter_reason(table: WikipediaTable, stats: dict[str, A
     if table.table_type == "infobox" and image_count and image_rate > PICTURE_HEAVY_TABLE_MAX_IMAGE_CELL_RATE:
         return f"no_picture_heavy_tables:image_cell_rate={image_rate:.4f}"
     return ""
-
-
-def _approximate_table_markers(table: WikipediaTable) -> list[str]:
-    """Return approximate-value markers that make table facts too imprecise."""
-    text = " ".join(
-        [
-            table.caption,
-            " ".join(cell for row in table.rows for cell in row),
-        ]
-    )
-    hits: list[str] = []
-    for marker, pattern in APPROXIMATE_TABLE_MARKER_PATTERNS:
-        if pattern.search(text) and marker not in hits:
-            hits.append(marker)
-    return hits
 
 
 def _number_dominance_table_stats(table: WikipediaTable) -> dict[str, Any]:
@@ -2152,6 +2157,7 @@ def _source_metadata(
     allowed_answer_types: Iterable[str] | None = None,
     extra_prompts: Iterable[str] | str | None = None,
     table_filter_modes: Iterable[str] | str | None = None,
+    llm_choose_table: bool = False,
 ) -> dict[str, Any]:
     """Build Route 3 audit metadata."""
     safe_subject_aliases = _first_paragraph_aliases(page.title, page.first_paragraph)
@@ -2174,6 +2180,7 @@ def _source_metadata(
         "allowed_answer_types": list(normalized_allowed_answer_types),
         "extra_prompts": list(normalized_extra_prompts),
         "table_filter_modes": list(normalized_table_filter_modes),
+        "llm_choose_table": bool(llm_choose_table),
         "parsed_tables": [table.to_metadata() for table in tables],
         "table_selection": [_selection_payload(row) for row in table_selection],
         "selected_source_table": source_table.to_metadata() if source_table is not None else {},
@@ -2338,7 +2345,6 @@ def _selection_payload(row: dict[str, Any]) -> dict[str, Any]:
         "incomplete_table_markers": row.get("incomplete_table_markers", []),
         "number_dominance_stats": row.get("number_dominance_stats", {}),
         "social_science_markers": row.get("social_science_markers", []),
-        "approximate_table_markers": row.get("approximate_table_markers", []),
         "min_table_score": row.get("min_table_score"),
         "below_min_table_score": bool(row.get("below_min_table_score", False)),
         "zero_numeric_rate": row.get("zero_numeric_rate"),
@@ -2464,13 +2470,13 @@ def _normalize_table_filter_mode(value: Any) -> str:
         "no_images": "no_picture_heavy_tables",
         "no_picture_heavy": "no_picture_heavy_tables",
         "no_image_heavy_tables": "no_picture_heavy_tables",
-        "approx": "no_approximate_tables",
-        "approximate": "no_approximate_tables",
-        "approximately": "no_approximate_tables",
-        "precision_gate": "no_approximate_tables",
-        "no_approx": "no_approximate_tables",
-        "no_approximate": "no_approximate_tables",
-        "no_approximately": "no_approximate_tables",
+        "approx": "no_incomplete_tables",
+        "approximate": "no_incomplete_tables",
+        "approximately": "no_incomplete_tables",
+        "precision_gate": "no_incomplete_tables",
+        "no_approx": "no_incomplete_tables",
+        "no_approximate": "no_incomplete_tables",
+        "no_approximately": "no_incomplete_tables",
     }
     return aliases.get(normalized, normalized)
 

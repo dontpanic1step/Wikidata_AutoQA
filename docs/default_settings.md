@@ -187,7 +187,8 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | DuckDuckGo parallel queries | `3` | `--duckduckgo-parallel-queries`. |
 | Generated search query count | `2` | Route 3 prompt asks for this many answer-blind queries. Fast default for initial Route 3 streaming; run slower survivor review separately when needed. |
 | Minimum table score | `0.0` | `--min-table-score`. The same cutoff is used for URL and streaming Route 3 runs. |
-| Route 3 table filter modes | `no_picture_heavy_tables`, `no_approximate_tables`, `no_incomplete_tables`, `not_number_dominant`, `no_social_science_research` | `--route3-table-filter-mode` enables modes and `--disable-route3-table-filter-mode` removes defaults for a run. These filters drop matching tables before the generation prompt. |
+| Route 3 LLM table choice | disabled | By default only the single top-ranked surviving table is passed to the generation LLM. `--route3-llm-choose-table` passes the top three surviving ranked tables and includes table-choice prompt text. |
+| Route 3 table filter modes | `no_picture_heavy_tables`, `no_incomplete_tables`, `not_number_dominant`, `no_social_science_research` | `--route3-table-filter-mode` enables modes and `--disable-route3-table-filter-mode` removes defaults for a run. These filters drop matching tables before the generation prompt. The incomplete marker gate also rejects approximate-value and citation-needed markers. |
 | Search full-question hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search keyword hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search overall hit-rate threshold | `0.3` | Reject when above threshold. |
