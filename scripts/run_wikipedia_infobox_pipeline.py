@@ -250,6 +250,16 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--stream-exclude-page-id-file",
+        action="append",
+        type=Path,
+        default=[],
+        help=(
+            "File containing page IDs that streaming discovery must skip. "
+            "Accepts a JSON list, JSON object values, JSONL records with page_id/page_ids, or plain IDs."
+        ),
+    )
+    parser.add_argument(
         "--stream-random-seed",
         type=int,
         default=None,
@@ -415,7 +425,8 @@ def parse_args() -> argparse.Namespace:
         default=list(DEFAULT_ROUTE3_TABLE_FILTER_MODES),
         help=(
             "Enable one or more early Route 3 table filter modes. Repeat the flag or pass comma-separated "
-            "values. Defaults: no_incomplete_tables,not_number_dominant,no_social_science_research."
+            "values. Defaults: no_picture_heavy_tables,no_approximate_tables,no_incomplete_tables,"
+            "not_number_dominant,no_social_science_research."
         ),
     )
     parser.add_argument(
@@ -990,6 +1001,11 @@ def _run_streaming_page_id_pipeline(
         state.save()
     else:
         state = PageIdStreamState.load(args.stream_state)
+    excluded_page_ids = _load_stream_excluded_page_ids(args.stream_exclude_page_id_file)
+    if excluded_page_ids:
+        state.used_ids.update(excluded_page_ids)
+        state._record_event("stream_exclude_page_ids", sorted(excluded_page_ids), "external_exclusion_file")
+        state.save()
     _initialize_table_search_offsets(state, args)
     endpoint_sync = {"accepted_ids_synced": 0, "rejected_ids_synced": 0}
     if args.start_from_endpoint:
@@ -1130,6 +1146,8 @@ def _run_streaming_page_id_pipeline(
         "stream_search_queries": _stream_search_queries(args),
         "stream_broad_table_search_enabled": args.enable_broad_table_search,
         "stream_search_offsets": state.table_search_offsets.copy(),
+        "stream_excluded_page_ids": len(excluded_page_ids),
+        "stream_exclude_page_id_files": [str(path) for path in args.stream_exclude_page_id_file],
         "run_date": settings.run_date,
         "stream_state": str(args.stream_state),
         "stream_state_stats": state.stats(),
@@ -1252,6 +1270,60 @@ def _initialize_table_search_offsets(state: PageIdStreamState, args: argparse.Na
         changed = True
     if changed:
         state.save()
+
+
+def _load_stream_excluded_page_ids(paths: list[Path]) -> set[int]:
+    """Load page IDs that the stream should treat as already used."""
+    excluded: set[int] = set()
+    for path in paths:
+        if path is None or not Path(path).exists():
+            continue
+        text = Path(path).read_text(encoding="utf-8").strip()
+        if not text:
+            continue
+        try:
+            payload = json.loads(text)
+        except json.JSONDecodeError:
+            for line in text.splitlines():
+                stripped = line.strip()
+                if not stripped:
+                    continue
+                try:
+                    line_payload = json.loads(stripped)
+                except json.JSONDecodeError:
+                    line_payload = stripped
+                excluded.update(_page_ids_from_payload(line_payload))
+            continue
+        if isinstance(payload, list):
+            for item in payload:
+                excluded.update(_page_ids_from_payload(item))
+        else:
+            excluded.update(_page_ids_from_payload(payload))
+    return {page_id for page_id in excluded if page_id > 0}
+
+
+def _page_ids_from_payload(payload: object) -> set[int]:
+    """Extract positive page IDs from common JSON/plain-text payload shapes."""
+    page_ids: set[int] = set()
+    if isinstance(payload, int):
+        if payload > 0:
+            page_ids.add(payload)
+        return page_ids
+    if isinstance(payload, str):
+        stripped = payload.strip()
+        if stripped.isdigit():
+            page_ids.add(int(stripped))
+        return page_ids
+    if isinstance(payload, list):
+        for item in payload:
+            page_ids.update(_page_ids_from_payload(item))
+        return page_ids
+    if isinstance(payload, dict):
+        for key in ("page_id", "pageid"):
+            page_ids.update(_page_ids_from_payload(payload.get(key)))
+        for key in ("page_ids", "used_ids", "accepted_ids", "rejected_ids", "rerun_pool"):
+            page_ids.update(_page_ids_from_payload(payload.get(key)))
+    return page_ids
 
 
 def _build_streaming_second_stage_model_panel(
@@ -1840,6 +1912,10 @@ def _summary_failure_reason(record: dict) -> str:
         return reason
     if reason == "wikipedia_infobox_table_filter_rejected":
         table_filter_reason = exact_reason.partition(":")[2]
+        if "no_picture_heavy_tables" in table_filter_reason:
+            return f"{reason}:no_picture_heavy_tables"
+        if "no_approximate_tables" in table_filter_reason:
+            return f"{reason}:no_approximate_tables"
         if "no_incomplete_tables" in table_filter_reason:
             return f"{reason}:no_incomplete_tables"
         if "no_social_science_research" in table_filter_reason:

@@ -87,7 +87,7 @@ def _command_value(command: list[str], flag: str) -> str:
 
 
 class WikipediaInfoboxRecipeTests(unittest.TestCase):
-    def test_recipe_segments_use_separate_stream_states_and_seeds(self) -> None:
+    def test_recipe_segments_use_separate_stream_states_and_shared_recipe_seed(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
             args = _recipe_args()
@@ -99,6 +99,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=0,
                 reasoning_types=["single_fact"],
                 table_filter_modes=["not_number_dominant"],
@@ -110,6 +111,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=50,
                 reasoning_types=["single_fact"],
                 table_filter_modes=["not_number_dominant"],
@@ -120,12 +122,16 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertTrue(str(second_paths["stream_state"]).endswith("02_date_40_state.json"))
         self.assertIn("--reset-stream-state", first_command)
         self.assertIn("--reset-stream-state", second_command)
-        self.assertNotEqual(
+        self.assertEqual(
             _command_value(first_command, "--stream-random-seed"),
             _command_value(second_command, "--stream-random-seed"),
         )
         self.assertEqual(_command_value(first_command, "--stream-search-initial-offset"), "0")
         self.assertEqual(_command_value(second_command, "--stream-search-initial-offset"), "50")
+        self.assertEqual(
+            _command_value(second_command, "--stream-exclude-page-id-file"),
+            str(segment_dir / "recipe_page_id_exclusions.json"),
+        )
 
     def test_recipe_segments_use_disjoint_table_search_offsets(self) -> None:
         recipe_items = [
@@ -172,7 +178,8 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "wall_clock_seconds": 20.0,
                 "random_seed": 456,
                 "stream_state": "date_state.json",
-                "stream_state_stats": {"used": 40, "accepted": 1, "rejected": 38, "rerun_pool": 1},
+                "stream_state_stats": {"used": 42, "accepted": 1, "rejected": 38, "rerun_pool": 1},
+                "stream_excluded_page_ids": 2,
                 "rerun_pool_ids_after_run": [101, 202],
                 "rerun_pool_failure_reasons_after_run": {
                     "101": "second_stage_grading_error",

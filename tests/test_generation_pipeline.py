@@ -382,6 +382,134 @@ class GenerationPipelineTests(unittest.TestCase):
             "post_rewrite_self_containment_forbidden_phrase:listed",
         )
 
+    def test_process_generated_candidates_rejects_table_marker_rewrite_before_search(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="Who directed the film Harbor Lights?",
+            canonical_question="Who directed the film Harbor Lights?",
+            answer="Jane Doe",
+            answer_aliases=["J. Doe"],
+            subject_entity=EntityReference(
+                name="Harbor Lights",
+                qid="Q1",
+                wikipedia_title="Harbor_Lights",
+                url="https://en.wikipedia.org/wiki/Harbor_Lights",
+            ),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="director",
+            evidence=EvidenceRecord(
+                text="Harbor Lights is a 2020 drama film directed by Jane Doe.",
+                url="https://en.wikipedia.org/wiki/Harbor_Lights",
+                source_title="Harbor Lights",
+                retrieved_at="2026-05-12",
+            ),
+            question_family="who_directed_film",
+            answer_type="Person",
+            topic="Arts and Media",
+            target_time="2020",
+            source_template_domain="film_director",
+            source_metadata={"stable_answer_override": True},
+            source_candidate=source_candidate,
+        )
+
+        class TableRewriteClient:
+            def rewrite_question(self, payload: dict) -> dict:
+                return {
+                    "rewritten_question": "Which table names the director of Harbor Lights?",
+                    "search_queries": ["table director"],
+                    "discard_reason": None,
+                }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = process_generated_candidates(
+                [candidate],
+                settings=Settings(
+                    target_time="2020",
+                    pilot_total=1,
+                    output_path=Path(tmpdir) / "accepted.jsonl",
+                    rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                    rewrite_enabled=True,
+                ),
+                search_client=ErrorSearchClient(),
+                rewrite_client=TableRewriteClient(),
+            )
+
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+        self.assertEqual(
+            result.rejected[0]["rejection_rule"],
+            "post_rewrite_self_containment_forbidden_phrase:table",
+        )
+
+    def test_process_generated_candidates_rejects_time_invariant_rewrite_before_search(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="Who directed the film Harbor Lights?",
+            canonical_question="Who directed the film Harbor Lights?",
+            answer="Jane Doe",
+            answer_aliases=["J. Doe"],
+            subject_entity=EntityReference(
+                name="Harbor Lights",
+                qid="Q1",
+                wikipedia_title="Harbor_Lights",
+                url="https://en.wikipedia.org/wiki/Harbor_Lights",
+            ),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="director",
+            evidence=EvidenceRecord(
+                text="Harbor Lights is a 2020 drama film directed by Jane Doe.",
+                url="https://en.wikipedia.org/wiki/Harbor_Lights",
+                source_title="Harbor Lights",
+                retrieved_at="2026-05-12",
+            ),
+            question_family="who_directed_film",
+            answer_type="Person",
+            topic="Arts and Media",
+            target_time="2020",
+            source_template_domain="film_director",
+            source_metadata={"stable_answer_override": True},
+            source_candidate=source_candidate,
+        )
+
+        class LatestRewriteClient:
+            def rewrite_question(self, payload: dict) -> dict:
+                return {
+                    "rewritten_question": "Who is the latest director associated with Harbor Lights?",
+                    "search_queries": ["latest director"],
+                    "discard_reason": None,
+                }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = process_generated_candidates(
+                [candidate],
+                settings=Settings(
+                    target_time="2020",
+                    pilot_total=1,
+                    output_path=Path(tmpdir) / "accepted.jsonl",
+                    rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                    rewrite_enabled=True,
+                ),
+                search_client=ErrorSearchClient(),
+                rewrite_client=LatestRewriteClient(),
+            )
+
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+        self.assertEqual(
+            result.rejected[0]["rejection_rule"],
+            "post_rewrite_time_invariance_forbidden_phrase:latest",
+        )
+        self.assertEqual(
+            result.rejected[0]["source_metadata"]["post_rewrite_time_invariance_failure_reason"],
+            "post_rewrite_time_invariance_forbidden_phrase:latest",
+        )
+
     def test_route1_rewrite_payload_uses_triplet_text_contract(self) -> None:
         source_candidate = make_candidate()
         source_candidate.source_metadata["stable_answer_override"] = True

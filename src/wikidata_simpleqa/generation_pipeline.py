@@ -45,6 +45,12 @@ POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS = (
     ("listed", re.compile(r"\blisted\b", flags=re.IGNORECASE)),
     ("example", re.compile(r"\bexample\b", flags=re.IGNORECASE)),
     ("in_the_table", re.compile(r"\bin\s+the\s+table\b", flags=re.IGNORECASE)),
+    ("table", re.compile(r"\btable\b", flags=re.IGNORECASE)),
+)
+POST_REWRITE_TIME_INVARIANCE_FORBIDDEN_PATTERNS = (
+    ("current", re.compile(r"\bcurrent(?:ly)?\b", flags=re.IGNORECASE)),
+    ("latest", re.compile(r"\blatest\b", flags=re.IGNORECASE)),
+    ("recent", re.compile(r"\brecent(?:ly)?\b", flags=re.IGNORECASE)),
 )
 
 
@@ -248,6 +254,26 @@ def process_generated_candidates(
                     notes={
                         "failure_reason": self_containment_reason,
                         "surface_validation_failure_reason": self_containment_reason,
+                    },
+                )
+            )
+            continue
+        time_invariance_reason = _post_rewrite_time_invariance_failure(candidate)
+        if time_invariance_reason is not None:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            candidate.source_metadata["surface_validation_failure_reason"] = time_invariance_reason
+            candidate.source_metadata["post_rewrite_time_invariance_failure_reason"] = time_invariance_reason
+            candidate.validation = {
+                "rewrite_guard_passed": False,
+                "surface_validation_failure_reason": time_invariance_reason,
+            }
+            _record_candidate_timings(candidate, candidate_timings)
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason="rewrite_guard_rejected",
+                    notes={
+                        "failure_reason": time_invariance_reason,
+                        "surface_validation_failure_reason": time_invariance_reason,
                     },
                 )
             )
@@ -504,6 +530,17 @@ def _post_rewrite_self_containment_failure(candidate: GeneratedCandidate) -> str
     for label, pattern in POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS:
         if pattern.search(rewritten_question):
             return f"post_rewrite_self_containment_forbidden_phrase:{label}"
+    return None
+
+
+def _post_rewrite_time_invariance_failure(candidate: GeneratedCandidate) -> str | None:
+    """Return a post-rewrite time-invariance failure reason for live-status wording."""
+    rewritten_question = str(candidate.rewritten_question or "").strip()
+    if not rewritten_question:
+        return None
+    for label, pattern in POST_REWRITE_TIME_INVARIANCE_FORBIDDEN_PATTERNS:
+        if pattern.search(rewritten_question):
+            return f"post_rewrite_time_invariance_forbidden_phrase:{label}"
     return None
 
 

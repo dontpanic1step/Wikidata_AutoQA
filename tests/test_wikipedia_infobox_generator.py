@@ -47,6 +47,7 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _filter_endpoint_url_entries,
     _failure_reason_counts,
     _load_endpoint_jsonl,
+    _load_stream_excluded_page_ids,
     _load_url_entries,
     _load_urls,
     _remaining_after_endpoint,
@@ -634,6 +635,43 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(selected, [303])
         self.assertEqual(state.rerun_pool, [301])
 
+    def test_table_search_reservation_skips_external_page_id_exclusions(self) -> None:
+        class FakeWikipediaSearchClient:
+            def __init__(self) -> None:
+                self.calls = 0
+
+            def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
+                self.calls += 1
+                if self.calls == 1:
+                    return [SimpleNamespace(page_id=101), SimpleNamespace(page_id=102)]
+                return [SimpleNamespace(page_id=201)]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            exclusion_file = root / "exclude.json"
+            exclusion_file.write_text(json.dumps([101, 102]), encoding="utf-8")
+            state = PageIdStreamState.load(root / "state.json")
+            state.used_ids.update(_load_stream_excluded_page_ids([exclusion_file]))
+            args = SimpleNamespace(
+                stream_page_source="table-search",
+                stream_search_max_rounds=2,
+                stream_search_limit=50,
+                stream_search_query=[],
+                enable_broad_table_search=False,
+            )
+
+            selected = _reserve_stream_page_ids(
+                state=state,
+                args=args,
+                wikipedia_client=FakeWikipediaSearchClient(),
+                rng=random.Random(1),
+                count=1,
+            )
+
+        self.assertEqual(selected, [201])
+        self.assertEqual(state.table_search_offset('insource:"wikitable"'), 100)
+        self.assertTrue({101, 102, 201}.issubset(state.used_ids))
+
     def test_rerun_pool_limit_defaults_to_whole_pool(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             state = PageIdStreamState.load(Path(tmpdir) / "state.json")
@@ -832,7 +870,8 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(len(tables), 2)
         self.assertEqual(tables[0].table_type, "infobox")
         self.assertEqual(tables[0].row_dicts, [])
-        self.assertIn("| Example event | Example event |", tables[0].markdown)
+        self.assertIn("| Column 1 | Column 2 |", tables[0].markdown)
+        self.assertIn("| Example event |  |", tables[0].markdown)
         self.assertIn("| Edition | 23rd |", tables[0].markdown)
         self.assertEqual(tables[1].caption, "List of tournament venues")
         self.assertEqual(tables[1].section_heading, "Venues")
@@ -840,6 +879,74 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("| Venue | City | Capacity |", tables[1].markdown)
         self.assertIn("| AT&T Stadium | Arlington | 80,000 |", tables[1].markdown)
         self.assertFalse(tables[1].structure["legacy_row_dict_parser_enabled"])
+
+    def test_infobox_colspan_rows_are_rendered_in_place_without_duplication(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <h2><span class="mw-headline" id="Formation">Formation</span></h2>
+        <table class="infobox">
+        <tr><th colspan="2">Great Western Railway Act 1835</th></tr>
+        <tr><th colspan="2">Act of Parliament</th></tr>
+        <tr><td colspan="2">Parliament of the United Kingdom</td></tr>
+        <tr><th>Long title</th><td>An Act for making a Railway from Bristol.</td></tr>
+        <tr><th>Citation</th><td>5 &amp; 6 Will. 4. c. cvii</td></tr>
+        <tr><th colspan="2">Dates</th></tr>
+        <tr><th>Royal assent</th><td>31 August 1835</td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+
+        self.assertEqual(table.headers, ["Column 1", "Column 2"])
+        self.assertIn("| Parliament of the United Kingdom |  |", table.markdown)
+        self.assertIn("| Royal assent | 31 August 1835 |", table.markdown)
+        self.assertNotIn("| Parliament of the United Kingdom | Parliament of the United Kingdom |", table.markdown)
+        self.assertEqual(table.structure["full_width_heading_row_count"], 4)
+
+    def test_wikitable_full_width_rows_are_context_without_shifting_partial_groups(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <table class="wikitable">
+        <tr><th colspan="8">Japanese era names by period</th></tr>
+        <tr><th colspan="8">538-1264</th></tr>
+        <tr><th colspan="2">Asuka</th><th colspan="2">Heian</th><th colspan="2">Heian contd</th><th colspan="2">Kamakura contd</th></tr>
+        <tr><td>645-650</td><td>Taika</td><td>806-810</td><td>Daido</td><td>964-968</td><td>Koho</td><td>1222-1224</td><td>Joo</td></tr>
+        <tr><th colspan="2">Nara</th><td>854-857</td><td>Saiko</td><td>983-985</td><td>Eikan</td><th colspan="2">Kamakura</th></tr>
+        <tr><td>715-717</td><td>Reiki</td><td>857-859</td><td>Tenan</td><td>985-987</td><td>Kanna</td><td>1185-1190</td><td>Bunji</td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+
+        self.assertEqual(table.structure["full_width_heading_row_count"], 2)
+        self.assertEqual(
+            [row["text"] for row in table.structure["full_width_heading_rows"]],
+            ["Japanese era names by period", "538-1264"],
+        )
+        self.assertNotIn("| Japanese era names by period | Japanese era names by period |", table.markdown)
+        self.assertIn("| Japanese era names by period |  |  |  |  |  |  |  |", table.markdown)
+        self.assertIn("| 538-1264 |  |  |  |  |  |  |  |", table.markdown)
+        self.assertIn("| Asuka |  | Heian |  | Heian contd |  | Kamakura contd |  |", table.markdown)
+        self.assertIn("| Nara |  | 854-857 | Saiko | 983-985 | Eikan | Kamakura |  |", table.markdown)
+        self.assertIn("| 715-717 | Reiki | 857-859 | Tenan | 985-987 | Kanna | 1185-1190 | Bunji |", table.markdown)
+
+    def test_table_extraction_strips_numeric_citation_markers_from_cells(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <table class="wikitable">
+        <tr><th>Name [1]</th><th>Note [a]</th></tr>
+        <tr><td>Alpha [ 23 ]</td><td>Kept note [a]</td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+
+        self.assertIn("| Name | Note [a] |", table.markdown)
+        self.assertIn("| Alpha | Kept note [a] |", table.markdown)
+        self.assertNotIn("[ 23 ]", table.markdown)
 
     def test_table_extraction_renders_complex_spanning_table_as_markdown(self) -> None:
         html = """
@@ -1185,7 +1292,13 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("no_social_science_research:population", candidate.source_metadata["discard_reason"])
         self.assertEqual(
             candidate.source_metadata["table_filter_modes"],
-            ["no_incomplete_tables", "not_number_dominant", "no_social_science_research"],
+            [
+                "no_picture_heavy_tables",
+                "no_approximate_tables",
+                "no_incomplete_tables",
+                "not_number_dominant",
+                "no_social_science_research",
+            ],
         )
 
     def test_no_incomplete_tables_mode_rejects_unknown_markers_before_llm_generation(self) -> None:
@@ -1248,6 +1361,142 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         self.assertNotIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
         self.assertEqual(len(llm_client.prompts), 1)
+
+    def test_no_picture_heavy_tables_mode_rejects_any_wikitable_image_before_llm_generation(self) -> None:
+        class PictureWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Picture example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Picture example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Role</th><th>Notes</th><th>Portrait</th></tr>
+                        <tr><td>Alpha</td><td>Chair</td><td>Settled</td><td><img src="alpha.jpg" alt="Alpha"></td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Picture_example"],
+            wikipedia_client=PictureWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn(
+            "no_picture_heavy_tables:wikitable_image_cell_count=1",
+            candidate.source_metadata["discard_reason"],
+        )
+        self.assertEqual(
+            candidate.source_metadata["table_selection"][0]["picture_heavy_table_stats"]["image_covered_cell_count"],
+            1,
+        )
+
+    def test_no_picture_heavy_tables_mode_allows_infobox_images_at_one_quarter_cells(self) -> None:
+        class SparseInfoboxImageWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Sparse infobox image example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Sparse infobox image example is a settled historical profile.</p>
+                        <table class="infobox">
+                        <tr><td>Alpha</td><td>Stable office</td><td>Archive</td><td><img src="alpha.jpg" alt="Alpha"></td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Sparse_infobox_image_example"],
+            wikipedia_client=SparseInfoboxImageWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertNotIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(len(llm_client.prompts), 1)
+        self.assertEqual(
+            candidate.source_metadata["table_selection"][0]["picture_heavy_table_stats"]["image_cell_rate"],
+            0.25,
+        )
+
+    def test_no_picture_heavy_tables_mode_rejects_infobox_images_above_one_quarter_cells(self) -> None:
+        class DenseInfoboxImageWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Dense infobox image example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Dense infobox image example is a settled historical profile.</p>
+                        <table class="infobox">
+                        <tr><td>Alpha</td><td>Stable office</td><td><img src="alpha.jpg" alt="Alpha"></td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Dense_infobox_image_example"],
+            wikipedia_client=DenseInfoboxImageWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn("no_picture_heavy_tables:image_cell_rate=0.3333", candidate.source_metadata["discard_reason"])
+
+    def test_no_approximate_tables_mode_rejects_precision_markers_before_llm_generation(self) -> None:
+        class ApproximateWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Approximate example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Approximate example is a settled historical list.</p>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Approx. status</th></tr>
+                        <tr><td>Alpha</td><td>Approximate status</td></tr>
+                        <tr><td>Beta</td><td>Approximately recorded</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Approximate_example"],
+            wikipedia_client=ApproximateWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn(
+            "no_approximate_tables:approx.,approximate,approximately",
+            candidate.source_metadata["discard_reason"],
+        )
+        self.assertEqual(
+            candidate.source_metadata["table_selection"][0]["approximate_table_markers"],
+            ["approx.", "approximate", "approximately"],
+        )
 
     def test_not_number_dominant_mode_rejects_comma_grouped_numbers_before_llm_generation(self) -> None:
         class BigNumberWikipediaClient(FakeWikipediaClient):

@@ -32,7 +32,6 @@ from run_wikipedia_infobox_pipeline import (
     _load_endpoint_jsonl,
     _phase_timing_stats,
     _safe_artifact_id,
-    _stable_stream_seed,
     _survival_by_layer,
     _write_stream_walkthrough,
 )
@@ -171,10 +170,13 @@ def main() -> int:
     summary_output = args.summary_output or ROOT / "outputs" / f"{run_id}_summary.json"
     walkthrough_output = args.walkthrough_output or ROOT / "docs" / "walkthroughs" / f"{run_id}.md"
     stream_state_base = args.stream_state or segment_dir / "stream_state.json"
+    stream_exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
 
     segment_dir.mkdir(parents=True, exist_ok=True)
     segment_summaries: list[dict] = []
+    stream_excluded_page_ids: set[int] = set()
     for index, item in enumerate(recipe_items):
+        _write_stream_exclusion_file(stream_exclusion_file, stream_excluded_page_ids)
         command, paths = _segment_command(
             args=args,
             item=item,
@@ -182,6 +184,7 @@ def main() -> int:
             run_id=run_id,
             segment_dir=segment_dir,
             stream_state_base=stream_state_base,
+            stream_exclusion_file=stream_exclusion_file,
             stream_search_initial_offset=_segment_stream_search_initial_offset(recipe_items, index, args.stream_search_limit),
             reasoning_types=reasoning_types,
             table_filter_modes=table_filter_modes,
@@ -193,6 +196,7 @@ def main() -> int:
             summary["segment_accepted_output"] = str(paths["accepted"])
             summary["segment_rejected_output"] = str(paths["rejected"])
             segment_summaries.append(summary)
+            stream_excluded_page_ids.update(_summary_page_ids(summary))
             continue
         if args.dry_run:
             print(" ".join(command))
@@ -204,6 +208,7 @@ def main() -> int:
         summary["segment_accepted_output"] = str(paths["accepted"])
         summary["segment_rejected_output"] = str(paths["rejected"])
         segment_summaries.append(summary)
+        stream_excluded_page_ids.update(_summary_page_ids(summary))
 
     if args.dry_run:
         return 0
@@ -326,22 +331,15 @@ def _recipe_segment_seed(
     answer_type: str,
     index: int,
 ) -> int:
-    """Return a deterministic seed for one recipe segment."""
+    """Return the deterministic recipe-level seed shared by every segment."""
     if args.stream_random_seed is not None:
-        return _stable_stream_seed(
-            "wikipedia_stream_recipe",
-            int(args.stream_random_seed),
-            run_id,
-            segment_id,
-            answer_type,
-            index,
-        )
+        return int(args.stream_random_seed)
     seed_args = argparse.Namespace(
         stream_random_seed=None,
         run_group_id=run_id,
-        run_segment_id=segment_id,
-        summary_output=segment_id,
-        stream_state=f"{run_id}:{segment_id}",
+        run_segment_id="recipe",
+        summary_output=f"{run_id}:recipe",
+        stream_state=f"{run_id}:recipe",
         start_from_endpoint=False,
         stream_rerun_pool_only=False,
     )
@@ -362,6 +360,25 @@ def _segment_stream_search_initial_offset(
     return offset
 
 
+def _write_stream_exclusion_file(path: Path, page_ids: set[int]) -> None:
+    """Write recipe-level page IDs that later segments must skip."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(sorted(page_ids), indent=2) + "\n", encoding="utf-8")
+
+
+def _summary_page_ids(summary: dict) -> set[int]:
+    """Return attempted page IDs recorded by one segment summary."""
+    page_ids: set[int] = set()
+    for raw_page_id in summary.get("page_ids", []):
+        try:
+            page_id = int(raw_page_id)
+        except (TypeError, ValueError):
+            continue
+        if page_id > 0:
+            page_ids.add(page_id)
+    return page_ids
+
+
 def _segment_command(
     *,
     args: argparse.Namespace,
@@ -370,6 +387,7 @@ def _segment_command(
     run_id: str,
     segment_dir: Path,
     stream_state_base: Path,
+    stream_exclusion_file: Path,
     stream_search_initial_offset: int,
     reasoning_types: list[str],
     table_filter_modes: list[str],
@@ -446,6 +464,8 @@ def _segment_command(
         str(args.stream_search_max_rounds),
         "--stream-search-initial-offset",
         str(max(0, int(stream_search_initial_offset))),
+        "--stream-exclude-page-id-file",
+        str(stream_exclusion_file),
         "--stream-random-seed",
         str(stream_random_seed),
         "--stream-batch-size",
@@ -677,6 +697,8 @@ def _aggregate_stream_state_stats(segment_summaries: list[dict]) -> dict[str, in
             continue
         for key in totals:
             totals[key] += int(stats.get(key, 0) or 0)
+        totals["used"] -= int(summary.get("stream_excluded_page_ids", 0) or 0)
+    totals["used"] = max(0, totals["used"])
     return totals
 
 

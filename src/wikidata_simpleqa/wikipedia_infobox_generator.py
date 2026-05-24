@@ -54,9 +54,21 @@ ROUTE3_ANSWER_TYPE_PROMPT_RULES = {
 ROUTE3_EXTRA_PROMPTS = {
     "no_social_science_research_prompt": NO_SOCIAL_SCIENCE_RESEARCH_PROMPT,
 }
-ROUTE3_TABLE_FILTER_MODES = ("no_incomplete_tables", "not_number_dominant", "no_social_science_research")
+ROUTE3_TABLE_FILTER_MODES = (
+    "no_picture_heavy_tables",
+    "no_approximate_tables",
+    "no_incomplete_tables",
+    "not_number_dominant",
+    "no_social_science_research",
+)
 ROUTE3_TABLE_FILTER_MODE_SET = set(ROUTE3_TABLE_FILTER_MODES)
 DEFAULT_ROUTE3_TABLE_FILTER_MODES = ROUTE3_TABLE_FILTER_MODES
+PICTURE_HEAVY_TABLE_MAX_IMAGE_CELL_RATE = 0.25
+APPROXIMATE_TABLE_MARKER_PATTERNS = (
+    ("approx.", re.compile(r"(?<!\w)approx\.", flags=re.IGNORECASE)),
+    ("approximate", re.compile(r"(?<!\w)approximate(?!\w)", flags=re.IGNORECASE)),
+    ("approximately", re.compile(r"(?<!\w)approximately(?!\w)", flags=re.IGNORECASE)),
+)
 NUMBER_DOMINANCE_WORD_MARKERS = ("thousand", "million", "billion", "trillion")
 NUMBER_DOMINANCE_LOW_NUMERIC_THRESHOLD = 1000
 NUMBER_DOMINANCE_YEAR_LIKE_MIN = 1500
@@ -247,6 +259,7 @@ ANSWER_PRECISION_PROMPT_RULES = (
     "and format it like `May 2024`.\n"
     "- If the answer is a number, specify the counted quantity or unit in the question, such as gallons, "
     "people, months, authors, tracks, seats, or metres.\n"
+    "- If the answer is a place, the question should specify the type of place or geographic entity, such as city, country, river, or mountain, instead of just asking `What place ...` `What location ...`.\n"
     "- Do not add units to the reference answer or answer_aliases; keep numeric reference answers as "
     "normalized values only.\n"
 )
@@ -262,6 +275,9 @@ NUMBER_PRECISION_PROMPT_RULES = (
     "people, months, authors, tracks, seats, or metres.\n"
     "- Do not add units to the reference answer or answer_aliases; keep numeric reference answers as "
     "normalized values only.\n"
+)
+PLACE_PRECISION_PROMPT_RULES = (
+    "- If the answer is a place, the question should specify the type of place or geographic entity, such as city, country, river, or mountain, instead of just asking `What place ...` `What location ...`.\n"
 )
 
 
@@ -882,6 +898,7 @@ def build_wikipedia_infobox_prompt(
         f"{_reasoning_type_prompt_rule(normalized_allowed_reasoning_types)}"
         f"{_answer_type_prompt_rule(normalized_allowed_answer_types)}"
         f"{_tie_answer_prompt_rule(normalized_allowed_reasoning_types)}"
+        f"- If the tables provided cannot support the allowed answer types {', '.join(normalized_allowed_answer_types)}, discard the table, set other fields empty, and write `discard_reason` in your response.\n"
 
         "### Reference answers should not change over time.\n\n"
         f"{_route3_stability_prompt_rule()}"
@@ -905,6 +922,8 @@ def build_wikipedia_infobox_prompt(
         "- The question must be self-contained. It should be answerable without seeing the list or the table. Do not ask `What is ... in the list(table)?`.\n"
         # "- Do not cite the list unless the source is a well-known named chart or list, such as a Billboard chart, UNESCO list or a sports tournament chart. Phrases to avoid: `according to the table`, `according to the [source] table`, or `in the List of ...`. \n"
         # "- Ask about the facts in the table. Do not ask questions about the table itself, such as `What year does the estimate refer to`.\n"
+        "- Rendered markdown preserves table layout: a non-empty cell followed by blank cells may represent an HTML colspan cell. Treat it as one spanned cell, not as repeated field values.\n"
+        "- Full-width or partial-width spanned rows can appear anywhere in a table. Use them as local visual/context labels for nearby rows, not as direct answers to unrelated fields.\n"
         "- If the table is only a toy, tutorial, or teaching example rather than real-world factual data, choose another table.\n"
         "- Treat curated list pages such as `List of national parks of the United States` as complete and authoritative for membership within their stated scope. Do not hedge by saying `according to the List of ...`.\n"
         "### Other prompt rules:\n\n"
@@ -1125,6 +1144,8 @@ def _answer_precision_prompt_rule(allowed_answer_types: tuple[str, ...]) -> str:
         parts.append(DATE_PRECISION_PROMPT_RULES)
     if "Number" in allowed_answer_types:
         parts.append(NUMBER_PRECISION_PROMPT_RULES)
+    if "Place" in allowed_answer_types:
+        parts.append(PLACE_PRECISION_PROMPT_RULES)
     return "".join(parts)
 
 
@@ -1311,6 +1332,17 @@ def _annotate_table_filter_modes(
         table = copied.get("table")
         copied["table_filter_modes"] = list(modes)
         if isinstance(table, WikipediaTable):
+            if "no_picture_heavy_tables" in modes:
+                picture_stats = _picture_heavy_table_stats(table)
+                copied["picture_heavy_table_stats"] = picture_stats
+                picture_reason = _picture_heavy_table_filter_reason(table, picture_stats)
+                if picture_reason:
+                    reasons.append(picture_reason)
+            if "no_approximate_tables" in modes:
+                approximate_markers = _approximate_table_markers(table)
+                copied["approximate_table_markers"] = approximate_markers
+                if approximate_markers:
+                    reasons.append(f"no_approximate_tables:{','.join(approximate_markers)}")
             if "no_incomplete_tables" in modes:
                 incomplete_markers = _incomplete_table_markers(table)
                 copied["incomplete_table_markers"] = incomplete_markers
@@ -1359,6 +1391,50 @@ def _incomplete_table_markers(table: WikipediaTable) -> list[str]:
     """Return incomplete-data markers present in table-owned text."""
     checked_text = _table_marker_text(table)
     return _text_exact_markers(checked_text, INCOMPLETE_TABLE_MARKERS)
+
+
+def _picture_heavy_table_stats(table: WikipediaTable) -> dict[str, Any]:
+    """Return audit stats for tables dominated by image-bearing cells."""
+    structure = table.structure if isinstance(table.structure, dict) else {}
+    image_covered = int(structure.get("image_covered_cell_count", 0) or 0)
+    total_covered = int(structure.get("total_cell_coverage_count", 0) or 0)
+    image_raw = int(structure.get("image_raw_cell_count", 0) or 0)
+    total_raw = int(structure.get("raw_cell_count", 0) or 0)
+    rate = image_covered / total_covered if total_covered > 0 else 0.0
+    return {
+        "image_raw_cell_count": image_raw,
+        "raw_cell_count": total_raw,
+        "image_covered_cell_count": image_covered,
+        "total_cell_coverage_count": total_covered,
+        "image_cell_rate": round(rate, 4),
+        "image_cell_rate_threshold": PICTURE_HEAVY_TABLE_MAX_IMAGE_CELL_RATE,
+    }
+
+
+def _picture_heavy_table_filter_reason(table: WikipediaTable, stats: dict[str, Any]) -> str:
+    """Return the picture-heavy rejection reason for one table, if any."""
+    image_rate = float(stats.get("image_cell_rate", 0.0) or 0.0)
+    image_count = int(stats.get("image_covered_cell_count", 0) or 0)
+    if table.table_type == "wikitable" and image_count:
+        return f"no_picture_heavy_tables:wikitable_image_cell_count={image_count}"
+    if table.table_type == "infobox" and image_count and image_rate > PICTURE_HEAVY_TABLE_MAX_IMAGE_CELL_RATE:
+        return f"no_picture_heavy_tables:image_cell_rate={image_rate:.4f}"
+    return ""
+
+
+def _approximate_table_markers(table: WikipediaTable) -> list[str]:
+    """Return approximate-value markers that make table facts too imprecise."""
+    text = " ".join(
+        [
+            table.caption,
+            " ".join(cell for row in table.rows for cell in row),
+        ]
+    )
+    hits: list[str] = []
+    for marker, pattern in APPROXIMATE_TABLE_MARKER_PATTERNS:
+        if pattern.search(text) and marker not in hits:
+            hits.append(marker)
+    return hits
 
 
 def _number_dominance_table_stats(table: WikipediaTable) -> dict[str, Any]:
@@ -1700,7 +1776,13 @@ class _WikipediaTableParser(HTMLParser):
                 "header": tag == "th",
                 "rowspan": _positive_cell_span(attr_map.get("rowspan", ""), default=1),
                 "colspan": _positive_cell_span(attr_map.get("colspan", ""), default=1),
+                "image_count": 0,
             }
+        elif tag == "img" and self._active_cell is not None:
+            self._active_cell["image_count"] = int(self._active_cell.get("image_count", 0) or 0) + 1
+
+    def handle_startendtag(self, tag: str, attrs) -> None:
+        self.handle_starttag(tag, attrs)
 
     def handle_endtag(self, tag: str) -> None:
         if tag == self._heading_tag:
@@ -1732,7 +1814,7 @@ class _WikipediaTableParser(HTMLParser):
         if self._table_depth != 1:
             return
         if tag in {"th", "td"} and self._active_cell is not None:
-            text = _clean_text(" ".join(self._active_cell["text_parts"]))
+            text = _clean_cell_text(" ".join(self._active_cell["text_parts"]))
             if self._active_row is not None:
                 self._active_row.append(
                     {
@@ -1740,6 +1822,7 @@ class _WikipediaTableParser(HTMLParser):
                         "header": bool(self._active_cell["header"]),
                         "rowspan": int(self._active_cell.get("rowspan", 1)),
                         "colspan": int(self._active_cell.get("colspan", 1)),
+                        "image_count": int(self._active_cell.get("image_count", 0) or 0),
                     }
                 )
             self._active_cell = None
@@ -1793,11 +1876,12 @@ def _expand_table_grid(raw_rows: list[list[dict[str, Any]]]) -> tuple[list[list[
             rowspan = _positive_cell_span(cell.get("rowspan", 1), default=1)
             colspan = _positive_cell_span(cell.get("colspan", 1), default=1)
             for offset in range(colspan):
-                row_values.append(text)
+                spanned_text = text if offset == 0 else ""
+                row_values.append(spanned_text)
                 row_headers.append(is_header)
                 if rowspan > 1:
                     pending[column + offset] = {
-                        "text": text,
+                        "text": spanned_text,
                         "header": is_header,
                         "remaining": rowspan - 1,
                     }
@@ -1823,11 +1907,20 @@ def _header_row_count(grid: list[list[str]], header_grid: list[list[bool]]) -> i
     """Return the number of consecutive top rows that are table headers."""
     count = 0
     for row, header_row in zip(grid, header_grid):
+        if _is_full_width_context_grid_row(row, header_row):
+            break
         if row and any(cell.strip() for cell in row) and all(header_row):
             count += 1
             continue
         break
     return count
+
+
+def _is_full_width_context_grid_row(row: list[str], header_row: list[bool]) -> bool:
+    """Return whether a rendered row is a full-width context label, not column headers."""
+    if len(row) <= 1 or not all(header_row):
+        return False
+    return sum(1 for cell in row if cell.strip()) == 1
 
 
 def _combined_markdown_headers(grid: list[list[str]], header_row_count: int) -> list[str]:
@@ -1841,14 +1934,38 @@ def _combined_markdown_headers(grid: list[list[str]], header_row_count: int) -> 
     for column in range(width):
         parts: list[str] = []
         seen: set[str] = set()
-        for row in grid[:header_row_count]:
+        for row in _header_rows_for_combination(grid[:header_row_count]):
             value = row[column].strip()
             normalized = normalize_name(value)
             if value and normalized not in seen:
                 parts.append(value)
                 seen.add(normalized)
-        headers.append(" / ".join(parts) if parts else f"Column {column + 1}")
+        if parts:
+            headers.append(" / ".join(parts))
+        elif header_row_count == 1:
+            headers.append("")
+        else:
+            headers.append(f"Column {column + 1}")
     return headers
+
+
+def _header_rows_for_combination(header_rows: list[list[str]]) -> list[list[str]]:
+    """Propagate parent headers only when child header rows exist."""
+    if len(header_rows) <= 1:
+        return header_rows
+    combined_rows: list[list[str]] = []
+    for row in header_rows:
+        filled: list[str] = []
+        active = ""
+        for value in row:
+            text = value.strip()
+            if text:
+                active = text
+                filled.append(value)
+            else:
+                filled.append(active)
+        combined_rows.append(filled)
+    return combined_rows
 
 
 def _markdown_cell(value: str) -> str:
@@ -1872,6 +1989,55 @@ def _grid_to_markdown(headers: list[str], data_rows: list[list[str]]) -> str:
     return "\n".join(lines)
 
 
+def _full_width_heading_rows(
+    raw_rows: list[list[dict[str, Any]]],
+    *,
+    width: int,
+) -> list[dict[str, Any]]:
+    """Return raw rows that span the whole table and should be contextual headings."""
+    if width <= 1:
+        return []
+    heading_rows: list[dict[str, Any]] = []
+    for row_index, raw_row in enumerate(raw_rows):
+        non_empty_cells = [
+            cell
+            for cell in raw_row
+            if str(cell.get("text", "")).strip()
+        ]
+        if len(non_empty_cells) != 1:
+            continue
+        cell = non_empty_cells[0]
+        colspan = _positive_cell_span(cell.get("colspan", 1), default=1)
+        if colspan < width:
+            continue
+        heading_rows.append(
+            {
+                "row": row_index,
+                "text": str(cell.get("text", "")).strip(),
+                "colspan": colspan,
+            }
+        )
+    return heading_rows
+
+
+def _drop_grid_rows(
+    grid: list[list[str]],
+    header_grid: list[list[bool]],
+    row_indexes: set[int],
+) -> tuple[list[list[str]], list[list[bool]]]:
+    """Return a table grid without contextual raw rows."""
+    if not row_indexes:
+        return grid, header_grid
+    filtered_grid: list[list[str]] = []
+    filtered_header_grid: list[list[bool]] = []
+    for row_index, (row, header_row) in enumerate(zip(grid, header_grid)):
+        if row_index in row_indexes:
+            continue
+        filtered_grid.append(row)
+        filtered_header_grid.append(header_row)
+    return filtered_grid, filtered_header_grid
+
+
 def _table_structure_stats(
     raw_rows: list[list[dict[str, Any]]],
     grid: list[list[str]],
@@ -1882,10 +2048,20 @@ def _table_structure_stats(
     raw_row_cell_counts = [len(row) for row in raw_rows]
     span_cells: list[dict[str, int]] = []
     empty_cells: list[dict[str, int]] = []
+    raw_cell_count = 0
+    total_cell_coverage_count = 0
+    image_raw_cell_count = 0
+    image_covered_cell_count = 0
     for row_index, row in enumerate(raw_rows):
         for column_index, cell in enumerate(row):
+            raw_cell_count += 1
             rowspan = _positive_cell_span(cell.get("rowspan", 1), default=1)
             colspan = _positive_cell_span(cell.get("colspan", 1), default=1)
+            coverage = max(1, rowspan * colspan)
+            total_cell_coverage_count += coverage
+            if int(cell.get("image_count", 0) or 0) > 0:
+                image_raw_cell_count += 1
+                image_covered_cell_count += coverage
             if rowspan > 1 or colspan > 1:
                 span_cells.append(
                     {
@@ -1909,6 +2085,16 @@ def _table_structure_stats(
         "span_cell_count": len(span_cells),
         "span_cells": span_cells[:20],
         "nested_table_count": int(frame.get("nested_table_count", 0) or 0),
+        "raw_cell_count": raw_cell_count,
+        "total_cell_coverage_count": total_cell_coverage_count,
+        "image_raw_cell_count": image_raw_cell_count,
+        "image_covered_cell_count": image_covered_cell_count,
+        "image_cell_rate": round(
+            image_covered_cell_count / total_cell_coverage_count,
+            4,
+        )
+        if total_cell_coverage_count
+        else 0.0,
     }
 
 
@@ -1916,12 +2102,17 @@ def _build_wikipedia_table(table_index: int, frame: dict[str, Any]) -> Wikipedia
     """Convert one parser frame into a table model."""
     raw_rows = frame.get("rows", [])
     grid, header_grid = _expand_table_grid(raw_rows)
+    table_type = str(frame.get("table_type", "")).strip()
+    full_width_heading_rows = _full_width_heading_rows(raw_rows, width=len(grid[0]) if grid else 0)
     header_rows = _header_row_count(grid, header_grid)
     headers = _combined_markdown_headers(grid, header_rows)
     data_rows = grid[header_rows:] if header_rows else grid
-    rows = [headers, *data_rows] if headers else data_rows
     markdown = _grid_to_markdown(headers, data_rows)
+    rows = [headers, *data_rows] if headers else data_rows
     structure = _table_structure_stats(raw_rows, grid, header_rows, frame)
+    if full_width_heading_rows:
+        structure["full_width_heading_row_count"] = len(full_width_heading_rows)
+        structure["full_width_heading_rows"] = full_width_heading_rows[:20]
     normalized_parts = [
         str(frame.get("section_heading", "")).strip(),
         str(frame.get("caption", "")).strip(),
@@ -1929,7 +2120,7 @@ def _build_wikipedia_table(table_index: int, frame: dict[str, Any]) -> Wikipedia
     ]
     return WikipediaTable(
         table_index=table_index,
-        table_type=str(frame.get("table_type", "")).strip(),
+        table_type=table_type,
         section_heading=str(frame.get("section_heading", "")).strip(),
         caption=str(frame.get("caption", "")).strip(),
         nearby_intro=str(frame.get("nearby_intro", "")).strip(),
@@ -2143,9 +2334,11 @@ def _selection_payload(row: dict[str, Any]) -> dict[str, Any]:
         "table_filter_modes": row.get("table_filter_modes", []),
         "table_filter_rejection_reason": row.get("table_filter_rejection_reason", ""),
         "table_filter_rejection_reasons": row.get("table_filter_rejection_reasons", []),
+        "picture_heavy_table_stats": row.get("picture_heavy_table_stats", {}),
         "incomplete_table_markers": row.get("incomplete_table_markers", []),
         "number_dominance_stats": row.get("number_dominance_stats", {}),
         "social_science_markers": row.get("social_science_markers", []),
+        "approximate_table_markers": row.get("approximate_table_markers", []),
         "min_table_score": row.get("min_table_score"),
         "below_min_table_score": bool(row.get("below_min_table_score", False)),
         "zero_numeric_rate": row.get("zero_numeric_rate"),
@@ -2264,6 +2457,20 @@ def _normalize_table_filter_mode(value: Any) -> str:
         "social_science": "no_social_science_research",
         "no_social_science": "no_social_science_research",
         "no_social_science_research_prompt": "no_social_science_research",
+        "picture_heavy": "no_picture_heavy_tables",
+        "pictures": "no_picture_heavy_tables",
+        "images": "no_picture_heavy_tables",
+        "no_pictures": "no_picture_heavy_tables",
+        "no_images": "no_picture_heavy_tables",
+        "no_picture_heavy": "no_picture_heavy_tables",
+        "no_image_heavy_tables": "no_picture_heavy_tables",
+        "approx": "no_approximate_tables",
+        "approximate": "no_approximate_tables",
+        "approximately": "no_approximate_tables",
+        "precision_gate": "no_approximate_tables",
+        "no_approx": "no_approximate_tables",
+        "no_approximate": "no_approximate_tables",
+        "no_approximately": "no_approximate_tables",
     }
     return aliases.get(normalized, normalized)
 
@@ -2658,6 +2865,11 @@ def _text_has_cutoff_year(text: str, cutoff_year: int) -> bool:
 def _clean_text(text: str) -> str:
     """Normalize table text."""
     return " ".join(unescape(text).replace("\xa0", " ").split())
+
+
+def _clean_cell_text(text: str) -> str:
+    """Normalize table cell text and remove numeric citation markers."""
+    return re.sub(r"\s*\[\s*\d+\s*\]", "", _clean_text(text)).strip()
 
 
 def _elapsed(start: float) -> float:
