@@ -45,10 +45,10 @@ ROUTE3_REASONING_TYPE_PROMPT_RULES = {
     "other": "ask only if the reasoning is clearly described by the table and does not fit the named reasoning types",
 }
 ROUTE3_ANSWER_TYPE_PROMPT_RULES = {
-    "Person": "answer must be a person's name",
-    "Place": "answer must be a place name, location, or geographic entity",
+    "Person": "answer must be a person's name, not a team's name, an official position or a named group of people. Do not ask `Who ...` unless the answer is a person's name",
+    "Place": "answer must be a place name, location, or geographic entity on Earth, not a company/award/ceremony/planet etc.",
     "Number": "answer must be numeric",
-    "Date": "answer must be a date, year, or other time-related value",
+    "Date": "answer must be a date, a month, or a year, do not ask `how many years` or ask about a time range",
     "Other": "answer must not be a person, place, number, or date; exclude numeric measurements, percentages, counts, scores, indices, rates, temperatures, durations, ranges, dates, years, people, and places",
 }
 ROUTE3_EXTRA_PROMPTS = {
@@ -946,8 +946,8 @@ def build_wikipedia_infobox_prompt(
         "- The question must be self-contained. It should be answerable without seeing the list or the table. Do not ask `What is ... in the list(table)?`.\n"
         # "- Do not cite the list unless the source is a well-known named chart or list, such as a Billboard chart, UNESCO list or a sports tournament chart. Phrases to avoid: `according to the table`, `according to the [source] table`, or `in the List of ...`. \n"
         # "- Ask about the facts in the table. Do not ask questions about the table itself, such as `What year does the estimate refer to`.\n"
-        "- Rendered markdown preserves table layout: a non-empty cell followed by blank cells may represent an HTML colspan cell. Treat it as one spanned cell, not as repeated field values.\n"
-        "- Full-width or partial-width spanned rows can appear anywhere in a table. Use them as local visual/context labels for nearby rows, not as direct answers to unrelated fields.\n"
+        # "- Rendered markdown preserves table layout: a non-empty cell followed by blank cells may represent an HTML colspan cell. Treat it as one spanned cell, not as repeated field values.\n"
+        # "- Full-width or partial-width spanned rows can appear anywhere in a table. Use them as local visual/context labels for nearby rows, not as direct answers to unrelated fields.\n"
         f"{toy_table_instruction}"
         "- Treat curated list pages such as `List of national parks of the United States` as complete and authoritative for membership within their stated scope. Do not hedge by saying `according to the List of ...`.\n"
         "### Other prompt rules:\n\n"

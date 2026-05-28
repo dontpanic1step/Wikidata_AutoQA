@@ -20,8 +20,11 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     RecipeItem,
     _apply_recipe_big_batch_mode,
     _append_stream_search_initial_offset,
+    _base_segment_id_for_run,
     _combine_segment_records,
+    _clear_rerun_pool_ids_from_states,
     _existing_recipe_page_ids,
+    _matching_segment_rerun_pool_seed,
     _recipe_summary,
     _segment_complete,
     _segment_used_count,
@@ -213,6 +216,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             )
 
         self.assertEqual(_command_value(command, "--stream-batch-size"), "50")
+        self.assertEqual(_command_value(command, "--stream-search-max-rounds"), "500")
         self.assertIn("--compact-output", command)
         self.assertIn("--big-batch-mode", command)
         self.assertEqual(_command_value(command, "--stream-discovery-max-retries"), "5")
@@ -282,6 +286,137 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
         self.assertEqual(offset, 2400)
 
+    def test_append_recipe_command_seeds_matching_rerun_pool(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            segment_dir.mkdir()
+            seed_file = segment_dir / "01_person_2000_topup1_rerun_pool_seed.json"
+            seed_file.write_text(json.dumps([101, 102]), encoding="utf-8")
+            args = _recipe_args(append_to_existing_run=True, append_run_label="topup1")
+
+            command, _paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Person", record_limit=2000),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=2400,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+                append_label="topup1",
+                rerun_pool_seed_file=seed_file,
+            )
+
+        self.assertEqual(_command_value(command, "--stream-rerun-pool-seed-file"), str(seed_file))
+        self.assertIn("--stream-prefer-rerun-pool", command)
+        self.assertIn("--stream-free-seeded-rerun-pool-on-completion", command)
+
+    def test_matching_segment_rerun_pool_seed_uses_same_segment_only(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            segment_dir.mkdir()
+            (segment_dir / "01_person_2000_state.json").write_text(
+                json.dumps({"rerun_pool": [101, 102], "accepted_ids": []}),
+                encoding="utf-8",
+            )
+            (segment_dir / "01_person_2000_topup_1_state.json").write_text(
+                json.dumps({"rerun_pool": [103], "accepted_ids": [102]}),
+                encoding="utf-8",
+            )
+            (segment_dir / "02_place_2000_state.json").write_text(
+                json.dumps({"rerun_pool": [201]}),
+                encoding="utf-8",
+            )
+
+            seed_ids, source_paths = _matching_segment_rerun_pool_seed(
+                segment_dir=segment_dir,
+                base_segment_id="01_person_2000",
+                current_segment_id="01_person_2000_topup_2",
+            )
+
+        self.assertEqual(seed_ids, [101, 103])
+        self.assertEqual({path.name for path in source_paths}, {"01_person_2000_state.json", "01_person_2000_topup_1_state.json"})
+
+    def test_append_subset_recipe_reuses_existing_answer_type_segment_id(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            segment_dir.mkdir()
+            (segment_dir / "02_place_2000_state.json").write_text(
+                json.dumps({"rerun_pool": [201, 202]}),
+                encoding="utf-8",
+            )
+
+            base_segment_id = _base_segment_id_for_run(
+                segment_dir=segment_dir,
+                item=RecipeItem(answer_type="Place", record_limit=933),
+                index=0,
+                append_label="topup_1",
+            )
+
+        self.assertEqual(base_segment_id, "02_place_2000")
+
+    def test_place_only_append_can_target_existing_rerun_pool_without_fresh_lane(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            segment_dir.mkdir()
+            (segment_dir / "02_place_2000_state.json").write_text(
+                json.dumps({"rerun_pool": [201, 202]}),
+                encoding="utf-8",
+            )
+            seed_ids, _source_paths = _matching_segment_rerun_pool_seed(
+                segment_dir=segment_dir,
+                base_segment_id="02_place_2000",
+                current_segment_id="02_place_2000_topup_1",
+            )
+            seed_file = segment_dir / "02_place_2000_topup_1_rerun_pool_seed.json"
+            seed_file.write_text(json.dumps(seed_ids), encoding="utf-8")
+            args = _recipe_args(append_to_existing_run=True, append_run_label="topup_1")
+
+            command, paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Place", record_limit=2),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=6300,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+                append_label="topup_1",
+                rerun_pool_seed_file=seed_file,
+                base_segment_id="02_place_2000",
+            )
+
+        self.assertEqual(seed_ids, [201, 202])
+        self.assertTrue(str(paths["accepted"]).endswith("02_place_2000_topup_1_accepted.jsonl"))
+        self.assertTrue(str(paths["stream_state"]).endswith("02_place_2000_topup_1_state.json"))
+        self.assertEqual(_command_value(command, "--record-limit"), "2")
+        self.assertEqual(_command_value(command, "--stream-rerun-pool-seed-file"), str(seed_file))
+        self.assertIn("--stream-prefer-rerun-pool", command)
+
+    def test_clear_rerun_pool_ids_from_states_frees_undecided_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state_path = Path(tmpdir) / "state.json"
+            state_path.write_text(
+                json.dumps({"used_ids": [101, 102], "rerun_pool": [101, 102], "accepted_ids": [102]}),
+                encoding="utf-8",
+            )
+
+            cleared = _clear_rerun_pool_ids_from_states(
+                state_paths=[state_path],
+                page_ids=[101, 102],
+                reason="test_transfer",
+            )
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(cleared, {str(state_path): 2})
+        self.assertNotIn(101, state["used_ids"])
+        self.assertIn(102, state["used_ids"])
+        self.assertEqual(state["rerun_pool"], [])
+
     def test_segment_used_count_subtracts_append_exclusions(self) -> None:
         summary = {
             "attempted_page_ids": 0,
@@ -302,13 +437,59 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 encoding="utf-8",
             )
             (segment_dir / "01_person_2000_state.json").write_text(
-                json.dumps({"used_ids": [301], "rerun_pool": [401], "accepted_ids": [501]}),
+                json.dumps({"used_ids": [301], "in_progress_ids": [301], "rerun_pool": [401], "accepted_ids": [501]}),
                 encoding="utf-8",
             )
 
             page_ids = _existing_recipe_page_ids(segment_dir, exclusion_file)
 
-        self.assertEqual(page_ids, {101, 201, 202, 301, 401, 501})
+        self.assertEqual(page_ids, {101, 301, 401, 501})
+
+    def test_existing_recipe_page_ids_ignores_summary_page_ids_when_state_exists(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            segment_dir.mkdir()
+            exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
+            (segment_dir / "01_person_2000_summary.json").write_text(
+                json.dumps({"page_ids": [101, 102, 201]}),
+                encoding="utf-8",
+            )
+            (segment_dir / "01_person_2000_state.json").write_text(
+                json.dumps({"accepted_ids": [201], "rejected_ids": [301]}),
+                encoding="utf-8",
+            )
+
+            page_ids = _existing_recipe_page_ids(segment_dir, exclusion_file)
+
+        self.assertEqual(page_ids, {201, 301})
+
+    def test_existing_recipe_page_ids_does_not_reexclude_raw_append_used_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            segment_dir.mkdir()
+            exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
+            (segment_dir / "01_person_2000_topup_1_summary.json").write_text(
+                json.dumps({"page_ids": [201]}),
+                encoding="utf-8",
+            )
+            (segment_dir / "01_person_2000_topup_1_state.json").write_text(
+                json.dumps(
+                    {
+                        "used_ids": [101, 102, 201, 301, 401],
+                        "accepted_ids": [201],
+                        "rejected_ids": [301],
+                        "in_progress_ids": [401],
+                        "rerun_pool": [501],
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+            page_ids = _existing_recipe_page_ids(segment_dir, exclusion_file)
+
+        self.assertEqual(page_ids, {201, 301, 401, 501})
+        self.assertNotIn(101, page_ids)
+        self.assertNotIn(102, page_ids)
 
     def test_incomplete_existing_segment_is_not_reused(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -25,6 +25,7 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     normalize_route3_reasoning_types,
     normalize_route3_table_filter_modes,
 )
+from wikidata_simpleqa.wikipedia_streaming import PageIdStreamState
 from run_wikipedia_infobox_pipeline import (
     _aggregate_phase_timings,
     _effective_stream_random_seed,
@@ -52,6 +53,7 @@ def _apply_recipe_big_batch_mode(args: argparse.Namespace) -> None:
     args.compact_rejected_output = True
     if getattr(args, "stream_page_source", "") == "table-search":
         args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
+        args.stream_search_max_rounds = max(500, int(getattr(args, "stream_search_max_rounds", 10) or 10))
 
 
 def parse_args() -> argparse.Namespace:
@@ -220,6 +222,25 @@ def main() -> int:
     stream_excluded_page_ids: set[int] = _existing_recipe_page_ids(segment_dir, stream_exclusion_file) if append_label else set()
     for index, item in enumerate(recipe_items):
         _write_stream_exclusion_file(stream_exclusion_file, stream_excluded_page_ids)
+        base_segment_id = _base_segment_id_for_run(
+            segment_dir=segment_dir,
+            item=item,
+            index=index,
+            append_label=append_label,
+        )
+        segment_id = _append_segment_id(base_segment_id, append_label)
+        rerun_pool_seed_file: Path | None = None
+        rerun_pool_seed_source_states: list[Path] = []
+        rerun_pool_seed_ids: list[int] = []
+        if append_label:
+            rerun_pool_seed_ids, rerun_pool_seed_source_states = _matching_segment_rerun_pool_seed(
+                segment_dir=segment_dir,
+                base_segment_id=base_segment_id,
+                current_segment_id=segment_id,
+            )
+            if rerun_pool_seed_ids:
+                rerun_pool_seed_file = segment_dir / f"{segment_id}_rerun_pool_seed.json"
+                _write_stream_exclusion_file(rerun_pool_seed_file, set(rerun_pool_seed_ids))
         base_stream_search_initial_offset = _segment_stream_search_initial_offset(
             recipe_items,
             index,
@@ -235,7 +256,7 @@ def main() -> int:
             stream_exclusion_file=stream_exclusion_file,
             stream_search_initial_offset=_append_stream_search_initial_offset(
                 segment_dir=segment_dir,
-                base_segment_id=_base_segment_id(item, index),
+                base_segment_id=base_segment_id,
                 base_offset=base_stream_search_initial_offset,
             )
             if append_label
@@ -243,6 +264,8 @@ def main() -> int:
             reasoning_types=reasoning_types,
             table_filter_modes=table_filter_modes,
             append_label=append_label,
+            rerun_pool_seed_file=rerun_pool_seed_file,
+            base_segment_id=base_segment_id,
         )
         if _segment_complete(paths):
             summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
@@ -263,6 +286,12 @@ def main() -> int:
                 "Recipe segment stopped before using its requested page budget: "
                 f"{summary.get('run_segment_id', paths['summary'].stem)} "
                 f"used={_segment_used_count(summary)} record_limit={summary.get('record_limit', 0)}"
+            )
+        if rerun_pool_seed_source_states:
+            _clear_rerun_pool_ids_from_states(
+                state_paths=rerun_pool_seed_source_states,
+                page_ids=_positive_ints(summary.get("seeded_rerun_pool_ids", rerun_pool_seed_ids)),
+                reason=f"transferred_to_append_segment:{segment_id}",
             )
         summary["recipe_answer_type"] = item.answer_type
         summary["recipe_record_limit"] = item.record_limit
@@ -400,6 +429,43 @@ def _base_segment_id(item: RecipeItem, index: int) -> str:
     return f"{index + 1:02d}_{item.answer_type.lower()}_{item.record_limit}"
 
 
+def _base_segment_id_for_run(
+    *,
+    segment_dir: Path,
+    item: RecipeItem,
+    index: int,
+    append_label: str,
+) -> str:
+    """Return the existing answer-type segment ID when appending a subset recipe."""
+    default_id = _base_segment_id(item, index)
+    if not append_label or not segment_dir.exists():
+        return default_id
+    answer_type = item.answer_type.lower()
+    candidates: set[str] = set()
+    for path in [*segment_dir.glob("*_state.json"), *segment_dir.glob("*_summary.json")]:
+        stem = path.stem
+        if stem.endswith("_state"):
+            stem = stem.removesuffix("_state")
+        elif stem.endswith("_summary"):
+            stem = stem.removesuffix("_summary")
+        parts = stem.split("_")
+        if len(parts) < 3:
+            continue
+        if parts[1] != answer_type:
+            continue
+        if not (parts[0].isdigit() and parts[2].isdigit()):
+            continue
+        candidates.add("_".join(parts[:3]))
+    if not candidates:
+        return default_id
+    return sorted(candidates, key=lambda value: (value.split("_")[0], value))[0]
+
+
+def _append_segment_id(base_segment_id: str, append_label: str) -> str:
+    """Return the segment ID with an optional append suffix."""
+    return f"{base_segment_id}_{append_label}" if append_label else base_segment_id
+
+
 def _segment_stream_state(stream_state_base: Path, *, segment_dir: Path, segment_id: str) -> Path:
     """Return the isolated stream-state path for one recipe segment."""
     base = Path(stream_state_base)
@@ -462,17 +528,82 @@ def _existing_recipe_page_ids(segment_dir: Path, stream_exclusion_file: Path) ->
                 summary = json.loads(summary_path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
-            page_ids.update(_summary_page_ids(summary))
+            if not _matching_state_path_for_summary(summary_path).exists():
+                page_ids.update(_summary_page_ids(summary))
         for state_path in segment_dir.glob("*_state.json"):
             try:
                 state = json.loads(state_path.read_text(encoding="utf-8"))
             except (OSError, json.JSONDecodeError):
                 continue
-            page_ids.update(_positive_ints(state.get("used_ids", [])))
             page_ids.update(_positive_ints(state.get("accepted_ids", [])))
             page_ids.update(_positive_ints(state.get("rejected_ids", [])))
+            page_ids.update(_positive_ints(state.get("in_progress_ids", [])))
             page_ids.update(_positive_ints(state.get("rerun_pool", [])))
     return page_ids
+
+
+def _matching_state_path_for_summary(summary_path: Path) -> Path:
+    """Return the conventional stream-state path for one segment summary."""
+    return summary_path.with_name(summary_path.name.removesuffix("_summary.json") + "_state.json")
+
+
+def _matching_segment_rerun_pool_seed(
+    *,
+    segment_dir: Path,
+    base_segment_id: str,
+    current_segment_id: str,
+) -> tuple[list[int], list[Path]]:
+    """Return rerun-pool IDs from prior states for the same recipe segment."""
+    if not segment_dir.exists():
+        return [], []
+    state_paths = sorted(
+        path
+        for path in segment_dir.glob(f"{base_segment_id}*_state.json")
+        if path.stem != f"{current_segment_id}_state"
+    )
+    decided_ids: set[int] = set()
+    states: list[tuple[Path, dict]] = []
+    for state_path in state_paths:
+        try:
+            state = json.loads(state_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        states.append((state_path, state))
+        decided_ids.update(_positive_ints(state.get("accepted_ids", [])))
+        decided_ids.update(_positive_ints(state.get("rejected_ids", [])))
+        decided_ids.update(_positive_ints(state.get("in_progress_ids", [])))
+    seed_ids: list[int] = []
+    seen: set[int] = set()
+    source_paths: list[Path] = []
+    for state_path, state in states:
+        state_contributed = False
+        for page_id in _positive_ints(state.get("rerun_pool", [])):
+            if page_id in decided_ids or page_id in seen:
+                continue
+            seed_ids.append(page_id)
+            seen.add(page_id)
+            state_contributed = True
+        if state_contributed:
+            source_paths.append(state_path)
+    return seed_ids, source_paths
+
+
+def _clear_rerun_pool_ids_from_states(*, state_paths: list[Path], page_ids: list[int], reason: str) -> dict[str, int]:
+    """Clear transferred rerun-pool IDs from source stream states."""
+    target_ids = _positive_ints(page_ids)
+    if not target_ids:
+        return {}
+    cleared: dict[str, int] = {}
+    for state_path in state_paths:
+        state = PageIdStreamState.load(state_path)
+        removed = state.clear_rerun_pool(
+            target_ids,
+            free_unused_page_ids=True,
+            reason=reason,
+        )
+        if removed:
+            cleared[str(state_path)] = len(removed)
+    return cleared
 
 
 def _append_stream_search_initial_offset(*, segment_dir: Path, base_segment_id: str, base_offset: int) -> int:
@@ -567,11 +698,11 @@ def _segment_command(
     reasoning_types: list[str],
     table_filter_modes: list[str],
     append_label: str = "",
+    rerun_pool_seed_file: Path | None = None,
+    base_segment_id: str | None = None,
 ) -> tuple[list[str], dict[str, Path]]:
     """Build the pipeline subprocess command for one recipe segment."""
-    segment_id = _base_segment_id(item, index)
-    if append_label:
-        segment_id = f"{segment_id}_{append_label}"
+    segment_id = _append_segment_id(base_segment_id or _base_segment_id(item, index), append_label)
     accepted = segment_dir / f"{segment_id}_accepted.jsonl"
     rejected = segment_dir / f"{segment_id}_rejected.jsonl"
     summary = segment_dir / f"{segment_id}_summary.json"
@@ -692,6 +823,10 @@ def _segment_command(
         )
     if not args.disable_auto_rerun_once:
         command.append("--stream-auto-rerun-once")
+    if rerun_pool_seed_file is not None:
+        command.extend(["--stream-rerun-pool-seed-file", str(rerun_pool_seed_file)])
+        command.append("--stream-prefer-rerun-pool")
+        command.append("--stream-free-seeded-rerun-pool-on-completion")
     if args.route3_llm_choose_table:
         command.append("--route3-llm-choose-table")
     else:

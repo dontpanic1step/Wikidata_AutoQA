@@ -118,6 +118,60 @@ class PageIdStreamState:
         self.save()
         return stale_ids
 
+    def seed_rerun_pool(self, page_ids: list[int], *, reason: str = "seed_rerun_pool") -> list[int]:
+        """Add undecided page IDs to the rerun pool without changing decided records."""
+        seeded: list[int] = []
+        rerun_seen = set(self.rerun_pool)
+        for page_id in _positive_unique_ids(page_ids):
+            if page_id in self.accepted_ids or page_id in self.rejected_ids or page_id in self.in_progress_ids:
+                continue
+            if page_id in rerun_seen:
+                continue
+            self.used_ids.add(page_id)
+            self.rerun_pool.append(page_id)
+            self.failure_reasons.setdefault(page_id, reason)
+            rerun_seen.add(page_id)
+            seeded.append(page_id)
+        if seeded:
+            self._record_event("seed_rerun_pool", seeded, reason)
+            self.save()
+        return seeded
+
+    def clear_rerun_pool(
+        self,
+        page_ids: list[int] | None = None,
+        *,
+        free_unused_page_ids: bool = False,
+        reason: str = "clear_rerun_pool",
+    ) -> list[int]:
+        """Remove rerun-pool IDs, optionally freeing undecided page IDs for future discovery."""
+        targets = set(_positive_unique_ids(page_ids)) if page_ids is not None else set(self.rerun_pool)
+        if not targets:
+            return []
+        cleared: list[int] = []
+        remaining: list[int] = []
+        for raw_page_id in self.rerun_pool:
+            if not _is_int_like(raw_page_id):
+                continue
+            page_id = int(raw_page_id)
+            if page_id in targets:
+                cleared.append(page_id)
+            else:
+                remaining.append(page_id)
+        if not cleared:
+            return []
+        self.rerun_pool = remaining
+        if free_unused_page_ids:
+            decided_or_reserved = self.accepted_ids | self.rejected_ids | self.in_progress_ids
+            for page_id in cleared:
+                if page_id in decided_or_reserved:
+                    continue
+                self.used_ids.discard(page_id)
+                self.failure_reasons.pop(page_id, None)
+        self._record_event("clear_rerun_pool", cleared, reason)
+        self.save()
+        return cleared
+
     def reserve_ids(
         self,
         *,

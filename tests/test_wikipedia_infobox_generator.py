@@ -637,6 +637,48 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(selected, [303])
         self.assertEqual(state.rerun_pool, [301])
 
+    def test_table_search_reservation_can_prefer_rerun_pool_then_fresh_ids(self) -> None:
+        class FakeWikipediaSearchClient:
+            def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
+                return [SimpleNamespace(page_id=303)]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = PageIdStreamState.load(Path(tmpdir) / "state.json")
+            state.mark_rerun(301, reason="transient")
+            args = SimpleNamespace(
+                stream_page_source="table-search",
+                stream_search_max_rounds=1,
+                stream_search_limit=50,
+                stream_search_query=[],
+                enable_broad_table_search=False,
+            )
+
+            selected = _reserve_stream_page_ids(
+                state=state,
+                args=args,
+                wikipedia_client=FakeWikipediaSearchClient(),
+                rng=random.Random(1),
+                count=2,
+                prefer_rerun_pool=True,
+            )
+
+        self.assertEqual(selected, [301, 303])
+        self.assertEqual(state.rerun_pool, [])
+        self.assertEqual(state.in_progress_ids, {301, 303})
+
+    def test_stream_state_can_seed_and_free_rerun_pool_ids(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = PageIdStreamState.load(Path(tmpdir) / "state.json")
+            seeded = state.seed_rerun_pool([101, 101, 102], reason="test_seed")
+            state.mark_accepted(102)
+            cleared = state.clear_rerun_pool([101, 102], free_unused_page_ids=True, reason="test_clear")
+
+        self.assertEqual(seeded, [101, 102])
+        self.assertEqual(cleared, [101])
+        self.assertNotIn(101, state.used_ids)
+        self.assertIn(102, state.used_ids)
+        self.assertEqual(state.rerun_pool, [])
+
     def test_table_search_reservation_skips_external_page_id_exclusions(self) -> None:
         class FakeWikipediaSearchClient:
             def __init__(self) -> None:

@@ -45,6 +45,36 @@ class WikipediaClientTests(unittest.TestCase):
         self.assertEqual(client._rate_limit_current_sleep, 90.0)
         self.assertGreater(client._rate_limit_resume_at, first_resume_at)
 
+    def test_http_429_retry_after_is_not_capped_by_local_max_backoff(self) -> None:
+        client = WikipediaClient(
+            user_agent="test-agent",
+            proxy=None,
+            timeout_seconds=1.0,
+            cache_dir=None,
+            rate_limit_backoff_seconds=10.0,
+            rate_limit_max_backoff_seconds=120.0,
+        )
+
+        client._record_rate_limit_429(_http_429(retry_after="600"))
+
+        self.assertEqual(client._rate_limit_current_sleep, 600.0)
+
+    def test_http_429_synthetic_backoff_is_capped_by_local_max_backoff(self) -> None:
+        client = WikipediaClient(
+            user_agent="test-agent",
+            proxy=None,
+            timeout_seconds=1.0,
+            cache_dir=None,
+            rate_limit_backoff_seconds=10.0,
+            rate_limit_max_backoff_seconds=120.0,
+        )
+        client._rate_limit_current_sleep = 90.0
+        client._rate_limit_last_429_at = perf_counter()
+
+        client._record_rate_limit_429(_http_429())
+
+        self.assertEqual(client._rate_limit_current_sleep, 120.0)
+
     def test_http_429_backoff_resets_after_quiet_recovery_window(self) -> None:
         client = WikipediaClient(
             user_agent="test-agent",

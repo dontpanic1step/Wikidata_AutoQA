@@ -255,8 +255,8 @@ class WikipediaClient:
 
     def _record_rate_limit_429(self, exc: HTTPError) -> None:
         """Extend the shared Wikipedia 429 backoff window."""
-        base_delay = self._rate_limit_retry_after_seconds(exc)
-        if base_delay <= 0:
+        retry_after_delay = self._rate_limit_retry_after_seconds(exc)
+        if self.rate_limit_backoff_seconds <= 0 and retry_after_delay <= 0:
             return
         now = perf_counter()
         with self._rate_limit_lock:
@@ -267,11 +267,12 @@ class WikipediaClient:
             ):
                 self._rate_limit_current_sleep = 0.0
             if self._rate_limit_current_sleep <= 0:
-                sleep_seconds = base_delay
+                synthetic_sleep = self.rate_limit_backoff_seconds
             else:
-                sleep_seconds = max(base_delay, self._rate_limit_current_sleep * 2)
+                synthetic_sleep = max(self.rate_limit_backoff_seconds, self._rate_limit_current_sleep * 2)
             if self.rate_limit_max_backoff_seconds > 0:
-                sleep_seconds = min(sleep_seconds, self.rate_limit_max_backoff_seconds)
+                synthetic_sleep = min(synthetic_sleep, self.rate_limit_max_backoff_seconds)
+            sleep_seconds = max(synthetic_sleep, retry_after_delay)
             self._rate_limit_current_sleep = sleep_seconds
             self._rate_limit_last_429_at = now
             self._rate_limit_resume_at = max(self._rate_limit_resume_at, now + sleep_seconds)

@@ -67,6 +67,7 @@ def _apply_big_batch_mode(args: argparse.Namespace) -> None:
     args.compact_rejected_output = True
     if getattr(args, "stream_random_page_ids", False) and getattr(args, "stream_page_source", "") == "table-search":
         args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
+        args.stream_search_max_rounds = max(500, int(getattr(args, "stream_search_max_rounds", 10) or 10))
 
 
 @dataclass(slots=True)
@@ -345,6 +346,23 @@ def parse_args() -> argparse.Namespace:
         help="Maximum rerun-pool IDs to process with --stream-rerun-pool-only; 0 means the whole pool.",
     )
     parser.add_argument(
+        "--stream-rerun-pool-seed-file",
+        action="append",
+        default=[],
+        type=Path,
+        help="JSON/JSONL file containing rerun-pool page IDs to seed into this stream state before discovery.",
+    )
+    parser.add_argument(
+        "--stream-prefer-rerun-pool",
+        action="store_true",
+        help="In normal streaming mode, reserve rerun-pool IDs before discovering fresh page IDs.",
+    )
+    parser.add_argument(
+        "--stream-free-seeded-rerun-pool-on-completion",
+        action="store_true",
+        help="When the configured page/accepted target is reached, clear any seeded rerun-pool IDs that remain unresolved.",
+    )
+    parser.add_argument(
         "--stream-auto-rerun-once",
         action="store_true",
         help="After the normal streaming pass, immediately process the rerun pool once, then stop.",
@@ -590,6 +608,8 @@ def main() -> int:
         raise ValueError("--wikipedia-429-recovery-seconds must be non-negative.")
     if args.stream_random_page_ids and args.stream_rerun_pool_limit < 0:
         raise ValueError("--stream-rerun-pool-limit must be non-negative.")
+    if args.stream_free_seeded_rerun_pool_on_completion and not args.stream_prefer_rerun_pool:
+        raise ValueError("--stream-free-seeded-rerun-pool-on-completion requires --stream-prefer-rerun-pool.")
     if args.reset_stream_state and not args.stream_random_page_ids:
         raise ValueError("--reset-stream-state only applies to streaming page-ID runs.")
     if args.reset_stream_state and args.start_from_endpoint:
@@ -1215,6 +1235,11 @@ def _run_streaming_page_id_pipeline(
         state.used_ids.update(excluded_page_ids)
         state._record_event("stream_exclude_page_ids", sorted(excluded_page_ids), "external_exclusion_file")
         state.save()
+    seeded_rerun_pool_ids = sorted(_load_stream_excluded_page_ids(args.stream_rerun_pool_seed_file))
+    seeded_rerun_pool_ids = state.seed_rerun_pool(
+        seeded_rerun_pool_ids,
+        reason="external_rerun_pool_seed_file",
+    )
     _initialize_table_search_offsets(state, args)
     endpoint_sync = {"accepted_ids_synced": 0, "rejected_ids_synced": 0}
     if args.start_from_endpoint:
@@ -1253,7 +1278,7 @@ def _run_streaming_page_id_pipeline(
             rng=rng,
             count=batch_size,
             rerun_pool_only=args.stream_rerun_pool_only,
-            prefer_rerun_pool=args.stream_rerun_pool_only,
+            prefer_rerun_pool=args.stream_rerun_pool_only or args.stream_prefer_rerun_pool,
         )
         if not reserved_ids:
             break
@@ -1295,6 +1320,15 @@ def _run_streaming_page_id_pipeline(
                                 reason="accepted_target_reached_before_processing",
                             )
                     break
+
+    seeded_rerun_pool_ids_freed_on_completion: list[int] = []
+    target_reached = ids_remaining <= 0 or (accepted_target > 0 and len(accepted_records) >= accepted_target)
+    if args.stream_free_seeded_rerun_pool_on_completion and target_reached and seeded_rerun_pool_ids:
+        seeded_rerun_pool_ids_freed_on_completion = state.clear_rerun_pool(
+            seeded_rerun_pool_ids,
+            free_unused_page_ids=True,
+            reason="stream_target_reached_free_seeded_rerun_pool",
+        )
 
     if args.stream_auto_rerun_once and not args.stream_rerun_pool_only and state.rerun_pool:
         auto_rerun_pool_ids_at_start = state.rerun_pool.copy()
@@ -1363,6 +1397,10 @@ def _run_streaming_page_id_pipeline(
         "stream_state_reset": bool(args.reset_stream_state),
         "stream_rerun_pool_only": bool(args.stream_rerun_pool_only),
         "stream_rerun_pool_limit": args.stream_rerun_pool_limit,
+        "stream_rerun_pool_seed_files": [str(path) for path in args.stream_rerun_pool_seed_file],
+        "stream_prefer_rerun_pool": bool(args.stream_prefer_rerun_pool),
+        "seeded_rerun_pool_ids": seeded_rerun_pool_ids,
+        "seeded_rerun_pool_ids_freed_on_completion": seeded_rerun_pool_ids_freed_on_completion,
         "stream_auto_rerun_once": bool(args.stream_auto_rerun_once),
         "auto_rerun_pool_ids_at_start": auto_rerun_pool_ids_at_start,
         "auto_rerun_processed_page_ids": auto_rerun_processed_ids,
