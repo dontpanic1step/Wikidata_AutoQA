@@ -100,6 +100,15 @@ class UrlEntry:
     subdomain: str = ""
 
 
+@dataclass(frozen=True, slots=True)
+class CachedPageArchiveEntry:
+    """One reusable Route 3 parsed page archive."""
+
+    page_id: int
+    source_url: str
+    archive_path: Path
+
+
 @dataclass(slots=True)
 class EndpointResumeState:
     """Accepted/rejected endpoint files used as a resume checkpoint."""
@@ -371,6 +380,25 @@ def parse_args() -> argparse.Namespace:
         default=[],
         type=Path,
         help="JSON/JSONL file containing rerun-pool page IDs to seed into this stream state before discovery.",
+    )
+    parser.add_argument(
+        "--stream-reuse-cached-page-count",
+        type=int,
+        default=0,
+        help=(
+            "Process up to this many already parsed Route 3 page archives from --route3-page-archive-dir "
+            "before discovering fresh streaming page IDs. 0 disables cache reuse."
+        ),
+    )
+    parser.add_argument(
+        "--stream-reuse-cached-page-used-id-file",
+        action="append",
+        default=[],
+        type=Path,
+        help=(
+            "Helper-generated used-ID JSON/JSONL/plain file for cached page reuse. "
+            "Page-only and triadic entries are treated as strict numeric page-level exclusions."
+        ),
     )
     parser.add_argument(
         "--stream-prefer-rerun-pool",
@@ -709,6 +737,8 @@ def main() -> int:
         raise ValueError("--wikipedia-429-recovery-seconds must be non-negative.")
     if args.stream_random_page_ids and args.stream_rerun_pool_limit < 0:
         raise ValueError("--stream-rerun-pool-limit must be non-negative.")
+    if args.stream_random_page_ids and args.stream_reuse_cached_page_count < 0:
+        raise ValueError("--stream-reuse-cached-page-count must be non-negative.")
     if args.stream_free_seeded_rerun_pool_on_completion and not args.stream_prefer_rerun_pool:
         raise ValueError("--stream-free-seeded-rerun-pool-on-completion requires --stream-prefer-rerun-pool.")
     if args.reset_stream_state and not args.stream_random_page_ids:
@@ -852,6 +882,7 @@ def main() -> int:
             pageview_unavailable_policy=args.route3_pageview_unavailable_policy,
             infobox_max_removed_row_rate=args.route3_infobox_max_removed_row_rate,
             infobox_min_remaining_rows=args.route3_infobox_min_remaining_rows,
+            page_archive_paths_by_url={url: cached_archive_path} if cached_archive_path is not None else None,
         )
         generated_candidates = generator.generate(
             run_date=settings.run_date,
@@ -1050,6 +1081,7 @@ def _manifest_segment(summary: dict) -> dict[str, object]:
         "streaming_mode": summary.get("streaming_mode", ""),
         "stream_rerun_pool_only": bool(summary.get("stream_rerun_pool_only", False)),
         "stream_auto_rerun_once": bool(summary.get("stream_auto_rerun_once", False)),
+        "stream_reused_cached_page_count": summary.get("stream_reused_cached_page_count", 0),
         "route3_reasoning_types": summary.get("route3_reasoning_types", []),
         "route3_answer_types": summary.get("route3_answer_types", []),
         "route3_extra_prompts": summary.get("route3_extra_prompts", []),
@@ -1502,6 +1534,55 @@ def _run_streaming_page_id_pipeline(
     page_workers = 1 if accepted_target else max(1, int(args.stream_page_workers))
     auto_rerun_pool_ids_at_start: list[int] = []
     auto_rerun_processed_ids: list[int] = []
+    cached_page_reuse_entries: list[CachedPageArchiveEntry] = []
+    cached_page_reuse_summary = _stream_cached_page_reuse_disabled_summary(args)
+
+    if args.stream_reuse_cached_page_count > 0:
+        cached_page_reuse_entries, cached_page_reuse_summary = _reserve_stream_cached_page_archives(
+            state=state,
+            args=args,
+        )
+        if cached_page_reuse_entries:
+            processed_ids.extend(entry.page_id for entry in cached_page_reuse_entries)
+            futures = {}
+            with ThreadPoolExecutor(max_workers=min(page_workers, len(cached_page_reuse_entries))) as executor:
+                for index, entry in enumerate(cached_page_reuse_entries):
+                    futures[
+                        executor.submit(
+                            _process_one_stream_page_id,
+                            entry.page_id,
+                            args=args,
+                            settings=settings,
+                            state=state,
+                            wikipedia_client=wikipedia_client,
+                            search_client=search_client,
+                            llm_client=llm_client,
+                            rewrite_client=rewrite_client,
+                            concurrency=concurrency,
+                            second_stage_model_clients=second_stage_model_clients,
+                            grading_grader_client=grading_grader_client,
+                            source_url=entry.source_url,
+                            stream_page_source="cached_page_archive",
+                            cached_archive_path=entry.archive_path,
+                        )
+                    ] = index
+                for future in as_completed(futures):
+                    index = futures[future]
+                    decision = future.result()
+                    accepted_records.extend(decision.get("accepted_records", []))
+                    rejected_records.extend(decision.get("rejected_records", []))
+                    if decision.get("status") == "rerun":
+                        rerun_records.append(decision)
+                    if accepted_target and len(accepted_records) >= accepted_target:
+                        for pending_future in futures:
+                            pending_future.cancel()
+                        for unprocessed_entry in cached_page_reuse_entries[index + 1 :]:
+                            with concurrency.commit_lock:
+                                state.mark_rerun(
+                                    unprocessed_entry.page_id,
+                                    reason="accepted_target_reached_before_processing",
+                                )
+                        break
 
     while ids_remaining > 0:
         if accepted_target and len(accepted_records) >= accepted_target:
@@ -1634,6 +1715,11 @@ def _run_streaming_page_id_pipeline(
         "stream_rerun_pool_only": bool(args.stream_rerun_pool_only),
         "stream_rerun_pool_limit": args.stream_rerun_pool_limit,
         "stream_rerun_pool_seed_files": [str(path) for path in args.stream_rerun_pool_seed_file],
+        "stream_reuse_cached_page_count": args.stream_reuse_cached_page_count,
+        "stream_reuse_cached_page_used_id_files": [str(path) for path in args.stream_reuse_cached_page_used_id_file],
+        "stream_cached_page_reuse": cached_page_reuse_summary,
+        "stream_reused_cached_page_ids": [entry.page_id for entry in cached_page_reuse_entries],
+        "stream_reused_cached_page_count": len(cached_page_reuse_entries),
         "stream_prefer_rerun_pool": bool(args.stream_prefer_rerun_pool),
         "seeded_rerun_pool_ids": seeded_rerun_pool_ids,
         "seeded_rerun_pool_ids_freed_on_completion": seeded_rerun_pool_ids_freed_on_completion,
@@ -1818,6 +1904,139 @@ def _load_stream_excluded_page_ids(
     return {page_id for page_id in excluded if page_id > 0}
 
 
+def _stream_cached_page_reuse_disabled_summary(args: argparse.Namespace) -> dict[str, object]:
+    """Return the summary payload used when cached page reuse is disabled."""
+    return {
+        "enabled": False,
+        "requested_count": max(0, int(getattr(args, "stream_reuse_cached_page_count", 0) or 0)),
+        "archive_dir": str(getattr(args, "route3_page_archive_dir", "") or ""),
+        "used_id_files": [str(path) for path in getattr(args, "stream_reuse_cached_page_used_id_file", [])],
+        "strict_numeric_page_id_matching": True,
+        "selected_count": 0,
+        "selected_page_ids": [],
+    }
+
+
+def _reserve_stream_cached_page_archives(
+    *,
+    state: PageIdStreamState,
+    args: argparse.Namespace,
+) -> tuple[list[CachedPageArchiveEntry], dict[str, object]]:
+    """Reserve reusable cached parsed pages by strict numeric page ID."""
+    requested_count = max(0, int(getattr(args, "stream_reuse_cached_page_count", 0) or 0))
+    archive_dir = Path(getattr(args, "route3_page_archive_dir", ROOT / DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR))
+    used_id_files = list(getattr(args, "stream_reuse_cached_page_used_id_file", []) or [])
+    used_ids = _load_stream_reuse_cached_page_used_ids(used_id_files)
+    cached_entries, scan_summary = _scan_route3_cached_page_archives(archive_dir)
+    available_entries = [entry for entry in cached_entries if entry.page_id not in used_ids]
+    state_used_ids = set(state.used_ids)
+    selected = available_entries[:requested_count]
+    if selected:
+        for entry in selected:
+            state.used_ids.add(entry.page_id)
+            state.in_progress_ids.add(entry.page_id)
+        state._record_event(
+            "reserve_cached_page_archives",
+            [entry.page_id for entry in selected],
+            f"requested={requested_count};archive_dir={archive_dir}",
+        )
+        state.save()
+    summary = {
+        "enabled": requested_count > 0,
+        "requested_count": requested_count,
+        "archive_dir": str(archive_dir),
+        "used_id_files": [str(path) for path in used_id_files],
+        "strict_numeric_page_id_matching": True,
+        **scan_summary,
+        "used_id_excluded_page_count": len({entry.page_id for entry in cached_entries if entry.page_id in used_ids}),
+        "state_already_used_page_count": len(
+            {entry.page_id for entry in available_entries if entry.page_id in state_used_ids}
+        ),
+        "reusable_cached_page_count": len(available_entries),
+        "selected_count": len(selected),
+        "selected_page_ids": [entry.page_id for entry in selected],
+        "selected_archive_paths": [str(entry.archive_path) for entry in selected],
+    }
+    return selected, summary
+
+
+def _load_stream_reuse_cached_page_used_ids(paths: list[Path]) -> set[int]:
+    """Load page-level cache-reuse exclusions from helper-generated ID files."""
+    used_ids: set[int] = set()
+    for path in paths:
+        if path is None or not Path(path).exists():
+            continue
+        entries = read_page_id_entries(Path(path), include_used_ids=True)
+        used_ids.update(entry.page_id for entry in entries if entry.page_id > 0)
+    return used_ids
+
+
+def _scan_route3_cached_page_archives(cache_dir: Path) -> tuple[list[CachedPageArchiveEntry], dict[str, object]]:
+    """Return reusable parsed page archives from a Route 3 archive directory."""
+    root = Path(cache_dir)
+    if not root.exists():
+        return [], {
+            "cached_archive_file_count": 0,
+            "cached_archive_valid_page_count": 0,
+            "cached_archive_duplicate_page_count": 0,
+            "cached_archive_skipped_count": 0,
+            "cached_archive_errors": [{"path": str(root), "error": "archive_dir_not_found"}],
+        }
+    entries: list[CachedPageArchiveEntry] = []
+    errors: list[dict[str, str]] = []
+    skipped_count = 0
+    duplicate_count = 0
+    seen_page_ids: set[int] = set()
+    archive_paths = sorted(path for path in root.glob("*.json") if path.is_file())
+    for path in archive_paths:
+        try:
+            payload = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            errors.append({"path": str(path), "error": f"{type(exc).__name__}:{exc}"})
+            skipped_count += 1
+            continue
+        if not isinstance(payload, dict):
+            skipped_count += 1
+            continue
+        page_id = _cached_archive_page_id(payload)
+        if page_id is None or not _cached_archive_has_parse_material(payload):
+            skipped_count += 1
+            continue
+        if page_id in seen_page_ids:
+            duplicate_count += 1
+            continue
+        source_url = str(payload.get("source_url") or "").strip() or build_pageid_url(page_id)
+        entries.append(CachedPageArchiveEntry(page_id=page_id, source_url=source_url, archive_path=path))
+        seen_page_ids.add(page_id)
+    return entries, {
+        "cached_archive_file_count": len(archive_paths),
+        "cached_archive_valid_page_count": len(entries),
+        "cached_archive_duplicate_page_count": duplicate_count,
+        "cached_archive_skipped_count": skipped_count,
+        "cached_archive_errors": errors[:20],
+    }
+
+
+def _cached_archive_page_id(payload: dict[str, object]) -> int | None:
+    """Return the strict numeric page ID stored in one cached archive."""
+    page_id = _positive_record_page_id(payload.get("page_id"))
+    if page_id is not None:
+        return page_id
+    parse_payload = payload.get("parse_payload")
+    parse_body = parse_payload.get("parse", {}) if isinstance(parse_payload, dict) else {}
+    if isinstance(parse_body, dict):
+        return _positive_record_page_id(parse_body.get("pageid"))
+    return None
+
+
+def _cached_archive_has_parse_material(payload: dict[str, object]) -> bool:
+    """Return whether one cached archive has enough parsed content to avoid a fetch."""
+    parse_payload = payload.get("parse_payload")
+    if isinstance(parse_payload, dict) and isinstance(parse_payload.get("parse"), dict):
+        return True
+    return bool(str(payload.get("parsed_html") or "").strip())
+
+
 def _page_id_list_answer_types(args: argparse.Namespace) -> list[str]:
     """Return answer-type contexts represented by this Route 3 streaming run."""
     answer_types = list(getattr(args, "route3_answer_type", []) or [])
@@ -1957,9 +2176,13 @@ def _process_one_stream_page_id(
     concurrency: StreamingConcurrencyContext,
     second_stage_model_clients,
     grading_grader_client,
+    source_url: str | None = None,
+    stream_page_source: str | None = None,
+    cached_archive_path: Path | None = None,
 ) -> dict:
     """Run one page ID through generation and shared processing."""
-    url = build_pageid_url(page_id)
+    url = source_url or build_pageid_url(page_id)
+    page_source = stream_page_source or args.stream_page_source
     try:
         generator = WikipediaInfoboxTableGenerator(
             urls=[url],
@@ -2001,7 +2224,14 @@ def _process_one_stream_page_id(
                 "reason": "no_generated_candidate",
             }
         for candidate in generated_candidates:
-            _attach_stream_metadata(candidate, page_id=page_id, url=url, args=args)
+            _attach_stream_metadata(
+                candidate,
+                page_id=page_id,
+                url=url,
+                args=args,
+                page_source=page_source,
+                cached_archive_path=cached_archive_path,
+            )
         result = process_generated_candidates(
             generated_candidates,
             settings=settings,
@@ -2014,11 +2244,25 @@ def _process_one_stream_page_id(
             with concurrency.commit_lock:
                 accepted_index_offset = _jsonl_record_count(args.output)
                 for index, record in enumerate(result.accepted, start=accepted_index_offset + 1):
-                    _attach_stream_record_metadata(record, page_id=page_id, url=url, args=args)
+                    _attach_stream_record_metadata(
+                        record,
+                        page_id=page_id,
+                        url=url,
+                        args=args,
+                        page_source=page_source,
+                        cached_archive_path=cached_archive_path,
+                    )
                     _ensure_page_id_list_entry_metadata(record)
                     record["id"] = _wikipedia_stream_record_id(record, index, run_date=settings.run_date)
                 for record in result.rejected:
-                    _attach_stream_record_metadata(record, page_id=page_id, url=url, args=args)
+                    _attach_stream_record_metadata(
+                        record,
+                        page_id=page_id,
+                        url=url,
+                        args=args,
+                        page_source=page_source,
+                        cached_archive_path=cached_archive_path,
+                    )
                 append_jsonl(args.output, _accepted_output_records(result.accepted, args))
                 if result.rejected:
                     append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
@@ -2032,7 +2276,14 @@ def _process_one_stream_page_id(
             }
         if result.rejected:
             for record in result.rejected:
-                _attach_stream_record_metadata(record, page_id=page_id, url=url, args=args)
+                _attach_stream_record_metadata(
+                    record,
+                    page_id=page_id,
+                    url=url,
+                    args=args,
+                    page_source=page_source,
+                    cached_archive_path=cached_archive_path,
+                )
             reason = _exact_failure_reason(result.rejected[0])
             if _should_rerun_stream_rejection(result.rejected[0]):
                 error_details = _rerun_error_details_from_record(result.rejected[0])
@@ -2251,7 +2502,15 @@ def _stream_search_queries(args: argparse.Namespace) -> list[str]:
     return queries
 
 
-def _attach_stream_metadata(candidate: GeneratedCandidate, *, page_id: int, url: str, args: argparse.Namespace) -> None:
+def _attach_stream_metadata(
+    candidate: GeneratedCandidate,
+    *,
+    page_id: int,
+    url: str,
+    args: argparse.Namespace,
+    page_source: str | None = None,
+    cached_archive_path: Path | None = None,
+) -> None:
     """Attach stream sampling metadata to a generated candidate."""
     _ensure_small_model_response_metadata(candidate.source_metadata)
     _attach_run_artifact_metadata(candidate.source_metadata, args=args)
@@ -2260,19 +2519,24 @@ def _attach_stream_metadata(candidate: GeneratedCandidate, *, page_id: int, url:
     candidate.source_metadata["prose_leakage_scoring_enabled"] = bool(args.route3_prose_leakage_scoring)
     candidate.source_metadata["page_id"] = page_id
     candidate.source_metadata["stream_source_url"] = url
-    candidate.source_metadata["streaming_discovery"] = {
-        "mode": "page_id_stream",
-        "page_source": args.stream_page_source,
-        "page_id": page_id,
-        "pageid_url": url,
-        "page_id_min": args.stream_page_id_min,
-        "page_id_max": args.stream_page_id_max,
-        "random_seed": args.stream_random_seed,
-        "domain_policy": "domain_and_subdomain_optional",
-    }
+    candidate.source_metadata["streaming_discovery"] = _streaming_discovery_metadata(
+        page_id=page_id,
+        url=url,
+        args=args,
+        page_source=page_source,
+        cached_archive_path=cached_archive_path,
+    )
 
 
-def _attach_stream_record_metadata(record: dict, *, page_id: int, url: str, args: argparse.Namespace) -> None:
+def _attach_stream_record_metadata(
+    record: dict,
+    *,
+    page_id: int,
+    url: str,
+    args: argparse.Namespace,
+    page_source: str | None = None,
+    cached_archive_path: Path | None = None,
+) -> None:
     """Attach stream sampling metadata to a serialized output record."""
     metadata = record.setdefault("source_metadata", {})
     if isinstance(metadata, dict):
@@ -2283,16 +2547,40 @@ def _attach_stream_record_metadata(record: dict, *, page_id: int, url: str, args
         metadata["prose_leakage_scoring_enabled"] = bool(args.route3_prose_leakage_scoring)
         metadata["page_id"] = page_id
         metadata["stream_source_url"] = url
-        metadata["streaming_discovery"] = {
-            "mode": "page_id_stream",
-            "page_source": args.stream_page_source,
-            "page_id": page_id,
-            "pageid_url": url,
-            "page_id_min": args.stream_page_id_min,
-            "page_id_max": args.stream_page_id_max,
-            "random_seed": args.stream_random_seed,
-            "domain_policy": "domain_and_subdomain_optional",
-        }
+        metadata["streaming_discovery"] = _streaming_discovery_metadata(
+            page_id=page_id,
+            url=url,
+            args=args,
+            page_source=page_source,
+            cached_archive_path=cached_archive_path,
+        )
+
+
+def _streaming_discovery_metadata(
+    *,
+    page_id: int,
+    url: str,
+    args: argparse.Namespace,
+    page_source: str | None = None,
+    cached_archive_path: Path | None = None,
+) -> dict[str, object]:
+    """Return stream source metadata for fresh or cached page processing."""
+    source = page_source or args.stream_page_source
+    metadata: dict[str, object] = {
+        "mode": "page_id_stream",
+        "page_source": source,
+        "page_id": page_id,
+        "pageid_url": build_pageid_url(page_id),
+        "source_url": url,
+        "page_id_min": args.stream_page_id_min,
+        "page_id_max": args.stream_page_id_max,
+        "random_seed": args.stream_random_seed,
+        "domain_policy": "domain_and_subdomain_optional",
+    }
+    if cached_archive_path is not None:
+        metadata["cached_archive_reuse"] = True
+        metadata["cached_archive_path"] = str(cached_archive_path)
+    return metadata
 
 
 def _attach_run_artifact_metadata(metadata: dict, *, args: argparse.Namespace) -> None:

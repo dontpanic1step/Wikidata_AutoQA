@@ -547,6 +547,7 @@ class WikipediaInfoboxTableGenerator:
     llm_choose_table: bool = False
     answer_type_mode: str = DEFAULT_ROUTE3_ANSWER_TYPE_MODE
     page_archive_dir: Path | None = DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR
+    page_archive_paths_by_url: dict[str, Path] | None = None
     pageview_prefilter_enabled: bool = DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED
     pageview_window_months: int = DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS
     max_monthly_average_pageviews: float = DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS
@@ -620,7 +621,7 @@ class WikipediaInfoboxTableGenerator:
 
     def _fetch_and_parse_page(self, url: str, *, timings: dict[str, float]) -> WikipediaPageTables:
         """Fetch one page through MediaWiki APIs and extract table records."""
-        archive_path = _route3_page_archive_path(self.page_archive_dir, url)
+        archive_path = self._page_archive_path_for_url(url)
         archive_payload, archive_cache_hit = _load_route3_page_archive(archive_path)
         archive_fetch_status = {
             "archive_path": str(archive_path) if archive_path is not None else "",
@@ -629,6 +630,17 @@ class WikipediaInfoboxTableGenerator:
         }
         fetch_start = perf_counter()
         parse_payload = archive_payload.get("parse_payload") if isinstance(archive_payload.get("parse_payload"), dict) else {}
+        if not parse_payload:
+            archived_html = str(archive_payload.get("parsed_html", "") or "").strip()
+            if archived_html:
+                parse_payload = {
+                    "parse": {
+                        "title": str(archive_payload.get("title") or normalize_wikipedia_title(url)).strip(),
+                        "pageid": archive_payload.get("page_id"),
+                        "text": archived_html,
+                    }
+                }
+                archive_fetch_status["parse_fetch_status"] = "archive_parsed_html_hit"
         if not parse_payload:
             parse_payload = self.wikipedia_client.fetch_parse(url)
             archive_fetch_status["parse_fetch_status"] = "fetched"
@@ -735,6 +747,14 @@ class WikipediaInfoboxTableGenerator:
             if domain:
                 return domain
         return ""
+
+    def _page_archive_path_for_url(self, url: str) -> Path | None:
+        """Return an explicit or hash-derived Route 3 archive path for one URL."""
+        if self.page_archive_paths_by_url:
+            explicit_path = self.page_archive_paths_by_url.get(url)
+            if explicit_path is not None:
+                return Path(explicit_path)
+        return _route3_page_archive_path(self.page_archive_dir, url)
 
     def _candidate_from_page(
         self,

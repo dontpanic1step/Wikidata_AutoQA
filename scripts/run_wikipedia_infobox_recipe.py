@@ -246,6 +246,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stream-discovery-max-retries", type=int, default=5)
     parser.add_argument("--stream-discovery-retry-backoff-seconds", type=float, default=10.0)
     parser.add_argument("--stream-discovery-retry-max-sleep-seconds", type=float, default=60.0)
+    parser.add_argument(
+        "--stream-reuse-cached-page-count",
+        type=int,
+        default=0,
+        help="Per-segment count of already parsed Route 3 page archives to process before fresh discovery.",
+    )
+    parser.add_argument(
+        "--stream-reuse-cached-page-used-id-file",
+        action="append",
+        type=Path,
+        default=[],
+        help=(
+            "Extra helper-generated used-ID JSON/JSONL/plain files for cache reuse. "
+            "The recipe segment exclusion file is also passed automatically when cache reuse is enabled."
+        ),
+    )
     parser.add_argument("--wikipedia-429-backoff-seconds", type=float, default=30.0)
     parser.add_argument("--wikipedia-429-max-backoff-seconds", type=float, default=300.0)
     parser.add_argument("--wikipedia-429-recovery-seconds", type=float, default=120.0)
@@ -311,6 +327,8 @@ def main() -> int:
     )
     args.route3_infobox_max_removed_row_rate = max(0.0, min(1.0, float(args.route3_infobox_max_removed_row_rate)))
     args.route3_infobox_min_remaining_rows = max(0, int(args.route3_infobox_min_remaining_rows))
+    if args.stream_reuse_cached_page_count < 0:
+        raise ValueError("--stream-reuse-cached-page-count must be non-negative.")
 
     run_id = _recipe_run_id(args, recipe_items, reasoning_types)
     segment_dir = args.segment_dir or ROOT / "outputs" / "recipe_segments" / run_id
@@ -1015,6 +1033,8 @@ def _segment_command(
         str(args.stream_discovery_retry_backoff_seconds),
         "--stream-discovery-retry-max-sleep-seconds",
         str(args.stream_discovery_retry_max_sleep_seconds),
+        "--stream-reuse-cached-page-count",
+        str(args.stream_reuse_cached_page_count),
         "--wikipedia-429-backoff-seconds",
         str(args.wikipedia_429_backoff_seconds),
         "--wikipedia-429-max-backoff-seconds",
@@ -1054,6 +1074,10 @@ def _segment_command(
         "--route3-infobox-min-remaining-rows",
         str(args.route3_infobox_min_remaining_rows),
     ]
+    if args.stream_reuse_cached_page_count > 0:
+        command.extend(["--stream-reuse-cached-page-used-id-file", str(stream_exclusion_file)])
+    for path in args.stream_reuse_cached_page_used_id_file:
+        command.extend(["--stream-reuse-cached-page-used-id-file", str(path)])
     if item.answer_type != ALL_TYPES_RECIPE_ANSWER_TYPE:
         command.extend(["--route3-answer-type", item.answer_type])
     if args.run_date:
@@ -1268,6 +1292,17 @@ def _recipe_summary(
         "append_to_existing_run": bool(getattr(args, "append_to_existing_run", False)),
         "append_run_label": append_label,
         "stream_auto_rerun_once": not args.disable_auto_rerun_once,
+        "stream_reuse_cached_page_count": args.stream_reuse_cached_page_count,
+        "stream_reuse_cached_page_used_id_files": [str(path) for path in args.stream_reuse_cached_page_used_id_file],
+        "stream_reused_cached_page_count": sum(
+            int(summary.get("stream_reused_cached_page_count", 0) or 0)
+            for summary in segment_summaries
+        ),
+        "stream_reused_cached_page_ids": [
+            page_id
+            for summary in segment_summaries
+            for page_id in summary.get("stream_reused_cached_page_ids", [])
+        ],
         "rerun_pool_ids_after_run": rerun_pool_ids,
         "rerun_pool_ids_after_run_by_segment": rerun_pool_by_segment,
         "rerun_pool_failure_reasons_after_run": rerun_reasons,

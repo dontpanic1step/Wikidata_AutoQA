@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import sys
 import json
+import hashlib
 import random
 import tempfile
 import unittest
@@ -62,6 +63,7 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _record_reasoning_type,
     _rejected_output_records,
     _rerun_error_details_from_record,
+    _reserve_stream_cached_page_archives,
     _reserve_stream_page_ids,
     _run_artifact_summary,
     _should_rerun_stream_rejection,
@@ -698,6 +700,100 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("parsed_html", archive_payload)
         self.assertIn("pageview", archive_payload)
         self.assertEqual(archive_payload["pageview_prefilter"]["monthly_average"], 10.0)
+
+    def test_route3_page_archive_can_reuse_parsed_html_without_parse_payload(self) -> None:
+        class NoFetchWikipediaClient(FakeWikipediaClient):
+            request_events: list[dict] = []
+
+            def fetch_parse(self, title_or_url: str) -> dict:
+                raise AssertionError("cached parsed HTML should avoid fetching parse payload")
+
+        url = "https://en.wikipedia.org/w/index.php?pageid=2468"
+        with tempfile.TemporaryDirectory() as tmpdir:
+            archive_path = Path(tmpdir) / f"page_{hashlib.sha256(url.encode('utf-8')).hexdigest()}.json"
+            archive_path.write_text(
+                json.dumps(
+                    {
+                        "source_url": url,
+                        "page_id": 2468,
+                        "title": "2026 FIFA World Cup",
+                        "canonical_url": "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup",
+                        "parsed_html": FIXTURE_HTML,
+                    }
+                ),
+                encoding="utf-8",
+            )
+            generator = WikipediaInfoboxTableGenerator(
+                urls=[url],
+                wikipedia_client=NoFetchWikipediaClient(),
+                llm_client=FakeLLMClient(),
+                record_limit=1,
+                table_filter_modes=(),
+                page_archive_dir=Path(tmpdir),
+            )
+            candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+        self.assertEqual(candidate.final_question, "Which stadium hosting the 23rd FIFA World Cup has the largest capacity?")
+        self.assertEqual(candidate.source_metadata["page_id"], 2468)
+        self.assertEqual(
+            candidate.source_metadata["route3_page_archive"]["parse_fetch_status"],
+            "archive_parsed_html_hit",
+        )
+
+    def test_stream_cached_page_reuse_uses_strict_numeric_page_id_exclusions(self) -> None:
+        def write_archive(path: Path, page_id: int) -> None:
+            path.write_text(
+                json.dumps(
+                    {
+                        "source_url": f"https://en.wikipedia.org/w/index.php?pageid={page_id}",
+                        "page_id": page_id,
+                        "parse_payload": {
+                            "parse": {
+                                "title": f"Cached page {page_id}",
+                                "pageid": page_id,
+                                "text": FIXTURE_HTML,
+                            }
+                        },
+                    }
+                ),
+                encoding="utf-8",
+            )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            cache_dir = root / "route3_pages"
+            cache_dir.mkdir()
+            write_archive(cache_dir / "page_a.json", 101)
+            write_archive(cache_dir / "page_b.json", 102)
+            write_archive(cache_dir / "page_c.json", 103)
+            (cache_dir / "page_invalid.json").write_text(json.dumps({"page_id": 104}), encoding="utf-8")
+            used_file = root / "used_ids.json"
+            used_file.write_text(
+                json.dumps(
+                    [
+                        101,
+                        {"page_id": 102, "answer_type": "Person", "table_type": "infobox"},
+                    ]
+                ),
+                encoding="utf-8",
+            )
+            state = PageIdStreamState.load(root / "state.json")
+            args = SimpleNamespace(
+                stream_reuse_cached_page_count=5,
+                route3_page_archive_dir=cache_dir,
+                stream_reuse_cached_page_used_id_file=[used_file],
+            )
+
+            selected, summary = _reserve_stream_cached_page_archives(state=state, args=args)
+
+        self.assertEqual([entry.page_id for entry in selected], [103])
+        self.assertEqual(summary["requested_count"], 5)
+        self.assertEqual(summary["cached_archive_valid_page_count"], 3)
+        self.assertEqual(summary["used_id_excluded_page_count"], 2)
+        self.assertEqual(summary["reusable_cached_page_count"], 1)
+        self.assertEqual(summary["selected_count"], 1)
+        self.assertEqual(state.in_progress_ids, {103})
+        self.assertTrue(any(event.get("event") == "reserve_cached_page_archives" for event in state.events))
 
     def test_pageview_prefilter_disabled_by_default_records_disabled_metadata(self) -> None:
         class NoPageviewWikipediaClient(FakeWikipediaClient):
