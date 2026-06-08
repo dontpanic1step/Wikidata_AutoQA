@@ -51,6 +51,7 @@ class PageIdStreamState:
     rerun_pool: list[int] = field(default_factory=list)
     table_search_offsets: dict[str, int] = field(default_factory=dict)
     failure_reasons: dict[int, str] = field(default_factory=dict)
+    rerun_error_details: dict[int, dict[str, str]] = field(default_factory=dict)
     events: list[dict[str, Any]] = field(default_factory=list)
 
     @classmethod
@@ -76,6 +77,11 @@ class PageIdStreamState:
                 for key, value in dict(payload.get("failure_reasons", {})).items()
                 if _is_int_like(key)
             },
+            rerun_error_details={
+                int(key): details
+                for key, value in dict(payload.get("rerun_error_details", {})).items()
+                if _is_int_like(key) and (details := _error_details(value))
+            },
             events=[
                 event
                 for event in payload.get("events", [])
@@ -96,6 +102,11 @@ class PageIdStreamState:
             "failure_reasons": {
                 str(page_id): reason
                 for page_id, reason in sorted(self.failure_reasons.items())
+            },
+            "rerun_error_details": {
+                str(page_id): details
+                for page_id, details in sorted(self.rerun_error_details.items())
+                if details
             },
             "events": self.events[-200:],
             "stats": self.stats(),
@@ -161,6 +172,8 @@ class PageIdStreamState:
         if not cleared:
             return []
         self.rerun_pool = remaining
+        for page_id in cleared:
+            self.rerun_error_details.pop(page_id, None)
         if free_unused_page_ids:
             decided_or_reserved = self.accepted_ids | self.rejected_ids | self.in_progress_ids
             for page_id in cleared:
@@ -267,6 +280,7 @@ class PageIdStreamState:
         self.accepted_ids.add(page_id)
         self.rejected_ids.discard(page_id)
         self.failure_reasons.pop(page_id, None)
+        self.rerun_error_details.pop(page_id, None)
         self._remove_from_rerun_pool(page_id)
         self._record_event("accepted", [page_id], "")
         self.save()
@@ -277,17 +291,37 @@ class PageIdStreamState:
         self.rejected_ids.add(page_id)
         self.accepted_ids.discard(page_id)
         self.failure_reasons[page_id] = reason
+        self.rerun_error_details.pop(page_id, None)
         self._remove_from_rerun_pool(page_id)
         self._record_event("rejected", [page_id], reason)
         self.save()
 
-    def mark_rerun(self, page_id: int, *, reason: str) -> None:
+    def mark_rerun(
+        self,
+        page_id: int,
+        *,
+        reason: str,
+        error_type: str = "",
+        error_message: str = "",
+        **extra_error_details: str,
+    ) -> None:
         """Return one unresolved page ID to the rerun pool."""
         self.in_progress_ids.discard(page_id)
         if page_id not in self.rerun_pool and page_id not in self.accepted_ids and page_id not in self.rejected_ids:
             self.rerun_pool.append(page_id)
         self.failure_reasons[page_id] = reason
-        self._record_event("rerun", [page_id], reason)
+        details = _error_details(
+            {
+                **extra_error_details,
+                "error_type": error_type,
+                "error_message": error_message,
+            }
+        )
+        if details:
+            self.rerun_error_details[page_id] = details
+        else:
+            self.rerun_error_details.pop(page_id, None)
+        self._record_event("rerun", [page_id], reason, **details)
         self.save()
 
     def sync_decided_ids(
@@ -314,6 +348,7 @@ class PageIdStreamState:
             self.rejected_ids.discard(page_id)
             self.in_progress_ids.discard(page_id)
             self.failure_reasons.pop(page_id, None)
+            self.rerun_error_details.pop(page_id, None)
             self._remove_from_rerun_pool(page_id)
             after = (
                 page_id in self.used_ids,
@@ -336,6 +371,7 @@ class PageIdStreamState:
             self.accepted_ids.discard(page_id)
             self.in_progress_ids.discard(page_id)
             self.failure_reasons.setdefault(page_id, reason)
+            self.rerun_error_details.pop(page_id, None)
             self._remove_from_rerun_pool(page_id)
             after = (
                 page_id in self.used_ids,
@@ -387,14 +423,17 @@ class PageIdStreamState:
     def _remove_from_rerun_pool(self, page_id: int) -> None:
         self.rerun_pool = [value for value in self.rerun_pool if value != page_id]
 
-    def _record_event(self, event_type: str, page_ids: list[int], reason: str) -> None:
-        self.events.append(
-            {
-                "event": event_type,
-                "page_ids": page_ids,
-                "reason": reason,
-            }
-        )
+    def _record_event(self, event_type: str, page_ids: list[int], reason: str, **details: str) -> None:
+        event = {
+            "event": event_type,
+            "page_ids": page_ids,
+            "reason": reason,
+        }
+        for key, value in details.items():
+            text = str(value or "").strip()
+            if text:
+                event[key] = text
+        self.events.append(event)
 
 
 def _validate_bounds(lower_bound: int, upper_bound: int) -> None:
@@ -427,6 +466,31 @@ def _positive_unique_ids(values: list[int]) -> list[int]:
         seen.add(page_id)
         result.append(page_id)
     return result
+
+
+def _error_details(value: object) -> dict[str, str]:
+    """Return compact retry error details from a JSON-like payload."""
+    if not isinstance(value, dict):
+        return {}
+    details: dict[str, str] = {}
+    for key in (
+        "error_type",
+        "error_message",
+        "query_name",
+        "query_category",
+        "query",
+        "query_duration_seconds",
+        "search_attempt_count",
+        "last_attempt_path",
+        "last_attempt_duration_ms",
+        "last_attempt_error_type",
+        "last_attempt_error_message",
+        "last_attempt_http_status",
+    ):
+        text = str(value.get(key) or "").strip()
+        if text:
+            details[key] = text[:500]
+    return details
 
 
 def _is_int_like(value: object) -> bool:

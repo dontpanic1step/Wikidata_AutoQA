@@ -88,6 +88,10 @@ class GeneratedCandidate:
         """Return the stable subject resource key used for deduplication."""
         if self.source_candidate is not None and self.source_candidate.subject_resource_key:
             return self.source_candidate.subject_resource_key
+        if self.generation_route == "route3_wikipedia_infobox":
+            slot_id = str(self.source_metadata.get("route3_slot_id") or "").strip()
+            if slot_id:
+                return f"{self.subject_entity.url}#{slot_id}"
         return self.subject_entity.url
 
     def to_output_record(self, example_id: str) -> dict[str, Any]:
@@ -128,6 +132,8 @@ class GeneratedCandidate:
             "legacy_domain": self.source_template_domain,
             "topic": self.topic,
             "target_time": self.target_time,
+            "subject_resource_url": self.subject_entity.url,
+            "subject_resource_key": self.subject_resource_key,
             "search_queries": self.search_queries,
             "prefilter_longtail_features": self.prefilter_longtail_features,
             "search_verification_features": self.search_verification_features,

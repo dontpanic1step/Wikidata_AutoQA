@@ -1,0 +1,43 @@
+{
+  "summary": {
+    "candidate_count": 0,
+    "ok_candidate_count": 0,
+    "error_candidate_count": 0,
+    "passed_candidate_count": 0,
+    "query_count": 0,
+    "query_error_count": 0,
+    "result_count_total": 0,
+    "zero_result_query_count": 0,
+    "used_lite_query_count": 0,
+    "html_202_switch_count": 0,
+    "attempt_endpoint_counts": [],
+    "attempt_path_counts": [],
+    "attempt_error_counts": [],
+    "query_errors": [],
+    "effective_settings": {
+      "user_agent": "wikidata-simpleqa-generator/0.1",
+      "proxy_arg": "none",
+      "proxy_effective": null,
+      "timeout_seconds": 30.0,
+      "duckduckgo_top_k": 5,
+      "duckduckgo_parallel_queries": 3,
+      "search_longtail_max_full_question_hit_rate": 0.3,
+      "search_longtail_max_keyword_hit_rate": 0.3,
+      "search_longtail_max_overall_hit_rate": 0.3,
+      "cache_dir": "cache\\wikidata"
+    }
+  },
+  "duration_seconds": 0.0015,
+  "inputs": {
+    "accepted_jsonl": [
+      "tmp_rowfilter_snapshot_2026_06_03\\01_place_200_rowfilter_test_accepted.jsonl"
+    ],
+    "rejected_jsonl": [
+      "tmp_rowfilter_snapshot_2026_06_03\\01_place_200_rowfilter_test_rejected.jsonl"
+    ],
+    "accepted_limit": 0,
+    "rejected_limit": 0,
+    "rejected_min_duckduckgo_seconds": 0.0
+  },
+  "results": []
+}

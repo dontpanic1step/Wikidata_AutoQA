@@ -32,10 +32,30 @@ from wikidata_simpleqa.generation_pipeline import (
 )
 from wikidata_simpleqa.io import append_jsonl, write_jsonl
 from wikidata_simpleqa.llm_rewrite import make_rewrite_client
+from wikidata_simpleqa.page_id_lists import (
+    PageIdListEntry,
+    build_page_id_entries,
+    page_ids_excluded_for_context,
+    read_page_id_entries,
+)
+from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids, route3_record_id
 from wikidata_simpleqa.search_client import DuckDuckGoSearchClient
 from wikidata_simpleqa.wikipedia_client import WikipediaClient, normalize_wikipedia_page_id, normalize_wikipedia_title
 from wikidata_simpleqa.wikipedia_infobox_generator import (
+    DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
+    DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE,
+    DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS,
+    DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
+    DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
+    DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
+    DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED,
+    DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
+    DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS,
+    DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
+    DEFAULT_ROUTE3_REASONING_TYPES,
     DEFAULT_ROUTE3_TABLE_FILTER_MODES,
+    DEFAULT_ROUTE3_TABLE_SOURCE_TYPES,
+    ROUTE3_ANSWER_TYPES,
     WikipediaInfoboxTableGenerator,
     _answer_items,
     _normalize_answer_type,
@@ -43,9 +63,12 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     _reasoning_type,
     _sanitize_answer_blind_queries,
     normalize_route3_answer_types,
+    normalize_route3_answer_type_mode,
     normalize_route3_extra_prompts,
+    normalize_route3_pageview_unavailable_policy,
     normalize_route3_reasoning_types,
     normalize_route3_table_filter_modes,
+    normalize_route3_table_source_types,
 )
 from wikidata_simpleqa.wikipedia_streaming import (
     BROAD_TABLE_SEARCH_QUERY,
@@ -60,11 +83,9 @@ DEFAULT_STREAM_RANDOM_SEED = 42
 
 
 def _apply_big_batch_mode(args: argparse.Namespace) -> None:
-    """Apply large-run defaults that keep 10k-style recipes resumable and compact."""
+    """Apply large-run defaults that keep 10k-style recipes resumable."""
     if not getattr(args, "big_batch_mode", False):
         return
-    args.compact_output = True
-    args.compact_rejected_output = True
     if getattr(args, "stream_random_page_ids", False) and getattr(args, "stream_page_source", "") == "table-search":
         args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
         args.stream_search_max_rounds = max(500, int(getattr(args, "stream_search_max_rounds", 10) or 10))
@@ -266,8 +287,7 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=[],
         help=(
-            "File containing page IDs that streaming discovery must skip. "
-            "Accepts a JSON list, JSON object values, JSONL records with page_id/page_ids, or plain IDs."
+            "File containing page IDs or page_id/answer_type/table_type entries that streaming discovery must skip."
         ),
     )
     parser.add_argument(
@@ -444,7 +464,7 @@ def parse_args() -> argparse.Namespace:
         default=[],
         help=(
             "Restrict Route 3 generation to one or more reasoning_type values. "
-            "Repeat the flag or pass comma-separated values. Default: unrestricted."
+            "Repeat the flag or pass comma-separated values. Default: single_fact."
         ),
     )
     parser.add_argument(
@@ -454,6 +474,15 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Restrict Route 3 generation to one or more SimpleQA Verified answer_type values: "
             "Person, Place, Number, Date, Other. Repeat the flag or pass comma-separated values. Default: unrestricted."
+        ),
+    )
+    parser.add_argument(
+        "--route3-answer-type-mode",
+        choices=["single", "all5"],
+        default=DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
+        help=(
+            "Route 3 small-model output mode. single asks for one QA; all5 asks once for up to one "
+            "Person, Place, Number, Date, and Other QA slot."
         ),
     )
     parser.add_argument(
@@ -471,8 +500,8 @@ def parse_args() -> argparse.Namespace:
         default=list(DEFAULT_ROUTE3_TABLE_FILTER_MODES),
         help=(
             "Enable one or more early Route 3 table filter modes. Repeat the flag or pass comma-separated "
-            "values. Defaults: no_picture_heavy_tables,no_incomplete_tables,"
-            "not_number_dominant,no_social_science_research."
+            "values. Defaults: no_external_links_tables,no_horizontal_companion_tables,"
+            "no_picture_heavy_tables,no_incomplete_tables,not_number_dominant,no_social_science_research."
         ),
     )
     parser.add_argument(
@@ -480,6 +509,24 @@ def parse_args() -> argparse.Namespace:
         action="append",
         default=[],
         help="Disable a default Route 3 table filter mode for this run. Can be repeated.",
+    )
+    parser.add_argument(
+        "--route3-table-source-type",
+        action="append",
+        default=[],
+        help=(
+            "Restrict Route 3 generation source tables to infobox, wikitable, or both/all. "
+            "Repeat the flag or pass comma-separated values. Default: both."
+        ),
+    )
+    parser.add_argument(
+        "--route3-prose-leakage-scoring",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
+        help=(
+            "Enable the lightweight prose-leakage rank signal. Default: enabled "
+            "(leakage <0.2 adds 0.5; leakage >0.8 subtracts 0.5)."
+        ),
     )
     parser.add_argument(
         "--route3-llm-choose-table",
@@ -491,21 +538,75 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--route3-page-archive-dir",
+        type=Path,
+        default=ROOT / DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
+        help="Directory for unified Route 3 page archives containing parse HTML and pageview metadata.",
+    )
+    parser.add_argument(
+        "--route3-pageview-prefilter",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED,
+        help=(
+            "Enable the optional Route 3 pageview popularity prefilter before table grading "
+            "and LLM generation. Disabled by default."
+        ),
+    )
+    parser.add_argument(
+        "--route3-pageview-window-months",
+        type=int,
+        default=DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS,
+        help="Complete monthly pageview window used by the Route 3 prefilter.",
+    )
+    parser.add_argument(
+        "--route3-max-monthly-average-pageviews",
+        type=float,
+        default=DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
+        help="Maximum allowed monthly average pageviews for Route 3 pageview prefilter.",
+    )
+    parser.add_argument(
+        "--route3-max-underfilled-monthly-pageviews",
+        type=float,
+        default=DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
+        help=(
+            "Maximum allowed single-month pageviews when the Route 3 pageview response contains fewer months "
+            "than --route3-pageview-window-months."
+        ),
+    )
+    parser.add_argument(
+        "--route3-pageview-unavailable-policy",
+        choices=["allow", "reject", "rerun"],
+        default=DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
+        help="Route 3 decision when pageview data is unavailable.",
+    )
+    parser.add_argument(
+        "--route3-infobox-max-removed-row-rate",
+        type=float,
+        default=DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE,
+        help="Reject infoboxes when row cleanup removes more than this fraction of non-header rows.",
+    )
+    parser.add_argument(
+        "--route3-infobox-min-remaining-rows",
+        type=int,
+        default=DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS,
+        help="Reject infoboxes when row cleanup leaves fewer than this many non-header rows.",
+    )
+    parser.add_argument(
         "--compact-rejected-output",
         action="store_true",
-        help="Write compact rejected JSONL records.",
+        help="Deprecated for Route 3; rejected JSONL records are always written in full audit form.",
     )
     parser.add_argument(
         "--compact-output",
         action="store_true",
-        help="Write compact accepted and rejected JSONL records for large production runs.",
+        help="Deprecated for Route 3; accepted and rejected JSONL records are always written in full audit form.",
     )
     parser.add_argument(
         "--big-batch-mode",
         action="store_true",
         help=(
-            "Large-run convenience mode: compact accepted/rejected JSONL records and align stream batch size "
-            "with the table-search page size."
+            "Large-run convenience mode: retry discovery failures and align stream batch size with the table-search page size. "
+            "It does not compact accepted or rejected records."
         ),
     )
     parser.add_argument(
@@ -618,7 +719,9 @@ def main() -> int:
         raise ValueError("--reset-stream-state cannot be combined with --stream-rerun-pool-only.")
     if args.run_artifact_manifest is not None and not args.run_group_id.strip():
         raise ValueError("--run-artifact-manifest requires --run-group-id.")
-    args.route3_reasoning_type = list(normalize_route3_reasoning_types(args.route3_reasoning_type))
+    args.route3_reasoning_type = list(
+        normalize_route3_reasoning_types(args.route3_reasoning_type) or DEFAULT_ROUTE3_REASONING_TYPES
+    )
     args.route3_answer_type = list(normalize_route3_answer_types(args.route3_answer_type))
     args.route3_extra_prompt = list(normalize_route3_extra_prompts(args.route3_extra_prompt))
     enabled_table_filter_modes = list(normalize_route3_table_filter_modes(args.route3_table_filter_mode))
@@ -626,6 +729,18 @@ def main() -> int:
     args.route3_table_filter_mode = [
         mode for mode in enabled_table_filter_modes if mode not in disabled_table_filter_modes
     ]
+    args.route3_table_source_type = list(
+        normalize_route3_table_source_types(args.route3_table_source_type or DEFAULT_ROUTE3_TABLE_SOURCE_TYPES)
+    )
+    args.route3_answer_type_mode = normalize_route3_answer_type_mode(args.route3_answer_type_mode)
+    args.route3_pageview_unavailable_policy = normalize_route3_pageview_unavailable_policy(
+        args.route3_pageview_unavailable_policy
+    )
+    args.route3_pageview_window_months = max(1, int(args.route3_pageview_window_months))
+    args.route3_max_monthly_average_pageviews = float(args.route3_max_monthly_average_pageviews)
+    args.route3_max_underfilled_monthly_pageviews = float(args.route3_max_underfilled_monthly_pageviews)
+    args.route3_infobox_max_removed_row_rate = max(0.0, min(1.0, float(args.route3_infobox_max_removed_row_rate)))
+    args.route3_infobox_min_remaining_rows = max(0, int(args.route3_infobox_min_remaining_rows))
     if args.start_stage == "generate" and not urls and not args.stream_random_page_ids and effective_record_limit > 0:
         raise ValueError("Provide at least one Wikipedia URL with --url or --url-file.")
     if args.start_stage == "validation" and not args.candidate_input:
@@ -705,6 +820,8 @@ def main() -> int:
             _apply_allowed_answer_type_filter(candidate, args.route3_answer_type)
             _attach_route3_extra_prompts(candidate, args.route3_extra_prompt)
             _attach_route3_table_filter_modes(candidate, args.route3_table_filter_mode)
+            _attach_route3_table_source_types(candidate, args.route3_table_source_type)
+            _attach_route3_prose_leakage_scoring(candidate, args.route3_prose_leakage_scoring)
         if not generated_candidates:
             raise ValueError("No candidates were loaded from --candidate-input.")
         if not url_entries:
@@ -723,7 +840,18 @@ def main() -> int:
             allowed_answer_types=tuple(args.route3_answer_type),
             extra_prompts=tuple(args.route3_extra_prompt),
             table_filter_modes=tuple(args.route3_table_filter_mode),
+            table_source_types=tuple(args.route3_table_source_type),
+            prose_leakage_scoring_enabled=args.route3_prose_leakage_scoring,
             llm_choose_table=args.route3_llm_choose_table,
+            answer_type_mode=args.route3_answer_type_mode,
+            page_archive_dir=args.route3_page_archive_dir,
+            pageview_prefilter_enabled=args.route3_pageview_prefilter,
+            pageview_window_months=args.route3_pageview_window_months,
+            max_monthly_average_pageviews=args.route3_max_monthly_average_pageviews,
+            max_underfilled_monthly_pageviews=args.route3_max_underfilled_monthly_pageviews,
+            pageview_unavailable_policy=args.route3_pageview_unavailable_policy,
+            infobox_max_removed_row_rate=args.route3_infobox_max_removed_row_rate,
+            infobox_min_remaining_rows=args.route3_infobox_min_remaining_rows,
         )
         generated_candidates = generator.generate(
             run_date=settings.run_date,
@@ -735,7 +863,11 @@ def main() -> int:
         search_client=search_client,
         rewrite_client=rewrite_client,
     )
-    _renumber_accepted_records(result.accepted, offset=endpoint_resume.accepted_count if args.start_from_endpoint else 0)
+    _renumber_accepted_records(
+        result.accepted,
+        offset=endpoint_resume.accepted_count if args.start_from_endpoint else 0,
+        run_date=settings.run_date,
+    )
     if args.start_from_endpoint:
         append_jsonl(args.output, _accepted_output_records(result.accepted, args))
         append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
@@ -782,9 +914,22 @@ def main() -> int:
         "route3_answer_types": args.route3_answer_type,
         "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": args.route3_table_filter_mode,
+        "route3_table_source_types": args.route3_table_source_type,
+        "route3_prose_leakage_scoring_enabled": bool(args.route3_prose_leakage_scoring),
         "route3_llm_choose_table": bool(args.route3_llm_choose_table),
-        "compact_output": bool(args.compact_output),
-        "compact_rejected_output": bool(args.compact_rejected_output or args.compact_output),
+        "route3_answer_type_mode": args.route3_answer_type_mode,
+        "route3_page_archive_dir": str(args.route3_page_archive_dir),
+        "route3_pageview_prefilter_enabled": bool(args.route3_pageview_prefilter),
+        "route3_pageview_window_months": args.route3_pageview_window_months,
+        "route3_max_monthly_average_pageviews": args.route3_max_monthly_average_pageviews,
+        "route3_max_underfilled_monthly_pageviews": args.route3_max_underfilled_monthly_pageviews,
+        "route3_pageview_unavailable_policy": args.route3_pageview_unavailable_policy,
+        "route3_infobox_max_removed_row_rate": args.route3_infobox_max_removed_row_rate,
+        "route3_infobox_min_remaining_rows": args.route3_infobox_min_remaining_rows,
+        "compact_output": False,
+        "compact_output_ignored": bool(args.compact_output or args.big_batch_mode),
+        "compact_rejected_output": False,
+        "compact_rejected_output_ignored": bool(args.compact_rejected_output or args.compact_output or args.big_batch_mode),
         "wikipedia_429_backoff_seconds": args.wikipedia_429_backoff_seconds,
         "wikipedia_429_max_backoff_seconds": args.wikipedia_429_max_backoff_seconds,
         "wikipedia_429_recovery_seconds": args.wikipedia_429_recovery_seconds,
@@ -909,6 +1054,8 @@ def _manifest_segment(summary: dict) -> dict[str, object]:
         "route3_answer_types": summary.get("route3_answer_types", []),
         "route3_extra_prompts": summary.get("route3_extra_prompts", []),
         "route3_table_filter_modes": summary.get("route3_table_filter_modes", []),
+        "route3_table_source_types": summary.get("route3_table_source_types", []),
+        "route3_prose_leakage_scoring_enabled": bool(summary.get("route3_prose_leakage_scoring_enabled", True)),
         "record_limit": summary.get("record_limit", 0),
         "attempted_page_ids": summary.get("attempted_page_ids", summary.get("attempted_urls", 0)),
         "auto_rerun_attempted_page_ids": summary.get("auto_rerun_attempted_page_ids", 0),
@@ -1068,24 +1215,99 @@ def _endpoint_page_ids(records: list[dict]) -> list[int]:
     return page_ids
 
 
-def _renumber_accepted_records(records: list[dict], *, offset: int) -> None:
-    """Keep appended accepted records from reusing existing JSONL IDs."""
+def _renumber_accepted_records(records: list[dict], *, offset: int, run_date: str = "") -> None:
+    """Assign stable Route 3 IDs, with legacy sequential IDs only as a fallback."""
+    for record in records:
+        _ensure_page_id_list_entry_metadata(record)
+    assign_unique_route3_record_ids(records, run_date=run_date)
     for index, record in enumerate(records, start=offset + 1):
-        record["id"] = f"simpleqa_candidate_{index:06d}"
+        if not str(record.get("id") or "").strip():
+            record["id"] = f"simpleqa_candidate_{index:06d}"
+
+
+def _jsonl_record_count(path: Path) -> int:
+    """Return the number of non-empty JSONL lines already written."""
+    if not path.exists():
+        return 0
+    return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
+
+
+def _wikipedia_stream_record_id(record: dict, index: int, *, run_date: str = "") -> str:
+    """Return a stable stream ID, falling back to the legacy local sequence when needed."""
+    stable_id = route3_record_id(record, run_date=run_date)
+    if stable_id:
+        return stable_id
+    answer_type_slug = re.sub(r"[^a-z0-9]+", "_", _record_answer_type(record).lower()).strip("_")
+    return f"{answer_type_slug or 'unknown'}_wikipedia_stream_{index:06d}"
 
 
 def _accepted_output_records(records: list[dict], args: argparse.Namespace) -> list[dict]:
     """Return accepted records in the configured output shape."""
-    if not getattr(args, "compact_output", False):
-        return records
-    return [_compact_accepted_record(record) for record in records]
+    for record in records:
+        _ensure_page_id_list_entry_metadata(record)
+    return records
 
 
 def _rejected_output_records(records: list[dict], args: argparse.Namespace) -> list[dict]:
     """Return rejected records in the configured output shape."""
-    if not (getattr(args, "compact_output", False) or getattr(args, "compact_rejected_output", False)):
-        return records
-    return [_compact_rejected_record(record) for record in records]
+    for record in records:
+        _ensure_page_id_list_entry_metadata(record)
+    return records
+
+
+def _ensure_page_id_list_entry_metadata(record: dict) -> None:
+    """Attach an explicit triadic page-ID entry when record metadata supports it."""
+    if not isinstance(record, dict):
+        return
+    metadata = record.setdefault("source_metadata", {})
+    if not isinstance(metadata, dict):
+        return
+    page_id = _record_page_id(record)
+    answer_type = _record_answer_type(record)
+    table_type = _record_table_type(record)
+    if not page_id or not answer_type or answer_type == "unknown" or not table_type:
+        return
+    metadata["page_id"] = page_id
+    metadata["page_id_list_entry"] = {
+        "page_id": page_id,
+        "answer_type": answer_type,
+        "table_type": table_type,
+    }
+
+
+def _record_table_type(record: dict) -> str:
+    """Return the actual Route 3 table type represented by one output record."""
+    metadata = record.get("source_metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+    selected = metadata.get("selected_source_table")
+    if isinstance(selected, dict):
+        table_type = _normalize_record_table_type(selected.get("table_type"))
+        if table_type:
+            return table_type
+    for source in (record, metadata):
+        if not isinstance(source, dict):
+            continue
+        for key in ("table_type", "source_channel", "recipe_table_type"):
+            table_type = _normalize_record_table_type(source.get(key))
+            if table_type:
+                return table_type
+    source_types = metadata.get("table_source_types")
+    if isinstance(source_types, list) and len(source_types) == 1:
+        return _normalize_record_table_type(source_types[0])
+    return ""
+
+
+def _normalize_record_table_type(value: object) -> str:
+    """Normalize one record table-type value for page-ID entries."""
+    text = str(value or "").strip()
+    if not text:
+        return ""
+    try:
+        normalized = normalize_route3_table_source_types([text])
+    except ValueError:
+        return ""
+    return normalized[0] if len(normalized) == 1 else ""
 
 
 def _compact_accepted_record(record: dict) -> dict:
@@ -1102,6 +1324,11 @@ def _compact_accepted_record(record: dict) -> dict:
     panel = record.get("panel_grading_features")
     if panel is None:
         panel = record.get("panel_grading_features", notes.get("panel_grading_features", {}))
+    llm_response = metadata.get("llm_response")
+    if not isinstance(llm_response, dict):
+        llm_response = metadata.get("small_model_qa_response")
+    if not isinstance(llm_response, dict):
+        llm_response = {}
     return {
         "id": record.get("id", ""),
         "question": record.get("question", record.get("canonical_question", "")),
@@ -1120,8 +1347,13 @@ def _compact_accepted_record(record: dict) -> dict:
         "source_metadata": {
             "page_title": metadata.get("page_title", ""),
             "first_paragraph": metadata.get("first_paragraph", ""),
+            "subject_anchor_aliases": metadata.get("subject_anchor_aliases", []),
+            "safe_subject_aliases": metadata.get("safe_subject_aliases", []),
             "subject_anchors": metadata.get("subject_anchors", {}),
             "parsed_tables": metadata.get("parsed_tables", []),
+            "selected_source_table": metadata.get("selected_source_table", {}),
+            "llm_response": llm_response,
+            "small_model_qa_response": llm_response,
             "phase_timings_seconds": metadata.get("phase_timings_seconds", {}),
         },
     }
@@ -1205,7 +1437,7 @@ def _run_streaming_page_id_pipeline(
     wikipedia_client = SemaphoreWrappedClient(
         wikipedia_client,
         concurrency.wikipedia_semaphore,
-        {"fetch_summary", "fetch_parse", "search_page_ids"},
+        {"fetch_summary", "fetch_parse", "fetch_pageviews", "search_page_ids"},
     )
     search_client = SemaphoreWrappedClient(
         search_client,
@@ -1215,13 +1447,13 @@ def _run_streaming_page_id_pipeline(
     llm_client = SemaphoreWrappedClient(
         llm_client,
         concurrency.generation_rewrite_semaphore,
-        {"complete_text"},
+        {"complete_text", "complete_text_with_audit"},
     )
     if rewrite_client is not None:
         rewrite_client = SemaphoreWrappedClient(
             rewrite_client,
             concurrency.generation_rewrite_semaphore,
-            {"rewrite_question"},
+            {"rewrite_question", "rewrite_question_with_audit"},
         )
     second_stage_model_clients = _build_streaming_second_stage_model_panel(settings, concurrency)
     grading_grader_client = _build_streaming_second_stage_grader_client(settings, concurrency)
@@ -1230,7 +1462,11 @@ def _run_streaming_page_id_pipeline(
         state.save()
     else:
         state = PageIdStreamState.load(args.stream_state)
-    excluded_page_ids = _load_stream_excluded_page_ids(args.stream_exclude_page_id_file)
+    excluded_page_ids = _load_stream_excluded_page_ids(
+        args.stream_exclude_page_id_file,
+        answer_types=_page_id_list_answer_types(args),
+        table_types=args.route3_table_source_type,
+    )
     if excluded_page_ids:
         state.used_ids.update(excluded_page_ids)
         state._record_event("stream_exclude_page_ids", sorted(excluded_page_ids), "external_exclusion_file")
@@ -1410,6 +1646,11 @@ def _run_streaming_page_id_pipeline(
             str(page_id): state.failure_reasons.get(page_id, "")
             for page_id in state.rerun_pool
         },
+        "rerun_pool_error_details_after_run": {
+            str(page_id): state.rerun_error_details.get(page_id, {})
+            for page_id in state.rerun_pool
+            if state.rerun_error_details.get(page_id)
+        },
         "recovered_stale_in_progress_ids": recovered_ids,
         "page_id_bounds": {
             "min": args.stream_page_id_min,
@@ -1436,6 +1677,17 @@ def _run_streaming_page_id_pipeline(
         "attempted_page_ids": len(processed_ids),
         "attempted_page_ids_unique": len(set(processed_ids)),
         "page_ids": processed_ids,
+        "page_id_list_entries": [
+            entry.to_record()
+            for entry in sorted(
+                _stream_page_id_list_entries(
+                    processed_ids,
+                    all_decision_records=all_decision_records,
+                    answer_types=_page_id_list_answer_types(args),
+                    table_types=args.route3_table_source_type,
+                )
+            )
+        ],
         "accepted": len(accepted_records),
         "accepted_total": endpoint_resume.accepted_count + len(accepted_records),
         "rejected": len(rejected_records),
@@ -1460,9 +1712,22 @@ def _run_streaming_page_id_pipeline(
         "route3_answer_types": args.route3_answer_type,
         "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": args.route3_table_filter_mode,
+        "route3_table_source_types": args.route3_table_source_type,
+        "route3_prose_leakage_scoring_enabled": bool(args.route3_prose_leakage_scoring),
         "route3_llm_choose_table": bool(args.route3_llm_choose_table),
-        "compact_output": bool(args.compact_output),
-        "compact_rejected_output": bool(args.compact_rejected_output or args.compact_output),
+        "route3_answer_type_mode": args.route3_answer_type_mode,
+        "route3_page_archive_dir": str(args.route3_page_archive_dir),
+        "route3_pageview_prefilter_enabled": bool(args.route3_pageview_prefilter),
+        "route3_pageview_window_months": args.route3_pageview_window_months,
+        "route3_max_monthly_average_pageviews": args.route3_max_monthly_average_pageviews,
+        "route3_max_underfilled_monthly_pageviews": args.route3_max_underfilled_monthly_pageviews,
+        "route3_pageview_unavailable_policy": args.route3_pageview_unavailable_policy,
+        "route3_infobox_max_removed_row_rate": args.route3_infobox_max_removed_row_rate,
+        "route3_infobox_min_remaining_rows": args.route3_infobox_min_remaining_rows,
+        "compact_output": False,
+        "compact_output_ignored": bool(args.compact_output or args.big_batch_mode),
+        "compact_rejected_output": False,
+        "compact_rejected_output_ignored": bool(args.compact_rejected_output or args.compact_output or args.big_batch_mode),
         "survival_by_layer": _survival_by_layer(
             attempted_count=len(processed_ids),
             rejected_records=rejected_records,
@@ -1528,34 +1793,101 @@ def _initialize_table_search_offsets(state: PageIdStreamState, args: argparse.Na
         state.save()
 
 
-def _load_stream_excluded_page_ids(paths: list[Path]) -> set[int]:
-    """Load page IDs that the stream should treat as already used."""
+def _load_stream_excluded_page_ids(
+    paths: list[Path],
+    *,
+    answer_types: list[str] | tuple[str, ...] | None = None,
+    table_types: list[str] | tuple[str, ...] | None = None,
+) -> set[int]:
+    """Load page IDs that the stream should treat as already used for this context."""
     excluded: set[int] = set()
     for path in paths:
         if path is None or not Path(path).exists():
             continue
-        text = Path(path).read_text(encoding="utf-8").strip()
-        if not text:
-            continue
-        try:
-            payload = json.loads(text)
-        except json.JSONDecodeError:
-            for line in text.splitlines():
-                stripped = line.strip()
-                if not stripped:
-                    continue
-                try:
-                    line_payload = json.loads(stripped)
-                except json.JSONDecodeError:
-                    line_payload = stripped
-                excluded.update(_page_ids_from_payload(line_payload))
-            continue
-        if isinstance(payload, list):
-            for item in payload:
-                excluded.update(_page_ids_from_payload(item))
+        entries = read_page_id_entries(Path(path))
+        if answer_types is None and table_types is None:
+            excluded.update(entry.page_id for entry in entries)
         else:
-            excluded.update(_page_ids_from_payload(payload))
+            excluded.update(
+                page_ids_excluded_for_context(
+                    entries,
+                    answer_types=answer_types or (),
+                    table_types=table_types or (),
+                )
+            )
     return {page_id for page_id in excluded if page_id > 0}
+
+
+def _page_id_list_answer_types(args: argparse.Namespace) -> list[str]:
+    """Return answer-type contexts represented by this Route 3 streaming run."""
+    answer_types = list(getattr(args, "route3_answer_type", []) or [])
+    if answer_types:
+        return answer_types
+    if getattr(args, "route3_answer_type_mode", "") == "all5":
+        return list(ROUTE3_ANSWER_TYPES)
+    return list(ROUTE3_ANSWER_TYPES)
+
+
+def _stream_page_id_list_entries(
+    processed_ids: list[int],
+    *,
+    all_decision_records: list[dict],
+    answer_types: list[str],
+    table_types: list[str],
+) -> set[PageIdListEntry]:
+    """Return used page-ID entries represented by one streaming run."""
+    actual_table_types_by_page = _actual_table_types_by_page_id(all_decision_records)
+    entries: set[PageIdListEntry] = set()
+    for page_id in processed_ids:
+        actual_table_types = actual_table_types_by_page.get(page_id)
+        entries.update(
+            build_page_id_entries(
+                [page_id],
+                answer_types=answer_types,
+                table_types=sorted(actual_table_types) if actual_table_types else table_types,
+            )
+        )
+    page_only_ids = {
+        page_id
+        for record in all_decision_records
+        if _all5_page_level_prerewrite_rejected(record)
+        for page_id in [_positive_record_page_id(_record_page_id(record))]
+        if page_id is not None
+    }
+    if not page_only_ids:
+        return entries
+    return {
+        entry
+        for entry in entries
+        if entry.page_id not in page_only_ids
+    } | {PageIdListEntry(page_id=page_id) for page_id in page_only_ids}
+
+
+def _actual_table_types_by_page_id(records: list[dict]) -> dict[int, set[str]]:
+    """Return actual selected table types observed in decision records by page ID."""
+    table_types_by_page: dict[int, set[str]] = defaultdict(set)
+    for record in records:
+        page_id = _positive_record_page_id(_record_page_id(record))
+        if page_id is None:
+            continue
+        table_type = _record_table_type(record)
+        if table_type:
+            table_types_by_page[page_id].add(table_type)
+    return table_types_by_page
+
+
+def _all5_page_level_prerewrite_rejected(record: dict) -> bool:
+    """Return whether one all5 rejected record invalidates the whole page before rewrite."""
+    metadata = record.get("source_metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+    if str(metadata.get("answer_type_mode") or "").strip() != "all5":
+        return False
+    if str(metadata.get("route3_slot_id") or "").strip():
+        return False
+    if _record_answer_type(record) != "unknown":
+        return False
+    return bool(_source_stage_rejection_reason(record))
 
 
 def _page_ids_from_payload(payload: object) -> set[int]:
@@ -1642,7 +1974,18 @@ def _process_one_stream_page_id(
             allowed_answer_types=tuple(args.route3_answer_type),
             extra_prompts=tuple(args.route3_extra_prompt),
             table_filter_modes=tuple(args.route3_table_filter_mode),
+            table_source_types=tuple(args.route3_table_source_type),
+            prose_leakage_scoring_enabled=args.route3_prose_leakage_scoring,
             llm_choose_table=args.route3_llm_choose_table,
+            answer_type_mode=args.route3_answer_type_mode,
+            page_archive_dir=args.route3_page_archive_dir,
+            pageview_prefilter_enabled=args.route3_pageview_prefilter,
+            pageview_window_months=args.route3_pageview_window_months,
+            max_monthly_average_pageviews=args.route3_max_monthly_average_pageviews,
+            max_underfilled_monthly_pageviews=args.route3_max_underfilled_monthly_pageviews,
+            pageview_unavailable_policy=args.route3_pageview_unavailable_policy,
+            infobox_max_removed_row_rate=args.route3_infobox_max_removed_row_rate,
+            infobox_min_remaining_rows=args.route3_infobox_min_remaining_rows,
         )
         generated_candidates = generator.generate(
             run_date=settings.run_date,
@@ -1657,10 +2000,10 @@ def _process_one_stream_page_id(
                 "url": url,
                 "reason": "no_generated_candidate",
             }
-        candidate = generated_candidates[0]
-        _attach_stream_metadata(candidate, page_id=page_id, url=url, args=args)
+        for candidate in generated_candidates:
+            _attach_stream_metadata(candidate, page_id=page_id, url=url, args=args)
         result = process_generated_candidates(
-            [candidate],
+            generated_candidates,
             settings=settings,
             search_client=search_client,
             rewrite_client=rewrite_client,
@@ -1669,25 +2012,32 @@ def _process_one_stream_page_id(
         )
         if result.accepted:
             with concurrency.commit_lock:
-                for index, record in enumerate(result.accepted):
-                    record["id"] = f"wikipedia_stream_{len(state.accepted_ids) + index + 1:06d}"
+                accepted_index_offset = _jsonl_record_count(args.output)
+                for index, record in enumerate(result.accepted, start=accepted_index_offset + 1):
+                    _attach_stream_record_metadata(record, page_id=page_id, url=url, args=args)
+                    _ensure_page_id_list_entry_metadata(record)
+                    record["id"] = _wikipedia_stream_record_id(record, index, run_date=settings.run_date)
+                for record in result.rejected:
                     _attach_stream_record_metadata(record, page_id=page_id, url=url, args=args)
                 append_jsonl(args.output, _accepted_output_records(result.accepted, args))
+                if result.rejected:
+                    append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
                 state.mark_accepted(page_id)
             return {
                 "status": "accepted",
                 "page_id": page_id,
                 "url": url,
                 "accepted_records": result.accepted,
-                "rejected_records": [],
+                "rejected_records": result.rejected,
             }
         if result.rejected:
             for record in result.rejected:
                 _attach_stream_record_metadata(record, page_id=page_id, url=url, args=args)
             reason = _exact_failure_reason(result.rejected[0])
             if _should_rerun_stream_rejection(result.rejected[0]):
+                error_details = _rerun_error_details_from_record(result.rejected[0])
                 with concurrency.commit_lock:
-                    state.mark_rerun(page_id, reason=reason)
+                    state.mark_rerun(page_id, reason=reason, **error_details)
                 return {
                     "status": "rerun",
                     "page_id": page_id,
@@ -1695,6 +2045,7 @@ def _process_one_stream_page_id(
                     "accepted_records": [],
                     "rejected_records": [],
                     "reason": reason,
+                    **error_details,
                 }
             with concurrency.commit_lock:
                 append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
@@ -1716,22 +2067,30 @@ def _process_one_stream_page_id(
             "reason": "pipeline_no_accept_or_reject",
         }
     except Exception as exc:  # noqa: BLE001
-        reason = f"pipeline_exception:{type(exc).__name__}"
+        error_type = type(exc).__name__
+        error_message = str(exc)
+        reason = f"pipeline_exception:{error_type}"
         with concurrency.commit_lock:
-            state.mark_rerun(page_id, reason=reason)
+            state.mark_rerun(
+                page_id,
+                reason=reason,
+                error_type=error_type,
+                error_message=error_message,
+            )
         return {
             "status": "rerun",
             "page_id": page_id,
             "url": url,
             "reason": reason,
-            "error_message": str(exc),
+            "error_type": error_type,
+            "error_message": error_message,
         }
 
 
 def _should_rerun_stream_rejection(record: dict) -> bool:
     """Return whether a rejected stream record represents a transient retryable failure."""
     reason = str(record.get("rejection_reason", "")).strip()
-    if reason in {"search_longtail_verifier_error", "second_stage_grading_error"}:
+    if reason in {"search_longtail_verifier_error", "second_stage_grading_error", "wikipedia_pageview_prefilter_unavailable"}:
         return True
     if not reason.startswith("wikipedia_infobox_generation_error:"):
         return False
@@ -1897,6 +2256,8 @@ def _attach_stream_metadata(candidate: GeneratedCandidate, *, page_id: int, url:
     _ensure_small_model_response_metadata(candidate.source_metadata)
     _attach_run_artifact_metadata(candidate.source_metadata, args=args)
     candidate.source_metadata["table_filter_modes"] = list(args.route3_table_filter_mode)
+    candidate.source_metadata["table_source_types"] = list(args.route3_table_source_type)
+    candidate.source_metadata["prose_leakage_scoring_enabled"] = bool(args.route3_prose_leakage_scoring)
     candidate.source_metadata["page_id"] = page_id
     candidate.source_metadata["stream_source_url"] = url
     candidate.source_metadata["streaming_discovery"] = {
@@ -1918,6 +2279,8 @@ def _attach_stream_record_metadata(record: dict, *, page_id: int, url: str, args
         _ensure_small_model_response_metadata(metadata)
         _attach_run_artifact_metadata(metadata, args=args)
         metadata["table_filter_modes"] = list(args.route3_table_filter_mode)
+        metadata["table_source_types"] = list(args.route3_table_source_type)
+        metadata["prose_leakage_scoring_enabled"] = bool(args.route3_prose_leakage_scoring)
         metadata["page_id"] = page_id
         metadata["stream_source_url"] = url
         metadata["streaming_discovery"] = {
@@ -2012,7 +2375,7 @@ def _rerun_stage(record: dict) -> str:
         return "search_longtail"
     if reason.startswith("second_stage_grading_error"):
         return "second_stage_grading"
-    if reason.startswith("wikipedia_infobox_") or reason.startswith("pipeline_exception"):
+    if reason.startswith("wikipedia_infobox_") or reason.startswith("wikipedia_pageview_") or reason.startswith("pipeline_exception"):
         return "route_generation"
     return "unresolved_rerun"
 
@@ -2141,9 +2504,12 @@ def _phase_timing_stats(records: list[dict]) -> dict[str, dict[str, float | int]
 def _rejection_stage(record: dict) -> str:
     """Map one rejected output record to the pipeline stage that rejected it."""
     reason = str(record.get("rejection_reason", "")).strip()
-    if reason.startswith("wikipedia_infobox_"):
+    source_failure = _source_stage_failure(record)
+    if source_failure is not None:
+        return source_failure[0]
+    if reason.startswith("wikipedia_infobox_") or reason.startswith("wikipedia_pageview_"):
         return "route_generation"
-    if reason in {"llm_rewrite_discarded", "rewrite_guard_rejected"}:
+    if reason in {"llm_rewrite_discarded", "rewrite_guard_rejected", "rule_based_answer_type_gate_rejected"}:
         return "rewrite_surface"
     if reason.startswith("search_longtail_"):
         return "search_longtail"
@@ -2158,15 +2524,27 @@ def _rejection_stage(record: dict) -> str:
 
 def _exact_failure_reason(record: dict) -> str:
     """Return a precise, reviewer-facing failure reason for one rejected record."""
+    reason = str(record.get("rejection_reason", "")).strip() or "unknown_rejection"
+    source_failure = _source_stage_failure(record)
+    if source_failure is not None:
+        _, source_reason, detail = source_failure
+        return f"{source_reason}:{detail}" if detail else source_reason
     compact_reason = str(record.get("failing_reason", "")).strip()
     if compact_reason:
         return compact_reason
-    reason = str(record.get("rejection_reason", "")).strip() or "unknown_rejection"
     notes = record.get("rejection_notes", {})
     if not isinstance(notes, dict):
         return reason
     if reason == "rewrite_guard_rejected":
         rule = record.get("rejection_rule") or notes.get("failure_reason") or notes.get("surface_validation_failure_reason")
+        return f"{reason}:{rule}" if rule else reason
+    if reason == "rule_based_answer_type_gate_rejected":
+        gate = notes.get("rule_based_qa_gate", {})
+        if isinstance(gate, dict):
+            details = gate.get("details", {})
+            if isinstance(details, dict) and details.get("rule"):
+                return f"{reason}:{details['rule']}"
+        rule = record.get("rejection_rule") or notes.get("failure_reason")
         return f"{reason}:{rule}" if rule else reason
     if reason == "search_longtail_verifier_rejected":
         features = notes.get("search_verification_features", {})
@@ -2194,6 +2572,95 @@ def _exact_failure_reason(record: dict) -> str:
         if error_message:
             return f"{reason}:{error_message[:160]}"
     return reason
+
+
+def _source_stage_failure(record: dict) -> tuple[str, str, str] | None:
+    """Return a source-stage failure that should take precedence over placeholder QA validation."""
+    source_reason = _source_stage_rejection_reason(record)
+    if not source_reason:
+        return None
+    detail = _source_metadata_failure_detail(record)
+    return "route_generation", source_reason, detail
+
+
+def _source_stage_rejection_reason(record: dict) -> str:
+    """Return the source-stage rejection reason represented by one record, if any."""
+    reason = str(record.get("rejection_reason", "")).strip()
+    if _is_source_stage_rejection_reason(reason):
+        return reason
+    notes = record.get("notes", [])
+    if isinstance(notes, list):
+        for note in notes:
+            note_text = str(note or "").strip()
+            if _is_source_stage_rejection_reason(note_text):
+                return note_text
+    return ""
+
+
+def _is_source_stage_rejection_reason(reason: str) -> bool:
+    """Return whether one reason represents a blocking Route 3 source-stage rejection."""
+    if not reason or reason == "wikipedia_infobox_incomplete_tie_answer":
+        return False
+    return reason.startswith("wikipedia_infobox_") or reason.startswith("wikipedia_pageview_")
+
+
+def _source_metadata_failure_detail(record: dict) -> str:
+    """Return the source metadata detail for a rejected record, if present."""
+    metadata = record.get("source_metadata", {})
+    if not isinstance(metadata, dict):
+        return ""
+    return str(metadata.get("discard_reason") or metadata.get("error_message") or "").strip()
+
+
+def _rerun_error_details_from_record(record: dict) -> dict[str, str]:
+    """Return retryable error details stored on a rejected record."""
+    details: dict[str, str] = {}
+    for source in (
+        record,
+        record.get("rejection_notes", {}),
+        record.get("source_metadata", {}),
+    ):
+        if not isinstance(source, dict):
+            continue
+        for key in ("error_type", "error_message"):
+            if details.get(key):
+                continue
+            text = str(source.get(key) or "").strip()
+            if text:
+                details[key] = text
+    notes = record.get("rejection_notes", {})
+    if isinstance(notes, dict):
+        features = notes.get("search_verification_features", {})
+        if isinstance(features, dict):
+            query_errors = features.get("query_errors", [])
+            if isinstance(query_errors, list) and query_errors:
+                first_error = query_errors[0]
+                if isinstance(first_error, dict):
+                    for source_key, target_key in (
+                        ("query_name", "query_name"),
+                        ("query_category", "query_category"),
+                        ("query", "query"),
+                        ("duration_seconds", "query_duration_seconds"),
+                    ):
+                        text = str(first_error.get(source_key) or "").strip()
+                        if text and not details.get(target_key):
+                            details[target_key] = text
+                    attempts = first_error.get("search_request_events", [])
+                    if isinstance(attempts, list):
+                        details.setdefault("search_attempt_count", str(len(attempts)))
+                        if attempts and isinstance(attempts[-1], dict):
+                            last_attempt = attempts[-1]
+                            for source_key, target_key in (
+                                ("path", "last_attempt_path"),
+                                ("duration_ms", "last_attempt_duration_ms"),
+                                ("error_type", "last_attempt_error_type"),
+                                ("error_message", "last_attempt_error_message"),
+                                ("http_status", "last_attempt_http_status"),
+                            ):
+                                text = str(last_attempt.get(source_key) or "").strip()
+                                if text and not details.get(target_key):
+                                    details[target_key] = text
+    return details
 
 
 def _summary_failure_reason(record: dict) -> str:
@@ -2300,6 +2767,11 @@ def _write_stream_walkthrough(
         lines.append(f"- Route 3 extra prompt rules: `{'; '.join(summary.get('route3_extra_prompts', []))}`")
     if summary.get("route3_table_filter_modes"):
         lines.append(f"- Route 3 table filter modes: `{', '.join(summary.get('route3_table_filter_modes', []))}`")
+    if summary.get("route3_table_source_types"):
+        lines.append(f"- Route 3 table source types: `{', '.join(summary.get('route3_table_source_types', []))}`")
+    if "route3_prose_leakage_scoring_enabled" in summary:
+        state = "enabled" if summary.get("route3_prose_leakage_scoring_enabled") else "disabled"
+        lines.append(f"- Route 3 prose-leakage scoring: `{state}`")
     if "route3_llm_choose_table" in summary:
         lines.append(
             "- Route 3 LLM table choice: "
@@ -3073,18 +3545,34 @@ def _has_second_stage_model_responses(features: dict) -> bool:
 
 
 def _record_page_id(record: dict) -> int | str:
-    if record.get("page_id"):
-        return record.get("page_id")
+    """Return the positive Wikipedia page ID represented by one output record."""
+    page_id = _positive_record_page_id(record.get("page_id"))
+    if page_id is not None:
+        return page_id
     metadata = record.get("source_metadata", {})
     if isinstance(metadata, dict):
-        page_id = metadata.get("page_id")
-        if page_id:
+        page_id = _positive_record_page_id(metadata.get("page_id"))
+        if page_id is not None:
             return page_id
-        source_url = str(metadata.get("source_url") or metadata.get("stream_source_url") or "")
-        parsed = normalize_wikipedia_page_id(source_url)
-        if parsed is not None:
-            return parsed
+        streaming = metadata.get("streaming_discovery", {})
+        if isinstance(streaming, dict):
+            page_id = _positive_record_page_id(streaming.get("page_id"))
+            if page_id is not None:
+                return page_id
+        for key in ("source_url", "stream_source_url", "canonical_url"):
+            page_id = _positive_record_page_id(normalize_wikipedia_page_id(str(metadata.get(key) or "")))
+            if page_id is not None:
+                return page_id
     return ""
+
+
+def _positive_record_page_id(value: object) -> int | None:
+    """Coerce one value into a positive Wikipedia page ID."""
+    try:
+        page_id = int(value)
+    except (TypeError, ValueError):
+        return None
+    return page_id if page_id > 0 else None
 
 
 def _escape_inline_code(value: str) -> str:
@@ -3218,6 +3706,16 @@ def _attach_route3_extra_prompts(candidate: GeneratedCandidate, extra_prompts: l
 def _attach_route3_table_filter_modes(candidate: GeneratedCandidate, table_filter_modes: list[str]) -> None:
     """Persist active Route 3 table filter modes on a loaded candidate."""
     candidate.source_metadata["table_filter_modes"] = list(table_filter_modes)
+
+
+def _attach_route3_table_source_types(candidate: GeneratedCandidate, table_source_types: list[str]) -> None:
+    """Persist active Route 3 source table types on a loaded candidate."""
+    candidate.source_metadata["table_source_types"] = list(table_source_types)
+
+
+def _attach_route3_prose_leakage_scoring(candidate: GeneratedCandidate, enabled: bool) -> None:
+    """Persist the active Route 3 prose-leakage scoring toggle."""
+    candidate.source_metadata["prose_leakage_scoring_enabled"] = bool(enabled)
 
 
 def _candidate_from_record(record: dict) -> GeneratedCandidate:

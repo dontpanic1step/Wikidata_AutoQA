@@ -87,6 +87,39 @@ class WikipediaClient:
         url = build_parse_api_url(title if title else title_or_url)
         return self._fetch_json(url)
 
+    def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict[str, Any]:
+        """Return uncached Wikimedia pageview payload for one English Wikipedia page."""
+        normalized_title = title.strip().replace(" ", "_")
+        if not normalized_title:
+            return {}
+        url = build_pageviews_api_url(normalized_title, start=start, end=end)
+        started = perf_counter()
+        try:
+            payload, used_direct_fallback, attempts = self._request_json_with_retry(url)
+        except Exception as exc:
+            self.request_events.append(
+                {
+                    "url": url,
+                    "cache_hit": False,
+                    "duration_ms": int((perf_counter() - started) * 1000),
+                    "error_type": type(exc).__name__,
+                    "error_message": str(exc),
+                    "request_type": "pageviews",
+                }
+            )
+            raise
+        self.request_events.append(
+            {
+                "url": url,
+                "cache_hit": False,
+                "duration_ms": int((perf_counter() - started) * 1000),
+                "attempts": attempts,
+                "used_direct_fallback": used_direct_fallback,
+                "request_type": "pageviews",
+            }
+        )
+        return payload
+
     def search_page_ids(
         self,
         search_query: str,
@@ -395,3 +428,13 @@ def build_search_api_url(
         }
     )
     return f"https://en.wikipedia.org/w/api.php?{query}"
+
+
+def build_pageviews_api_url(title: str, *, start: str, end: str) -> str:
+    """Build a Wikimedia monthly pageviews URL for one article title."""
+    normalized_title = title.strip().replace(" ", "_")
+    quoted_title = quote(normalized_title, safe=":_()")
+    return (
+        "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/"
+        f"en.wikipedia/all-access/user/{quoted_title}/monthly/{start}/{end}"
+    )

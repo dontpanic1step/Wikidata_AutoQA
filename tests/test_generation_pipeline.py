@@ -152,6 +152,41 @@ def make_candidate() -> CandidateFact:
     )
 
 
+def make_route3_candidate(
+    *,
+    answer: str,
+    answer_type: str = "Other",
+    question: str = "Which organization signed the Harbor Lights agreement?",
+) -> GeneratedCandidate:
+    """Build a minimal Route 3 generated candidate for shared-pipeline tests."""
+    return GeneratedCandidate(
+        source_type="wikipedia_tables",
+        generation_route="route3_wikipedia_infobox",
+        question=question,
+        canonical_question=question,
+        answer=answer,
+        answer_aliases=[],
+        subject_entity=EntityReference(
+            name="Harbor Lights",
+            wikipedia_title="Harbor_Lights",
+            url="https://en.wikipedia.org/wiki/Harbor_Lights",
+        ),
+        answer_entity=EntityReference(name=answer),
+        relation_or_claim="single_fact",
+        evidence=EvidenceRecord(
+            text=f"Harbor Lights agreement party: {answer}.",
+            url="https://en.wikipedia.org/wiki/Harbor_Lights",
+            source_title="Harbor Lights",
+            retrieved_at="2026-05-12",
+        ),
+        question_family="wikipedia_infobox_table_fact",
+        answer_type=answer_type,
+        topic="Wikipedia semi-structured data",
+        target_time="2026",
+        source_template_domain="wikipedia_infobox_table",
+    )
+
+
 class GenerationPipelineTests(unittest.TestCase):
     """Check acceptance, rejection, and dedup in the new pipeline."""
 
@@ -510,6 +545,131 @@ class GenerationPipelineTests(unittest.TestCase):
             "post_rewrite_time_invariance_forbidden_phrase:latest",
         )
 
+    def test_process_generated_candidates_rejects_award_what_year_without_month(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="wikipedia_tables",
+            generation_route="route3_wikipedia_infobox",
+            question="In what year did Jane Doe win the ASCAP Award for Harbor Lights?",
+            canonical_question="In what year did Jane Doe win the ASCAP Award for Harbor Lights?",
+            answer="1997",
+            answer_aliases=[],
+            subject_entity=EntityReference(
+                name="Harbor Lights",
+                wikipedia_title="Harbor_Lights",
+                url="https://en.wikipedia.org/wiki/Harbor_Lights",
+            ),
+            answer_entity=EntityReference(name="1997"),
+            relation_or_claim="single_fact",
+            evidence=EvidenceRecord(
+                text="Jane Doe won the ASCAP Award in 1997.",
+                url="https://en.wikipedia.org/wiki/Harbor_Lights",
+                source_title="Harbor Lights",
+                retrieved_at="2026-05-12",
+            ),
+            question_family="wikipedia_infobox_table_fact",
+            answer_type="Date",
+            topic="Wikipedia semi-structured data",
+            target_time="2026",
+            source_template_domain="wikipedia_infobox_table",
+            source_metadata={"stable_answer_override": True},
+            source_candidate=source_candidate,
+        )
+
+        class AwardRewriteClient:
+            def rewrite_question(self, payload: dict) -> dict:
+                return {
+                    "rewritten_question": "In what year did Jane Doe win the ASCAP Award for Harbor Lights?",
+                    "search_queries": ["Jane Doe ASCAP Award Harbor Lights"],
+                    "discard_reason": None,
+                }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = process_generated_candidates(
+                [candidate],
+                settings=Settings(
+                    target_time="2020",
+                    pilot_total=1,
+                    output_path=Path(tmpdir) / "accepted.jsonl",
+                    rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                    rewrite_enabled=True,
+                ),
+                search_client=ErrorSearchClient(),
+                rewrite_client=AwardRewriteClient(),
+            )
+
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+        self.assertEqual(result.rejected[0]["rejection_rule"], "post_rewrite_award_year_without_month")
+        self.assertEqual(
+            result.rejected[0]["source_metadata"]["post_rewrite_award_year_precision_failure_reason"],
+            "post_rewrite_award_year_without_month",
+        )
+
+    def test_route3_rejects_exact_popular_answer_after_rewrite(self) -> None:
+        candidate = make_route3_candidate(
+            answer="United States",
+            answer_type="Place",
+            question="In which country was the Harbor Lights agreement signed?",
+        )
+
+        class CountryRewriteClient:
+            def rewrite_question(self, payload: dict) -> dict:
+                return {
+                    "rewritten_question": "In which country was the Harbor Lights agreement signed?",
+                    "search_queries": ["Harbor Lights agreement country"],
+                    "discard_reason": None,
+                }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = process_generated_candidates(
+                [candidate],
+                settings=Settings(
+                    target_time="2020",
+                    pilot_total=1,
+                    output_path=Path(tmpdir) / "accepted.jsonl",
+                    rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                    rewrite_enabled=True,
+                ),
+                search_client=ErrorSearchClient(),
+                rewrite_client=CountryRewriteClient(),
+            )
+
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+        self.assertEqual(result.rejected[0]["rejection_rule"], "answer_too_popular:United States")
+        self.assertEqual(result.rejected[0]["failing_reason"], "answer_too_popular:United States")
+        self.assertEqual(
+            result.rejected[0]["source_metadata"]["post_rewrite_answer_popularity_failure_reason"],
+            "answer_too_popular:United States",
+        )
+
+    def test_route3_popular_answer_guard_requires_exact_answer_match(self) -> None:
+        for answer in ("United States Postal Service", "China (band)"):
+            with self.subTest(answer=answer):
+                candidate = make_route3_candidate(answer=answer)
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    result = process_generated_candidates(
+                        [candidate],
+                        settings=Settings(
+                            target_time="2020",
+                            pilot_total=1,
+                            output_path=Path(tmpdir) / "accepted.jsonl",
+                            rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                        ),
+                        search_client=FakeSearchClient({}),
+                        rewrite_client=None,
+                    )
+
+                self.assertEqual(len(result.accepted), 1)
+                self.assertEqual(result.accepted[0]["answer"], answer)
+                self.assertNotIn(
+                    "post_rewrite_answer_popularity_failure_reason",
+                    result.accepted[0]["source_metadata"],
+                )
+
     def test_route1_rewrite_payload_uses_triplet_text_contract(self) -> None:
         source_candidate = make_candidate()
         source_candidate.source_metadata["stable_answer_override"] = True
@@ -849,9 +1009,180 @@ class GenerationPipelineTests(unittest.TestCase):
                 settings=settings,
                 search_client=ErrorSearchClient(),
                 rewrite_client=None,
-            )
+        )
         self.assertEqual(result.accepted, [])
         self.assertEqual(result.rejected[0]["rejection_reason"], "search_longtail_verifier_error")
+        notes = result.rejected[0]["rejection_notes"]
+        self.assertEqual(notes["error_type"], "RuntimeError")
+        features = notes["search_verification_features"]
+        self.assertTrue(features["triggered_rule"].endswith(":query_error"))
+        self.assertTrue(features["query_errors"][0]["query_name"])
+        self.assertEqual(features["query_errors"][0]["error_type"], "RuntimeError")
+        self.assertIn("duration_seconds", features["query_errors"][0])
+
+    def test_shared_validation_runs_before_search_longtail_verifier(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route2_wikidata_wikipedia_hybrid",
+            question="Who directed the film Example Film?",
+            canonical_question="Who directed the film Example Film?",
+            answer="Jane Doe",
+            answer_aliases=[],
+            subject_entity=EntityReference(
+                name="Example Film",
+                qid="Q1",
+                wikipedia_title="Example_Film",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+            ),
+            answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+            relation_or_claim="director",
+            evidence=EvidenceRecord(
+                text="Example Film is a 2020 drama film.",
+                url="https://en.wikipedia.org/wiki/Example_Film",
+                source_title="Example Film",
+                retrieved_at="2026-05-13",
+            ),
+            question_family="who_directed_film",
+            answer_type="Person",
+            topic="Arts and Media",
+            target_time="2020",
+            source_template_domain="film_director",
+            source_metadata={
+                "subject_wikipedia_title": "Example_Film",
+                "subject_wikipedia_url": "https://en.wikipedia.org/wiki/Example_Film",
+                "stable_answer_override": True,
+            },
+            source_candidate=source_candidate,
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+            )
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=ErrorSearchClient(),
+                rewrite_client=None,
+            )
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "shared_validation_failed")
+        self.assertFalse(result.rejected[0]["rejection_notes"]["validation"]["answer_in_evidence"])
+        self.assertNotIn("duckduckgo_search_seconds", result.rejected[0]["source_metadata"]["phase_timings_seconds"])
+
+    def test_rule_based_answer_type_gate_runs_before_search_longtail_verifier(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route3_wikipedia_infobox",
+            question="At which awards ceremony did Example Artist win the Best International Album award?",
+            canonical_question="At which awards ceremony did Example Artist win the Best International Album award?",
+            answer="Brit Awards",
+            answer_aliases=[],
+            subject_entity=EntityReference(
+                name="Example Artist",
+                qid="Q1",
+                wikipedia_title="Example_Artist",
+                url="https://en.wikipedia.org/wiki/Example_Artist",
+            ),
+            answer_entity=EntityReference(name="Brit Awards", qid="Q2"),
+            relation_or_claim="award received",
+            evidence=EvidenceRecord(
+                text="Example Artist won Best International Album at the Brit Awards.",
+                url="https://en.wikipedia.org/wiki/Example_Artist",
+                source_title="Example Artist",
+                retrieved_at="2026-05-13",
+            ),
+            question_family="route3_single_fact",
+            answer_type="Place",
+            topic="Arts and Media",
+            target_time="2020",
+            source_template_domain="route3_table",
+            source_metadata={
+                "stable_answer_override": True,
+            },
+            source_candidate=source_candidate,
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+            )
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=ErrorSearchClient(),
+                rewrite_client=None,
+            )
+
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "rule_based_answer_type_gate_rejected")
+        gate = result.rejected[0]["source_metadata"]["rule_based_qa_gate"]
+        self.assertEqual(gate["details"]["extracted_category"], "awards ceremony")
+        self.assertFalse(result.rejected[0]["source_metadata"]["rule_answer_type_match"])
+        self.assertNotIn("duckduckgo_search_seconds", result.rejected[0]["source_metadata"]["phase_timings_seconds"])
+
+    def test_rule_based_date_gate_normalizes_answer_before_acceptance(self) -> None:
+        source_candidate = make_candidate()
+        source_candidate.source_metadata["stable_answer_override"] = True
+        candidate = GeneratedCandidate(
+            source_type="test",
+            generation_route="route3_wikipedia_infobox",
+            question="What month and year did the Example venue open?",
+            canonical_question="What month and year did the Example venue open?",
+            answer="03-1940",
+            answer_aliases=[],
+            subject_entity=EntityReference(
+                name="Example venue",
+                qid="Q1",
+                wikipedia_title="Example_venue",
+                url="https://en.wikipedia.org/wiki/Example_venue",
+            ),
+            answer_entity=EntityReference(name="03-1940", qid=""),
+            relation_or_claim="opened",
+            evidence=EvidenceRecord(
+                text="The Example venue opened in 03-1940.",
+                url="https://en.wikipedia.org/wiki/Example_venue",
+                source_title="Example venue",
+                retrieved_at="2026-05-13",
+            ),
+            question_family="route3_single_fact",
+            answer_type="Date",
+            topic="Architecture and Transportation",
+            target_time="2020",
+            source_template_domain="route3_table",
+            source_metadata={
+                "stable_answer_override": True,
+            },
+            source_candidate=source_candidate,
+        )
+        search_client = FakeSearchClient({"What month and year did the Example venue open?": []})
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+            )
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=search_client,
+                rewrite_client=None,
+            )
+
+        self.assertEqual(len(result.accepted), 1)
+        self.assertEqual(result.accepted[0]["answer"], "March 1940")
+        gate = result.accepted[0]["source_metadata"]["rule_based_qa_gate"]
+        self.assertEqual(gate["details"]["normalized_answer"], "March 1940")
+        self.assertTrue(result.accepted[0]["source_metadata"]["rule_answer_type_match"])
 
     def test_process_generated_candidates_records_removed_cheap_model_rejection_phase(self) -> None:
         source_candidate = make_candidate()

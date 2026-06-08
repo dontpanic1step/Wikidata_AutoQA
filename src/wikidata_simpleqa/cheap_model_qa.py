@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import os
 from dataclasses import dataclass
+from copy import deepcopy
 from time import sleep
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -49,6 +50,10 @@ class OpenRouterCheapModelQAClient:
 
     def complete_text(self, prompt: str) -> str:
         """Return the assistant text for one prompt."""
+        return str(self.complete_text_with_audit(prompt)["text"]).strip()
+
+    def complete_text_with_audit(self, prompt: str) -> dict[str, Any]:
+        """Return assistant text plus sanitized request and full response metadata."""
         request_payload = {
             "model": self.config.model,
             "temperature": self.config.temperature,
@@ -59,7 +64,12 @@ class OpenRouterCheapModelQAClient:
             ],
         }
         body = self._request_with_retry(request_payload, use_proxy=bool(self.proxy))
-        return str(body["choices"][0]["message"]["content"]).strip()
+        text = str(body["choices"][0]["message"]["content"]).strip()
+        return {
+            "text": text,
+            "request_payload": _sanitize_openrouter_request_payload(request_payload),
+            "response_body": body,
+        }
 
     def _request_with_retry(self, request_payload: dict[str, Any], *, use_proxy: bool) -> dict[str, Any]:
         """Send one OpenRouter request with retries and direct fallback."""
@@ -123,3 +133,8 @@ def make_cheap_model_qa_client(
     if config.provider == "openrouter":
         return OpenRouterCheapModelQAClient(config=config, timeout_seconds=timeout_seconds)
     raise ValueError(f"Unsupported cheap model provider: {config.provider}")
+
+
+def _sanitize_openrouter_request_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy of an OpenRouter request payload without secret-bearing fields."""
+    return deepcopy(payload)

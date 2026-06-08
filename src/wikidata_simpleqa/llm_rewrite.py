@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import os
+from copy import deepcopy
 from abc import ABC, abstractmethod
 from time import sleep
 from typing import Any
@@ -86,18 +87,30 @@ class OpenRouterRewriteClient(RewriteClient):
 
     def rewrite_question(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Call OpenRouter and return a parsed JSON object."""
+        return self.rewrite_question_with_audit(payload)["parsed_response"]
+
+    def rewrite_question_with_audit(self, payload: dict[str, Any]) -> dict[str, Any]:
+        """Call OpenRouter and return parsed JSON plus full sanitized audit metadata."""
+        prompt = build_rewrite_prompt(payload)
         request_payload = {
             "model": self.config.model,
             "temperature": self.config.temperature,
             "max_tokens": self.config.max_tokens,
             "messages": [
                 {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": build_rewrite_prompt(payload)},
+                {"role": "user", "content": prompt},
             ],
         }
         body = self._request_with_retry(request_payload, use_proxy=bool(self.proxy))
-        text = body["choices"][0]["message"]["content"]
-        return parse_json_object(text)
+        text = str(body["choices"][0]["message"]["content"])
+        parsed = parse_json_object(text)
+        return {
+            "prompt": prompt,
+            "request_payload": _sanitize_openrouter_request_payload(request_payload),
+            "response_body": body,
+            "raw_text": text,
+            "parsed_response": parsed,
+        }
 
     def _request_with_retry(self, request_payload: dict[str, Any], *, use_proxy: bool) -> dict[str, Any]:
         """Send one OpenRouter request with retries and optional direct fallback."""
@@ -469,3 +482,8 @@ def _extra_prompt_text(payload: dict[str, Any]) -> str:
         values = []
     lines = [value.rstrip(".") for value in values if value]
     return "".join(f"- {line}.\n" for line in lines)
+
+
+def _sanitize_openrouter_request_payload(payload: dict[str, Any]) -> dict[str, Any]:
+    """Return a copy of an OpenRouter request payload without secret-bearing fields."""
+    return deepcopy(payload)

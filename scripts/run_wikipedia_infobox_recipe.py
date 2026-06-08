@@ -18,18 +18,43 @@ if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
 from wikidata_simpleqa.io import append_jsonl, write_jsonl
+from wikidata_simpleqa.page_id_lists import (
+    PageIdListEntry,
+    build_page_id_entries,
+    extract_page_id_entries_from_payload,
+    read_page_id_entries,
+    write_page_id_entries,
+)
+from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids
 from wikidata_simpleqa.wikipedia_infobox_generator import (
+    DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
+    DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE,
+    DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS,
+    DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
+    DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
+    DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
+    DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED,
+    DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
+    DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS,
+    ROUTE3_ANSWER_TYPES,
+    DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
+    DEFAULT_ROUTE3_REASONING_TYPES,
     DEFAULT_ROUTE3_TABLE_FILTER_MODES,
+    DEFAULT_ROUTE3_TABLE_SOURCE_TYPES,
     normalize_route3_answer_types,
+    normalize_route3_answer_type_mode,
     normalize_route3_extra_prompts,
+    normalize_route3_pageview_unavailable_policy,
     normalize_route3_reasoning_types,
     normalize_route3_table_filter_modes,
+    normalize_route3_table_source_types,
 )
 from wikidata_simpleqa.wikipedia_streaming import PageIdStreamState
 from run_wikipedia_infobox_pipeline import (
     _aggregate_phase_timings,
     _effective_stream_random_seed,
     _failure_reason_counts,
+    _ensure_page_id_list_entry_metadata,
     _load_endpoint_jsonl,
     _phase_timing_stats,
     _safe_artifact_id,
@@ -45,12 +70,13 @@ class RecipeItem:
     record_limit: int
 
 
+ALL_TYPES_RECIPE_ANSWER_TYPE = "AllTypes"
+
+
 def _apply_recipe_big_batch_mode(args: argparse.Namespace) -> None:
     """Apply recipe-level large-run defaults before segment commands are built."""
     if not getattr(args, "big_batch_mode", False):
         return
-    args.compact_output = True
-    args.compact_rejected_output = True
     if getattr(args, "stream_page_source", "") == "table-search":
         args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
         args.stream_search_max_rounds = max(500, int(getattr(args, "stream_search_max_rounds", 10) or 10))
@@ -106,6 +132,32 @@ def parse_args() -> argparse.Namespace:
         help="Disable one shared default Route 3 table filter mode.",
     )
     parser.add_argument(
+        "--route3-table-source-type",
+        action="append",
+        default=[],
+        help=(
+            "Shared Route 3 source table types: infobox, wikitable, or both/all. "
+            "Repeat or pass comma-separated values. Default: both."
+        ),
+    )
+    parser.add_argument(
+        "--route3-answer-type-mode",
+        choices=["single", "all5"],
+        default=DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
+        help=(
+            "Shared Route 3 answer-type mode. Recipe items named AllTypes/all5 force all5 for that segment."
+        ),
+    )
+    parser.add_argument(
+        "--route3-prose-leakage-scoring",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
+        help=(
+            "Shared Route 3 prose-leakage rank signal toggle. Default: enabled "
+            "(leakage <0.2 adds 0.5; leakage >0.8 subtracts 0.5)."
+        ),
+    )
+    parser.add_argument(
         "--route3-llm-choose-table",
         action=argparse.BooleanOptionalAction,
         default=False,
@@ -113,6 +165,47 @@ def parse_args() -> argparse.Namespace:
             "Let each segment's Route 3 generation LLM choose among the top three surviving ranked tables. "
             "By default only the single top-ranked table is passed."
         ),
+    )
+    parser.add_argument(
+        "--route3-page-archive-dir",
+        type=Path,
+        default=ROOT / DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
+        help="Directory for unified Route 3 page archives.",
+    )
+    parser.add_argument(
+        "--route3-pageview-prefilter",
+        action=argparse.BooleanOptionalAction,
+        default=DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED,
+        help=(
+            "Enable the optional Route 3 pageview popularity prefilter before table grading "
+            "and LLM generation. Disabled by default."
+        ),
+    )
+    parser.add_argument("--route3-pageview-window-months", type=int, default=DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS)
+    parser.add_argument(
+        "--route3-max-monthly-average-pageviews",
+        type=float,
+        default=DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
+    )
+    parser.add_argument(
+        "--route3-max-underfilled-monthly-pageviews",
+        type=float,
+        default=DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
+    )
+    parser.add_argument(
+        "--route3-pageview-unavailable-policy",
+        choices=["allow", "reject", "rerun"],
+        default=DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
+    )
+    parser.add_argument(
+        "--route3-infobox-max-removed-row-rate",
+        type=float,
+        default=DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE,
+    )
+    parser.add_argument(
+        "--route3-infobox-min-remaining-rows",
+        type=int,
+        default=DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS,
     )
     parser.add_argument("--run-id", default="", help="Path-safe batch ID. Defaults to a dated recipe ID.")
     parser.add_argument("--run-date", default=None)
@@ -201,11 +294,23 @@ def main() -> int:
     if not recipe_items:
         raise ValueError("Recipe must include at least one answer-type count, e.g. '40 Person'.")
     if not reasoning_types:
-        reasoning_types = ["single_fact"]
+        reasoning_types = list(DEFAULT_ROUTE3_REASONING_TYPES)
+    args.route3_answer_type_mode = normalize_route3_answer_type_mode(args.route3_answer_type_mode)
     args.route3_extra_prompt = list(normalize_route3_extra_prompts(args.route3_extra_prompt))
     enabled_filter_modes = list(normalize_route3_table_filter_modes(args.route3_table_filter_mode))
     disabled_filter_modes = set(normalize_route3_table_filter_modes(args.disable_route3_table_filter_mode))
     table_filter_modes = [mode for mode in enabled_filter_modes if mode not in disabled_filter_modes]
+    table_source_types = list(
+        normalize_route3_table_source_types(args.route3_table_source_type or DEFAULT_ROUTE3_TABLE_SOURCE_TYPES)
+    )
+    args.route3_pageview_window_months = max(1, int(args.route3_pageview_window_months))
+    args.route3_max_monthly_average_pageviews = float(args.route3_max_monthly_average_pageviews)
+    args.route3_max_underfilled_monthly_pageviews = float(args.route3_max_underfilled_monthly_pageviews)
+    args.route3_pageview_unavailable_policy = normalize_route3_pageview_unavailable_policy(
+        args.route3_pageview_unavailable_policy
+    )
+    args.route3_infobox_max_removed_row_rate = max(0.0, min(1.0, float(args.route3_infobox_max_removed_row_rate)))
+    args.route3_infobox_min_remaining_rows = max(0, int(args.route3_infobox_min_remaining_rows))
 
     run_id = _recipe_run_id(args, recipe_items, reasoning_types)
     segment_dir = args.segment_dir or ROOT / "outputs" / "recipe_segments" / run_id
@@ -219,9 +324,11 @@ def main() -> int:
 
     segment_dir.mkdir(parents=True, exist_ok=True)
     segment_summaries: list[dict] = []
-    stream_excluded_page_ids: set[int] = _existing_recipe_page_ids(segment_dir, stream_exclusion_file) if append_label else set()
+    stream_excluded_page_entries: set[PageIdListEntry] = (
+        _existing_recipe_page_id_entries(segment_dir, stream_exclusion_file) if append_label else set()
+    )
     for index, item in enumerate(recipe_items):
-        _write_stream_exclusion_file(stream_exclusion_file, stream_excluded_page_ids)
+        _write_stream_exclusion_file(stream_exclusion_file, stream_excluded_page_entries)
         base_segment_id = _base_segment_id_for_run(
             segment_dir=segment_dir,
             item=item,
@@ -263,6 +370,7 @@ def main() -> int:
             else base_stream_search_initial_offset,
             reasoning_types=reasoning_types,
             table_filter_modes=table_filter_modes,
+            table_source_types=table_source_types,
             append_label=append_label,
             rerun_pool_seed_file=rerun_pool_seed_file,
             base_segment_id=base_segment_id,
@@ -274,7 +382,7 @@ def main() -> int:
             summary["segment_accepted_output"] = str(paths["accepted"])
             summary["segment_rejected_output"] = str(paths["rejected"])
             segment_summaries.append(summary)
-            stream_excluded_page_ids.update(_summary_page_ids(summary))
+            stream_excluded_page_entries.update(_summary_page_id_entries(summary))
             continue
         if args.dry_run:
             print(" ".join(command))
@@ -298,7 +406,7 @@ def main() -> int:
         summary["segment_accepted_output"] = str(paths["accepted"])
         summary["segment_rejected_output"] = str(paths["rejected"])
         segment_summaries.append(summary)
-        stream_excluded_page_ids.update(_summary_page_ids(summary))
+        stream_excluded_page_entries.update(_summary_page_id_entries(summary))
 
     if args.dry_run:
         return 0
@@ -325,6 +433,7 @@ def main() -> int:
         recipe_items=recipe_items,
         reasoning_types=reasoning_types,
         table_filter_modes=table_filter_modes,
+        table_source_types=table_source_types,
         segment_summaries=segment_summaries,
         accepted_records=accepted_records,
         rejected_records=rejected_records,
@@ -374,7 +483,7 @@ def _parse_recipe(args: argparse.Namespace) -> tuple[list[RecipeItem], list[str]
     if args.answer_types:
         if args.per_answer_type < 1:
             raise ValueError("--answer-types requires --per-answer-type >= 1.")
-        for answer_type in normalize_route3_answer_types(args.answer_types):
+        for answer_type in _normalize_recipe_answer_types(args.answer_types):
             items.append(RecipeItem(answer_type=answer_type, record_limit=args.per_answer_type))
     for reasoning_type in normalize_route3_reasoning_types(args.route3_reasoning_type):
         if reasoning_type not in reasoning_types:
@@ -394,12 +503,41 @@ def _parse_recipe_item(part: str) -> RecipeItem | None:
         answer_type_raw = type_first.group(1)
     else:
         return None
-    answer_types = normalize_route3_answer_types([answer_type_raw])
+    answer_types = _normalize_recipe_answer_types([answer_type_raw])
     if len(answer_types) != 1:
         raise ValueError(f"Recipe part {part!r} must name exactly one answer_type.")
     if count < 1:
         raise ValueError(f"Recipe part {part!r} must use a positive count.")
     return RecipeItem(answer_type=answer_types[0], record_limit=count)
+
+
+def _normalize_recipe_answer_types(values: list[str]) -> list[str]:
+    """Return normalized recipe answer types, including the AllTypes pseudo segment."""
+    normalized_values: list[str] = []
+    seen: set[str] = set()
+    normal_parts: list[str] = []
+    for raw_value in values:
+        for part in str(raw_value or "").split(","):
+            text = part.strip()
+            if not text:
+                continue
+            if _is_all_types_recipe_answer_type(text):
+                if ALL_TYPES_RECIPE_ANSWER_TYPE not in seen:
+                    normalized_values.append(ALL_TYPES_RECIPE_ANSWER_TYPE)
+                    seen.add(ALL_TYPES_RECIPE_ANSWER_TYPE)
+                continue
+            normal_parts.append(text)
+    for answer_type in normalize_route3_answer_types(normal_parts):
+        if answer_type not in seen:
+            normalized_values.append(answer_type)
+            seen.add(answer_type)
+    return normalized_values
+
+
+def _is_all_types_recipe_answer_type(value: str) -> bool:
+    """Return whether a recipe token means the all5 answer-type mode segment."""
+    normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
+    return normalized in {"alltypes", "all_types", "all5", "all_5", "all"}
 
 
 def _recipe_run_id(args: argparse.Namespace, recipe_items: list[RecipeItem], reasoning_types: list[str]) -> str:
@@ -512,10 +650,20 @@ def _segment_stream_search_initial_offset(
     return offset
 
 
-def _write_stream_exclusion_file(path: Path, page_ids: set[int]) -> None:
-    """Write recipe-level page IDs that later segments must skip."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(sorted(page_ids), indent=2) + "\n", encoding="utf-8")
+def _write_stream_exclusion_file(path: Path, page_ids: set[int] | set[PageIdListEntry]) -> None:
+    """Write recipe-level page IDs or triadic page-ID entries that later segments must skip."""
+    entries: set[PageIdListEntry] = set()
+    for value in page_ids:
+        if isinstance(value, PageIdListEntry):
+            entries.add(value)
+            continue
+        try:
+            page_id = int(value)
+        except (TypeError, ValueError):
+            continue
+        if page_id > 0:
+            entries.add(PageIdListEntry(page_id=page_id))
+    write_page_id_entries(path, entries)
 
 
 def _existing_recipe_page_ids(segment_dir: Path, stream_exclusion_file: Path) -> set[int]:
@@ -540,6 +688,52 @@ def _existing_recipe_page_ids(segment_dir: Path, stream_exclusion_file: Path) ->
             page_ids.update(_positive_ints(state.get("in_progress_ids", [])))
             page_ids.update(_positive_ints(state.get("rerun_pool", [])))
     return page_ids
+
+
+def _existing_recipe_page_id_entries(segment_dir: Path, stream_exclusion_file: Path) -> set[PageIdListEntry]:
+    """Return triadic page-ID entries already touched by previous recipe invocations."""
+    entries: set[PageIdListEntry] = set()
+    entries.update(read_page_id_entries(stream_exclusion_file))
+    if segment_dir.exists():
+        for summary_path in segment_dir.glob("*_summary.json"):
+            try:
+                summary = json.loads(summary_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if not _matching_state_path_for_summary(summary_path).exists():
+                entries.update(_summary_page_id_entries(summary))
+        for state_path in segment_dir.glob("*_state.json"):
+            try:
+                state = json.loads(state_path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            summary = _state_summary_payload(state_path)
+            page_ids = set()
+            page_ids.update(_positive_ints(state.get("accepted_ids", [])))
+            page_ids.update(_positive_ints(state.get("rejected_ids", [])))
+            page_ids.update(_positive_ints(state.get("in_progress_ids", [])))
+            page_ids.update(_positive_ints(state.get("rerun_pool", [])))
+            if summary:
+                entries.update(_summary_page_id_entries({**summary, "page_ids": sorted(page_ids)}))
+            else:
+                entries.update(PageIdListEntry(page_id=page_id) for page_id in page_ids)
+    return entries
+
+
+def _state_summary_payload(state_path: Path) -> dict:
+    summary_path = _matching_summary_path_for_state(state_path)
+    if not summary_path.exists():
+        return {}
+    try:
+        payload = json.loads(summary_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
+def _matching_summary_path_for_state(state_path: Path) -> Path:
+    """Return the conventional summary path for one stream-state path."""
+    return state_path.with_name(state_path.name.removesuffix("_state.json") + "_summary.json")
 
 
 def _matching_state_path_for_summary(summary_path: Path) -> Path:
@@ -685,6 +879,44 @@ def _summary_page_ids(summary: dict) -> set[int]:
     return page_ids
 
 
+def _summary_page_id_entries(summary: dict) -> set[PageIdListEntry]:
+    """Return page-ID entries represented by one segment summary."""
+    raw_entries = summary.get("page_id_list_entries", [])
+    if raw_entries:
+        return {
+            entry
+            for entry in read_page_id_entries_from_summary_payload(raw_entries)
+            if entry.page_id > 0
+        }
+    answer_types = _summary_answer_types(summary)
+    table_types = _summary_table_types(summary)
+    return build_page_id_entries(_summary_page_ids(summary), answer_types=answer_types, table_types=table_types)
+
+
+def read_page_id_entries_from_summary_payload(payload: object) -> set[PageIdListEntry]:
+    """Read page-ID entries from a summary field payload."""
+    return extract_page_id_entries_from_payload(payload)
+
+
+def _summary_answer_types(summary: dict) -> list[str]:
+    values = summary.get("route3_answer_types", [])
+    if isinstance(values, list) and values:
+        return [str(value) for value in values if str(value or "").strip()]
+    recipe_answer_type = str(summary.get("recipe_answer_type", "") or "").strip()
+    if recipe_answer_type and recipe_answer_type != ALL_TYPES_RECIPE_ANSWER_TYPE:
+        return [recipe_answer_type]
+    if recipe_answer_type == ALL_TYPES_RECIPE_ANSWER_TYPE:
+        return list(ROUTE3_ANSWER_TYPES)
+    return [str(value) for value in ROUTE3_ANSWER_TYPES]
+
+
+def _summary_table_types(summary: dict) -> list[str]:
+    values = summary.get("route3_table_source_types", [])
+    if isinstance(values, list) and values:
+        return [str(value) for value in values if str(value or "").strip()]
+    return list(DEFAULT_ROUTE3_TABLE_SOURCE_TYPES)
+
+
 def _segment_command(
     *,
     args: argparse.Namespace,
@@ -697,11 +929,15 @@ def _segment_command(
     stream_search_initial_offset: int,
     reasoning_types: list[str],
     table_filter_modes: list[str],
+    table_source_types: list[str] | None = None,
     append_label: str = "",
     rerun_pool_seed_file: Path | None = None,
     base_segment_id: str | None = None,
 ) -> tuple[list[str], dict[str, Path]]:
     """Build the pipeline subprocess command for one recipe segment."""
+    normalized_table_source_types = list(
+        normalize_route3_table_source_types(table_source_types or DEFAULT_ROUTE3_TABLE_SOURCE_TYPES)
+    )
     segment_id = _append_segment_id(base_segment_id or _base_segment_id(item, index), append_label)
     accepted = segment_dir / f"{segment_id}_accepted.jsonl"
     rejected = segment_dir / f"{segment_id}_rejected.jsonl"
@@ -714,14 +950,17 @@ def _segment_command(
         answer_type=item.answer_type,
         index=index,
     )
+    segment_answer_type_mode = (
+        "all5" if item.answer_type == ALL_TYPES_RECIPE_ANSWER_TYPE else args.route3_answer_type_mode
+    )
     command = [
         sys.executable,
         str(ROOT / "scripts" / "run_wikipedia_infobox_pipeline.py"),
         "--stream-random-page-ids",
         "--record-limit",
         str(item.record_limit),
-        "--route3-answer-type",
-        item.answer_type,
+        "--route3-answer-type-mode",
+        segment_answer_type_mode,
         "--run-group-id",
         run_id,
         "--run-segment-id",
@@ -800,7 +1039,23 @@ def _segment_command(
         str(args.openrouter_generation_rewrite_concurrency_limit),
         "--second-stage-concurrency-limit",
         str(args.second_stage_concurrency_limit),
+        "--route3-page-archive-dir",
+        str(args.route3_page_archive_dir),
+        "--route3-pageview-window-months",
+        str(args.route3_pageview_window_months),
+        "--route3-max-monthly-average-pageviews",
+        str(args.route3_max_monthly_average_pageviews),
+        "--route3-max-underfilled-monthly-pageviews",
+        str(args.route3_max_underfilled_monthly_pageviews),
+        "--route3-pageview-unavailable-policy",
+        str(args.route3_pageview_unavailable_policy),
+        "--route3-infobox-max-removed-row-rate",
+        str(args.route3_infobox_max_removed_row_rate),
+        "--route3-infobox-min-remaining-rows",
+        str(args.route3_infobox_min_remaining_rows),
     ]
+    if item.answer_type != ALL_TYPES_RECIPE_ANSWER_TYPE:
+        command.extend(["--route3-answer-type", item.answer_type])
     if args.run_date:
         command.extend(["--run-date", str(args.run_date)])
     for reasoning_type in reasoning_types:
@@ -809,6 +1064,8 @@ def _segment_command(
         command.extend(["--route3-extra-prompt", extra_prompt])
     for mode in table_filter_modes:
         command.extend(["--route3-table-filter-mode", mode])
+    for source_type in normalized_table_source_types:
+        command.extend(["--route3-table-source-type", source_type])
     for mode in args.disable_route3_table_filter_mode:
         command.extend(["--disable-route3-table-filter-mode", str(mode)])
     if args.enable_rewrite:
@@ -831,10 +1088,14 @@ def _segment_command(
         command.append("--route3-llm-choose-table")
     else:
         command.append("--no-route3-llm-choose-table")
-    if args.compact_output:
-        command.append("--compact-output")
-    elif args.compact_rejected_output:
-        command.append("--compact-rejected-output")
+    if args.route3_prose_leakage_scoring:
+        command.append("--route3-prose-leakage-scoring")
+    else:
+        command.append("--no-route3-prose-leakage-scoring")
+    if args.route3_pageview_prefilter:
+        command.append("--route3-pageview-prefilter")
+    else:
+        command.append("--no-route3-pageview-prefilter")
     if args.big_batch_mode:
         command.append("--big-batch-mode")
     command.append("--reset-stream-state")
@@ -894,11 +1155,15 @@ def _combine_segment_records(
                 metadata["recipe_answer_type"] = answer_type
                 metadata["recipe_record_limit"] = record_limit
                 metadata["recipe_segment_id"] = summary.get("run_segment_id", "")
+                metadata["recipe_segment_run_date"] = summary.get("run_date", "")
                 metadata["recipe_segment_summary"] = summary.get("summary_output", "")
+                _ensure_page_id_list_entry_metadata(record)
         accepted_records.extend(accepted)
         rejected_records.extend(rejected)
+    assign_unique_route3_record_ids(accepted_records)
     for index, record in enumerate(accepted_records, start=max(0, int(accepted_id_offset)) + 1):
-        record["id"] = f"simpleqa_candidate_{index:06d}"
+        if not str(record.get("id") or "").strip():
+            record["id"] = f"simpleqa_candidate_{index:06d}"
     return accepted_records, rejected_records
 
 
@@ -926,14 +1191,25 @@ def _recipe_summary(
     stream_state_base: Path,
     append_label: str,
     wall_clock_seconds: float,
+    table_source_types: list[str] | None = None,
 ) -> dict:
     """Build the combined recipe summary."""
+    normalized_table_source_types = list(
+        normalize_route3_table_source_types(table_source_types or DEFAULT_ROUTE3_TABLE_SOURCE_TYPES)
+    )
     attempted = sum(int(summary.get("attempted_page_ids", 0) or 0) for summary in segment_summaries)
     page_ids = [
         page_id
         for summary in segment_summaries
         for page_id in summary.get("page_ids", [])
     ]
+    page_id_entries = sorted(
+        {
+            entry
+            for summary in segment_summaries
+            for entry in _summary_page_id_entries(summary)
+        }
+    )
     stream_states = _segment_stream_states(segment_summaries)
     state_stats = _aggregate_stream_state_stats(segment_summaries)
     rerun_pool_by_segment = _rerun_pool_by_segment(segment_summaries)
@@ -1000,6 +1276,7 @@ def _recipe_summary(
         "attempted_page_ids": attempted,
         "attempted_page_ids_unique": len({_coerce_int(page_id) for page_id in page_ids if _coerce_int(page_id)}),
         "page_ids": page_ids,
+        "page_id_list_entries": [entry.to_record() for entry in page_id_entries],
         "accepted": len(accepted_records),
         "accepted_total": len(accepted_records),
         "rejected": len(rejected_records),
@@ -1022,11 +1299,24 @@ def _recipe_summary(
         "generated_search_query_count": args.generated_search_query_count,
         "route3_reasoning_types": reasoning_types,
         "route3_answer_types": [item.answer_type for item in recipe_items],
+        "route3_answer_type_mode": args.route3_answer_type_mode,
         "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": table_filter_modes,
+        "route3_table_source_types": normalized_table_source_types,
+        "route3_prose_leakage_scoring_enabled": bool(args.route3_prose_leakage_scoring),
         "route3_llm_choose_table": bool(args.route3_llm_choose_table),
-        "compact_output": bool(args.compact_output),
-        "compact_rejected_output": bool(args.compact_rejected_output or args.compact_output),
+        "route3_page_archive_dir": str(args.route3_page_archive_dir),
+        "route3_pageview_prefilter_enabled": bool(args.route3_pageview_prefilter),
+        "route3_pageview_window_months": args.route3_pageview_window_months,
+        "route3_max_monthly_average_pageviews": args.route3_max_monthly_average_pageviews,
+        "route3_max_underfilled_monthly_pageviews": args.route3_max_underfilled_monthly_pageviews,
+        "route3_pageview_unavailable_policy": args.route3_pageview_unavailable_policy,
+        "route3_infobox_max_removed_row_rate": args.route3_infobox_max_removed_row_rate,
+        "route3_infobox_min_remaining_rows": args.route3_infobox_min_remaining_rows,
+        "compact_output": False,
+        "compact_output_ignored": bool(args.compact_output or args.big_batch_mode),
+        "compact_rejected_output": False,
+        "compact_rejected_output_ignored": bool(args.compact_rejected_output or args.compact_output or args.big_batch_mode),
         "big_batch_mode": bool(args.big_batch_mode),
         "stream_discovery_max_retries": args.stream_discovery_max_retries,
         "stream_discovery_retry_backoff_seconds": args.stream_discovery_retry_backoff_seconds,

@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field, replace
 import re
 from time import perf_counter
+from typing import Any
 
 from .cheap_model_qa import make_cheap_model_qa_client
 from .entity_normalization import normalize_name
@@ -13,6 +14,7 @@ from .config import LLMConfig, Settings
 from .domain_templates import get_all_templates, get_stage1_templates
 from .generation_models import GeneratedCandidate
 from .generator_validators import (
+    SearchLongtailVerifierError,
     build_removed_prefilter_stub,
     run_fact_level_longtail_prefilter,
     run_search_based_longtail_verifier,
@@ -30,8 +32,13 @@ from .io import write_jsonl
 from .llm_rewrite import make_rewrite_client
 from .number_reference import NUMBER_REFERENCE_MARGIN_KEY, build_number_reference_margin
 from .reasoning import normalize_reasoning_style
+from .route3_quality_rules import award_year_without_month_question_reason
 from .route1_multihop import ROUTE1_MULTIHOP_JOIN_ROUTE, get_route1_multihop_join_templates
 from .route4_two_hop import ROUTE4_TWO_HOP_CONTRACT, ROUTE4_WIKIDATA_TWO_HOP_ROUTE
+from .rule_based_answer_type_gate import (
+    attach_rule_based_gate_result,
+    evaluate_candidate_answer_type_gate,
+)
 from .search_client import DuckDuckGoSearchClient
 from .wikipedia_client import WikipediaClient
 from .wikidata_client import WikidataClient
@@ -39,6 +46,10 @@ from .wikidata_client import WikidataClient
 EARLY_REJECTION_REASONS = {
     "unsupported_relation_record",
     "entity_grounding_failed",
+}
+SOURCE_STAGE_REJECTION_PREFIXES = ("wikipedia_infobox_", "wikipedia_pageview_")
+SOURCE_STAGE_NON_BLOCKING_NOTES = {
+    "wikipedia_infobox_incomplete_tie_answer",
 }
 POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS = (
     ("list", re.compile(r"\blist\b", flags=re.IGNORECASE)),
@@ -52,6 +63,26 @@ POST_REWRITE_TIME_INVARIANCE_FORBIDDEN_PATTERNS = (
     ("latest", re.compile(r"\blatest\b", flags=re.IGNORECASE)),
     ("recent", re.compile(r"\brecent(?:ly)?\b", flags=re.IGNORECASE)),
 )
+ROUTE3_POPULAR_EXACT_ANSWERS = (
+    "United States",
+    "China",
+    "United Kingdom",
+    "Russia",
+    "Germany",
+    "France",
+    "Japan",
+    "English",
+    "Spanish",
+    "French",
+    "Mandarin Chinese",
+    "Russian",
+    "male",
+    "female",
+)
+ROUTE3_POPULAR_EXACT_ANSWER_BY_NORMALIZED = {
+    re.sub(r"\s+", " ", answer.strip()).casefold(): answer
+    for answer in ROUTE3_POPULAR_EXACT_ANSWERS
+}
 
 
 @dataclass(slots=True)
@@ -238,6 +269,26 @@ def process_generated_candidates(
                 )
             )
             continue
+        answer_popularity_reason = _post_rewrite_answer_popularity_failure(candidate)
+        if answer_popularity_reason is not None:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            candidate.source_metadata["surface_validation_failure_reason"] = answer_popularity_reason
+            candidate.source_metadata["post_rewrite_answer_popularity_failure_reason"] = answer_popularity_reason
+            candidate.validation = {
+                "rewrite_guard_passed": False,
+                "surface_validation_failure_reason": answer_popularity_reason,
+            }
+            _record_candidate_timings(candidate, candidate_timings)
+            record = candidate.to_rejected_record(
+                reason="rewrite_guard_rejected",
+                notes={
+                    "failure_reason": answer_popularity_reason,
+                    "surface_validation_failure_reason": answer_popularity_reason,
+                },
+            )
+            record["failing_reason"] = answer_popularity_reason
+            rejected_records.append(record)
+            continue
         self_containment_reason = _post_rewrite_self_containment_failure(candidate)
         if self_containment_reason is not None:
             candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
@@ -278,6 +329,26 @@ def process_generated_candidates(
                 )
             )
             continue
+        award_year_reason = _post_rewrite_award_year_precision_failure(candidate)
+        if award_year_reason is not None:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            candidate.source_metadata["surface_validation_failure_reason"] = award_year_reason
+            candidate.source_metadata["post_rewrite_award_year_precision_failure_reason"] = award_year_reason
+            candidate.validation = {
+                "rewrite_guard_passed": False,
+                "surface_validation_failure_reason": award_year_reason,
+            }
+            _record_candidate_timings(candidate, candidate_timings)
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason="rewrite_guard_rejected",
+                    notes={
+                        "failure_reason": award_year_reason,
+                        "surface_validation_failure_reason": award_year_reason,
+                    },
+                )
+            )
+            continue
         surface_reason = validate_question_surface(
             candidate.final_question,
             candidate,
@@ -302,9 +373,41 @@ def process_generated_candidates(
             )
             continue
 
+        rule_gate_result = evaluate_candidate_answer_type_gate(candidate)
+        attach_rule_based_gate_result(candidate, rule_gate_result)
+        if not rule_gate_result.matched:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason="rule_based_answer_type_gate_rejected",
+                    notes={
+                        "rule_based_qa_gate": candidate.source_metadata["rule_based_qa_gate"],
+                        "failure_reason": rule_gate_result.details.get("rule", ""),
+                    },
+                )
+            )
+            continue
+
         margin_start = perf_counter()
         _apply_number_reference_margin(candidate)
         candidate_timings["number_reference_margin_seconds"] = _elapsed(margin_start)
+
+        validation_passed, validation = validate_generated_candidate(
+            candidate,
+            cutoff_year=settings.cutoff_year,
+        )
+        candidate.validation = validation
+        if not validation_passed:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            _record_candidate_timings(candidate, candidate_timings)
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason="shared_validation_failed",
+                    notes={"validation": validation},
+                )
+            )
+            continue
 
         search_start = perf_counter()
         try:
@@ -324,10 +427,22 @@ def process_generated_candidates(
             candidate_timings["duckduckgo_search_seconds"] = _elapsed(search_start)
             candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
             _record_candidate_timings(candidate, candidate_timings)
+            search_error_features = getattr(exc, "features", None)
+            if isinstance(search_error_features, dict):
+                search_error_features["duration_seconds"] = candidate_timings["duckduckgo_search_seconds"]
+                candidate.search_verification_features = search_error_features
+            original_error = exc.original_error if isinstance(exc, SearchLongtailVerifierError) else exc
+            query_error = _first_search_query_error(search_error_features)
+            notes = {
+                "error_type": query_error.get("error_type") or type(original_error).__name__,
+                "error_message": query_error.get("error_message") or str(original_error),
+            }
+            if isinstance(search_error_features, dict):
+                notes["search_verification_features"] = search_error_features
             rejected_records.append(
                 candidate.to_rejected_record(
                     reason="search_longtail_verifier_error",
-                    notes={"error_type": type(exc).__name__, "error_message": str(exc)},
+                    notes=notes,
                 )
             )
             continue
@@ -396,22 +511,6 @@ def process_generated_candidates(
                 "reason": "second_stage_grading_disabled_or_unconfigured",
             }
 
-        validation_passed, validation = validate_generated_candidate(
-            candidate,
-            cutoff_year=settings.cutoff_year,
-        )
-        candidate.validation = validation
-        if not validation_passed:
-            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
-            _record_candidate_timings(candidate, candidate_timings)
-            rejected_records.append(
-                candidate.to_rejected_record(
-                    reason="shared_validation_failed",
-                    notes={"validation": validation},
-                )
-            )
-            continue
-
         subject_resource_key = candidate.subject_resource_key
         final_question = candidate.final_question
         if subject_resource_key and subject_resource_key in seen_subject_resources:
@@ -464,6 +563,22 @@ def _elapsed(start: float) -> float:
     return round(perf_counter() - start, 4)
 
 
+def _first_search_query_error(features: Any) -> dict[str, str]:
+    """Return the first query-level search error from verifier features."""
+    if not isinstance(features, dict):
+        return {}
+    query_errors = features.get("query_errors", [])
+    if not isinstance(query_errors, list) or not query_errors:
+        return {}
+    first_error = query_errors[0]
+    if not isinstance(first_error, dict):
+        return {}
+    return {
+        "error_type": str(first_error.get("error_type") or "").strip(),
+        "error_message": str(first_error.get("error_message") or "").strip(),
+    }
+
+
 def _record_candidate_timings(candidate: GeneratedCandidate, timings: dict[str, float]) -> None:
     """Attach per-candidate phase timing and bottleneck metadata."""
     cleaned = {key: value for key, value in timings.items() if value >= 0.0}
@@ -483,9 +598,17 @@ def _early_rejection_reason(candidate: GeneratedCandidate) -> str:
     for note in candidate.notes:
         if note in EARLY_REJECTION_REASONS:
             return note
-        if note.startswith("wikipedia_infobox_"):
+        if _is_source_stage_rejection_note(note):
             return note
     return ""
+
+
+def _is_source_stage_rejection_note(note: object) -> bool:
+    """Return whether one candidate note is a blocking source-stage rejection."""
+    text = str(note or "").strip()
+    if not text or text in SOURCE_STAGE_NON_BLOCKING_NOTES:
+        return False
+    return text.startswith(SOURCE_STAGE_REJECTION_PREFIXES)
 
 
 def _summarize_bottlenecks(timings: dict[str, float]) -> list[dict[str, float | str]]:
@@ -544,6 +667,25 @@ def _post_rewrite_time_invariance_failure(candidate: GeneratedCandidate) -> str 
     return None
 
 
+def _post_rewrite_award_year_precision_failure(candidate: GeneratedCandidate) -> str | None:
+    """Return a post-rewrite failure reason for award questions asking only for a year."""
+    reason = award_year_without_month_question_reason(candidate.final_question)
+    return reason or None
+
+
+def _post_rewrite_answer_popularity_failure(candidate: GeneratedCandidate) -> str | None:
+    """Return a Route 3 failure reason when the exact answer is too popular."""
+    if candidate.generation_route != "route3_wikipedia_infobox":
+        return None
+    normalized_answer = re.sub(r"\s+", " ", str(candidate.answer or "").strip()).casefold()
+    if not normalized_answer:
+        return None
+    popular_answer = ROUTE3_POPULAR_EXACT_ANSWER_BY_NORMALIZED.get(normalized_answer)
+    if popular_answer is None:
+        return None
+    return f"answer_too_popular:{popular_answer}"
+
+
 def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, settings: Settings) -> None:
     """Optionally rewrite one candidate into a more natural final question."""
     if rewrite_client is None:
@@ -568,7 +710,12 @@ def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, set
             "search_query_count": settings.generated_search_query_count,
         }
     try:
-        rewritten = rewrite_client.rewrite_question(payload)
+        if hasattr(rewrite_client, "rewrite_question_with_audit"):
+            rewrite_audit = rewrite_client.rewrite_question_with_audit(payload)
+            candidate.source_metadata["small_model_rewrite_audit"] = rewrite_audit
+            rewritten = dict(rewrite_audit.get("parsed_response", {}))
+        else:
+            rewritten = rewrite_client.rewrite_question(payload)
     except Exception as exc:  # noqa: BLE001
         candidate.notes.append(f"rewrite_failed:{type(exc).__name__}")
         return

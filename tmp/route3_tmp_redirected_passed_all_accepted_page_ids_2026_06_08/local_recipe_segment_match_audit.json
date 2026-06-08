@@ -1,0 +1,170 @@
+{
+  "source_recipe_segment_dir": "outputs\\recipe_segments\\wikipedia_stream_recipe_2000_each_answer_type_single_fact_2026_05_24_bigbatch_fresh",
+  "target_accepted_dir": "outputs\\route3_tmp_redirected_passed_all",
+  "cache_dir": "cache\\wikidata",
+  "output": "tmp\\route3_tmp_redirected_passed_all_accepted_page_ids_2026_06_08\\accepted_page_ids.json",
+  "matching_policy": "Map each segment accepted record by title against that segment state accepted_ids resolved through local parse cache; match target records by exact normalized title/question/answer, with audited unique-title fallback only when the exact key is absent.",
+  "target_records": 548,
+  "matched_target_records": 548,
+  "matched_by_exact_record_key": 544,
+  "matched_by_title_fallback": 4,
+  "unique_page_id_count": 529,
+  "unmatched_target_count": 0,
+  "ambiguous_target_count": 0,
+  "raw_records_total": 695,
+  "raw_records_mapped_by_segment_title": 695,
+  "raw_records_unmapped_count": 0,
+  "raw_records_unmapped_sample": [],
+  "raw_duplicate_key_count": 0,
+  "raw_duplicate_keys_sample": [],
+  "title_fallback_matches": [
+    {
+      "target_file": "outputs\\route3_tmp_redirected_passed_all\\date.passed_all_appended.jsonl",
+      "line": 50,
+      "id": "wikipedia_stream_000062",
+      "title": "List of ships of the Imperial Japanese Navy",
+      "question": "In what month and year was the destroyer Akishimo of the Imperial Japanese Navy commissioned during World War II?",
+      "answer": "March 1944",
+      "candidate_page_ids": [
+        187692
+      ],
+      "page_id": 187692
+    },
+    {
+      "target_file": "outputs\\route3_tmp_redirected_passed_all\\date.passed_all_appended.jsonl",
+      "line": 74,
+      "id": "wikipedia_stream_000002",
+      "title": "Midnight Cowboy",
+      "question": "In what month and year was the single \"Midnight Cowboy\" by Ferrante & Teicher released?",
+      "answer": "November 1969",
+      "candidate_page_ids": [
+        42147
+      ],
+      "page_id": 42147
+    },
+    {
+      "target_file": "outputs\\route3_tmp_redirected_passed_all\\date.passed_all_appended.jsonl",
+      "line": 106,
+      "id": "wikipedia_stream_000037",
+      "title": "Defence Secretary (Pakistan)",
+      "question": "In what month and year did Lt Gen (R) Zamir ul Hassan Shah assume office as Defence Secretary of Pakistan?",
+      "answer": "August 2016",
+      "candidate_page_ids": [
+        18735978
+      ],
+      "page_id": 18735978
+    },
+    {
+      "target_file": "outputs\\route3_tmp_redirected_passed_all\\place.passed_all_appended.jsonl",
+      "line": 59,
+      "id": "wikipedia_stream_000009",
+      "title": "Essex County, Ontario",
+      "question": "What was the name of the township seat of Gosfield South in Essex County before the 1999 restructuring?",
+      "answer": "Kingsville",
+      "candidate_page_ids": [
+        177867
+      ],
+      "page_id": 177867
+    }
+  ],
+  "segment_diagnostics": [
+    {
+      "segment_id": "01_date_1700_topup_1",
+      "accepted_ids": 88,
+      "accepted_records": 88,
+      "cache_missing_accepted_ids": [],
+      "cache_missing_count": 0,
+      "duplicate_title_count": 0,
+      "duplicate_titles_sample": [],
+      "mapped_records_by_segment_title": 88,
+      "unmapped_record_count": 0,
+      "unmapped_records_sample": []
+    },
+    {
+      "segment_id": "01_date_1700_topup_2",
+      "accepted_ids": 39,
+      "accepted_records": 39,
+      "cache_missing_accepted_ids": [],
+      "cache_missing_count": 0,
+      "duplicate_title_count": 0,
+      "duplicate_titles_sample": [],
+      "mapped_records_by_segment_title": 39,
+      "unmapped_record_count": 0,
+      "unmapped_records_sample": []
+    },
+    {
+      "segment_id": "01_number_2000_topup_1",
+      "accepted_ids": 154,
+      "accepted_records": 154,
+      "cache_missing_accepted_ids": [],
+      "cache_missing_count": 0,
+      "duplicate_title_count": 0,
+      "duplicate_titles_sample": [],
+      "mapped_records_by_segment_title": 154,
+      "unmapped_record_count": 0,
+      "unmapped_records_sample": []
+    },
+    {
+      "segment_id": "01_person_2000",
+      "accepted_ids": 48,
+      "accepted_records": 48,
+      "cache_missing_accepted_ids": [],
+      "cache_missing_count": 0,
+      "duplicate_title_count": 0,
+      "duplicate_titles_sample": [],
+      "mapped_records_by_segment_title": 48,
+      "unmapped_record_count": 0,
+      "unmapped_records_sample": []
+    },
+    {
+      "segment_id": "01_person_2000_topup_1",
+      "accepted_ids": 93,
+      "accepted_records": 93,
+      "cache_missing_accepted_ids": [],
+      "cache_missing_count": 0,
+      "duplicate_title_count": 0,
+      "duplicate_titles_sample": [],
+      "mapped_records_by_segment_title": 93,
+      "unmapped_record_count": 0,
+      "unmapped_records_sample": []
+    },
+    {
+      "segment_id": "02_place_2000",
+      "accepted_ids": 73,
+      "accepted_records": 73,
+      "cache_missing_accepted_ids": [],
+      "cache_missing_count": 0,
+      "duplicate_title_count": 0,
+      "duplicate_titles_sample": [],
+      "mapped_records_by_segment_title": 73,
+      "unmapped_record_count": 0,
+      "unmapped_records_sample": []
+    },
+    {
+      "segment_id": "02_place_2000_topup_1",
+      "accepted_ids": 41,
+      "accepted_records": 41,
+      "cache_missing_accepted_ids": [],
+      "cache_missing_count": 0,
+      "duplicate_title_count": 0,
+      "duplicate_titles_sample": [],
+      "mapped_records_by_segment_title": 41,
+      "unmapped_record_count": 0,
+      "unmapped_records_sample": []
+    },
+    {
+      "segment_id": "03_other_2000",
+      "accepted_ids": 159,
+      "accepted_records": 159,
+      "cache_missing_accepted_ids": [],
+      "cache_missing_count": 0,
+      "duplicate_title_count": 0,
+      "duplicate_titles_sample": [],
+      "mapped_records_by_segment_title": 159,
+      "unmapped_record_count": 0,
+      "unmapped_records_sample": []
+    }
+  ],
+  "unmatched_targets_sample": [],
+  "ambiguous_targets_sample": []
+}

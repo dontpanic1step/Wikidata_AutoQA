@@ -25,6 +25,7 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _clear_rerun_pool_ids_from_states,
     _existing_recipe_page_ids,
     _matching_segment_rerun_pool_seed,
+    _parse_recipe,
     _recipe_summary,
     _segment_complete,
     _segment_used_count,
@@ -69,7 +70,18 @@ def _recipe_args(**overrides):
         "openrouter_generation_rewrite_concurrency_limit": 10,
         "second_stage_concurrency_limit": 10,
         "route3_extra_prompt": [],
+        "route3_answer_type_mode": "single",
+        "route3_table_source_type": [],
+        "route3_prose_leakage_scoring": True,
         "route3_llm_choose_table": False,
+        "route3_page_archive_dir": ROOT / "cache" / "route3_pages",
+        "route3_pageview_prefilter": False,
+        "route3_pageview_window_months": 12,
+        "route3_max_monthly_average_pageviews": 5000.0,
+        "route3_max_underfilled_monthly_pageviews": 10000.0,
+        "route3_pageview_unavailable_policy": "allow",
+        "route3_infobox_max_removed_row_rate": 0.60,
+        "route3_infobox_min_remaining_rows": 5,
         "disable_route3_table_filter_mode": [],
         "enable_rewrite": True,
         "rewrite_model": "openai/gpt-4.1-mini",
@@ -155,6 +167,39 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             str(segment_dir / "recipe_page_id_exclusions.json"),
         )
 
+    def test_recipe_parses_alltypes_segment_and_commands_all5_mode(self) -> None:
+        args = _recipe_args(
+            recipe=["200 AllTypes", "single_fact"],
+            answer_type_count=[],
+            answer_types=[],
+            per_answer_type=0,
+            route3_reasoning_type=[],
+        )
+        items, reasoning_types = _parse_recipe(args)
+
+        self.assertEqual(items, [RecipeItem(answer_type="AllTypes", record_limit=200)])
+        self.assertEqual(reasoning_types, ["single_fact"])
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            command, paths = _segment_command(
+                args=args,
+                item=items[0],
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=0,
+                reasoning_types=reasoning_types,
+                table_filter_modes=["not_number_dominant"],
+            )
+
+        self.assertEqual(_command_value(command, "--route3-answer-type-mode"), "all5")
+        self.assertNotIn("--route3-answer-type", command)
+        self.assertEqual(_command_value(command, "--route3-max-underfilled-monthly-pageviews"), "10000.0")
+        self.assertTrue(str(paths["accepted"]).endswith("01_alltypes_200_accepted.jsonl"))
+
     def test_recipe_segment_disables_route3_llm_table_choice_by_default(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
@@ -196,7 +241,96 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertIn("--route3-llm-choose-table", command)
         self.assertNotIn("--no-route3-llm-choose-table", command)
 
-    def test_big_batch_mode_aligns_batch_size_and_compacts_outputs(self) -> None:
+    def test_recipe_segment_disables_pageview_prefilter_by_default(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            args = _recipe_args()
+
+            command, _paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Person", record_limit=40),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=0,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+            )
+
+        self.assertIn("--no-route3-pageview-prefilter", command)
+        self.assertNotIn("--route3-pageview-prefilter", command)
+
+    def test_recipe_segment_can_enable_pageview_prefilter(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            args = _recipe_args(route3_pageview_prefilter=True)
+
+            command, _paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Person", record_limit=40),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=0,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+            )
+
+        self.assertIn("--route3-pageview-prefilter", command)
+        self.assertNotIn("--no-route3-pageview-prefilter", command)
+
+    def test_recipe_segment_passes_route3_table_source_types(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            args = _recipe_args()
+
+            command, _paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Person", record_limit=40),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=0,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+                table_source_types=["infobox"],
+            )
+
+        source_values = [
+            command[index + 1]
+            for index, value in enumerate(command)
+            if value == "--route3-table-source-type"
+        ]
+        self.assertEqual(source_values, ["infobox"])
+
+    def test_recipe_segment_can_disable_route3_prose_leakage_scoring(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            args = _recipe_args(route3_prose_leakage_scoring=False)
+
+            command, _paths = _segment_command(
+                args=args,
+                item=RecipeItem(answer_type="Person", record_limit=40),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
+                stream_search_initial_offset=0,
+                reasoning_types=["single_fact"],
+                table_filter_modes=["not_number_dominant"],
+            )
+
+        self.assertIn("--no-route3-prose-leakage-scoring", command)
+        self.assertNotIn("--route3-prose-leakage-scoring", command)
+
+    def test_big_batch_mode_aligns_batch_size_without_compacting_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
             args = _recipe_args(big_batch_mode=True, stream_search_limit=50)
@@ -217,7 +351,8 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
         self.assertEqual(_command_value(command, "--stream-batch-size"), "50")
         self.assertEqual(_command_value(command, "--stream-search-max-rounds"), "500")
-        self.assertIn("--compact-output", command)
+        self.assertNotIn("--compact-output", command)
+        self.assertNotIn("--compact-rejected-output", command)
         self.assertIn("--big-batch-mode", command)
         self.assertEqual(_command_value(command, "--stream-discovery-max-retries"), "5")
         self.assertEqual(_command_value(command, "--wikipedia-429-backoff-seconds"), "30.0")
@@ -513,7 +648,21 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             root = Path(tmpdir)
             accepted_path = root / "accepted.jsonl"
             rejected_path = root / "rejected.jsonl"
-            accepted_path.write_text('{"id": "old", "question": "q", "source_metadata": {}}\n', encoding="utf-8")
+            accepted_path.write_text(
+                json.dumps(
+                    {
+                        "id": "old",
+                        "question": "q",
+                        "answer_type": "Person",
+                        "source_metadata": {
+                            "page_id": 123,
+                            "selected_source_table": {"table_type": "infobox"},
+                        },
+                    }
+                )
+                + "\n",
+                encoding="utf-8",
+            )
             rejected_path.write_text("", encoding="utf-8")
             summaries = [
                 {
@@ -522,6 +671,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                     "segment_accepted_output": str(accepted_path),
                     "segment_rejected_output": str(rejected_path),
                     "run_segment_id": "01_person_10_topup1",
+                    "run_date": "2026-05-25",
                     "summary_output": str(root / "summary.json"),
                 }
             ]
@@ -533,7 +683,11 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             )
 
         self.assertEqual(rejected, [])
-        self.assertEqual(accepted[0]["id"], "simpleqa_candidate_000049")
+        self.assertEqual(accepted[0]["id"], "route3_20260525_p123_person_infobox")
+        self.assertEqual(
+            accepted[0]["source_metadata"]["page_id_list_entry"],
+            {"page_id": 123, "answer_type": "Person", "table_type": "infobox"},
+        )
 
     def test_recipe_segments_use_disjoint_table_search_offsets(self) -> None:
         recipe_items = [
@@ -621,6 +775,8 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(summary["rerun_pool_ids_after_run"], [101, 202])
         self.assertIn("01_person_40:101", summary["rerun_pool_failure_reasons_after_run"])
         self.assertIn("02_date_40:101", summary["rerun_pool_failure_reasons_after_run"])
+        self.assertEqual(summary["route3_table_source_types"], ["infobox", "wikitable"])
+        self.assertTrue(summary["route3_prose_leakage_scoring_enabled"])
 
     def test_default_stream_seed_changes_for_incremental_runs(self) -> None:
         fresh_seed = _effective_stream_random_seed(_pipeline_seed_args())

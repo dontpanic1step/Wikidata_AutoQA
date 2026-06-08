@@ -452,13 +452,10 @@ def judge_record(
 ) -> None:
     key = record_key(record, index)
     output_record = merge_existing_judges(record, existing.get(key))
-    predictions = output_record.get("predictions")
-    if not isinstance(predictions, list):
-        predictions = []
-        output_record["predictions"] = predictions
+    predictions = ensure_predictions(output_record)
 
     question = stringify(output_record.get("question"))
-    target = stringify(output_record.get("answer"))
+    target = gold_target_answer(output_record)
     for prediction in predictions:
         if not isinstance(prediction, dict):
             continue
@@ -478,8 +475,10 @@ def judge_record(
 
 def merge_existing_judges(record: dict[str, Any], previous: dict[str, Any] | None) -> dict[str, Any]:
     merged = json.loads(json.dumps(record, ensure_ascii=False))
+    ensure_predictions(merged)
     if previous is None:
         return merged
+    ensure_predictions(previous)
     previous_predictions = previous.get("predictions")
     merged_predictions = merged.get("predictions")
     if not isinstance(previous_predictions, list) or not isinstance(merged_predictions, list):
@@ -494,6 +493,7 @@ def merge_existing_judges(record: dict[str, Any], previous: dict[str, Any] | Non
 
 
 def record_is_judged(record: dict[str, Any], judge_model: str) -> bool:
+    ensure_predictions(record)
     predictions = record.get("predictions")
     if not isinstance(predictions, list) or not predictions:
         return False
@@ -513,6 +513,93 @@ def prediction_answer(prediction: Any) -> str:
     if value is None:
         value = prediction.get("predicted_answer")
     return "" if value is None else str(value)
+
+
+def ensure_predictions(record: dict[str, Any]) -> list[dict[str, Any]]:
+    """Ensure a record has prediction rows, adapting raw response-style inputs."""
+    predictions = record.get("predictions")
+    if isinstance(predictions, list):
+        normalized = [prediction for prediction in predictions if isinstance(prediction, dict)]
+        if len(normalized) != len(predictions):
+            record["predictions"] = normalized
+        return normalized
+
+    prediction = prediction_from_raw_record(record)
+    predictions = [prediction] if prediction is not None else []
+    record["predictions"] = predictions
+    return predictions
+
+
+def prediction_from_raw_record(record: dict[str, Any]) -> dict[str, Any] | None:
+    """Build one prediction row from top-level raw model-response fields."""
+    answer = raw_prediction_answer(record)
+    if answer is None:
+        return None
+    prediction: dict[str, Any] = {
+        "model": stringify(record.get("model")),
+        "answer": answer,
+    }
+    for key in (
+        "repeat_index",
+        "ok",
+        "error",
+        "temperature",
+        "temperature_requested",
+        "temperature_sent",
+        "max_tokens",
+        "reasoning",
+        "reasoning_effort",
+        "created_at",
+        "original_id",
+    ):
+        if key in record:
+            prediction[key] = record[key]
+    return prediction
+
+
+def raw_prediction_answer(record: dict[str, Any]) -> str | None:
+    """Extract a predicted answer from common raw output formats."""
+    for key in ("response_text", "predicted_answer", "model_answer"):
+        value = record.get(key)
+        if value is not None:
+            return stringify(value)
+
+    response = record.get("response")
+    if isinstance(response, str):
+        return stringify(response)
+    if isinstance(response, dict):
+        extracted = response_text_from_openrouter_response(response)
+        if extracted is not None:
+            return extracted
+
+    if ("gold_answer" in record or "reference_answer" in record) and "answer" in record:
+        return stringify(record.get("answer"))
+    return None
+
+
+def response_text_from_openrouter_response(response: dict[str, Any]) -> str | None:
+    choices = response.get("choices")
+    if not isinstance(choices, list) or not choices:
+        return None
+    first_choice = choices[0]
+    if not isinstance(first_choice, dict):
+        return None
+    message = first_choice.get("message")
+    if not isinstance(message, dict):
+        return None
+    content = message.get("content")
+    if content is None:
+        return ""
+    return stringify(content)
+
+
+def gold_target_answer(record: dict[str, Any]) -> str:
+    """Return the gold answer, allowing raw formats where answer is a prediction."""
+    for key in ("gold_answer", "reference_answer", "answer"):
+        value = stringify(record.get(key))
+        if value:
+            return value
+    return ""
 
 
 def load_existing_output(path: Path) -> dict[str, dict[str, Any]]:

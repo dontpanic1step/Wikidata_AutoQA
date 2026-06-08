@@ -53,8 +53,11 @@ Prefer high precision over high recall. Treat early pilot outputs as candidate g
 - Route 3 URL discovery should default to dump-backed discovery, not hand-prepared URL lists. Prefer raw pages-articles XML slices extracted into JSONL while preserving wikitext table/infobox markup. A Wikimedia title dump or bounded MediaWiki search may be used as a fallback, but opened pages must still be grade-filtered by parsed table quality.
 - Route 3 discovery may score multiple subdomains per broad domain, then keep the best-scoring subdomain and the top URLs for that domain. This preserves the reusable Domain Axis while avoiding brittle first-subdomain-only selection on sparse dump slices.
 - Route 3 stores provenance and parsed tables, but does not perform route-local factual validation beyond provenance and downstream shared checks.
+- Route 3 pageview prefiltering is optional and disabled by default. Disabled runs must record explicit pageview prefilter metadata (`enabled=false`, `status=disabled`, `decision=allow`, `reason=pageview_prefilter_disabled`) and must not fetch pageviews, emit `wikipedia_pageview_prefilter_rejected`, emit `wikipedia_pageview_prefilter_unavailable`, or replace later failures with pageview placeholder reasons.
 - Route 3 questions may be single fact table/infobox questions or compositional questions. New model payloads and records use `reasoning_type`; legacy `composition_type` is accepted only at compatibility boundaries.
-- Route 3 prompt payloads should pass subject scope as context, not mandatory question text. Include the page title, title-derived aliases, and each selected table's caption plus nearby section heading so the model can infer a safe, bounded question scope without copying `List of ...` page titles. Pass safe first-paragraph aliases separately as `safe_subject_aliases`; when the page title has a cutoff-year marker, the model should use one of those aliases if it needs to name the subject.
+- Route 3 prompt payloads should pass subject scope as context, not mandatory question text. Render the LLM-facing payload as concise Markdown, not as a JSON dump, with English headings `### subject_anchors`, `### table context`, and `### table content`. Each small item under those headings should use label-value lines such as `page title`: ..., `safe_subject_aliases`: ..., `section_heading`: ..., `caption`: ..., and `nearby_intro`: .... In `subject_anchors`, render `title_aliases` in place of the page title when aliases are available, and pass safe first-paragraph aliases separately as `safe_subject_aliases`. Default prompts must use the actual top table type passed to the LLM, never `wikitable or infobox`; mixed wording is allowed only when `llm_choose_table` is enabled and rendered candidate tables include both types. Wikitable prompts may include section heading, caption, and nearby intro scope guidance; infobox prompts should render only first paragraph as table context and omit wikitable-only guidance. Include `source_table` in the model output schema only when `llm_choose_table` is enabled.
+- Route 3 used page-ID files may mix page-only IDs and triadic entries with `page_id`, `answer_type`, and `table_type`. A page-only entry represents an accepted QA for that page and blocks every future Route 3 context with the same page ID. A triadic entry represents a newly generated or not-yet-verified QA context and blocks only the exact same `(page_id, answer_type, table_type)` context. Incomplete scoped entries are not wildcards. Streamed generation writes triadic entries for the current run context. The triadic `table_type` must be the actual selected/used table type from the decision record, not the configured allowed table-source set; configured table-source types are only a fallback for pages that have no decision record metadata. In `all5` mode, a page-level source-stage rejection before rewrite and before any concrete answer-type slot should be represented as a page-only used entry because it invalidates the page for all answer types in that source context; slot-level and later-stage failures remain triadic. Accepted and rejected records should carry the numeric Wikipedia page ID in `source_metadata.page_id`, using the resolved parse/page-archive page ID when the input was a title URL. When the answer type and actual selected table type are known, records should also carry `source_metadata.page_id_list_entry` with `page_id`, `answer_type`, and `table_type`. Restore and inherit helpers may write either page-only or triadic outputs; accepted restore defaults to page-only unless triadic output is explicitly requested. Accepted restore reads numeric page IDs only and must not silently guess IDs from `/wiki/Title` URLs.
+- Route 3 rejected placeholders represent source-stage failures before a concrete QA exists. Every reporting layer, including JSONL `rejection_reason`, compact `failing_reason`, summaries, stream states, and walkthroughs, should preserve the original source-stage reason and detail instead of replacing it with placeholder QA validation failures. For example, a pageview prefilter rejection should report `wikipedia_pageview_prefilter_rejected:monthly_average_pageviews>5000.0000`, not `shared_validation_failed:answer_in_evidence`.
 
 ## Candidate Schema Contract
 
@@ -114,7 +117,7 @@ For `route4_wikidata_two_hop`, `source_candidate` is also required before shared
 
 For numeric answers, store the normalized reference value without units. For temporal answers, make the question text responsible for declaring whether the expected answer is a year, month, full date, duration, or other temporal unit. Route 3 generated candidates must include a SimpleQA Verified-style `answer_type`: `Person`, `Place`, `Number`, `Date`, or `Other`.
 
-Accepted JSONL records include the final question, answer, aliases, route, source entities, evidence, canonical and rewritten question fields, template key/domain compatibility fields, search metadata, grading metadata, validation metadata, notes, and `source_metadata`.
+Accepted JSONL records include the final question, answer, aliases, route, source entities, evidence, canonical and rewritten question fields, template key/domain compatibility fields, search metadata, grading metadata, validation metadata, notes, and `source_metadata`. Route 3 accepted record IDs are deterministic from the run date plus `source_metadata.page_id_list_entry`: `route3_<yyyymmdd>_p<page_id>_<answer_type>_<table_type>`, with a stable question hash suffix only when that base ID collides.
 
 Rejected JSONL records use the same audit shape plus `rejection_reason` and `rejection_notes`. Surface-guard rejections must also expose the exact violated rule as `rejection_rule`, `rejection_notes.failure_reason`, and `source_metadata.surface_validation_failure_reason` so reviewers can distinguish failures such as `answer_leakage` or `cutoff_year_exceeded`.
 
@@ -144,13 +147,15 @@ The shared filtering flow is:
 
 1. Route-local early rejection notes.
 2. Optional LLM rewrite or route-provided final question.
-3. Deterministic surface validation.
-4. DuckDuckGo search-based long-tail verifier.
-5. Optional SimpleQA Verified-style model grading panel.
-6. Shared route-aware validation.
+3. Deterministic surface validation and answer normalization helpers.
+4. Shared route-aware validation, including evidence-presence, available time-invariance, and route-specific deterministic checks.
+5. DuckDuckGo search-based long-tail verifier.
+6. Optional SimpleQA Verified-style model grading panel.
 7. Duplicate subject and duplicate question checks.
 
 Stage 1 long-tail filtering is DuckDuckGo search-based evidence. Stage 2 is optional SimpleQA-style model grading. The search verifier stores queries, result counts, titles, snippets, URLs, answer-hit flags, category hit rates, thresholds, and triggered rules.
+
+Rule-based validation must run before both long-tail stages once a final candidate question and answer are available. Route-specific small-model output constraints, such as Route 3 allowed `reasoning_type` or `answer_type`, may run during generation before the shared flow; the shared route-aware validator then catches cross-route deterministic failures before spending DuckDuckGo or model-grading calls.
 
 Do not use a standalone cheap-model exact-match QA phase as a rejection gate. LLMs are allowed for rewriting and optional review, but not for inventing facts, proving uniqueness, or serving as the primary factuality validator.
 
@@ -175,10 +180,10 @@ Route 3 validation is intentionally limited:
 - `stable_answer` is treated as true by route policy.
 - `answer_in_evidence` must pass by finding the answer or alias in stored evidence text.
 - `question_unambiguous` requires a subject URL.
-- shared rewrite/surface guards still apply.
-- metadata records `route_local_factual_validation` as false and names the provenance-only policy.
+- shared rewrite/surface guards and shared route-aware validation apply before DuckDuckGo long-tail filtering and optional second-stage grading.
+- metadata names the provenance-only policy without adding placeholder validation failures.
 - the incomplete tied-answer detector is retained for review but is non-blocking; Route 3 records it under `source_metadata.route_guard_warnings.wikipedia_infobox_incomplete_tie_answer`.
-- default table filter modes drop big-number-heavy and social-science-research tables before the Route 3 generation prompt; selected/rejected table metadata records active modes, matched markers, and big-number stats.
+- default table filter modes drop matching wikitables before the Route 3 generation prompt; infoboxes first remove image rows, then remove individual key-value rows that fail incomplete-data, number-dominance, or social-science checks, and selected/rejected metadata records active modes plus removed-row audit details.
 
 Route 1 multi-hop join validation is intentionally stricter than Route 3:
 

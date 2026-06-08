@@ -1,0 +1,5662 @@
+{
+  "enwiki:Jimmy_Snuka:2025050100:2026040100:monthly": {
+    "title": "Jimmy_Snuka",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Jimmy_Snuka/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 275153,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 27951
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 20058
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 34870
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 37926
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 21340
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 19735
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 20002
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 23088
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 25885
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 21956
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 21677
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 665
+      }
+    ]
+  },
+  "enwiki:Mission:_Impossible_(1966_TV_series):2025050100:2026040100:monthly": {
+    "title": "Mission:_Impossible_(1966_TV_series)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Mission%3A_Impossible_%281966_TV_series%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 537919,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 139732
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 86091
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 43542
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 44163
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 33252
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 28929
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 32706
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 41708
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 35689
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 25258
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 26164
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 685
+      }
+    ]
+  },
+  "enwiki:List_of_Televisa_telenovelas_(1960s):2025050100:2026040100:monthly": {
+    "title": "List_of_Televisa_telenovelas_(1960s)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/List_of_Televisa_telenovelas_%281960s%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 2930,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 321
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 208
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 249
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 138
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 291
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 198
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 206
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 201
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 224
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 184
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 706
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 4
+      }
+    ]
+  },
+  "enwiki:Committee_to_Protect_Journalists:2025050100:2026040100:monthly": {
+    "title": "Committee_to_Protect_Journalists",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Committee_to_Protect_Journalists/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 20707,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1759
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1852
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1323
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 4153
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1635
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1888
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1697
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1366
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1348
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1846
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 1797
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 43
+      }
+    ]
+  },
+  "enwiki:Book_of_Han:2025050100:2026040100:monthly": {
+    "title": "Book_of_Han",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Book_of_Han/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 29133,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 2607
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 2248
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 2297
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 3327
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 2498
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 2845
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2746
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 2849
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 2864
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2291
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 2483
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 78
+      }
+    ]
+  },
+  "enwiki:Mauretania:2025050100:2026040100:monthly": {
+    "title": "Mauretania",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Mauretania/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 148046,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 14239
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 12115
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 13644
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 14489
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 12994
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 14230
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 13222
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 13418
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 14168
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 12182
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 12897
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 448
+      }
+    ]
+  },
+  "enwiki:Billy_Bingham:2025050100:2026040100:monthly": {
+    "title": "Billy_Bingham",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Billy_Bingham/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 20111,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1839
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1414
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1252
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1920
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1756
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 2252
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2618
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1376
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 2710
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1388
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 1526
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 60
+      }
+    ]
+  },
+  "enwiki:List_of_programmes_broadcast_by_Hungama_TV:2025050100:2026040100:monthly": {
+    "title": "List_of_programmes_broadcast_by_Hungama_TV",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/List_of_programmes_broadcast_by_Hungama_TV/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 33581,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 3686
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 3329
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 3261
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 3578
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 3162
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 2970
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2822
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 2754
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 2964
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2388
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 2606
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 61
+      }
+    ]
+  },
+  "enwiki:2022_FIFA_World_Cup_qualification_–_AFC_second_round:2025050100:2026040100:monthly": {
+    "title": "2022_FIFA_World_Cup_qualification_–_AFC_second_round",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2022_FIFA_World_Cup_qualification_%E2%80%93_AFC_second_round/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 21306,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1369
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 3559
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1513
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1287
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1636
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 2801
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2332
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 2058
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1673
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1304
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 1652
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 122
+      }
+    ]
+  },
+  "enwiki:Manfield_Non-Life_Master_Pairs:2025050100:2026040100:monthly": {
+    "title": "Manfield_Non-Life_Master_Pairs",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Manfield_Non-Life_Master_Pairs/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 188,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 7
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 20
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 10
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 16
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 22
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 18
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 25
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 11
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 30
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 18
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 10
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 1
+      }
+    ]
+  },
+  "enwiki:Robin_Givens:2025050100:2026040100:monthly": {
+    "title": "Robin_Givens",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Robin_Givens/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 518654,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 40298
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 44290
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 54817
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 54807
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 43126
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 37458
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 48054
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 57393
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 48567
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 43830
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 44908
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 1106
+      }
+    ]
+  },
+  "enwiki:Sing_(Annie_Lennox_song):2025050100:2026040100:monthly": {
+    "title": "Sing_(Annie_Lennox_song)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Sing_%28Annie_Lennox_song%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 4839,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 439
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 387
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 390
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 475
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 536
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 498
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 512
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 481
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 412
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 320
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 381
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 8
+      }
+    ]
+  },
+  "enwiki:Norm_Smith_Medal:2025050100:2026040100:monthly": {
+    "title": "Norm_Smith_Medal",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Norm_Smith_Medal/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 59901,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 3219
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 2611
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 3527
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 4110
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 35133
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 4259
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1101
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1069
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1103
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1385
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 2320
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 64
+      }
+    ]
+  },
+  "enwiki:Joey_(TV_series):2025050100:2026040100:monthly": {
+    "title": "Joey_(TV_series)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Joey_%28TV_series%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 370329,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 47293
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 34532
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 30013
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 33032
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 29584
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 32589
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 60200
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 28346
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 27810
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 22631
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 23408
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 891
+      }
+    ]
+  },
+  "enwiki:Pat_McCrory:2025050100:2026040100:monthly": {
+    "title": "Pat_McCrory",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Pat_McCrory/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 61800,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 4563
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 5502
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 9883
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 5241
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 6034
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 5145
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 5474
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 5573
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 4246
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 4416
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 5576
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 147
+      }
+    ]
+  },
+  "enwiki:2011_Major_League_Baseball_draft:2025050100:2026040100:monthly": {
+    "title": "2011_Major_League_Baseball_draft",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2011_Major_League_Baseball_draft/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 52860,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5893
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 6353
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 9241
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 4405
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 4782
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 7053
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 4491
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 2407
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 2427
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2308
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 3350
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 150
+      }
+    ]
+  },
+  "enwiki:Chukotka_Autonomous_Okrug:2025050100:2026040100:monthly": {
+    "title": "Chukotka_Autonomous_Okrug",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Chukotka_Autonomous_Okrug/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 239516,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 16450
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 17134
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 20417
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 29064
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 18538
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 19692
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 21348
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 34582
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 29858
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 16967
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 15031
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 435
+      }
+    ]
+  },
+  "enwiki:Christina_Applegate:2025050100:2026040100:monthly": {
+    "title": "Christina_Applegate",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Christina_Applegate/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 2010541,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 134325
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 121455
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 148909
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 215663
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 115505
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 146837
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 170434
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 145016
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 157839
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 272607
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 376932
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 5019
+      }
+    ]
+  },
+  "enwiki:2022_FIFA_World_Cup_qualification_(AFC):2025050100:2026040100:monthly": {
+    "title": "2022_FIFA_World_Cup_qualification_(AFC)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2022_FIFA_World_Cup_qualification_%28AFC%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 62106,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 3743
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 14650
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 4458
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 3275
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 5425
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 9316
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 6959
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 4807
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 3427
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2309
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 3229
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 508
+      }
+    ]
+  },
+  "enwiki:Paulina_Porizkova:2025050100:2026040100:monthly": {
+    "title": "Paulina_Porizkova",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Paulina_Porizkova/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 434680,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 31990
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 29975
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 48613
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 40914
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 45608
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 32213
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 48673
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 34003
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 32956
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 50415
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 38653
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 667
+      }
+    ]
+  },
+  "enwiki:Judeo-Berber_language:2025050100:2026040100:monthly": {
+    "title": "Judeo-Berber_language",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Judeo-Berber_language/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 8736,
+    "months": 12,
+    "error": "HTTP 429: Too Many Requests",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 809
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 885
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 788
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 782
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 779
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 880
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 802
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 794
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 806
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 690
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 697
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 24
+      }
+    ]
+  },
+  "enwiki:The_Beast_in_the_East:2025050100:2026040100:monthly": {
+    "title": "The_Beast_in_the_East",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/The_Beast_in_the_East/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 32516,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 3671
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 2860
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 3657
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 3642
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 2830
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 3137
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2242
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 2658
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 2799
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2568
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 2372
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 80
+      }
+    ]
+  },
+  "enwiki:Carlos_Bocanegra:2025050100:2026040100:monthly": {
+    "title": "Carlos_Bocanegra",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Carlos_Bocanegra/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 44500,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 4228
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 4974
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 4264
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 3351
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 4543
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 4764
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 3344
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 3797
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 3229
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 3511
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 4196
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 299
+      }
+    ]
+  },
+  "enwiki:Perth_Football_Club:2025050100:2026040100:monthly": {
+    "title": "Perth_Football_Club",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Perth_Football_Club/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 8929,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1210
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 844
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 799
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1385
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1347
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 584
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 544
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 460
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 481
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 484
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 771
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 20
+      }
+    ]
+  },
+  "enwiki:Independent_Labour_Party:2025050100:2026040100:monthly": {
+    "title": "Independent_Labour_Party",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Independent_Labour_Party/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 60019,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5105
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 4757
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 5712
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 5273
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 5633
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 5823
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 5363
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 5566
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 5839
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 5449
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 5321
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 178
+      }
+    ]
+  },
+  "enwiki:Adore_(album):2025050100:2026040100:monthly": {
+    "title": "Adore_(album)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Adore_%28album%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 106454,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 9561
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 8860
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 10138
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 11268
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 10105
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 10861
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 9676
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 8465
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 9724
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 7449
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 10062
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 285
+      }
+    ]
+  },
+  "enwiki:The_Remains_of_the_Day_(film):2025050100:2026040100:monthly": {
+    "title": "The_Remains_of_the_Day_(film)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/The_Remains_of_the_Day_%28film%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 375658,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 30093
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 27046
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 36276
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 33395
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 30729
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 26677
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 64399
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 29568
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 31441
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 32337
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 33088
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 609
+      }
+    ]
+  },
+  "enwiki:New_York's_20th_congressional_district:2025050100:2026040100:monthly": {
+    "title": "New_York's_20th_congressional_district",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/New_York%27s_20th_congressional_district/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 28471,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1976
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 2918
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 2877
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 2114
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1938
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 2484
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 3168
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 3512
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 3279
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2082
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 2064
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 59
+      }
+    ]
+  },
+  "enwiki:Quinn_Hughes:2025050100:2026040100:monthly": {
+    "title": "Quinn_Hughes",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Quinn_Hughes/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 1317277,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 16524
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 13814
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 10312
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 8138
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 11549
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 30613
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 29071
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 224813
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 71963
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 780945
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 118383
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 1152
+      }
+    ]
+  },
+  "enwiki:EuroBasket:2025050100:2026040100:monthly": {
+    "title": "EuroBasket",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/EuroBasket/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 384874,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 12419
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 14313
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 18166
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 77708
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 215816
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 9944
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 8471
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 7371
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 6621
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 6941
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 6843
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 261
+      }
+    ]
+  },
+  "enwiki:United_States_federal_executive_departments:2025050100:2026040100:monthly": {
+    "title": "United_States_federal_executive_departments",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/United_States_federal_executive_departments/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 265624,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 21373
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 19280
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 17818
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 18994
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 27587
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 31264
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 25119
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 23092
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 30360
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 24171
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 25800
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 766
+      }
+    ]
+  },
+  "enwiki:Hyman_G._Rickover:2025050100:2026040100:monthly": {
+    "title": "Hyman_G._Rickover",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Hyman_G._Rickover/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 126829,
+    "months": 12,
+    "error": "HTTP 429: Too Many Requests",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 10520
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 9891
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 14564
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 11016
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 9004
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 11458
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 12368
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 13018
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 13493
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 9729
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 11451
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 317
+      }
+    ]
+  },
+  "enwiki:2003_Major_League_Baseball_season:2025050100:2026040100:monthly": {
+    "title": "2003_Major_League_Baseball_season",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2003_Major_League_Baseball_season/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 34887,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 3424
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 3533
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 4167
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 4011
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 3111
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 6571
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2930
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1519
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1656
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1685
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 2188
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 92
+      }
+    ]
+  },
+  "enwiki:Come_On_Over:2025050100:2026040100:monthly": {
+    "title": "Come_On_Over",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Come_On_Over/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 131424,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 11780
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 11532
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 13820
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 13324
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 11519
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 11893
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 11700
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 11209
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 12591
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 10495
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 11260
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 301
+      }
+    ]
+  },
+  "enwiki:Colin_Kazim-Richards:2025050100:2026040100:monthly": {
+    "title": "Colin_Kazim-Richards",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Colin_Kazim-Richards/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 79383,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 4712
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 4083
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 8164
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 6234
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 5305
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 6428
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 3802
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 3655
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 4640
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 4098
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 27808
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 454
+      }
+    ]
+  },
+  "enwiki:2022_NCAA_Division_I_FCS_football_season:2025050100:2026040100:monthly": {
+    "title": "2022_NCAA_Division_I_FCS_football_season",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2022_NCAA_Division_I_FCS_football_season/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 15424,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 653
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 557
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 785
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1308
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1921
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 2179
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2315
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 2930
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1711
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 620
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 433
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 12
+      }
+    ]
+  },
+  "enwiki:Superettan:2025050100:2026040100:monthly": {
+    "title": "Superettan",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Superettan/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 74560,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 7462
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 5566
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 6934
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 7584
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 7452
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 10086
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 7171
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 5295
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 7086
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 4886
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 4747
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 291
+      }
+    ]
+  },
+  "enwiki:Finnish_Air_Force:2025050100:2026040100:monthly": {
+    "title": "Finnish_Air_Force",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Finnish_Air_Force/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 227945,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 21417
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 21934
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 15860
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 39920
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 34020
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 16101
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 15876
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 18649
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 16797
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 12276
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 14695
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 400
+      }
+    ]
+  },
+  "enwiki:The_King_of_Queens:2025050100:2026040100:monthly": {
+    "title": "The_King_of_Queens",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/The_King_of_Queens/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 571836,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 43320
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 44463
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 50399
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 49801
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 43560
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 56036
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 54493
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 53486
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 80640
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 51301
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 42999
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 1338
+      }
+    ]
+  },
+  "enwiki:High_Hopes_(Pink_Floyd_song):2025050100:2026040100:monthly": {
+    "title": "High_Hopes_(Pink_Floyd_song)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/High_Hopes_%28Pink_Floyd_song%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 58082,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5068
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 4154
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 4413
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 5074
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 6102
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 6072
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 5634
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 6001
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 5766
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 4408
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 5240
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 150
+      }
+    ]
+  },
+  "enwiki:African_Cross_Country_Championships:2025050100:2026040100:monthly": {
+    "title": "African_Cross_Country_Championships",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/African_Cross_Country_Championships/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 774,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 56
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 55
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 75
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 80
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 82
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 73
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 80
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 69
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 90
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 48
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 56
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 10
+      }
+    ]
+  },
+  "enwiki:Abère:2025050100:2026040100:monthly": {
+    "title": "Abère",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Ab%C3%A8re/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 372,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 43
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 50
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 26
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 17
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 27
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 27
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 38
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 23
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 32
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 38
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 48
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 3
+      }
+    ]
+  },
+  "enwiki:Voiced_retroflex_affricate:2025050100:2026040100:monthly": {
+    "title": "Voiced_retroflex_affricate",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Voiced_retroflex_affricate/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 15475,
+    "months": 12,
+    "error": "HTTP 429: Too Many Requests",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1464
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1262
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1334
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1498
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1526
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1474
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1448
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1348
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1426
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1236
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 1414
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 45
+      }
+    ]
+  },
+  "enwiki:Wynnum_Manly_Seagulls:2025050100:2026040100:monthly": {
+    "title": "Wynnum_Manly_Seagulls",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Wynnum_Manly_Seagulls/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 6091,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 644
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 614
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 595
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 618
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 728
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 683
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 417
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 302
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 361
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 468
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 643
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 18
+      }
+    ]
+  },
+  "enwiki:RIM-8_Talos:2025050100:2026040100:monthly": {
+    "title": "RIM-8_Talos",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/RIM-8_Talos/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 47359,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 4202
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 3820
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 4468
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 4069
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 4378
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 4594
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 4114
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 4624
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 4394
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 3701
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 4870
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 125
+      }
+    ]
+  },
+  "enwiki:2014_Women's_Rugby_World_Cup:2025050100:2026040100:monthly": {
+    "title": "2014_Women's_Rugby_World_Cup",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2014_Women%27s_Rugby_World_Cup/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 36038,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 779
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 713
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1557
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 8650
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 19866
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1466
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 705
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 579
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 512
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 564
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 626
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 21
+      }
+    ]
+  },
+  "enwiki:Crank_Yankers:2025050100:2026040100:monthly": {
+    "title": "Crank_Yankers",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Crank_Yankers/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 64844,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5865
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 5251
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 5926
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 6353
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 8998
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 5589
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 5665
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 4912
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 5815
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 4923
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 5367
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 180
+      }
+    ]
+  },
+  "enwiki:The_Slipper_and_the_Rose:2025050100:2026040100:monthly": {
+    "title": "The_Slipper_and_the_Rose",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/The_Slipper_and_the_Rose/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 40256,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 3310
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 2591
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 2671
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 2868
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 7741
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 3294
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2680
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 5806
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 3672
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2679
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 2840
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 104
+      }
+    ]
+  },
+  "enwiki:Football_at_the_Mediterranean_Games:2025050100:2026040100:monthly": {
+    "title": "Football_at_the_Mediterranean_Games",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Football_at_the_Mediterranean_Games/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 8985,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 664
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1047
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 618
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 612
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 896
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 933
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1013
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 894
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 987
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 528
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 732
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 61
+      }
+    ]
+  },
+  "enwiki:2011_Kazakhstan_Premier_League:2025050100:2026040100:monthly": {
+    "title": "2011_Kazakhstan_Premier_League",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2011_Kazakhstan_Premier_League/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 834,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 60
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 56
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 61
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 142
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 76
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 93
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 76
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 66
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 90
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 52
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 61
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 1
+      }
+    ]
+  },
+  "enwiki:Krymchak_language:2025050100:2026040100:monthly": {
+    "title": "Krymchak_language",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Krymchak_language/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 10460,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1076
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1074
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 824
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1056
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 936
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 958
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1016
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 949
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 867
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 795
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 874
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 35
+      }
+    ]
+  },
+  "enwiki:Heart_murmur:2025050100:2026040100:monthly": {
+    "title": "Heart_murmur",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Heart_murmur/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 117413,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 12955
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 11734
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 12811
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 12474
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 11031
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 11058
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 10510
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 9217
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 8861
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 8313
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 8175
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 274
+      }
+    ]
+  },
+  "enwiki:Tupong_(state_constituency):2025050100:2026040100:monthly": {
+    "title": "Tupong_(state_constituency)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Tupong_%28state_constituency%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 648,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 66
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 51
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 77
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 54
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 49
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 63
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 88
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 48
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 50
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 43
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 58
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 1
+      }
+    ]
+  },
+  "enwiki:United_States_presidential_elections_in_Alaska:2025050100:2026040100:monthly": {
+    "title": "United_States_presidential_elections_in_Alaska",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/United_States_presidential_elections_in_Alaska/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 45805,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1031
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 854
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1004
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1563
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 893
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1065
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 8504
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 24413
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 4933
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 784
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 739
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 22
+      }
+    ]
+  },
+  "enwiki:Beijing_Mandarin_(division_of_Mandarin):2025050100:2026040100:monthly": {
+    "title": "Beijing_Mandarin_(division_of_Mandarin)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Beijing_Mandarin_%28division_of_Mandarin%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 11182,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1064
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 929
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 951
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1121
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 968
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 992
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1079
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1117
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1118
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 883
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 936
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 24
+      }
+    ]
+  },
+  "enwiki:Ichthyosis:2025050100:2026040100:monthly": {
+    "title": "Ichthyosis",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Ichthyosis/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 100785,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 12496
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 12272
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 8490
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 10652
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 8225
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 9215
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 9235
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 7569
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 8832
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 6604
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 6977
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 218
+      }
+    ]
+  },
+  "enwiki:Joint_Chiefs_of_Staff_Committee:2025050100:2026040100:monthly": {
+    "title": "Joint_Chiefs_of_Staff_Committee",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Joint_Chiefs_of_Staff_Committee/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 17550,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5826
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1344
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 799
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1108
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 821
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1217
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 3065
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1573
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 599
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 588
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 594
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 16
+      }
+    ]
+  },
+  "enwiki:Filipe_Albuquerque:2025050100:2026040100:monthly": {
+    "title": "Filipe_Albuquerque",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Filipe_Albuquerque/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 11584,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1184
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 2270
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 902
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 880
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 927
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 859
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 839
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 942
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1278
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 624
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 848
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 31
+      }
+    ]
+  },
+  "enwiki:NBA_Live:2025050100:2026040100:monthly": {
+    "title": "NBA_Live",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/NBA_Live/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 75110,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 8001
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 8526
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 9348
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 5450
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 5700
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 6282
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 6488
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 7035
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 6731
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 5954
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 5420
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 175
+      }
+    ]
+  },
+  "enwiki:List_of_Chicago_Cubs_owners_and_executives:2025050100:2026040100:monthly": {
+    "title": "List_of_Chicago_Cubs_owners_and_executives",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/List_of_Chicago_Cubs_owners_and_executives/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 7717,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 893
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 775
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1067
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 948
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 750
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 923
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 519
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 496
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 587
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 298
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 447
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 14
+      }
+    ]
+  },
+  "enwiki:Brazil_at_the_2007_Pan_American_Games:2025050100:2026040100:monthly": {
+    "title": "Brazil_at_the_2007_Pan_American_Games",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Brazil_at_the_2007_Pan_American_Games/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 563,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 32
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 40
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 32
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 48
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 52
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 49
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 60
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 64
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 80
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 43
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 60
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 3
+      }
+    ]
+  },
+  "enwiki:Ahn_Jung-hwan:2025050100:2026040100:monthly": {
+    "title": "Ahn_Jung-hwan",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Ahn_Jung-hwan/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 77686,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 8828
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 6760
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 5542
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 9291
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 5745
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 5112
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 5234
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 7176
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 11233
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 7033
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 5399
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 333
+      }
+    ]
+  },
+  "enwiki:List_of_Privy_Council_orders:2025050100:2026040100:monthly": {
+    "title": "List_of_Privy_Council_orders",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/List_of_Privy_Council_orders/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 1092,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 96
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 111
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 84
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 92
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 130
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 108
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 111
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 95
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 89
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 87
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 88
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 1
+      }
+    ]
+  },
+  "enwiki:1992_New_York_Yankees_season:2025050100:2026040100:monthly": {
+    "title": "1992_New_York_Yankees_season",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/1992_New_York_Yankees_season/monthly/2025050100/2026040100",
+    "ok": false,
+    "views_12m": null,
+    "months": 0,
+    "error": "URLError(ConnectionResetError(10054, '远程主机强迫关闭了一个现有的连接。', None, 10054, None))"
+  },
+  "enwiki:The_Hughleys:2025050100:2026040100:monthly": {
+    "title": "The_Hughleys",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/The_Hughleys/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 43763,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5312
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 3585
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 3670
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 4400
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 3705
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 3698
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 4762
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 3701
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 3946
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 3395
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 3484
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 105
+      }
+    ]
+  },
+  "enwiki:Barrie:2025050100:2026040100:monthly": {
+    "title": "Barrie",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Barrie/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 94462,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 8866
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 8801
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 9121
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 9842
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 10745
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 8351
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 7550
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 7286
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 8919
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 7040
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 7684
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 257
+      }
+    ]
+  },
+  "enwiki:2016–17_SHL_season:2025050100:2026040100:monthly": {
+    "title": "2016–17_SHL_season",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2016%E2%80%9317_SHL_season/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 983,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 61
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 51
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 71
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 67
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 113
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 97
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 105
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 80
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 97
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 104
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 134
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 3
+      }
+    ]
+  },
+  "enwiki:Fleet_Marine_Force:2025050100:2026040100:monthly": {
+    "title": "Fleet_Marine_Force",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Fleet_Marine_Force/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 28137,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 2546
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 2762
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 2507
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 2552
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 2259
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 2603
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2861
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 2429
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 2282
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1793
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 3455
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 88
+      }
+    ]
+  },
+  "enwiki:Aulong_(state_constituency):2025050100:2026040100:monthly": {
+    "title": "Aulong_(state_constituency)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Aulong_%28state_constituency%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 1216,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 83
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 97
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 87
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 97
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 97
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 125
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 150
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 127
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 102
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 122
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 127
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 2
+      }
+    ]
+  },
+  "enwiki:French_occupation_of_Malta:2025050100:2026040100:monthly": {
+    "title": "French_occupation_of_Malta",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/French_occupation_of_Malta/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 21543,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1995
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 3849
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1594
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1964
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 2185
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1868
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1715
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1659
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1524
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1566
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 1572
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 52
+      }
+    ]
+  },
+  "enwiki:Three_Sisters_(play):2025050100:2026040100:monthly": {
+    "title": "Three_Sisters_(play)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Three_Sisters_%28play%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 122687,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 11637
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 7887
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 8950
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 9868
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 8528
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 28224
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 11115
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 8537
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 9235
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 8543
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 9874
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 289
+      }
+    ]
+  },
+  "enwiki:Idaho's_congressional_delegations:2025050100:2026040100:monthly": {
+    "title": "Idaho's_congressional_delegations",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Idaho%27s_congressional_delegations/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 1606,
+    "months": 4,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2026010100",
+        "views": 178
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 672
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 731
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 25
+      }
+    ]
+  },
+  "enwiki:XXXTentacion_discography:2025050100:2026040100:monthly": {
+    "title": "XXXTentacion_discography",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/XXXTentacion_discography/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 195805,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 22795
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 18714
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 16872
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 18678
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 22351
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 22888
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 20600
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 20283
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 11268
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 8596
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 12323
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 437
+      }
+    ]
+  },
+  "enwiki:Bad_Day_(Daniel_Powter_song):2025050100:2026040100:monthly": {
+    "title": "Bad_Day_(Daniel_Powter_song)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Bad_Day_%28Daniel_Powter_song%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 85613,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 8880
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 7681
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 8047
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 9773
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 7654
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 7752
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 6940
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 6635
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 8087
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 6389
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 7562
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 213
+      }
+    ]
+  },
+  "enwiki:APAN_Star_Awards:2025050100:2026040100:monthly": {
+    "title": "APAN_Star_Awards",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/APAN_Star_Awards/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 19492,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1731
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 961
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1575
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1162
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1069
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1263
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2570
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 5479
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1898
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 860
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 904
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 20
+      }
+    ]
+  },
+  "enwiki:2008_Montana_gubernatorial_election:2025050100:2026040100:monthly": {
+    "title": "2008_Montana_gubernatorial_election",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2008_Montana_gubernatorial_election/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 12225,
+    "months": 12,
+    "error": "HTTP 429: Too Many Requests",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 955
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 914
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1104
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1232
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1010
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 997
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1165
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1088
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1201
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 821
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 1697
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 41
+      }
+    ]
+  },
+  "enwiki:Leatherman:2025050100:2026040100:monthly": {
+    "title": "Leatherman",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Leatherman/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 53084,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5158
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 4958
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 5287
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 5209
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 5754
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 5199
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 4839
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 4597
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 4253
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 3618
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 4066
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 146
+      }
+    ]
+  },
+  "enwiki:Murum_(state_constituency):2025050100:2026040100:monthly": {
+    "title": "Murum_(state_constituency)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Murum_%28state_constituency%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 430,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 25
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 30
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 36
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 42
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 53
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 46
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 58
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 38
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 27
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 38
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 36
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 1
+      }
+    ]
+  },
+  "enwiki:Kehlani:2025050100:2026040100:monthly": {
+    "title": "Kehlani",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Kehlani/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 994423,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 64772
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 65478
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 76519
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 74272
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 87224
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 89103
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 101642
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 98542
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 94458
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 139416
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 100374
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 2623
+      }
+    ]
+  },
+  "enwiki:Pain_in_crustaceans:2025050100:2026040100:monthly": {
+    "title": "Pain_in_crustaceans",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Pain_in_crustaceans/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 38591,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 4550
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 3625
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 3623
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 3503
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 3430
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 3227
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 3108
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 3880
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 4540
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2301
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 2716
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 88
+      }
+    ]
+  },
+  "enwiki:Russell_Senate_Office_Building:2025050100:2026040100:monthly": {
+    "title": "Russell_Senate_Office_Building",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Russell_Senate_Office_Building/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 20223,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1789
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 2075
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 2014
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1485
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1769
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1995
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1976
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1407
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1544
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2019
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 2078
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 72
+      }
+    ]
+  },
+  "enwiki:Treyarch:2025050100:2026040100:monthly": {
+    "title": "Treyarch",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Treyarch/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 120517,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 8419
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 10945
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 9253
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 12407
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 9483
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 11369
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 18959
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 16157
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 9163
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 6920
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 7187
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 255
+      }
+    ]
+  },
+  "enwiki:List_of_recessions_in_the_United_States:2025050100:2026040100:monthly": {
+    "title": "List_of_recessions_in_the_United_States",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/List_of_recessions_in_the_United_States/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 208292,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 26668
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 17176
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 18852
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 22820
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 21416
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 20592
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 19278
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 15605
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 14010
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 13393
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 17865
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 617
+      }
+    ]
+  },
+  "enwiki:Gigantour:2025050100:2026040100:monthly": {
+    "title": "Gigantour",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Gigantour/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 11980,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1103
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 934
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1169
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1667
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 975
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1076
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 963
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 823
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1276
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1141
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 821
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 32
+      }
+    ]
+  },
+  "enwiki:Turkish_diaspora:2025050100:2026040100:monthly": {
+    "title": "Turkish_diaspora",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Turkish_diaspora/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 50934,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 4901
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 4861
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 4942
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 4863
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 4703
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 4493
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 4618
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 4731
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 4587
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 3822
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 4280
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 133
+      }
+    ]
+  },
+  "enwiki:Follow-on:2025050100:2026040100:monthly": {
+    "title": "Follow-on",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Follow-on/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 55129,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 2882
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 3610
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 14745
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 2088
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 819
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 13840
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 6812
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 6691
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1717
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1033
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 864
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 28
+      }
+    ]
+  },
+  "enwiki:California_State_University,_Chico:2025050100:2026040100:monthly": {
+    "title": "California_State_University,_Chico",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/California_State_University%2C_Chico/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 46711,
+    "months": 12,
+    "error": "HTTP 429: Too Many Requests",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5035
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 3865
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 4002
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 4970
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 4342
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 4538
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 4695
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 4185
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 4088
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 3253
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 3613
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 125
+      }
+    ]
+  },
+  "enwiki:FC_Gomel:2025050100:2026040100:monthly": {
+    "title": "FC_Gomel",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/FC_Gomel/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 11728,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1067
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1125
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1258
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1440
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1029
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 998
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1077
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 931
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 898
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 892
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 987
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 26
+      }
+    ]
+  },
+  "enwiki:Coal_gas:2025050100:2026040100:monthly": {
+    "title": "Coal_gas",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Coal_gas/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 53647,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5018
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 4253
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 4749
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 5063
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 4647
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 4665
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 5325
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 4902
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 5110
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 4227
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 5547
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 141
+      }
+    ]
+  },
+  "enwiki:BFC_Siófok:2025050100:2026040100:monthly": {
+    "title": "BFC_Siófok",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/BFC_Si%C3%B3fok/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 3699,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 349
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 328
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 347
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 410
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 372
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 267
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 387
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 263
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 287
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 344
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 331
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 14
+      }
+    ]
+  },
+  "enwiki:Eudromaeosauria:2025050100:2026040100:monthly": {
+    "title": "Eudromaeosauria",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Eudromaeosauria/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 22113,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1852
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1903
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 2851
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 2341
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1930
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 2034
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2019
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1834
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1961
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1487
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 1857
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 44
+      }
+    ]
+  },
+  "enwiki:Nevada_Wolf_Pack_men's_basketball:2025050100:2026040100:monthly": {
+    "title": "Nevada_Wolf_Pack_men's_basketball",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Nevada_Wolf_Pack_men%27s_basketball/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 21136,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1520
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1619
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 984
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 831
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 917
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1248
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 2173
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1638
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 2659
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 2180
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 5311
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 56
+      }
+    ]
+  },
+  "enwiki:2017_in_video_games:2025050100:2026040100:monthly": {
+    "title": "2017_in_video_games",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/2017_in_video_games/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 52397,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 5382
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 4996
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 4300
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 4606
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 5213
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 4899
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 4010
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 5161
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 4937
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 4472
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 4289
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 132
+      }
+    ]
+  },
+  "enwiki:TVA_(Canadian_TV_network):2025050100:2026040100:monthly": {
+    "title": "TVA_(Canadian_TV_network)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/TVA_%28Canadian_TV_network%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 15575,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 1653
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 1347
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 1420
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1419
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 1327
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 1600
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 1492
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 1375
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1403
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1221
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 1266
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 52
+      }
+    ]
+  },
+  "enwiki:Byomkesh_Bakshi:2025050100:2026040100:monthly": {
+    "title": "Byomkesh_Bakshi",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Byomkesh_Bakshi/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 94269,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 7138
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 8358
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 8289
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 9697
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 7401
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 8145
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 8000
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 11128
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 11314
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 6814
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 7756
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 229
+      }
+    ]
+  },
+  "enwiki:List_of_United_States_representatives_from_Arkansas:2025050100:2026040100:monthly": {
+    "title": "List_of_United_States_representatives_from_Arkansas",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/List_of_United_States_representatives_from_Arkansas/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 7849,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 731
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 673
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 871
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 944
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 712
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 739
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 835
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 644
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 740
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 433
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 509
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 18
+      }
+    ]
+  },
+  "enwiki:1973–74_in_English_football:2025050100:2026040100:monthly": {
+    "title": "1973–74_in_English_football",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/1973%E2%80%9374_in_English_football/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 12115,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 2439
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 905
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 761
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 1071
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 863
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 918
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 764
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 858
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 1221
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 1112
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 1171
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 32
+      }
+    ]
+  },
+  "enwiki:Hocus_Pocus_(1993_film):2025050100:2026040100:monthly": {
+    "title": "Hocus_Pocus_(1993_film)",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Hocus_Pocus_%281993_film%29/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 602842,
+    "months": 12,
+    "error": "HTTP 429: Too Many Requests",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 24941
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 23982
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 30419
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 36962
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 54059
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 271347
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 72695
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 27092
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 22192
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 17749
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 20721
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 683
+      }
+    ]
+  },
+  "enwiki:Colson_Whitehead:2025050100:2026040100:monthly": {
+    "title": "Colson_Whitehead",
+    "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia.org/all-access/user/Colson_Whitehead/monthly/2025050100/2026040100",
+    "ok": true,
+    "views_12m": 144475,
+    "months": 12,
+    "error": "",
+    "monthly": [
+      {
+        "timestamp": "2025050100",
+        "views": 16565
+      },
+      {
+        "timestamp": "2025060100",
+        "views": 13198
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 13646
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 13343
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 11512
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 12389
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 11644
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 11705
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 14228
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 13022
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 12806
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 417
+      }
+    ]
+  }
+}

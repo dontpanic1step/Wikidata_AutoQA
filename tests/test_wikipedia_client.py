@@ -8,7 +8,7 @@ from urllib.error import HTTPError
 
 from test_support import ROOT  # noqa: F401
 
-from wikidata_simpleqa.wikipedia_client import WikipediaClient
+from wikidata_simpleqa.wikipedia_client import WikipediaClient, build_pageviews_api_url
 
 
 def _http_429(*, retry_after: str = "") -> HTTPError:
@@ -24,6 +24,13 @@ def _http_429(*, retry_after: str = "") -> HTTPError:
 
 
 class WikipediaClientTests(unittest.TestCase):
+    def test_build_pageviews_api_url_encodes_title_and_window(self) -> None:
+        url = build_pageviews_api_url("2026 FIFA World Cup", start="2025050100", end="2026040100")
+
+        self.assertIn("/metrics/pageviews/per-article/en.wikipedia/all-access/user/", url)
+        self.assertIn("2026_FIFA_World_Cup", url)
+        self.assertTrue(url.endswith("/monthly/2025050100/2026040100"))
+
     def test_http_429_extends_shared_backoff_and_honors_retry_after(self) -> None:
         client = WikipediaClient(
             user_agent="test-agent",

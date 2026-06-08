@@ -1,0 +1,268 @@
+{
+  "base": "outputs\\recipe_segments\\wikipedia_stream_recipe_2000_each_answer_type_single_fact_2026_05_24_bigbatch_fresh",
+  "sample_size_per_answer_type_label": 10,
+  "seed": 42,
+  "pageview_metric": {
+    "project": "en.wikipedia.org",
+    "agent": "all-access",
+    "user_type": "user",
+    "granularity": "monthly",
+    "start_month": "2025050100",
+    "end_month": "2026040100",
+    "derived_metric": "average monthly pageviews over 2025-05 through 2026-04"
+  },
+  "negative_rejection_reasons": [
+    "search_longtail_verifier_rejected",
+    "second_stage_grading_accuracy_threshold_exceeded"
+  ],
+  "rejection_reason_counts": {
+    "Date\trewrite_guard_rejected": 49,
+    "Date\tsearch_longtail_verifier_rejected": 84,
+    "Date\tsecond_stage_grading_accuracy_threshold_exceeded": 454,
+    "Date\tshared_validation_failed": 56,
+    "Date\twikipedia_infobox_generation_error:IncompleteRead": 3,
+    "Date\twikipedia_infobox_live_table_scope": 66,
+    "Date\twikipedia_infobox_llm_discarded": 273,
+    "Date\twikipedia_infobox_no_tables": 74,
+    "Date\twikipedia_infobox_table_filter_rejected": 788,
+    "Date\twikipedia_infobox_table_score_below_minimum": 14,
+    "Number\trewrite_guard_rejected": 199,
+    "Number\tsearch_longtail_verifier_rejected": 53,
+    "Number\tsecond_stage_grading_accuracy_threshold_exceeded": 230,
+    "Number\tshared_validation_failed": 33,
+    "Number\twikipedia_infobox_answer_type_not_allowed": 103,
+    "Number\twikipedia_infobox_live_table_scope": 58,
+    "Number\twikipedia_infobox_llm_discarded": 90,
+    "Number\twikipedia_infobox_no_tables": 66,
+    "Number\twikipedia_infobox_table_filter_rejected": 676,
+    "Number\twikipedia_infobox_table_score_below_minimum": 10,
+    "Other\trewrite_guard_rejected": 87,
+    "Other\tsecond_stage_grading_accuracy_threshold_exceeded": 267,
+    "Other\tshared_validation_failed": 1,
+    "Other\twikipedia_infobox_answer_type_not_allowed": 2,
+    "Other\twikipedia_infobox_live_table_scope": 14,
+    "Other\twikipedia_infobox_llm_discarded": 25,
+    "Other\twikipedia_infobox_llm_missing_question_or_answer": 1,
+    "Other\twikipedia_infobox_single_fact_list_answer": 5,
+    "Other\twikipedia_infobox_table_filter_rejected": 295,
+    "Person\trewrite_guard_rejected": 104,
+    "Person\tsearch_longtail_verifier_rejected": 28,
+    "Person\tsecond_stage_grading_accuracy_threshold_exceeded": 447,
+    "Person\tshared_validation_failed": 81,
+    "Person\twikipedia_infobox_live_table_scope": 68,
+    "Person\twikipedia_infobox_llm_discarded": 419,
+    "Person\twikipedia_infobox_llm_missing_question_or_answer": 1,
+    "Person\twikipedia_infobox_no_tables": 1,
+    "Person\twikipedia_infobox_single_fact_list_answer": 14,
+    "Person\twikipedia_infobox_table_filter_rejected": 728,
+    "Person\twikipedia_infobox_table_score_below_minimum": 3,
+    "Place\trewrite_guard_rejected": 172,
+    "Place\tsearch_longtail_verifier_rejected": 28,
+    "Place\tsecond_stage_grading_accuracy_threshold_exceeded": 560,
+    "Place\tshared_validation_failed": 58,
+    "Place\twikipedia_infobox_answer_type_not_allowed": 13,
+    "Place\twikipedia_infobox_live_table_scope": 61,
+    "Place\twikipedia_infobox_llm_discarded": 200,
+    "Place\twikipedia_infobox_llm_missing_question_or_answer": 2,
+    "Place\twikipedia_infobox_no_tables": 2,
+    "Place\twikipedia_infobox_single_fact_list_answer": 7,
+    "Place\twikipedia_infobox_table_filter_rejected": 739,
+    "Place\twikipedia_infobox_table_score_below_minimum": 8
+  },
+  "sample_counts": {
+    "Date\tlong_tail": 10,
+    "Date\tnot_long_tail": 10,
+    "Number\tlong_tail": 10,
+    "Number\tnot_long_tail": 10,
+    "Other\tlong_tail": 10,
+    "Other\tnot_long_tail": 10,
+    "Person\tlong_tail": 10,
+    "Person\tnot_long_tail": 10,
+    "Place\tlong_tail": 10,
+    "Place\tnot_long_tail": 10
+  },
+  "by_answer_type_label": {
+    "Date\tlong_tail": {
+      "n": 10,
+      "mean": 9075.616666666667,
+      "median": 2101.625,
+      "p25": 1688.3333333333333,
+      "p75": 9952.479166666666,
+      "min": 15.666666666666666,
+      "max": 44826.583333333336
+    },
+    "Date\tnot_long_tail": {
+      "n": 10,
+      "mean": 31793.550000000003,
+      "median": 12567.583333333334,
+      "p25": 5031.3125,
+      "p75": 34882.6875,
+      "min": 403.25,
+      "max": 167545.08333333334
+    },
+    "Number\tlong_tail": {
+      "n": 10,
+      "mean": 16961.833333333332,
+      "median": 4056.666666666667,
+      "p25": 2456.8541666666665,
+      "p75": 7903.770833333333,
+      "min": 728.0,
+      "max": 109773.08333333333
+    },
+    "Number\tnot_long_tail": {
+      "n": 10,
+      "mean": 15939.883333333333,
+      "median": 10760.541666666668,
+      "p25": 6313.8125,
+      "p75": 21350.354166666668,
+      "min": 1285.3333333333333,
+      "max": 47653.0
+    },
+    "Other\tlong_tail": {
+      "n": 10,
+      "mean": 2318.9666666666667,
+      "median": 2146.375,
+      "p25": 567.875,
+      "p75": 3798.6041666666665,
+      "min": 31.0,
+      "max": 5403.666666666667
+    },
+    "Other\tnot_long_tail": {
+      "n": 10,
+      "mean": 3261.425,
+      "median": 1213.9166666666667,
+      "p25": 886.7083333333334,
+      "p75": 5648.645833333333,
+      "min": 54.0,
+      "max": 9784.416666666666
+    },
+    "Person\tlong_tail": {
+      "n": 9,
+      "mean": 2366.8425925925926,
+      "median": 643.0833333333334,
+      "p25": 91.0,
+      "p75": 3646.9166666666665,
+      "min": 46.916666666666664,
+      "max": 7871.833333333333
+    },
+    "Person\tnot_long_tail": {
+      "n": 10,
+      "mean": 12584.333333333332,
+      "median": 3109.4583333333335,
+      "p25": 1170.1458333333333,
+      "p75": 9451.541666666666,
+      "min": 35.833333333333336,
+      "max": 82868.58333333333
+    },
+    "Place\tlong_tail": {
+      "n": 10,
+      "mean": 5147.933333333333,
+      "median": 4068.541666666667,
+      "p25": 2067.9166666666665,
+      "p75": 4563.208333333333,
+      "min": 977.3333333333334,
+      "max": 17357.666666666668
+    },
+    "Place\tnot_long_tail": {
+      "n": 10,
+      "mean": 8137.25,
+      "median": 1802.0416666666665,
+      "p25": 1081.6666666666667,
+      "p75": 6983.416666666667,
+      "min": 308.25,
+      "max": 50236.833333333336
+    }
+  },
+  "by_answer_type": {
+    "Date": {
+      "threshold_eval": {
+        "threshold_avg_monthly": 2798.4166666666665,
+        "tp": 7,
+        "fp": 1,
+        "tn": 9,
+        "fn": 3,
+        "recall_long_tail": 0.7,
+        "specificity_not_long_tail": 0.9,
+        "precision_long_tail": 0.875,
+        "balanced_accuracy": 0.8
+      },
+      "auc_not_longtail_has_higher_pageviews": 0.75,
+      "point_biserial_corr_longtail_vs_log10_pageviews": -0.40599021555644577
+    },
+    "Number": {
+      "threshold_eval": {
+        "threshold_avg_monthly": 5001.583333333333,
+        "tp": 7,
+        "fp": 2,
+        "tn": 8,
+        "fn": 3,
+        "recall_long_tail": 0.7,
+        "specificity_not_long_tail": 0.8,
+        "precision_long_tail": 0.7777777777777778,
+        "balanced_accuracy": 0.75
+      },
+      "auc_not_longtail_has_higher_pageviews": 0.7,
+      "point_biserial_corr_longtail_vs_log10_pageviews": -0.2708009746651219
+    },
+    "Other": {
+      "threshold_eval": {
+        "threshold_avg_monthly": 5403.666666666667,
+        "tp": 10,
+        "fp": 7,
+        "tn": 3,
+        "fn": 0,
+        "recall_long_tail": 1.0,
+        "specificity_not_long_tail": 0.3,
+        "precision_long_tail": 0.5882352941176471,
+        "balanced_accuracy": 0.65
+      },
+      "auc_not_longtail_has_higher_pageviews": 0.57,
+      "point_biserial_corr_longtail_vs_log10_pageviews": -0.06060342037773443
+    },
+    "Person": {
+      "threshold_eval": {
+        "threshold_avg_monthly": 643.0833333333334,
+        "tp": 5,
+        "fp": 2,
+        "tn": 8,
+        "fn": 4,
+        "recall_long_tail": 0.5555555555555556,
+        "specificity_not_long_tail": 0.8,
+        "precision_long_tail": 0.7142857142857143,
+        "balanced_accuracy": 0.6777777777777778
+      },
+      "auc_not_longtail_has_higher_pageviews": 0.6777777777777778,
+      "point_biserial_corr_longtail_vs_log10_pageviews": -0.34979171808601206
+    },
+    "Place": {
+      "threshold_eval": {
+        "threshold_avg_monthly": 4594.083333333333,
+        "tp": 8,
+        "fp": 7,
+        "tn": 3,
+        "fn": 2,
+        "recall_long_tail": 0.8,
+        "specificity_not_long_tail": 0.3,
+        "precision_long_tail": 0.5333333333333333,
+        "balanced_accuracy": 0.55
+      },
+      "auc_not_longtail_has_higher_pageviews": 0.43,
+      "point_biserial_corr_longtail_vs_log10_pageviews": 0.11952503827554305
+    }
+  },
+  "overall": {
+    "threshold_eval": {
+      "threshold_avg_monthly": 5001.583333333333,
+      "tp": 38,
+      "fp": 25,
+      "tn": 25,
+      "fn": 11,
+      "recall_long_tail": 0.7755102040816326,
+      "specificity_not_long_tail": 0.5,
+      "precision_long_tail": 0.6031746031746031,
+      "balanced_accuracy": 0.6377551020408163
+    },
+    "auc_not_longtail_has_higher_pageviews": 0.6181632653061224,
+    "point_biserial_corr_longtail_vs_log10_pageviews": -0.19774374501886233
+  }
+}

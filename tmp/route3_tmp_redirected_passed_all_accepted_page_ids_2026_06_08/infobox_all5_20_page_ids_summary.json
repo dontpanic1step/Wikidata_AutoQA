@@ -1,0 +1,700 @@
+{
+  "start_stage": "generate",
+  "start_from_endpoint": false,
+  "endpoint_resume": {
+    "enabled": false,
+    "accepted_records_loaded": 0,
+    "rejected_records_loaded": 0,
+    "final_decisions_loaded": 0,
+    "skipped_malformed_lines": 0,
+    "skipped_line_details": [],
+    "accepted_ids_synced": 0,
+    "rejected_ids_synced": 0
+  },
+  "streaming_mode": "page_id_stream",
+  "stream_page_source": "table-search",
+  "stream_search_queries": [
+    "insource:\"wikitable\""
+  ],
+  "stream_broad_table_search_enabled": false,
+  "stream_search_offsets": {
+    "insource:\"wikitable\"": 200
+  },
+  "stream_excluded_page_ids": 529,
+  "stream_exclude_page_id_files": [
+    "tmp\\route3_tmp_redirected_passed_all_accepted_page_ids_2026_06_08\\accepted_page_ids.json"
+  ],
+  "run_date": "2026-06-08",
+  "stream_state": "tmp\\route3_tmp_redirected_passed_all_accepted_page_ids_2026_06_08\\infobox_all5_20_page_ids_state.json",
+  "stream_state_stats": {
+    "used": 549,
+    "in_progress": 0,
+    "accepted": 0,
+    "rejected": 20,
+    "rerun_pool": 0,
+    "table_search_queries": 1
+  },
+  "stream_state_reset": true,
+  "stream_rerun_pool_only": false,
+  "stream_rerun_pool_limit": 0,
+  "stream_rerun_pool_seed_files": [],
+  "stream_prefer_rerun_pool": false,
+  "seeded_rerun_pool_ids": [],
+  "seeded_rerun_pool_ids_freed_on_completion": [],
+  "stream_auto_rerun_once": false,
+  "auto_rerun_pool_ids_at_start": [],
+  "auto_rerun_processed_page_ids": [],
+  "auto_rerun_attempted_page_ids": 0,
+  "rerun_pool_ids_after_run": [],
+  "rerun_pool_failure_reasons_after_run": {},
+  "rerun_pool_error_details_after_run": {},
+  "recovered_stale_in_progress_ids": [],
+  "page_id_bounds": {
+    "min": 1,
+    "max": 80000000
+  },
+  "random_seed": 1707206937,
+  "random_seed_was_explicit": false,
+  "record_limit": 20,
+  "record_limit_remaining_at_start": 20,
+  "stream_batch_size": 5,
+  "stream_discovery_max_retries": 5,
+  "stream_discovery_retry_backoff_seconds": 10.0,
+  "stream_discovery_retry_max_sleep_seconds": 60.0,
+  "wikipedia_429_backoff_seconds": 30.0,
+  "wikipedia_429_max_backoff_seconds": 300.0,
+  "wikipedia_429_recovery_seconds": 120.0,
+  "stream_page_workers": 2,
+  "wikipedia_concurrency_limit": 2,
+  "duckduckgo_concurrency_limit": 2,
+  "openrouter_generation_rewrite_concurrency_limit": 2,
+  "second_stage_concurrency_limit": 2,
+  "stream_accepted_target": 0,
+  "stream_accepted_target_remaining_at_start": 0,
+  "attempted_page_ids": 20,
+  "attempted_page_ids_unique": 20,
+  "page_ids": [
+    32611,
+    17416221,
+    9316,
+    22093,
+    5489,
+    199445,
+    21355232,
+    31740,
+    8083,
+    292259,
+    66958,
+    41853326,
+    60382764,
+    45367389,
+    105908,
+    22948,
+    55440889,
+    84952,
+    235916,
+    2924002
+  ],
+  "page_id_list_entries": [
+    {
+      "page_id": 5489,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 8083,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 9316,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 22093,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 22948,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 31740,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 32611,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 66958,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 84952,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 105908,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 199445,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 235916,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 292259,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 2924002,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 17416221,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 21355232,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 41853326,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 45367389,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 55440889,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 60382764,
+      "answer_type": "",
+      "table_type": ""
+    }
+  ],
+  "accepted": 0,
+  "accepted_total": 0,
+  "rejected": 20,
+  "rejected_total": 20,
+  "rerun": 0,
+  "wall_clock_seconds": 105.8671,
+  "output_path": "tmp\\route3_tmp_redirected_passed_all_accepted_page_ids_2026_06_08\\infobox_all5_20_page_ids_accepted.jsonl",
+  "rejected_output_path": "tmp\\route3_tmp_redirected_passed_all_accepted_page_ids_2026_06_08\\infobox_all5_20_page_ids_rejected.jsonl",
+  "summary_output": "tmp\\route3_tmp_redirected_passed_all_accepted_page_ids_2026_06_08\\infobox_all5_20_page_ids_summary.json",
+  "walkthrough_output": "tmp\\route3_tmp_redirected_passed_all_accepted_page_ids_2026_06_08\\infobox_all5_20_page_ids_walkthrough.md",
+  "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "rest_summary_fallback_enabled": false,
+  "small_model": "openai/gpt-4.1-mini",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": false,
+  "duckduckgo_top_k": 5,
+  "duckduckgo_parallel_queries": 3,
+  "generated_search_query_count": 2,
+  "min_table_score": 0.0,
+  "route3_reasoning_types": [
+    "single_fact"
+  ],
+  "route3_answer_types": [],
+  "route3_extra_prompts": [],
+  "route3_table_filter_modes": [
+    "no_external_links_tables",
+    "no_horizontal_companion_tables",
+    "no_picture_heavy_tables",
+    "no_incomplete_tables",
+    "not_number_dominant",
+    "no_social_science_research"
+  ],
+  "route3_table_source_types": [
+    "infobox"
+  ],
+  "route3_prose_leakage_scoring_enabled": true,
+  "route3_llm_choose_table": false,
+  "route3_answer_type_mode": "all5",
+  "route3_page_archive_dir": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\cache\\route3_pages",
+  "route3_pageview_prefilter_enabled": true,
+  "route3_pageview_window_months": 12,
+  "route3_max_monthly_average_pageviews": 5000.0,
+  "route3_max_underfilled_monthly_pageviews": 10000.0,
+  "route3_pageview_unavailable_policy": "allow",
+  "route3_infobox_max_removed_row_rate": 0.6,
+  "route3_infobox_min_remaining_rows": 5,
+  "compact_output": false,
+  "compact_output_ignored": false,
+  "compact_rejected_output": false,
+  "compact_rejected_output_ignored": false,
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "entered": 20,
+      "failed": 0,
+      "survived": 20,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "entered": 20,
+      "failed": 0,
+      "survived": 20,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Page extraction, table grading, and QA generation",
+      "entered": 20,
+      "failed": 20,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared route-aware validation",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "entered": 0,
+      "failed": 0,
+      "survived": 0,
+      "survival_rate_from_layer_input": 0.0,
+      "cumulative_survival_rate": 0.0
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_pageview_prefilter_rejected:monthly_average_pageviews>5000.0000",
+      "count": 20
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 20,
+      "total": 0.0079,
+      "average": 0.0004,
+      "max": 0.0009
+    },
+    "number_reference_margin_seconds": {
+      "count": 20,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "page_fetch_seconds": {
+      "count": 20,
+      "total": 1.8572,
+      "average": 0.0929,
+      "max": 0.2221
+    },
+    "pageview_prefilter_seconds": {
+      "count": 20,
+      "total": 163.9782,
+      "average": 8.1989,
+      "max": 62.6307
+    },
+    "rewrite_seconds": {
+      "count": 20,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "table_parse_seconds": {
+      "count": 20,
+      "total": 31.4078,
+      "average": 1.5704,
+      "max": 3.8971
+    },
+    "total_generation_seconds": {
+      "count": 20,
+      "total": 202.7334,
+      "average": 10.1367,
+      "max": 63.9535
+    },
+    "total_processing_seconds": {
+      "count": 20,
+      "total": 0.0079,
+      "average": 0.0004,
+      "max": 0.0009
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "page_fetch_seconds": 1.8572,
+    "table_parse_seconds": 31.4078,
+    "pageview_prefilter_seconds": 163.9782,
+    "total_generation_seconds": 202.7334,
+    "rewrite_seconds": 0.0,
+    "number_reference_margin_seconds": 0.0,
+    "total_processing_seconds": 0.0079,
+    "candidate_processing_seconds": 0.0079
+  },
+  "telemetry": {
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=0&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 21
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=17416221",
+        "cache_hit": true,
+        "duration_ms": 66
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=32611",
+        "cache_hit": true,
+        "duration_ms": 182
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/South_Africa/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 2290,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Vietnam_War/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1778,
+        "attempts": 2,
+        "used_direct_fallback": false,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=9316",
+        "cache_hit": true,
+        "duration_ms": 96
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=22093",
+        "cache_hit": true,
+        "duration_ms": 221
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/England/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1865,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/National_Basketball_Association/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1968,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=5489",
+        "cache_hit": true,
+        "duration_ms": 79
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Chile/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1723,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=50&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 23
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=21355232",
+        "cache_hit": true,
+        "duration_ms": 39
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=199445",
+        "cache_hit": true,
+        "duration_ms": 177
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/List_of_national_parks_of_the_United_States/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 2681,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=31740",
+        "cache_hit": true,
+        "duration_ms": 112
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Wayne_Rooney/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 2444,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=8083",
+        "cache_hit": true,
+        "duration_ms": 76
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/University_of_Michigan/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 2292,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=292259",
+        "cache_hit": true,
+        "duration_ms": 52
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Dr._Dre/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 2143,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Deutsche_Welle/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1918,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=100&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 28
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=66958",
+        "cache_hit": true,
+        "duration_ms": 54
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=41853326",
+        "cache_hit": true,
+        "duration_ms": 140
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Renminbi/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "rate_limit_wait_seconds": 59.5374,
+        "event": "wikipedia_429_shared_wait"
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Renminbi/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 62507,
+        "attempts": 4,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Inter_Miami_CF/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "rate_limit_wait_seconds": 59.354,
+        "event": "wikipedia_429_shared_wait"
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Inter_Miami_CF/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 62421,
+        "attempts": 4,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=60382764",
+        "cache_hit": true,
+        "duration_ms": 30
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=45367389",
+        "cache_hit": true,
+        "duration_ms": 105
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Greater_London/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1739,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=105908",
+        "cache_hit": true,
+        "duration_ms": 35
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Reiwa_era/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1992,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Ford_Mustang/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1836,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=150&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 21
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=55440889",
+        "cache_hit": true,
+        "duration_ms": 38
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=22948",
+        "cache_hit": true,
+        "duration_ms": 152
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Pixel_2/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 2366,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=84952",
+        "cache_hit": true,
+        "duration_ms": 38
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Poseidon/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1986,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=235916",
+        "cache_hit": true,
+        "duration_ms": 68
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Marvelous_Marvin_Hagler/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 2213,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=2924002",
+        "cache_hit": true,
+        "duration_ms": 43
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Jada_Pinkett_Smith/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1864,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      },
+      {
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Electronic_dance_music/monthly/2025060100/2026050100",
+        "cache_hit": false,
+        "duration_ms": 1939,
+        "attempts": 3,
+        "used_direct_fallback": true,
+        "request_type": "pageviews"
+      }
+    ],
+    "search": []
+  }
+}

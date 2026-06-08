@@ -84,3 +84,61 @@ def test_judge_prediction_answer_does_not_fall_back_to_content() -> None:
     )
     assert module.prediction_answer({"predicted_answer": "legacy answer"}) == "legacy answer"
     assert module.prediction_answer({"content": "do not extract this"}) == ""
+
+
+def test_judge_adapts_raw_response_text_record() -> None:
+    module = load_script_module(
+        "judge_openrouter_batch_predictions_raw_text",
+        "scripts/judge_openrouter_batch_predictions.py",
+    )
+    record = {
+        "id": "q1::m::0",
+        "question": "Question?",
+        "reference_answer": "Gold",
+        "model": "example/model",
+        "response_text": "Predicted",
+        "repeat_index": 0,
+    }
+
+    predictions = module.ensure_predictions(record)
+
+    assert module.gold_target_answer(record) == "Gold"
+    assert predictions == [
+        {
+            "model": "example/model",
+            "answer": "Predicted",
+            "repeat_index": 0,
+        }
+    ]
+
+
+def test_judge_adapts_raw_openrouter_response_record() -> None:
+    module = load_script_module(
+        "judge_openrouter_batch_predictions_raw_response",
+        "scripts/judge_openrouter_batch_predictions.py",
+    )
+    record = {
+        "id": "q1::m::1",
+        "question": "Question?",
+        "gold_answer": "Gold",
+        "model": "example/model",
+        "response": {"choices": [{"message": {"content": "Predicted from raw"}}]},
+    }
+
+    predictions = module.ensure_predictions(record)
+
+    assert module.gold_target_answer(record) == "Gold"
+    assert predictions[0]["answer"] == "Predicted from raw"
+
+
+def test_judge_only_uses_top_level_answer_as_prediction_with_explicit_gold() -> None:
+    module = load_script_module(
+        "judge_openrouter_batch_predictions_top_answer",
+        "scripts/judge_openrouter_batch_predictions.py",
+    )
+
+    ambiguous = {"question": "Question?", "answer": "Gold"}
+    explicit = {"question": "Question?", "reference_answer": "Gold", "answer": "Predicted"}
+
+    assert module.ensure_predictions(ambiguous) == []
+    assert module.ensure_predictions(explicit)[0]["answer"] == "Predicted"

@@ -16,6 +16,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
+from wikidata_simpleqa.page_id_lists import PageIdListEntry
 from wikidata_simpleqa.wikipedia_client import (
     WikipediaClient,
     build_parse_api_url,
@@ -27,14 +28,17 @@ from wikidata_simpleqa.wikipedia_streaming import PageIdStreamState
 from wikidata_simpleqa.wikipedia_infobox_generator import (
     WikipediaInfoboxTableGenerator,
     WikipediaTable,
+    extract_first_paragraph,
     extract_non_table_prose,
     extract_wikipedia_tables,
     rank_wikipedia_tables,
+    _annotate_table_filter_modes,
     _normalize_answer_type,
     _normalize_generated_answer,
     _rejected_placeholder,
     _subject_anchor_context,
     _tie_completion_problem,
+    normalize_route3_table_source_types,
 )
 
 SCRIPTS = ROOT / "scripts"
@@ -43,6 +47,8 @@ if str(SCRIPTS) not in sys.path:
 
 from run_wikipedia_infobox_pipeline import (  # noqa: E402
     EndpointResumeState,
+    _accepted_output_records,
+    _apply_big_batch_mode,
     _candidate_from_record,
     _compact_accepted_record,
     _compact_rejected_record,
@@ -54,11 +60,16 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _load_urls,
     _remaining_after_endpoint,
     _record_reasoning_type,
+    _rejected_output_records,
+    _rerun_error_details_from_record,
     _reserve_stream_page_ids,
     _run_artifact_summary,
     _should_rerun_stream_rejection,
     _stream_rerun_pool_run_limit,
+    _stream_page_id_list_entries,
     _stream_search_queries,
+    _survival_by_layer,
+    _wikipedia_stream_record_id,
     _write_summary_and_manifest,
     _write_stream_walkthrough,
     UrlEntry,
@@ -67,10 +78,14 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
 
 FIXTURE_HTML = """
 <div class="mw-parser-output">
-<p>The 2026 FIFA World Cup is the 23rd FIFA World Cup. Venue capacities are not listed in prose.</p>
+<p>The 2026 FIFA World Cup is the 23rd FIFA World Cup. Table capacities are not listed in prose. Example event metadata names Jane Doe as a sample host.</p>
 <table class="infobox vevent">
   <tr><th colspan="2">Example event</th></tr>
   <tr><th>Edition</th><td>23rd</td></tr>
+  <tr><th>Example host</th><td>Jane Doe</td></tr>
+  <tr><th>Format</th><td>International tournament</td></tr>
+  <tr><th>Region</th><td>North America</td></tr>
+  <tr><th>Founded</th><td>1994</td></tr>
 </table>
 <h2><span class="mw-headline" id="Venues">Venues</span></h2>
 <table class="wikitable sortable">
@@ -83,7 +98,7 @@ FIXTURE_HTML = """
 """
 
 NO_PARAGRAPH_FIXTURE_HTML = FIXTURE_HTML.replace(
-    "<p>The 2026 FIFA World Cup is the 23rd FIFA World Cup. Venue capacities are not listed in prose.</p>",
+    "<p>The 2026 FIFA World Cup is the 23rd FIFA World Cup. Table capacities are not listed in prose. Example event metadata names Jane Doe as a sample host.</p>",
     "",
 )
 
@@ -226,6 +241,47 @@ class FakeSingleFactListLLMClient(FakeLLMClient):
         }"""
 
 
+class FakeAll5LLMClient(FakeLLMClient):
+    """Fake all5 output with two generated slots and three discards."""
+
+    def complete_text(self, prompt: str) -> str:
+        self.prompts.append(prompt)
+        return """{
+          "outputs": [
+            {
+              "answer_type": "Person",
+              "question": "Who is named as the sample host for the 23rd FIFA World Cup?",
+              "answer": "Jane Doe",
+              "answer_aliases": [],
+              "search_queries": ["23rd FIFA World Cup sample host field"],
+              "reasoning_type": "single_fact",
+              "derivation_summary": "Read the Example host field from the infobox."
+            },
+            {
+              "answer_type": "Place",
+              "discard_reason": "No stable place question is supported."
+            },
+            {
+              "answer_type": "Number",
+              "discard_reason": "No stable number question is supported."
+            },
+            {
+              "answer_type": "Date",
+              "question": "In what year was the 23rd FIFA World Cup record founded?",
+              "answer": "1994",
+              "answer_aliases": [],
+              "search_queries": ["23rd FIFA World Cup founded field"],
+              "reasoning_type": "single_fact",
+              "derivation_summary": "Read the Founded field from the infobox."
+            },
+            {
+              "answer_type": "Other",
+              "discard_reason": "No stable other-type question is supported."
+            }
+          ]
+        }"""
+
+
 class FakeSearchClient:
     """Search client that returns configured result rows."""
 
@@ -237,6 +293,16 @@ class FakeSearchClient:
     def search(self, query: str, *, max_results: int = 5):
         rows = self.results_by_query.get(query, [])[:max_results]
         return [type("SearchResult", (), row)() for row in rows]
+
+
+def _pageview_payload(views: int, *, months: int = 12) -> dict:
+    """Return a simple monthly pageview payload."""
+    return {
+        "items": [
+            {"timestamp": f"2025{month:02d}0100", "views": views}
+            for month in range(1, months + 1)
+        ]
+    }
 
 
 class WikipediaInfoboxGeneratorTests(unittest.TestCase):
@@ -569,6 +635,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             llm_client=FakeLLMClient(),
             record_limit=1,
             enable_rest_summary_fallback=True,
+            allowed_reasoning_types=("max",),
             table_filter_modes=(),
         )
 
@@ -577,7 +644,358 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(candidates[0].final_question, "Which stadium hosting the 23rd FIFA World Cup has the largest capacity?")
         self.assertEqual(candidates[0].source_metadata["first_paragraph"], "")
         self.assertIn("URLError", candidates[0].source_metadata["first_paragraph_fetch_error"])
-        self.assertIn("first_paragraph_fetch_seconds", candidates[0].source_metadata["phase_timings_seconds"])
+
+    def test_route3_page_archive_reuses_parse_and_pageview_payloads(self) -> None:
+        class ArchiveWikipediaClient(FakeWikipediaClient):
+            def __init__(self) -> None:
+                self.parse_calls = 0
+                self.pageview_calls = 0
+                self.request_events = []
+
+            def fetch_parse(self, title_or_url: str) -> dict:
+                self.parse_calls += 1
+                return super().fetch_parse(title_or_url)
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                self.pageview_calls += 1
+                return _pageview_payload(10)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first_client = ArchiveWikipediaClient()
+            first_generator = WikipediaInfoboxTableGenerator(
+                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+                wikipedia_client=first_client,
+                llm_client=FakeLLMClient(),
+                record_limit=1,
+                table_filter_modes=(),
+                page_archive_dir=Path(tmpdir),
+                pageview_prefilter_enabled=True,
+            )
+            first = first_generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+            second_client = ArchiveWikipediaClient()
+            second_generator = WikipediaInfoboxTableGenerator(
+                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+                wikipedia_client=second_client,
+                llm_client=FakeLLMClient(),
+                record_limit=1,
+                table_filter_modes=(),
+                page_archive_dir=Path(tmpdir),
+                pageview_prefilter_enabled=True,
+            )
+            second = second_generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+            archive_path = Path(second.source_metadata["route3_page_archive"]["archive_path"])
+            archive_payload = json.loads(archive_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(first_client.parse_calls, 1)
+        self.assertEqual(first_client.pageview_calls, 1)
+        self.assertEqual(second_client.parse_calls, 0)
+        self.assertEqual(second_client.pageview_calls, 0)
+        self.assertEqual(first.source_metadata["pageview_prefilter"]["decision"], "allow")
+        self.assertTrue(second.source_metadata["route3_page_archive"]["cache_hit"])
+        self.assertEqual(second.source_metadata["route3_page_archive"]["parse_fetch_status"], "archive_hit")
+        self.assertEqual(second.source_metadata["route3_page_archive"]["pageview_fetch_status"], "archive_hit")
+        self.assertIn("parsed_html", archive_payload)
+        self.assertIn("pageview", archive_payload)
+        self.assertEqual(archive_payload["pageview_prefilter"]["monthly_average"], 10.0)
+
+    def test_pageview_prefilter_disabled_by_default_records_disabled_metadata(self) -> None:
+        class NoPageviewWikipediaClient(FakeWikipediaClient):
+            def __init__(self) -> None:
+                self.pageview_calls = 0
+                self.request_events = []
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                self.pageview_calls += 1
+                raise AssertionError("disabled pageview prefilter must not fetch pageviews")
+
+        llm_client = FakeLLMClient()
+        wikipedia_client = NoPageviewWikipediaClient()
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generator = WikipediaInfoboxTableGenerator(
+                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+                wikipedia_client=wikipedia_client,
+                llm_client=llm_client,
+                record_limit=1,
+                table_filter_modes=(),
+                page_archive_dir=Path(tmpdir),
+            )
+            candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+            archive_path = Path(candidate.source_metadata["route3_page_archive"]["archive_path"])
+            archive_payload = json.loads(archive_path.read_text(encoding="utf-8"))
+
+        pageview = candidate.source_metadata["pageview_prefilter"]
+        self.assertEqual(wikipedia_client.pageview_calls, 0)
+        self.assertEqual(len(llm_client.prompts), 1)
+        self.assertEqual(pageview["enabled"], False)
+        self.assertEqual(pageview["status"], "disabled")
+        self.assertEqual(pageview["decision"], "allow")
+        self.assertEqual(pageview["reason"], "pageview_prefilter_disabled")
+        self.assertEqual(candidate.source_metadata["route3_page_archive"]["pageview_status"], "disabled")
+        self.assertEqual(archive_payload["pageview_prefilter"]["status"], "disabled")
+        self.assertNotIn("wikipedia_pageview_prefilter_rejected", candidate.notes)
+        self.assertNotIn("wikipedia_pageview_prefilter_unavailable", candidate.notes)
+
+    def test_disabled_pageview_prefilter_preserves_cached_pageview_payload(self) -> None:
+        class CachedPageviewWikipediaClient(FakeWikipediaClient):
+            def __init__(self, views: int) -> None:
+                self.views = views
+                self.pageview_calls = 0
+                self.request_events = []
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                self.pageview_calls += 1
+                return _pageview_payload(self.views)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            enabled_client = CachedPageviewWikipediaClient(views=10)
+            enabled_generator = WikipediaInfoboxTableGenerator(
+                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+                wikipedia_client=enabled_client,
+                llm_client=FakeLLMClient(),
+                record_limit=1,
+                table_filter_modes=(),
+                page_archive_dir=Path(tmpdir),
+                pageview_prefilter_enabled=True,
+            )
+            enabled_generator.generate(run_date="2026-05-16", cutoff_year=2025)
+
+            disabled_client = CachedPageviewWikipediaClient(views=99)
+            disabled_generator = WikipediaInfoboxTableGenerator(
+                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+                wikipedia_client=disabled_client,
+                llm_client=FakeLLMClient(),
+                record_limit=1,
+                table_filter_modes=(),
+                page_archive_dir=Path(tmpdir),
+            )
+            candidate = disabled_generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+            archive_path = Path(candidate.source_metadata["route3_page_archive"]["archive_path"])
+            archive_payload = json.loads(archive_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(enabled_client.pageview_calls, 1)
+        self.assertEqual(disabled_client.pageview_calls, 0)
+        self.assertEqual(candidate.source_metadata["pageview_prefilter"]["status"], "disabled")
+        self.assertEqual(archive_payload["pageview_prefilter"]["status"], "disabled")
+        self.assertEqual(archive_payload["pageview"]["response"]["items"][0]["views"], 10)
+
+    def test_route3_source_metadata_uses_archive_page_id_for_title_url(self) -> None:
+        class PageIdWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                payload = super().fetch_parse(title_or_url)
+                payload["parse"]["pageid"] = 987654
+                return payload
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                return _pageview_payload(10)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            generator = WikipediaInfoboxTableGenerator(
+                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+                wikipedia_client=PageIdWikipediaClient(),
+                llm_client=FakeLLMClient(),
+                record_limit=1,
+                table_filter_modes=(),
+                page_archive_dir=Path(tmpdir),
+            )
+            candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+            archive_path = Path(candidate.source_metadata["route3_page_archive"]["archive_path"])
+            archive_payload = json.loads(archive_path.read_text(encoding="utf-8"))
+
+        self.assertEqual(candidate.source_metadata["source_url"], "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup")
+        self.assertEqual(candidate.source_metadata["page_id"], 987654)
+        self.assertEqual(candidate.source_metadata["route3_page_archive"]["page_id"], 987654)
+        self.assertEqual(archive_payload["page_id"], 987654)
+
+    def test_route3_page_archive_backfills_missing_pageview_without_refetching_parse(self) -> None:
+        class BackfillWikipediaClient(FakeWikipediaClient):
+            def __init__(self) -> None:
+                self.parse_calls = 0
+                self.pageview_calls = 0
+                self.request_events = []
+
+            def fetch_parse(self, title_or_url: str) -> dict:
+                self.parse_calls += 1
+                return super().fetch_parse(title_or_url)
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                self.pageview_calls += 1
+                return _pageview_payload(20)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            first_client = BackfillWikipediaClient()
+            generator = WikipediaInfoboxTableGenerator(
+                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+                wikipedia_client=first_client,
+                llm_client=FakeLLMClient(),
+                record_limit=1,
+                table_filter_modes=(),
+                page_archive_dir=Path(tmpdir),
+                pageview_prefilter_enabled=False,
+            )
+            first = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+            archive_path = Path(first.source_metadata["route3_page_archive"]["archive_path"])
+
+            second_client = BackfillWikipediaClient()
+            second_generator = WikipediaInfoboxTableGenerator(
+                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+                wikipedia_client=second_client,
+                llm_client=FakeLLMClient(),
+                record_limit=1,
+                table_filter_modes=(),
+                page_archive_dir=Path(tmpdir),
+                pageview_prefilter_enabled=True,
+            )
+            second = second_generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+            archive_exists = archive_path.exists()
+
+        self.assertTrue(archive_exists)
+        self.assertEqual(second_client.parse_calls, 0)
+        self.assertEqual(second_client.pageview_calls, 1)
+        self.assertEqual(second.source_metadata["pageview_prefilter"]["monthly_average"], 20.0)
+        self.assertEqual(second.source_metadata["route3_page_archive"]["parse_fetch_status"], "archive_hit")
+        self.assertEqual(second.source_metadata["route3_page_archive"]["pageview_fetch_status"], "fetched")
+
+    def test_pageview_prefilter_rejects_high_popularity_before_llm(self) -> None:
+        class PopularWikipediaClient(FakeWikipediaClient):
+            request_events: list[dict] = []
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                return _pageview_payload(5001)
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=PopularWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_filter_modes=(),
+            pageview_prefilter_enabled=True,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+        self.assertIn("wikipedia_pageview_prefilter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertEqual(candidate.source_metadata["pageview_prefilter"]["decision"], "reject")
+        self.assertEqual(candidate.source_metadata["pageview_prefilter"]["monthly_average"], 5001.0)
+
+    def test_shared_processing_preserves_pageview_prefilter_rejection_reason(self) -> None:
+        class PopularWikipediaClient(FakeWikipediaClient):
+            request_events: list[dict] = []
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                return _pageview_payload(5001)
+
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=PopularWikipediaClient(),
+            llm_client=FakeLLMClient(),
+            record_limit=1,
+            table_filter_modes=(),
+            pageview_prefilter_enabled=True,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+        result = process_generated_candidates(
+            [candidate],
+            settings=Settings(
+                target_time="2024",
+                pilot_total=1,
+                cutoff_year=2025,
+                enabled_routes=("route3_wikipedia_infobox",),
+            ),
+            search_client=FakeSearchClient(),
+        )
+
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "wikipedia_pageview_prefilter_rejected")
+        self.assertEqual(
+            result.rejected[0]["source_metadata"]["discard_reason"],
+            "monthly_average_pageviews>5000.0000",
+        )
+        self.assertNotIn("rewrite_disabled", result.rejected[0]["notes"])
+
+    def test_pageview_prefilter_rejects_underfilled_window_when_single_month_above_threshold(self) -> None:
+        class UnderfilledPopularWikipediaClient(FakeWikipediaClient):
+            request_events: list[dict] = []
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                return _pageview_payload(20000, months=11)
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=UnderfilledPopularWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_filter_modes=(),
+            pageview_prefilter_enabled=True,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn("wikipedia_pageview_prefilter_rejected", candidate.notes)
+        pageview = candidate.source_metadata["pageview_prefilter"]
+        self.assertEqual(pageview["decision"], "reject")
+        self.assertEqual(pageview["status"], "incomplete_window")
+        self.assertEqual(pageview["reason"], "underfilled_monthly_pageviews>10000.0000")
+        self.assertEqual(pageview["observed_month_count"], 11)
+        self.assertEqual(pageview["required_month_count"], 12)
+        self.assertTrue(pageview["incomplete_window"])
+        self.assertEqual(pageview["max_observed_monthly"], 20000)
+
+    def test_pageview_prefilter_allows_underfilled_window_below_single_month_threshold(self) -> None:
+        class UnderfilledAllowedWikipediaClient(FakeWikipediaClient):
+            request_events: list[dict] = []
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                return _pageview_payload(10000, months=11)
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=UnderfilledAllowedWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_filter_modes=(),
+            pageview_prefilter_enabled=True,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+        self.assertEqual(len(llm_client.prompts), 1)
+        pageview = candidate.source_metadata["pageview_prefilter"]
+        self.assertEqual(pageview["decision"], "allow")
+        self.assertEqual(pageview["status"], "incomplete_window")
+        self.assertEqual(pageview["reason"], "underfilled_monthly_pageviews_within_threshold")
+        self.assertEqual(pageview["observed_month_count"], 11)
+        self.assertEqual(pageview["required_month_count"], 12)
+        self.assertTrue(pageview["incomplete_window"])
+        self.assertEqual(pageview["monthly_average"], 10000.0)
+        self.assertEqual(pageview["max_observed_monthly"], 10000)
+
+    def test_pageview_unavailable_allow_records_error_and_continues(self) -> None:
+        class PageviewErrorWikipediaClient(FakeWikipediaClient):
+            request_events: list[dict] = []
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                raise URLError("pageview offline")
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=PageviewErrorWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_filter_modes=(),
+            pageview_prefilter_enabled=True,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+        self.assertEqual(len(llm_client.prompts), 1)
+        pageview = candidate.source_metadata["pageview_prefilter"]
+        self.assertEqual(pageview["decision"], "allow")
+        self.assertEqual(pageview["status"], "error")
+        self.assertEqual(pageview["errors"][0]["error_type"], "URLError")
 
     def test_broad_table_search_query_is_opt_in(self) -> None:
         default_args = SimpleNamespace(stream_search_query=[], enable_broad_table_search=False)
@@ -716,6 +1134,43 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(state.table_search_offset('insource:"wikitable"'), 100)
         self.assertTrue({101, 102, 201}.issubset(state.used_ids))
 
+    def test_triadic_stream_exclusions_match_current_answer_and_table_context(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            exclusion_file = Path(tmpdir) / "exclude.json"
+            exclusion_file.write_text(
+                json.dumps(
+                    [
+                        {"page_id": 101, "answer_type": "Person", "table_type": "infobox"},
+                        {"page_id": 102, "answer_type": "Person", "table_type": "infobox"},
+                        {"page_id": 102, "answer_type": "Person", "table_type": "wikitable"},
+                        {"page_id": 103},
+                        {"page_id": 104, "answer_type": "Person"},
+                        {"page_id": 105, "table_type": "infobox"},
+                    ]
+                ),
+                encoding="utf-8",
+            )
+
+            person_infobox = _load_stream_excluded_page_ids(
+                [exclusion_file],
+                answer_types=["Person"],
+                table_types=["infobox"],
+            )
+            place_infobox = _load_stream_excluded_page_ids(
+                [exclusion_file],
+                answer_types=["Place"],
+                table_types=["infobox"],
+            )
+            person_both = _load_stream_excluded_page_ids(
+                [exclusion_file],
+                answer_types=["Person"],
+                table_types=["infobox", "wikitable"],
+            )
+
+        self.assertEqual(person_infobox, {101, 102, 103})
+        self.assertEqual(place_infobox, {103})
+        self.assertEqual(person_both, {101, 102, 103})
+
     def test_table_search_discovery_retries_transient_errors_before_stopping(self) -> None:
         class FlakyWikipediaSearchClient:
             def __init__(self) -> None:
@@ -796,6 +1251,23 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual([entry.url for entry in filtered], ["https://en.wikipedia.org/wiki/Example_Page"])
         self.assertEqual(skipped, ["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"])
         self.assertEqual(_remaining_after_endpoint(40, endpoint.final_decision_count), 39)
+
+    def test_wikipedia_stream_id_uses_generation_answer_type_prefix(self) -> None:
+        record = {
+            "answer_type": "Date",
+            "source_metadata": {
+                "page_id": 123,
+                "selected_source_table": {"table_type": "wikitable"},
+            },
+        }
+
+        self.assertEqual(
+            _wikipedia_stream_record_id(record, 23, run_date="2026-05-25"),
+            "route3_20260525_p123_date_wikitable",
+        )
+
+        fallback = {"answer_type": "Date", "source_metadata": {"answer_type": "Other"}}
+        self.assertEqual(_wikipedia_stream_record_id(fallback, 23), "date_wikipedia_stream_000023")
 
     def test_run_group_manifest_indexes_resumed_segments(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -897,6 +1369,12 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "rejection_reason": "wikipedia_infobox_llm_discarded",
                 "source_metadata": {"discard_reason": "No date or year information is present."},
             },
+            {
+                "rejection_reason": "shared_validation_failed",
+                "notes": ["wikipedia_pageview_prefilter_rejected"],
+                "rejection_notes": {"validation": {"answer_in_evidence": False}},
+                "source_metadata": {"discard_reason": "monthly_average_pageviews>5000.0000"},
+            },
         ]
 
         counts = {
@@ -917,9 +1395,120 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             counts[("route_generation", "wikipedia_infobox_llm_discarded:No date or year information is present.")],
             1,
         )
+        self.assertEqual(
+            counts[("route_generation", "wikipedia_pageview_prefilter_rejected:monthly_average_pageviews>5000.0000")],
+            1,
+        )
         self.assertFalse(any("hit_rate_exceeded" in reason for _, reason in counts))
         self.assertFalse(any("accuracy=" in reason or "threshold=" in reason for _, reason in counts))
         self.assertFalse(any("population" in reason or "comma_number_count" in reason for _, reason in counts))
+
+    def test_survival_stats_place_pageview_placeholder_rejections_at_route_generation(self) -> None:
+        records = [
+            {
+                "rejection_reason": "shared_validation_failed",
+                "notes": ["wikipedia_pageview_prefilter_rejected"],
+                "rejection_notes": {"validation": {"answer_in_evidence": False}},
+                "source_metadata": {"discard_reason": "monthly_average_pageviews>5000.0000"},
+            }
+        ]
+
+        rows = {row["stage"]: row for row in _survival_by_layer(attempted_count=1, rejected_records=records, rerun_records=[])}
+
+        self.assertEqual(rows["route_generation"]["failed"], 1)
+        self.assertEqual(rows["shared_validation"]["failed"], 0)
+
+    def test_all5_page_level_prerewrite_rejection_writes_page_only_used_entry(self) -> None:
+        records = [
+            {
+                "rejection_reason": "wikipedia_pageview_prefilter_rejected",
+                "notes": ["wikipedia_pageview_prefilter_rejected"],
+                "answer_type": "",
+                "source_metadata": {
+                    "page_id": 101,
+                    "answer_type_mode": "all5",
+                    "route3_slot_id": "",
+                    "discard_reason": "monthly_average_pageviews>5000.0000",
+                    "table_source_types": ["infobox"],
+                },
+            }
+        ]
+
+        entries = _stream_page_id_list_entries(
+            [101, 102],
+            all_decision_records=records,
+            answer_types=["Person", "Place", "Number", "Date", "Other"],
+            table_types=["infobox"],
+        )
+
+        self.assertIn(PageIdListEntry(page_id=101), entries)
+        self.assertFalse(any(entry.page_id == 101 and entry.answer_type for entry in entries))
+        self.assertIn(PageIdListEntry(page_id=102, answer_type="Person", table_type="infobox"), entries)
+        self.assertIn(PageIdListEntry(page_id=102, answer_type="Other", table_type="infobox"), entries)
+
+    def test_all5_slot_level_prerewrite_rejection_keeps_triadic_used_entries(self) -> None:
+        records = [
+            {
+                "rejection_reason": "wikipedia_infobox_llm_discarded",
+                "notes": ["wikipedia_infobox_llm_discarded"],
+                "answer_type": "Date",
+                "source_metadata": {
+                    "page_id": 201,
+                    "answer_type_mode": "all5",
+                    "route3_slot_id": "Date",
+                    "discard_reason": "No stable date question is supported.",
+                    "selected_source_table": {"table_type": "infobox"},
+                },
+            }
+        ]
+
+        entries = _stream_page_id_list_entries(
+            [201],
+            all_decision_records=records,
+            answer_types=["Person", "Place", "Number", "Date", "Other"],
+            table_types=["infobox"],
+        )
+
+        self.assertNotIn(PageIdListEntry(page_id=201), entries)
+        self.assertIn(PageIdListEntry(page_id=201, answer_type="Date", table_type="infobox"), entries)
+        self.assertIn(PageIdListEntry(page_id=201, answer_type="Person", table_type="infobox"), entries)
+
+    def test_stream_page_id_entries_use_actual_selected_table_type(self) -> None:
+        records = [
+            {
+                "answer_type": "Person",
+                "source_metadata": {
+                    "page_id": 301,
+                    "table_source_types": ["infobox", "wikitable"],
+                    "selected_source_table": {"table_type": "infobox"},
+                },
+            }
+        ]
+
+        entries = _stream_page_id_list_entries(
+            [301],
+            all_decision_records=records,
+            answer_types=["Person"],
+            table_types=["infobox", "wikitable"],
+        )
+
+        self.assertEqual(entries, {PageIdListEntry(page_id=301, answer_type="Person", table_type="infobox")})
+
+    def test_stream_page_id_entries_fall_back_to_configured_table_types_without_decision_metadata(self) -> None:
+        entries = _stream_page_id_list_entries(
+            [401],
+            all_decision_records=[],
+            answer_types=["Person"],
+            table_types=["infobox", "wikitable"],
+        )
+
+        self.assertEqual(
+            entries,
+            {
+                PageIdListEntry(page_id=401, answer_type="Person", table_type="infobox"),
+                PageIdListEntry(page_id=401, answer_type="Person", table_type="wikitable"),
+            },
+        )
 
     def test_compact_big_batch_records_keep_review_fields(self) -> None:
         accepted = {
@@ -941,8 +1530,16 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             "source_metadata": {
                 "page_title": "Example page",
                 "first_paragraph": "Intro.",
+                "subject_anchor_aliases": ["Example page"],
+                "safe_subject_aliases": ["Example"],
                 "subject_anchors": {"page_title": "Example page"},
                 "parsed_tables": [{"table_index": 1}],
+                "selected_source_table": {"table_index": 1},
+                "llm_response": {
+                    "question": "Who acted in the example?",
+                    "answer": "Jane Doe",
+                    "reasoning_type": "single_fact",
+                },
                 "phase_timings_seconds": {"total_generation_seconds": 1.2},
                 "discard_reason": "large field should not leak",
             },
@@ -970,7 +1567,26 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(set(compact_accepted["subject_entity"]), {"name", "wikipedia_title", "url"})
         self.assertEqual(
             set(compact_accepted["source_metadata"]),
-            {"page_title", "first_paragraph", "subject_anchors", "parsed_tables", "phase_timings_seconds"},
+            {
+                "page_title",
+                "first_paragraph",
+                "subject_anchor_aliases",
+                "safe_subject_aliases",
+                "subject_anchors",
+                "parsed_tables",
+                "selected_source_table",
+                "llm_response",
+                "small_model_qa_response",
+                "phase_timings_seconds",
+            },
+        )
+        self.assertEqual(
+            compact_accepted["source_metadata"]["llm_response"],
+            {
+                "question": "Who acted in the example?",
+                "answer": "Jane Doe",
+                "reasoning_type": "single_fact",
+            },
         )
 
         rejected = {
@@ -1002,6 +1618,52 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         )
         self.assertEqual(compact_rejected["failure_metrics"]["accuracy_threshold"], 0.1)
         self.assertNotIn("evidence", compact_rejected)
+
+    def test_route3_output_helpers_ignore_compact_flags_and_keep_full_records(self) -> None:
+        accepted = {
+            "id": "wikipedia_stream_000001",
+            "question": "Who acted in the example?",
+            "answer": "Jane Doe",
+            "answer_type": "Person",
+            "source_metadata": {
+                "page_id": 123,
+                "llm_prompt": "full prompt",
+                "llm_audit": {"response_body": {"id": "resp"}},
+                "selected_source_table": {"table_type": "infobox"},
+            },
+            "evidence": {"text": "full evidence"},
+        }
+        rejected = {
+            "question": "Who acted in the easy example?",
+            "answer": "Jane Doe",
+            "answer_type": "Person",
+            "rejection_reason": "wikipedia_infobox_llm_discarded",
+            "source_metadata": {
+                "llm_prompt": "full prompt",
+                "llm_audit": {"response_body": {"id": "resp"}},
+                "selected_source_table": {"table_type": "wikitable"},
+                "streaming_discovery": {"page_id": 456},
+            },
+            "evidence": {"text": "full evidence"},
+        }
+        args = SimpleNamespace(compact_output=True, compact_rejected_output=True, big_batch_mode=True)
+
+        _apply_big_batch_mode(args)
+        accepted_records = _accepted_output_records([accepted], args)
+        rejected_records = _rejected_output_records([rejected], args)
+
+        self.assertEqual(accepted_records, [accepted])
+        self.assertEqual(rejected_records, [rejected])
+        self.assertIn("evidence", accepted_records[0])
+        self.assertIn("llm_prompt", rejected_records[0]["source_metadata"])
+        self.assertEqual(
+            accepted_records[0]["source_metadata"]["page_id_list_entry"],
+            {"page_id": 123, "answer_type": "Person", "table_type": "infobox"},
+        )
+        self.assertEqual(
+            rejected_records[0]["source_metadata"]["page_id_list_entry"],
+            {"page_id": 456, "answer_type": "Person", "table_type": "wikitable"},
+        )
 
     def test_rejection_placeholder_uses_single_allowed_reasoning_type(self) -> None:
         candidate = _rejected_placeholder(
@@ -1037,12 +1699,63 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("| Column 1 | Column 2 |", tables[0].markdown)
         self.assertIn("| Example event |  |", tables[0].markdown)
         self.assertIn("| Edition | 23rd |", tables[0].markdown)
+        self.assertIn("| Example host | Jane Doe |", tables[0].markdown)
         self.assertEqual(tables[1].caption, "List of tournament venues")
         self.assertEqual(tables[1].section_heading, "Venues")
         self.assertEqual(tables[1].row_dicts, [])
         self.assertIn("| Venue | City | Capacity |", tables[1].markdown)
         self.assertIn("| AT&T Stadium | Arlington | 80,000 |", tables[1].markdown)
         self.assertFalse(tables[1].structure["legacy_row_dict_parser_enabled"])
+
+    def test_table_rows_do_not_duplicate_headers(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <table class="wikitable">
+        <tr><th>Award</th><th>Wins</th><th>Nominations</th></tr>
+        <tr><td>Emmy Awards</td><td>3</td><td>5</td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+
+        self.assertEqual(table.headers, ["Award", "Wins", "Nominations"])
+        self.assertEqual(table.rows[0], ["Emmy Awards", "3", "5"])
+        self.assertNotEqual(table.rows[0], table.headers)
+        self.assertIn("| Award | Wins | Nominations |", table.markdown)
+        self.assertIn("| Emmy Awards | 3 | 5 |", table.markdown)
+
+    def test_table_extraction_drops_tables_with_more_than_40_rows_or_markdown_over_2500_chars(self) -> None:
+        long_rows = "\n".join(
+            f"<tr><td>Very long table row {index}</td><td>{'x' * 80}</td></tr>"
+            for index in range(35)
+        )
+        many_rows = "\n".join(
+            f"<tr><td>Row {index}</td><td>{index}</td></tr>"
+            for index in range(41)
+        )
+        html = f"""
+        <div class="mw-parser-output">
+        <table class="wikitable">
+        <tr><th>Name</th><th>Value</th></tr>
+        <tr><td>Kept</td><td>1</td></tr>
+        </table>
+        <table class="wikitable">
+        <tr><th>Name</th><th>Value</th></tr>
+        {long_rows}
+        </table>
+        <table class="wikitable">
+        <tr><th>Name</th><th>Value</th></tr>
+        {many_rows}
+        </table>
+        </div>
+        """
+
+        tables = extract_wikipedia_tables(html)
+
+        self.assertEqual(len(tables), 1)
+        self.assertEqual(tables[0].table_index, 1)
+        self.assertIn("| Kept | 1 |", tables[0].markdown)
 
     def test_infobox_colspan_rows_are_rendered_in_place_without_duplication(self) -> None:
         html = """
@@ -1112,6 +1825,26 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("| Alpha | Kept note [a] |", table.markdown)
         self.assertNotIn("[ 23 ]", table.markdown)
 
+    def test_table_extraction_suppresses_mw_parser_output_style_noise(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <style>.mw-parser-output .hlist{font-size:95%}</style>
+        <p><style>.mw-parser-output .plainlist{margin-left:0}</style>Profile prose.</p>
+        <table class="infobox">
+        <tr><th colspan="2">Profile</th></tr>
+        <tr><th>College</th><td><style>.mw-parser-output .nowrap{white-space:nowrap}</style>Gustavus Adolphus College</td></tr>
+        <tr><th>Known for</th><td>Stable archive</td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+
+        self.assertIn("Gustavus Adolphus College", table.markdown)
+        self.assertNotIn(".mw-parser-output", table.markdown)
+        self.assertNotIn(".mw-parser-output", table.normalized_text)
+        self.assertEqual(extract_first_paragraph(html), "Profile prose.")
+
     def test_table_extraction_renders_complex_spanning_table_as_markdown(self) -> None:
         html = """
         <div class="mw-parser-output">
@@ -1149,7 +1882,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
 
         table = extract_wikipedia_tables(html)[0]
 
-        self.assertEqual(table.rows[1], ["Nasal", "m", "n", "", "ng", ""])
+        self.assertEqual(table.rows[0], ["Nasal", "m", "n", "", "ng", ""])
         self.assertIn("| Nasal | m | n |  | ng |  |", table.markdown)
         self.assertEqual(table.structure["empty_cell_count"], 2)
 
@@ -1172,6 +1905,57 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             "The following songs are covers recorded by artists other than the original band.",
         )
         self.assertIn("nearby_intro", table.to_metadata())
+
+    def test_horizontal_companion_tables_are_marked_without_rejecting_following_vertical_table(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <h2><span class="mw-headline" id="WTA_Tour_finals">WTA Tour finals</span></h2>
+        <h3><span class="mw-headline" id="Singles">Singles: 9 (8 titles, 1 runner-up)</span></h3>
+        <table class="wikitable" style="float:left; margin-right:0.5em">
+        <tr><th>Legend</th></tr>
+        <tr><td>Grand Slam</td></tr>
+        <tr><td>Tier I / Premier M &amp; 5 (1-0)</td></tr>
+        <tr><td>Tier II / Premier (2-1)</td></tr>
+        <tr><td>Tiers III &amp; IV / International (5-0)</td></tr>
+        </table>
+        <table class="wikitable" style="float:left; margin-right:0.5em">
+        <tr><th>Finals by surface</th></tr>
+        <tr><td>Hard (6-1)</td></tr>
+        <tr><td>Grass (1-0)</td></tr>
+        <tr><td>Carpet (1-0)</td></tr>
+        </table>
+        <table class="wikitable" style="float:left">
+        <tr><th>Finals by setting</th></tr>
+        <tr><td>Outdoor (7-1)</td></tr>
+        <tr><td>Indoor (1-0)</td></tr>
+        </table>
+        <table class="wikitable sortable">
+        <tr><th>Result</th><th>W-L</th><th>Date</th><th>Tournament</th><th>Tier</th><th>Surface</th><th>Opponent</th><th>Score</th></tr>
+        <tr><td>Win</td><td>1-0</td><td>Sep 2006</td><td>Guangzhou Open, China</td><td>Tier III</td><td>Hard</td><td>Anabel Medina Garrigues</td><td>6-3, 6-4</td></tr>
+        <tr><td>Win</td><td>2-0</td><td>Oct 2006</td><td>Kremlin Cup, Russia</td><td>Tier I</td><td>Carpet (i)</td><td>Nadia Petrova</td><td>6-4, 6-4</td></tr>
+        </table>
+        </div>
+        """
+
+        tables = extract_wikipedia_tables(html)
+
+        self.assertEqual(len(tables), 4)
+        self.assertEqual(tables[0].structure["horizontal_companion_group_size"], 3)
+        self.assertEqual(tables[1].structure["horizontal_companion_group_size"], 3)
+        self.assertEqual(tables[2].structure["horizontal_companion_group_size"], 3)
+        self.assertNotIn("horizontal_companion_group_size", tables[3].structure)
+
+        annotated = _annotate_table_filter_modes(
+            [{"table": table, "score": 1.0, "reasons": []} for table in tables],
+            ("no_horizontal_companion_tables",),
+        )
+
+        for row in annotated[:3]:
+            self.assertIn(
+                "no_horizontal_companion_tables:float_left;group_size=3",
+                row["table_filter_rejection_reason"],
+            )
+        self.assertEqual(annotated[3]["table_filter_rejection_reason"], "")
 
     def test_table_ranking_prefers_structured_low_prose_leakage_tables(self) -> None:
         tables = extract_wikipedia_tables(FIXTURE_HTML)
@@ -1216,7 +2000,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         )
 
         ranked = rank_wikipedia_tables(
-            [infobox, wikitable],
+            [wikitable, infobox],
             first_paragraph="",
             prose_text="",
         )
@@ -1224,6 +2008,311 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(ranked[0]["table_type"], "infobox")
         self.assertEqual(ranked[0]["score"], ranked[1]["score"])
         self.assertNotIn("article_table", ranked[1]["reasons"])
+
+    def test_table_ranking_no_longer_scores_by_row_count(self) -> None:
+        short_table = WikipediaTable(
+            table_index=1,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[
+                ["Alpha", "Archive"],
+                ["Beta", "Stable"],
+            ],
+            row_dicts=[],
+            normalized_text="Name Value Alpha Archive Beta Stable",
+            structure={"row_count": 3},
+        )
+        long_table = WikipediaTable(
+            table_index=2,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[
+                ["Alpha", "Archive"],
+                ["Beta", "Stable"],
+                ["Gamma", "Settled"],
+                ["Delta", "Historic"],
+                ["Epsilon", "Closed"],
+            ],
+            row_dicts=[],
+            normalized_text="Name Value Alpha Archive Beta Stable Gamma Settled Delta Historic Epsilon Closed",
+            structure={"row_count": 6},
+        )
+
+        ranked = rank_wikipedia_tables([long_table, short_table], first_paragraph="", prose_text="")
+
+        self.assertEqual(ranked[0]["score"], ranked[1]["score"])
+        self.assertEqual(ranked[0]["table_index"], 1)
+        self.assertEqual(ranked[1]["table_index"], 2)
+        self.assertNotIn("multi_row", ranked[0]["reasons"])
+        self.assertNotIn("multi_row", ranked[1]["reasons"])
+        self.assertNotIn("too_few_rows", ranked[0]["reasons"])
+        self.assertNotIn("too_few_rows", ranked[1]["reasons"])
+
+    def test_table_ranking_prefers_lower_prose_leakage_on_score_tie(self) -> None:
+        high_leakage_table = WikipediaTable(
+            table_index=1,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[
+                ["Bramley", "Cedar Hall"],
+                ["Dunwich", "Elm Yard"],
+            ],
+            row_dicts=[],
+            normalized_text="Name Value Bramley Cedar Hall Dunwich Elm Yard",
+            structure={"row_count": 3},
+        )
+        low_leakage_table = WikipediaTable(
+            table_index=2,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[
+                ["Lancaster", "Aster Hall"],
+                ["Raventon", "Kestrel Yard"],
+            ],
+            row_dicts=[],
+            normalized_text="Name Value Lancaster Aster Hall Raventon Kestrel Yard",
+            structure={"row_count": 3},
+        )
+
+        ranked = rank_wikipedia_tables(
+            [high_leakage_table, low_leakage_table],
+            first_paragraph="",
+            prose_text="Bramley and Cedar Hall are named in prose. Lancaster is also mentioned.",
+        )
+
+        self.assertEqual(ranked[0]["score"], ranked[1]["score"])
+        self.assertEqual(ranked[0]["table_index"], 2)
+        self.assertLess(
+            ranked[0]["prose_leakage"]["leakage_rate"],
+            ranked[1]["prose_leakage"]["leakage_rate"],
+        )
+
+    def test_table_ranking_applies_person_answer_type_bonus(self) -> None:
+        person_table = WikipediaTable(
+            table_index=1,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["field", "value"],
+            rows=[["architect", "Zyphor Qandrel"], ["style", "archive record"]],
+            row_dicts=[],
+            normalized_text="architect Zyphor Qandrel style archive record",
+            structure={"row_count": 3},
+        )
+        plain_table = WikipediaTable(
+            table_index=2,
+            table_type="infobox",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["field", "value"],
+            rows=[["material", "stonework"], ["style", "archive record"]],
+            row_dicts=[],
+            normalized_text="material stonework style archive record",
+            structure={"row_count": 3},
+        )
+
+        ranked = rank_wikipedia_tables(
+            [plain_table, person_table],
+            first_paragraph="",
+            prose_text="",
+            answer_type_hints=("Person",),
+        )
+        by_index = {row["table_index"]: row for row in ranked}
+
+        self.assertEqual(ranked[0]["table_index"], 1)
+        self.assertEqual(by_index[1]["answer_type_score_bonus"], 1.0)
+        self.assertIn("answer_type_score_bonus", by_index[1]["reasons"])
+        self.assertEqual(by_index[1]["answer_type_score"]["hits"][0]["pair"], ["Zyphor", "Qandrel"])
+        self.assertEqual(by_index[2]["answer_type_score_bonus"], 0.0)
+
+        without_hints = rank_wikipedia_tables([person_table], first_paragraph="", prose_text="")
+        self.assertEqual(without_hints[0]["answer_type_score_bonus"], 0.0)
+
+    def test_table_ranking_applies_place_answer_type_bonus(self) -> None:
+        table = WikipediaTable(
+            table_index=1,
+            table_type="infobox",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["field", "value"],
+            rows=[["category", "river"], ["name", "silver reach"]],
+            row_dicts=[],
+            normalized_text="category river name silver reach",
+            structure={"row_count": 3},
+        )
+
+        ranked = rank_wikipedia_tables(
+            [table],
+            first_paragraph="",
+            prose_text="",
+            answer_type_hints=("Place",),
+        )
+
+        self.assertEqual(ranked[0]["answer_type_score_bonus"], 2.0)
+        self.assertIn("river", ranked[0]["answer_type_score"]["hits"][0]["markers"])
+        self.assertIn("answer_type_score_bonus", ranked[0]["reasons"])
+
+    def test_table_ranking_applies_date_answer_type_bonus(self) -> None:
+        table = WikipediaTable(
+            table_index=1,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["field", "value"],
+            rows=[["opened", "3/6/2026"], ["recorded", "March 1998"]],
+            row_dicts=[],
+            normalized_text="opened 3/6/2026 recorded March 1998",
+            structure={"row_count": 3},
+        )
+
+        ranked = rank_wikipedia_tables(
+            [table],
+            first_paragraph="",
+            prose_text="",
+            answer_type_hints=("Date",),
+        )
+
+        self.assertEqual(ranked[0]["answer_type_score_bonus"], 2.0)
+        self.assertIn("answer_type_score_bonus", ranked[0]["reasons"])
+        self.assertEqual(ranked[0]["answer_type_score"]["hits"][0]["answer_type"], "Date")
+        marker_rules = {
+            marker["rule"]
+            for marker in ranked[0]["answer_type_score"]["hits"][0]["markers"]
+        }
+        self.assertIn("month_name", marker_rules)
+        self.assertIn("year_1500_2040_no_comma", marker_rules)
+        self.assertIn("numeric_month_day_year", marker_rules)
+
+    def test_table_ranking_ignores_multiple_answer_type_hints(self) -> None:
+        table = WikipediaTable(
+            table_index=1,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["field", "value"],
+            rows=[["opened", "3/6/2026"], ["recorded", "March 1998"]],
+            row_dicts=[],
+            normalized_text="opened 3/6/2026 recorded March 1998",
+            structure={"row_count": 3},
+        )
+
+        ranked = rank_wikipedia_tables(
+            [table],
+            first_paragraph="",
+            prose_text="",
+            answer_type_hints=("Date", "Other"),
+        )
+
+        self.assertEqual(ranked[0]["answer_type_score_bonus"], 0.0)
+        self.assertEqual(ranked[0]["answer_type_score"]["hints"], [])
+        self.assertNotIn("answer_type_score_bonus", ranked[0]["reasons"])
+
+    def test_prose_leakage_scoring_uses_light_default_thresholds(self) -> None:
+        low_leak_table = WikipediaTable(
+            table_index=1,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[["Alpha", "Archive"], ["Beta", "Stable"]],
+            row_dicts=[],
+            normalized_text="Name Value Alpha Archive Beta Stable",
+            structure={"row_count": 3},
+        )
+        high_leak_table = WikipediaTable(
+            table_index=2,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[["Gamma", "Historic"], ["Delta", "Settled"]],
+            row_dicts=[],
+            normalized_text="Name Value Gamma Historic Delta Settled",
+            structure={"row_count": 3},
+        )
+
+        ranked = rank_wikipedia_tables(
+            [low_leak_table, high_leak_table],
+            first_paragraph="Gamma Historic Delta Settled",
+            prose_text="",
+        )
+        by_index = {row["table_index"]: row for row in ranked}
+
+        self.assertEqual(by_index[1]["score"], 1.5)
+        self.assertIn("low_prose_leakage", by_index[1]["reasons"])
+        self.assertEqual(by_index[1]["prose_leakage"]["low_score_bonus"], 0.5)
+        self.assertEqual(by_index[2]["score"], 0.5)
+        self.assertIn("high_prose_leakage", by_index[2]["reasons"])
+        self.assertEqual(by_index[2]["prose_leakage"]["high_rate_threshold"], 0.8)
+
+    def test_prose_leakage_scoring_can_be_disabled_without_losing_audit_stats(self) -> None:
+        table = WikipediaTable(
+            table_index=1,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[["Gamma", "Historic"], ["Delta", "Settled"]],
+            row_dicts=[],
+            normalized_text="Name Value Gamma Historic Delta Settled",
+            structure={"row_count": 3},
+        )
+
+        ranked = rank_wikipedia_tables(
+            [table],
+            first_paragraph="Gamma Historic Delta Settled",
+            prose_text="",
+            prose_leakage_scoring_enabled=False,
+        )
+
+        self.assertEqual(ranked[0]["score"], 1.0)
+        self.assertNotIn("high_prose_leakage", ranked[0]["reasons"])
+        self.assertEqual(ranked[0]["prose_leakage"]["leakage_rate"], 1.0)
+        self.assertFalse(ranked[0]["prose_leakage"]["scoring_enabled"])
+
+    def test_table_filter_hard_rejects_two_or_fewer_total_rows(self) -> None:
+        table = WikipediaTable(
+            table_index=1,
+            table_type="wikitable",
+            section_heading="",
+            caption="",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[["Alpha", "Archive"]],
+            row_dicts=[],
+            normalized_text="Name Value Alpha Archive",
+            structure={"row_count": 2},
+        )
+
+        annotated = _annotate_table_filter_modes(
+            [{"table": table, "score": 1.0, "reasons": []}],
+            (),
+        )
+
+        self.assertEqual(
+            annotated[0]["table_filter_rejection_reason"],
+            "too_few_rows:row_count=2;min_rows=3",
+        )
 
     def test_current_scope_tables_are_rejected_before_llm_generation(self) -> None:
         class CurrentOnlyWikipediaClient(FakeWikipediaClient):
@@ -1238,6 +2327,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>King</th><th>Since</th></tr>
                         <tr><td>Frederik X</td><td>14 January 2024</td></tr>
+                        <tr><td>Carl XVI Gustaf</td><td>15 September 1973</td></tr>
                         </table>
                         </div>
                         """,
@@ -1286,7 +2376,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         generator = WikipediaInfoboxTableGenerator(
             urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
             wikipedia_client=FakeWikipediaClient(),
-            llm_client=FakeLLMClient(),
+            llm_client=FakeSingleFactLLMClient(),
             record_limit=1,
             url_domains={"https://en.wikipedia.org/wiki/2026_FIFA_World_Cup": "Sports"},
             table_filter_modes=(),
@@ -1295,13 +2385,16 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(len(candidates), 1)
         candidate = candidates[0]
         self.assertEqual(candidate.generation_route, "route3_wikipedia_infobox")
-        self.assertEqual(candidate.final_question, "Which stadium hosting the 23rd FIFA World Cup has the largest capacity?")
-        self.assertEqual(candidate.answer, "AT&T Stadium")
-        self.assertEqual(candidate.relation_or_claim, "max")
+        self.assertEqual(candidate.final_question, "What edition is the FIFA World Cup described as the 23rd FIFA World Cup?")
+        self.assertEqual(candidate.answer, "23rd")
+        self.assertEqual(candidate.relation_or_claim, "single_fact")
         self.assertEqual(candidate.question_family, "wikipedia_infobox_table_fact")
         self.assertEqual(candidate.source_metadata["selected_source_table"]["caption"], "List of tournament venues")
-        self.assertEqual(candidate.source_metadata["table_selection"][0]["caption"], "List of tournament venues")
-        self.assertEqual(candidate.source_metadata["reasoning_type"], "max")
+        self.assertTrue(
+            all(row["answer_type_score_bonus"] == 0.0 for row in candidate.source_metadata["table_selection"])
+        )
+        self.assertEqual(candidate.source_metadata["reasoning_type"], "single_fact")
+        self.assertEqual(candidate.source_metadata["allowed_reasoning_types"], ["single_fact"])
         self.assertNotIn("composition_type", candidate.source_metadata)
         self.assertEqual(candidate.source_metadata["content_domain"], "Sports")
         self.assertIn("23rd FIFA World Cup", candidate.source_metadata["subject_anchor_aliases"])
@@ -1317,9 +2410,14 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("May 2024", generator.llm_client.prompts[0])
         self.assertIn("specify the counted quantity or unit", generator.llm_client.prompts[0])
         self.assertIn("Do not add units to the reference answer", generator.llm_client.prompts[0])
-        self.assertIn('"subject_anchors"', generator.llm_client.prompts[0])
-        self.assertIn('"safe_subject_aliases"', generator.llm_client.prompts[0])
-        self.assertIn('"table_scopes"', generator.llm_client.prompts[0])
+        self.assertIn("### subject_anchors", generator.llm_client.prompts[0])
+        self.assertIn("- `page title`:", generator.llm_client.prompts[0])
+        self.assertIn("- `safe_subject_aliases`: 23rd FIFA World Cup", generator.llm_client.prompts[0])
+        self.assertIn("### table context", generator.llm_client.prompts[0])
+        self.assertIn("### table content", generator.llm_client.prompts[0])
+        self.assertIn("- `section_heading`: Venues", generator.llm_client.prompts[0])
+        self.assertIn("- `caption`: List of tournament venues", generator.llm_client.prompts[0])
+        self.assertNotIn('"subject_anchors"', generator.llm_client.prompts[0])
         self.assertNotIn('"preferred_subject_anchors"', generator.llm_client.prompts[0])
         self.assertIn("If the page title contains a cutoff-year marker", generator.llm_client.prompts[0])
         self.assertIn("do not copy anchor text mechanically", generator.llm_client.prompts[0])
@@ -1328,15 +2426,37 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertNotIn("For the 2026 FIFA World Cup page", generator.llm_client.prompts[0])
         self.assertIn("Do not ask cumulative-statistic questions", generator.llm_client.prompts[0])
         self.assertIn('"answer_type": "Person|Place|Number|Date|Other"', generator.llm_client.prompts[0])
-        self.assertIn('"reasoning_type"', generator.llm_client.prompts[0])
-        self.assertIn("`single_fact`: ask a direct single fact lookup", generator.llm_client.prompts[0])
+        schema = generator.llm_client.prompts[0].partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
+        self.assertNotIn('"reasoning_type"', schema)
+        self.assertNotIn('"source_table"', schema)
+        self.assertIn("Use fixed `single_fact` reasoning", generator.llm_client.prompts[0])
+        self.assertIn("Do not include a `reasoning_type` field", generator.llm_client.prompts[0])
+        self.assertNotIn("allowed answer types ,", generator.llm_client.prompts[0])
+        self.assertNotIn("allowed answer type .", generator.llm_client.prompts[0])
         self.assertIn("historically settled in the provided table content", generator.llm_client.prompts[0])
         self.assertIn("cannot change", generator.llm_client.prompts[0])
         self.assertFalse(candidate.source_metadata["llm_choose_table"])
+        self.assertNotIn("wikitable or infobox", generator.llm_client.prompts[0])
         self.assertNotIn('"composition_type"', generator.llm_client.prompts[0])
         self.assertNotIn("preferred_subject_anchor exactly", generator.llm_client.prompts[0])
         self.assertNotIn("local, bounded facts", generator.llm_client.prompts[0])
-        self.assertEqual(len(candidate.search_queries), 3)
+        self.assertEqual(len(candidate.search_queries), 2)
+
+    def test_subject_anchor_aliases_use_fixed_2025_cutoff_but_prompt_context_uses_run_cutoff(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=FakeSingleFactLLMClient(),
+            record_limit=1,
+            min_table_score=-999.0,
+            table_filter_modes=(),
+        )
+
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2027)[0]
+
+        self.assertNotIn("2026 FIFA World Cup", candidate.source_metadata["subject_anchor_aliases"])
+        self.assertIn("23rd FIFA World Cup", candidate.source_metadata["subject_anchor_aliases"])
+        self.assertEqual(candidate.source_metadata["subject_anchors"]["safe_page_title"], "2026 FIFA World Cup")
 
     def test_route3_passes_only_top_ranked_table_to_generation_llm_by_default(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
@@ -1344,20 +2464,27 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeLLMClient(),
             record_limit=1,
+            allowed_reasoning_types=("max",),
             table_filter_modes=(),
         )
 
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         prompt = generator.llm_client.prompts[0]
-        payload = json.loads(prompt.partition("Payload:\n")[2])
+        payload = prompt.partition("Payload:\n")[2]
+        schema = prompt.partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
 
         self.assertFalse(candidate.source_metadata["llm_choose_table"])
-        self.assertEqual(len(payload["tables"]), 1)
-        self.assertEqual(len(payload["ranked_table_selection"]), 1)
-        self.assertFalse(payload["llm_choose_table"])
+        self.assertTrue(payload.startswith("### subject_anchors"))
+        self.assertEqual(payload.count("### table content"), 1)
+        self.assertIn("- `table_type`: wikitable", payload)
+        self.assertNotIn("- `source_table`:", payload)
+        self.assertNotIn('"tables"', payload)
         self.assertNotIn("table_selection_criteria", payload)
+        self.assertNotIn('"source_table"', schema)
         self.assertNotIn("Choose from the top three ranked tables", prompt)
         self.assertNotIn("choose another table", prompt)
+        self.assertIn("Generate one long-tail SimpleQA-style factual question from a Wikipedia wikitable.", prompt)
+        self.assertNotIn("wikitable or infobox", prompt)
         self.assertIn("Use the provided top-ranked table as the only structured evidence table", prompt)
         self.assertIn("If the provided table is only a toy", prompt)
 
@@ -1365,39 +2492,264 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         generator = WikipediaInfoboxTableGenerator(
             urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
             wikipedia_client=FakeWikipediaClient(),
-            llm_client=FakeLLMClient(),
+            llm_client=FakeSingleFactLLMClient(),
             record_limit=1,
             table_filter_modes=(),
+            min_table_score=-999.0,
             llm_choose_table=True,
         )
 
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         prompt = generator.llm_client.prompts[0]
-        payload = json.loads(prompt.partition("Payload:\n")[2])
+        payload = prompt.partition("Payload:\n")[2]
+        schema = prompt.partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
 
         self.assertTrue(candidate.source_metadata["llm_choose_table"])
-        self.assertGreaterEqual(len(payload["tables"]), 2)
-        self.assertTrue(payload["llm_choose_table"])
-        self.assertIn("table_selection_criteria", payload)
+        self.assertGreaterEqual(payload.count("- `source_table`:"), 2)
+        self.assertIn("- `table_type`: infobox", payload)
+        self.assertIn("- `table_type`: wikitable", payload)
+        self.assertIn('"source_table": integer', schema)
         self.assertIn("Choose from the top three ranked tables", prompt)
         self.assertIn("choose another table", prompt)
+        self.assertIn("wikitable or infobox", prompt)
 
-    def test_route3_single_fact_reasoning_type_restriction_rejects_max_output(self) -> None:
+    def test_route3_can_restrict_generation_to_infobox_source_tables(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=FakeSingleFactLLMClient(),
+            record_limit=1,
+            table_filter_modes=(),
+            min_table_score=-999.0,
+            table_source_types=("infobox",),
+        )
+
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        prompt = generator.llm_client.prompts[0]
+        payload = prompt.partition("Payload:\n")[2]
+
+        self.assertEqual(candidate.source_metadata["table_source_types"], ["infobox"])
+        self.assertEqual(candidate.source_metadata["selected_source_table"]["table_type"], "infobox")
+        self.assertIn("Generate one long-tail SimpleQA-style factual question from a Wikipedia infobox.", prompt)
+        self.assertIn("- `table_type`: infobox", payload)
+        self.assertNotIn("- `section_heading`:", payload)
+        self.assertNotIn("- `caption`:", payload)
+        self.assertNotIn("- `nearby_intro`:", payload)
+        self.assertNotIn("do not copy anchor text mechanically", prompt)
+        self.assertNotIn("Treat curated list pages", prompt)
+
+    def test_route3_can_restrict_generation_to_wikitable_source_tables(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
             urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeLLMClient(),
             record_limit=1,
-            allowed_reasoning_types=("single_fact",),
+            table_filter_modes=(),
+            table_source_types=("wikitable",),
+        )
+
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        prompt = generator.llm_client.prompts[0]
+        payload = prompt.partition("Payload:\n")[2]
+
+        self.assertEqual(candidate.source_metadata["table_source_types"], ["wikitable"])
+        self.assertEqual(candidate.source_metadata["selected_source_table"]["table_type"], "wikitable")
+        self.assertIn("Generate one long-tail SimpleQA-style factual question from a Wikipedia wikitable.", prompt)
+        self.assertIn("- `table_type`: wikitable", payload)
+        self.assertIn("- `section_heading`: Venues", payload)
+        self.assertIn("- `caption`: List of tournament venues", payload)
+        self.assertIn("do not copy anchor text mechanically", prompt)
+
+    def test_all5_mode_returns_one_candidate_or_rejection_per_answer_type_slot(self) -> None:
+        llm_client = FakeAll5LLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_filter_modes=(),
+            table_source_types=("infobox",),
+            answer_type_mode="all5",
+            pageview_prefilter_enabled=False,
+        )
+
+        candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
+        prompt = llm_client.prompts[0]
+        schema = prompt.partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
+        payload = prompt.partition("Payload:\n")[2]
+
+        self.assertEqual(len(llm_client.prompts), 1)
+        self.assertIn("exactly five fixed answer-type slots", prompt)
+        self.assertIn("Reject only that slot", prompt)
+        self.assertIn("For each generated all5 slot", prompt)
+        self.assertIn("Generate five fixed answer-type slots for long-tail SimpleQA-style factual questions from a Wikipedia infobox.", prompt)
+        self.assertIn("### subject_anchors", payload)
+        self.assertIn("### table context", payload)
+        self.assertIn("### table content", payload)
+        self.assertNotIn("Wikitable-only guidance", prompt)
+        self.assertIn('"outputs"', schema)
+        for answer_type in ("Person", "Place", "Number", "Date", "Other"):
+            self.assertIn(f'"answer_type": "{answer_type}"', schema)
+        self.assertNotIn('"answer_type": "Person|Place|Number|Date|Other"', schema)
+        self.assertNotIn('"reasoning_type"', schema)
+        self.assertNotIn('"source_table"', schema)
+        self.assertEqual(len(candidates), 5)
+        self.assertEqual(
+            [candidate.source_metadata["route3_slot_id"] for candidate in candidates],
+            ["Person", "Place", "Number", "Date", "Other"],
+        )
+        self.assertEqual([candidate.source_metadata["answer_type_mode"] for candidate in candidates], ["all5"] * 5)
+        self.assertEqual(candidates[0].answer, "Jane Doe")
+        self.assertIn("wikipedia_infobox_llm_discarded", candidates[1].notes)
+        self.assertEqual(candidates[1].source_metadata["discard_reason"], "No stable place question is supported.")
+        self.assertEqual(candidates[0].source_metadata["llm_response"]["answer_type"], "Person")
+        self.assertIn("outputs", candidates[1].source_metadata["llm_audit"]["parsed_response"])
+
+    def test_all5_mode_does_not_apply_answer_type_table_ranking_bonus(self) -> None:
+        llm_client = FakeAll5LLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_filter_modes=(),
+            table_source_types=("infobox",),
+            answer_type_mode="all5",
+            allowed_answer_types=("Date",),
+            pageview_prefilter_enabled=False,
+        )
+
+        candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
+        prompt = llm_client.prompts[0]
+        schema = prompt.partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
+
+        self.assertEqual(len(candidates), 5)
+        self.assertIn("Generate five fixed answer-type slots", prompt)
+        self.assertNotIn('"source_table"', schema)
+        self.assertIn('"answer_type": "Person"', schema)
+        self.assertIn('"answer_type": "Date"', schema)
+        self.assertNotIn("Use only `Date` answer_type", prompt)
+        slot_positions = [
+            schema.index(f'"answer_type": "{answer_type}"')
+            for answer_type in ("Person", "Place", "Number", "Date", "Other")
+        ]
+        self.assertEqual(slot_positions, sorted(slot_positions))
+        self.assertTrue(
+            all(
+                row["answer_type_score_bonus"] == 0.0
+                for row in candidates[0].source_metadata["table_selection"]
+            )
+        )
+        self.assertTrue(
+            all(
+                row["answer_type_score"]["hints"] == []
+                for row in candidates[0].source_metadata["table_selection"]
+            )
+        )
+
+    def test_all5_same_page_accepted_slots_are_not_subject_deduped(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=FakeAll5LLMClient(),
+            record_limit=1,
+            table_filter_modes=(),
+            table_source_types=("infobox",),
+            answer_type_mode="all5",
+            pageview_prefilter_enabled=False,
+        )
+        candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
+
+        result = process_generated_candidates(
+            candidates,
+            settings=Settings(
+                target_time="2024",
+                pilot_total=5,
+                cutoff_year=2025,
+                duckduckgo_top_k=5,
+                search_longtail_max_full_question_hit_rate=1.0,
+                search_longtail_max_keyword_hit_rate=1.0,
+                search_longtail_max_overall_hit_rate=1.0,
+            ),
+            search_client=FakeSearchClient(),
+        )
+
+        self.assertEqual(len(result.accepted), 2)
+        self.assertEqual([record["answer_type"] for record in result.accepted], ["Person", "Date"])
+        self.assertNotIn("duplicate_subject_resource", [record["rejection_reason"] for record in result.rejected])
+        self.assertEqual(
+            {record["source_metadata"]["route3_slot_id"] for record in result.accepted},
+            {"Person", "Date"},
+        )
+        self.assertEqual(
+            {record["subject_resource_key"] for record in result.accepted},
+            {
+                "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup#Person",
+                "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup#Date",
+            },
+        )
+        self.assertEqual(
+            {record["subject_resource_url"] for record in result.accepted},
+            {"https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"},
+        )
+
+    def test_route3_rejects_when_configured_source_type_is_absent(self) -> None:
+        class InfoboxOnlyWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Infobox only example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Infobox only example is a settled historical profile.</p>
+                        <table class="infobox">
+                        <tr><th colspan="2">Profile</th></tr>
+                        <tr><th>Field</th><td>Archive</td></tr>
+                        <tr><th>Known for</th><td>Stable record</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Infobox_only_example"],
+            wikipedia_client=InfoboxOnlyWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_source_types=("wikitable",),
+        )
+
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+        self.assertIn("wikipedia_infobox_no_allowed_table_source_types", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertEqual(candidate.source_metadata["table_source_types"], ["wikitable"])
+        self.assertIn("allowed=wikitable;available=infobox", candidate.source_metadata["discard_reason"])
+
+    def test_route3_table_source_type_normalization_accepts_both_aliases(self) -> None:
+        self.assertEqual(normalize_route3_table_source_types("both"), ("infobox", "wikitable"))
+        self.assertEqual(normalize_route3_table_source_types(["infoboxes", "article_tables"]), ("infobox", "wikitable"))
+
+    def test_route3_default_single_fact_reasoning_type_is_passed_through(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=FakeLLMClient(),
+            record_limit=1,
             table_filter_modes=(),
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         prompt = generator.llm_client.prompts[0]
-        self.assertIn("Use only `single_fact` reasoning_type", prompt)
+        schema = prompt.partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
+        self.assertIn("Use fixed `single_fact` reasoning", prompt)
         self.assertIn("do not ask a compositional question", prompt)
-        self.assertIn('"reasoning_type": "single_fact"', prompt)
-        self.assertIn("wikipedia_infobox_reasoning_type_not_allowed", candidate.notes)
-        self.assertIn("reasoning_type_not_allowed:max; allowed=single_fact", candidate.source_metadata["discard_reason"])
+        self.assertIn("Do not include a `reasoning_type` field", prompt)
+        self.assertNotIn('"reasoning_type"', schema)
+        self.assertNotIn("wikipedia_infobox_reasoning_type_not_allowed", candidate.notes)
+        self.assertEqual(candidate.source_metadata["reasoning_type"], "single_fact")
+        self.assertEqual(candidate.relation_or_claim, "single_fact")
         self.assertEqual(candidate.source_metadata["allowed_reasoning_types"], ["single_fact"])
 
     def test_route3_ordinal_reasoning_type_restriction_prompts_for_temporal_ordinal(self) -> None:
@@ -1411,12 +2763,13 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         )
         generator.generate(run_date="2026-05-16", cutoff_year=2025)
         prompt = generator.llm_client.prompts[0]
-        self.assertIn("Use only `ordinal` reasoning_type", prompt)
+        schema = prompt.partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
+        self.assertIn("Use fixed `ordinal` reasoning", prompt)
         self.assertIn("temporal ordinal question", prompt)
         self.assertIn("first or second by date, time, or order of occurrence", prompt)
         self.assertIn("do not ask magnitude rankings", prompt)
         self.assertIn("largest or second largest", prompt)
-        self.assertIn('"reasoning_type": "ordinal"', prompt)
+        self.assertNotIn('"reasoning_type"', schema)
 
     def test_route3_multiple_reasoning_type_restriction_accepts_allowed_output(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
@@ -1453,10 +2806,33 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         prompt = generator.llm_client.prompts[0]
         self.assertEqual(candidate.answer_type, "Person")
         self.assertEqual(candidate.source_metadata["allowed_answer_types"], ["Person"])
+        self.assertTrue(
+            any(row["answer_type_score"]["hints"] == ["Person"] for row in candidate.source_metadata["table_selection"])
+        )
         self.assertIn("Use only `Person` answer_type", prompt)
         self.assertIn('"answer_type": "Person"', prompt)
         self.assertIn("Ask factual questions, not questions about the findings", prompt)
         self.assertIn("social science research", "\n".join(candidate.source_metadata["extra_prompts"]).lower())
+
+    def test_route3_single_date_answer_type_restriction_applies_table_ranking_bonus(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=FakeSingleFactLLMClient(),
+            record_limit=1,
+            allowed_reasoning_types=("single_fact",),
+            allowed_answer_types=("Date",),
+            table_filter_modes=(),
+        )
+
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+        self.assertTrue(
+            any(row["answer_type_score_bonus"] == 2.0 for row in candidate.source_metadata["table_selection"])
+        )
+        self.assertTrue(
+            any(row["answer_type_score"]["hints"] == ["Date"] for row in candidate.source_metadata["table_selection"])
+        )
 
     def test_route3_other_answer_type_prompt_excludes_numeric_and_date_guidance(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
@@ -1482,18 +2858,24 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         generator = WikipediaInfoboxTableGenerator(
             urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
             wikipedia_client=FakeWikipediaClient(),
-            llm_client=FakePersonLLMClient(),
+            llm_client=FakeSingleFactLLMClient(),
             record_limit=1,
             allowed_reasoning_types=("single_fact",),
-            allowed_answer_types=("Person", "Other"),
+            allowed_answer_types=("Date", "Other"),
             table_filter_modes=(),
         )
-        generator.generate(run_date="2026-05-16", cutoff_year=2025)
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         prompt = generator.llm_client.prompts[0]
-        self.assertIn("Use only these answer_type values: `Person`, `Other`", prompt)
-        self.assertIn("`Person`: answer must be a person's name", prompt)
+        self.assertIn("Use only these answer_type values: `Date`, `Other`", prompt)
+        self.assertIn("`Date`: answer must be a date, a month, or a year", prompt)
         self.assertIn("`Other`: answer must not be a person, place, number, or date", prompt)
         self.assertNotIn("`Number`: answer must be numeric", prompt)
+        self.assertTrue(
+            all(row["answer_type_score_bonus"] == 0.0 for row in candidate.source_metadata["table_selection"])
+        )
+        self.assertTrue(
+            all(row["answer_type_score"]["hints"] == [] for row in candidate.source_metadata["table_selection"])
+        )
 
     def test_route3_answer_type_restriction_rejects_disallowed_output(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
@@ -1543,11 +2925,49 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(
             candidate.source_metadata["table_filter_modes"],
             [
+                "no_external_links_tables",
+                "no_horizontal_companion_tables",
                 "no_picture_heavy_tables",
                 "no_incomplete_tables",
                 "not_number_dominant",
                 "no_social_science_research",
             ],
+        )
+
+    def test_external_links_tables_are_rejected_before_llm_generation(self) -> None:
+        class ExternalLinksWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "External links example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>External links example is a settled historical profile.</p>
+                        <h2><span class="mw-headline" id="External_links">External links</span></h2>
+                        <table class="wikitable">
+                        <tr><th>Name</th><th>Value</th></tr>
+                        <tr><td>Alpha</td><td>Settled</td></tr>
+                        <tr><td>Beta</td><td>Archived</td></tr>
+                        <tr><td>Gamma</td><td>Stable</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/External_links_example"],
+            wikipedia_client=ExternalLinksWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        self.assertIn(
+            "no_external_links_tables:external_links_section",
+            candidate.source_metadata["discard_reason"],
         )
 
     def test_no_incomplete_tables_mode_rejects_unknown_markers_before_llm_generation(self) -> None:
@@ -1562,6 +2982,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>Name</th><th>Status</th></tr>
                         <tr><td>Alpha</td><td>Unknown</td></tr>
+                        <tr><td>Beta</td><td>Known</td></tr>
                         </table>
                         </div>
                         """,
@@ -1593,6 +3014,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>Name</th><th>Status</th></tr>
                         <tr><td>Alpha</td><td>Unknown</td></tr>
+                        <tr><td>Beta</td><td>Known</td></tr>
                         </table>
                         </div>
                         """,
@@ -1623,6 +3045,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>Name</th><th>Role</th><th>Notes</th><th>Portrait</th></tr>
                         <tr><td>Alpha</td><td>Chair</td><td>Settled</td><td><img src="alpha.jpg" alt="Alpha"></td></tr>
+                        <tr><td>Beta</td><td>Archivist</td><td>Stable</td><td>None</td></tr>
                         </table>
                         </div>
                         """,
@@ -1648,7 +3071,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             1,
         )
 
-    def test_no_picture_heavy_tables_mode_allows_infobox_images_at_one_quarter_cells(self) -> None:
+    def test_no_picture_heavy_tables_mode_drops_infobox_image_rows_before_generation(self) -> None:
         class SparseInfoboxImageWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:
                 return {
@@ -1658,7 +3081,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <div class="mw-parser-output">
                         <p>Sparse infobox image example is a settled historical profile.</p>
                         <table class="infobox">
-                        <tr><td>Alpha</td><td>Stable office</td><td>Archive</td><td><img src="alpha.jpg" alt="Alpha"></td></tr>
+                        <tr><th colspan="2">Profile</th></tr>
+                        <tr><td colspan="2"><img src="alpha.jpg" alt="Alpha"></td></tr>
+                        <tr><th>Role</th><td>Stable office</td></tr>
+                        <tr><th>Known for</th><td>Archive record</td></tr>
                         </table>
                         </div>
                         """,
@@ -1673,14 +3099,101 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             record_limit=1,
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-        self.assertNotIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
-        self.assertEqual(len(llm_client.prompts), 1)
+        self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(llm_client.prompts, [])
+        selection = candidate.source_metadata["table_selection"][0]
+        filtering = selection["infobox_row_filtering"]
+        self.assertEqual(filtering["removed_row_count"], 1)
+        self.assertIn("no_picture_heavy_tables:image_row", filtering["removed_reasons"])
+        self.assertEqual(filtering["remaining_row_count"], 3)
+        self.assertTrue(filtering["remaining_rows_below_minimum"])
+        self.assertIn("infobox_remaining_rows_lt_min", candidate.source_metadata["discard_reason"])
         self.assertEqual(
-            candidate.source_metadata["table_selection"][0]["picture_heavy_table_stats"]["image_cell_rate"],
-            0.25,
+            filtering["original_picture_heavy_table_stats"]["non_title_image_cell_rate"],
+            0.3333,
         )
 
-    def test_no_picture_heavy_tables_mode_rejects_infobox_images_above_one_quarter_cells(self) -> None:
+    def test_infobox_image_cleanup_removes_media_captions_without_dropping_location_rows(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <table class="infobox">
+        <tr><th colspan="2">Shanghai Disneyland</th></tr>
+        <tr><td colspan="2" class="infobox-image"><img src="logo.png"></td></tr>
+        <tr><td colspan="2" class="infobox-image"><img src="castle.jpg"></td></tr>
+        <tr><td colspan="2" class="infobox-caption">The Enchanted Storybook Castle, landmark of Shanghai Disneyland</td></tr>
+        <tr><td colspan="2" class="infobox-full-data"><img src="map.png"></td></tr>
+        <tr><td colspan="2" class="infobox-caption">Interactive map of Shanghai Disneyland</td></tr>
+        <tr><th>Location</th><td>Shanghai Disney Resort, Pudong, Shanghai, China</td></tr>
+        <tr><th>Opened</th><td>June 16, 2016</td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+        annotated = _annotate_table_filter_modes([{"table": table}], ("no_picture_heavy_tables",))
+        cleaned = annotated[0]["table"]
+        filtering = cleaned.structure["infobox_row_filtering"]
+
+        self.assertIn(["Location", "Shanghai Disney Resort, Pudong, Shanghai, China"], cleaned.rows)
+        self.assertIn(["Opened", "June 16, 2016"], cleaned.rows)
+        self.assertNotIn(["The Enchanted Storybook Castle, landmark of Shanghai Disneyland", ""], cleaned.rows)
+        self.assertNotIn(["Interactive map of Shanghai Disneyland", ""], cleaned.rows)
+        self.assertEqual(filtering["removed_row_count"], 5)
+        self.assertIn("no_picture_heavy_tables:image_row", filtering["removed_reasons"])
+        self.assertIn("no_picture_heavy_tables:image_caption_row", filtering["removed_reasons"])
+
+    def test_infobox_image_cleanup_removes_portrait_caption_and_signature_title(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <table class="infobox">
+        <tr><th colspan="2">Rosa Parks</th></tr>
+        <tr><td colspan="2" class="infobox-image"><img src="portrait.jpg"></td></tr>
+        <tr><td colspan="2" class="infobox-caption">Parks in 1956</td></tr>
+        <tr><th>Born</th><td>Rosa Louise McCauley</td></tr>
+        <tr><th>Known for</th><td>Montgomery bus boycott</td></tr>
+        <tr><th colspan="2" class="infobox-header">Signature</th></tr>
+        <tr><td colspan="2" class="infobox-full-data"><img src="signature.svg"></td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+        annotated = _annotate_table_filter_modes([{"table": table}], ("no_picture_heavy_tables",))
+        cleaned = annotated[0]["table"]
+        filtering = cleaned.structure["infobox_row_filtering"]
+
+        self.assertIn(["Born", "Rosa Louise McCauley"], cleaned.rows)
+        self.assertIn(["Known for", "Montgomery bus boycott"], cleaned.rows)
+        self.assertNotIn(["Parks in 1956", ""], cleaned.rows)
+        self.assertNotIn(["Signature", ""], cleaned.rows)
+        self.assertEqual(filtering["removed_row_count"], 4)
+        self.assertIn("no_picture_heavy_tables:image_caption_row", filtering["removed_reasons"])
+        self.assertIn("no_picture_heavy_tables:image_title_row", filtering["removed_reasons"])
+
+    def test_infobox_image_cleanup_keeps_unclassed_section_heading_after_image(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <table class="infobox">
+        <tr><th colspan="2">Profile</th></tr>
+        <tr><td colspan="2" class="infobox-image"><img src="portrait.jpg"></td></tr>
+        <tr><th colspan="2">Visitor information</th></tr>
+        <tr><th>Location</th><td>Archive Hall</td></tr>
+        <tr><th>Opened</th><td>1994</td></tr>
+        </table>
+        </div>
+        """
+
+        table = extract_wikipedia_tables(html)[0]
+        annotated = _annotate_table_filter_modes([{"table": table}], ("no_picture_heavy_tables",))
+        cleaned = annotated[0]["table"]
+        filtering = cleaned.structure["infobox_row_filtering"]
+
+        self.assertIn(["Visitor information", ""], cleaned.rows)
+        self.assertIn(["Location", "Archive Hall"], cleaned.rows)
+        self.assertEqual(filtering["removed_row_count"], 1)
+        self.assertNotIn("no_picture_heavy_tables:image_caption_row", filtering["removed_reasons"])
+
+    def test_infobox_image_rows_are_removed_before_remaining_row_count_check(self) -> None:
         class DenseInfoboxImageWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:
                 return {
@@ -1690,7 +3203,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <div class="mw-parser-output">
                         <p>Dense infobox image example is a settled historical profile.</p>
                         <table class="infobox">
-                        <tr><td>Alpha</td><td>Stable office</td><td><img src="alpha.jpg" alt="Alpha"></td></tr>
+                        <tr><th colspan="2">Profile</th></tr>
+                        <tr><td colspan="2"><img src="alpha.jpg" alt="Alpha"></td></tr>
+                        <tr><td colspan="2"><img src="beta.jpg" alt="Beta"></td></tr>
+                        <tr><th>Role</th><td>Stable office</td></tr>
                         </table>
                         </div>
                         """,
@@ -1707,7 +3223,73 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
         self.assertEqual(llm_client.prompts, [])
-        self.assertIn("no_picture_heavy_tables:image_cell_rate=0.3333", candidate.source_metadata["discard_reason"])
+        self.assertEqual(
+            candidate.source_metadata["discard_reason"],
+            "infobox_remaining_rows_lt_min:remaining_non_header_rows=2;min=5",
+        )
+        filtering = candidate.source_metadata["table_selection"][0]["infobox_row_filtering"]
+        self.assertEqual(filtering["removed_row_count"], 2)
+        self.assertTrue(filtering["remaining_rows_below_minimum"])
+        self.assertIn("no_picture_heavy_tables:image_row", filtering["removed_reasons"])
+        self.assertEqual(
+            filtering["original_picture_heavy_table_stats"]["non_title_image_cell_rate"],
+            0.6667,
+        )
+
+    def test_infobox_quality_filters_remove_bad_key_value_rows_before_generation(self) -> None:
+        class MixedQualityInfoboxWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Mixed quality infobox example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Mixed quality infobox example is a settled historical profile.</p>
+                        <table class="infobox">
+                        <tr><th colspan="2">Profile</th></tr>
+                        <tr><td colspan="2"><img src="alpha.jpg" alt="Alpha"></td></tr>
+                        <tr><th>Population</th><td>Archive group</td></tr>
+                        <tr><th>Status</th><td>Unknown</td></tr>
+                        <tr><th>Capacity</th><td>80,000</td></tr>
+                        <tr><th>Role</th><td>Stable office</td></tr>
+                        <tr><th>Founded</th><td>1986</td></tr>
+                        <tr><th>Location</th><td>Archive Hall</td></tr>
+                        <tr><th>Method</th><td>Curated register</td></tr>
+                        <tr><th>Series</th><td>Reference file</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        llm_client = FakeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Mixed_quality_infobox_example"],
+            wikipedia_client=MixedQualityInfoboxWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_source_types=("infobox",),
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        self.assertNotIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
+        self.assertEqual(len(llm_client.prompts), 1)
+        filtering = candidate.source_metadata["table_selection"][0]["infobox_row_filtering"]
+        self.assertEqual(filtering["removed_row_count"], 4)
+        self.assertIn("no_picture_heavy_tables:image_row", filtering["removed_reasons"])
+        self.assertIn("no_social_science_research:population", filtering["removed_reasons"])
+        self.assertIn("no_incomplete_tables:unknown", filtering["removed_reasons"])
+        self.assertIn("not_number_dominant:comma_number_count=1", filtering["removed_reasons"])
+        self.assertEqual(
+            candidate.source_metadata["selected_source_table"]["rows"],
+            [
+                ["Profile", ""],
+                ["Role", "Stable office"],
+                ["Founded", "1986"],
+                ["Location", "Archive Hall"],
+                ["Method", "Curated register"],
+                ["Series", "Reference file"],
+            ],
+        )
 
     def test_no_incomplete_tables_mode_rejects_precision_and_citation_markers_before_llm_generation(self) -> None:
         class ApproximateWikipediaClient(FakeWikipediaClient):
@@ -1872,6 +3454,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>Name</th><th>Value</th></tr>
                         <tr><td>Alpha</td><td>2,024</td></tr>
+                        <tr><td>Beta</td><td>2023</td></tr>
                         </table>
                         </div>
                         """,
@@ -1902,6 +3485,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>Name</th><th>Year</th></tr>
                         <tr><td>Alpha</td><td>2041</td></tr>
+                        <tr><td>Beta</td><td>2023</td></tr>
                         </table>
                         </div>
                         """,
@@ -1935,6 +3519,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>Name</th><th>Ratio</th></tr>
                         <tr><td>Alpha</td><td>1.2</td></tr>
+                        <tr><td>Beta</td><td>2</td></tr>
                         </table>
                         </div>
                         """,
@@ -1965,6 +3550,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>#</th><th>%</th></tr>
                         <tr><td>12</td><td>34</td></tr>
+                        <tr><td>56</td><td>78</td></tr>
                         </table>
                         </div>
                         """,
@@ -1995,6 +3581,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>Name</th><th>Production (kt)</th></tr>
                         <tr><td>Alpha</td><td>261</td></tr>
+                        <tr><td>Beta</td><td>262</td></tr>
                         </table>
                         </div>
                         """,
@@ -2026,6 +3613,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>Name</th><th>Output in kilocalories</th></tr>
                         <tr><td>Alpha</td><td>261</td></tr>
+                        <tr><td>Beta</td><td>262</td></tr>
                         </table>
                         </div>
                         """,
@@ -2056,6 +3644,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <table class="wikitable">
                         <tr><th>Name</th><th>Length (m)</th></tr>
                         <tr><td>Alpha</td><td>42</td></tr>
+                        <tr><td>Beta</td><td>43</td></tr>
                         </table>
                         </div>
                         """,
@@ -2140,13 +3729,13 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(candidate.source_metadata["reasoning_type"], "single_fact")
         self.assertEqual(candidate.source_metadata["selected_source_table"]["table_type"], "infobox")
 
-    def test_generated_answer_normalization_splits_parenthetical_alias(self) -> None:
+    def test_generated_answer_normalization_preserves_parenthetical_answer_and_rank_alias(self) -> None:
         answer, aliases = _normalize_generated_answer(
             "AT&T Stadium ‡ (Dallas Stadium)",
-            ["AT&T Stadium", "Dallas Stadium"],
+            ["AT&T Stadium", "Dallas Stadium", "#1"],
         )
-        self.assertEqual(answer, "AT&T Stadium")
-        self.assertEqual(aliases, ["Dallas Stadium"])
+        self.assertEqual(answer, "AT&T Stadium (Dallas Stadium)")
+        self.assertEqual(aliases, ["AT&T Stadium", "Dallas Stadium", "#1"])
 
     def test_explicit_other_answer_type_preserves_numeric_code_list(self) -> None:
         self.assertEqual(
@@ -2164,6 +3753,24 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "Number",
                 "1998",
                 "What year had the highest number of viewers for the Academy Awards?",
+            ),
+            "Date",
+        )
+
+    def test_temporal_question_overrides_mislabeled_era_qualified_year_answer(self) -> None:
+        self.assertEqual(
+            _normalize_answer_type(
+                "Number",
+                "401 BC",
+                "In which year was the Kingdom of Cilicia annexed by the Achaemenid Empire?",
+            ),
+            "Date",
+        )
+        self.assertEqual(
+            _normalize_answer_type(
+                "Number",
+                "402 BCE",
+                "What year did the historical event occur?",
             ),
             "Date",
         )
@@ -2279,6 +3886,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=TieWikipediaClient(),
             llm_client=TieLLMClient(),
             record_limit=1,
+            allowed_reasoning_types=("max",),
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         self.assertNotIn("wikipedia_infobox_incomplete_tie_answer", candidate.notes)
@@ -2294,6 +3902,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeLLMClient(),
             record_limit=1,
+            allowed_reasoning_types=("max",),
             table_filter_modes=(),
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
@@ -2396,6 +4005,20 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertTrue(_should_rerun_stream_rejection(retryable))
         self.assertTrue(_should_rerun_stream_rejection({"rejection_reason": "search_longtail_verifier_error"}))
         self.assertTrue(_should_rerun_stream_rejection({"rejection_reason": "second_stage_grading_error"}))
+        search_error = {
+            "rejection_reason": "search_longtail_verifier_error",
+            "rejection_notes": {
+                "error_type": "URLError",
+                "error_message": "timed out while searching",
+            },
+        }
+        self.assertEqual(
+            _rerun_error_details_from_record(search_error),
+            {
+                "error_type": "URLError",
+                "error_message": "timed out while searching",
+            },
+        )
         permanent = {
             "rejection_reason": "wikipedia_infobox_no_tables",
             "source_metadata": {"error_message": ""},

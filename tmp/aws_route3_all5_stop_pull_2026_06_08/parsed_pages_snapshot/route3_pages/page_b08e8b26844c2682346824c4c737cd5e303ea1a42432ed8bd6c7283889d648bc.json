@@ -1,0 +1,474 @@
+{
+  "canonical_url": "https://en.wikipedia.org/wiki/Cubic_metre",
+  "content_hashes": {
+    "parse_payload_sha256": "d1475475dd035b818e50b794001149d117d58b2fcc1f6bbc11fbccf13eace40b",
+    "parsed_html_sha256": "2fa776372f37aff8df64683057679b1626793d7b0ea133b215e7a3c4abfd19f4"
+  },
+  "created_at": "2026-06-08T10:11:51.811686+00:00",
+  "extracted_tables": [
+    {
+      "caption": "",
+      "headers": [
+        "Column 1",
+        "Column 2"
+      ],
+      "markdown": "| Column 1 | Column 2 |\n| --- | --- |\n| cubic metre |  |\n| All eight cubes together form one cubic metre of concrete (representing the world annual production per capita ) (on the left). |  |\n| General information |  |\n| Unit system | SI |\n| Unit of | volume |\n| Symbol | m 3 |",
+      "nearby_intro": "",
+      "normalized_text": "| Column 1 | Column 2 |\n| --- | --- |\n| cubic metre |  |\n| All eight cubes together form one cubic metre of concrete (representing the world annual production per capita ) (on the left). |  |\n| General information |  |\n| Unit system | SI |\n| Unit of | volume |\n| Symbol | m 3 |",
+      "rows": [
+        [
+          "cubic metre",
+          ""
+        ],
+        [
+          "All eight cubes together form one cubic metre of concrete (representing the world annual production per capita ) (on the left).",
+          ""
+        ],
+        [
+          "General information",
+          ""
+        ],
+        [
+          "Unit system",
+          "SI"
+        ],
+        [
+          "Unit of",
+          "volume"
+        ],
+        [
+          "Symbol",
+          "m 3"
+        ]
+      ],
+      "section_heading": "",
+      "structure": {
+        "empty_cell_count": 0,
+        "empty_cells": [],
+        "expanded_width": 2,
+        "full_width_heading_row_count": 3,
+        "full_width_heading_rows": [
+          {
+            "colspan": 2,
+            "row": 0,
+            "text": "cubic metre"
+          },
+          {
+            "colspan": 2,
+            "row": 1,
+            "text": "All eight cubes together form one cubic metre of concrete (representing the world annual production per capita ) (on the left)."
+          },
+          {
+            "colspan": 2,
+            "row": 2,
+            "text": "General information"
+          }
+        ],
+        "header_row_count": 0,
+        "horizontal_layout_markers": [],
+        "html_class": "infobox ib-unit",
+        "html_style": "",
+        "image_caption_row_indexes": [],
+        "image_cell_rate": 0.1667,
+        "image_context_row_indexes": [],
+        "image_covered_cell_count": 2,
+        "image_raw_cell_count": 1,
+        "image_row_indexes": [
+          1
+        ],
+        "image_title_row_indexes": [],
+        "key_value_row_indexes": [
+          3,
+          4,
+          5
+        ],
+        "legacy_row_dict_parser_enabled": false,
+        "nested_table_count": 0,
+        "non_title_image_cell_rate": 0.25,
+        "non_title_image_covered_cell_count": 2,
+        "non_title_image_raw_cell_count": 1,
+        "non_title_image_row_indexes": [
+          1
+        ],
+        "non_title_raw_cell_count": 7,
+        "non_title_row_count": 4,
+        "non_title_total_cell_coverage_count": 8,
+        "parser": "expanded_markdown_table",
+        "raw_cell_count": 9,
+        "raw_row_cell_counts": [
+          1,
+          1,
+          1,
+          2,
+          2,
+          2
+        ],
+        "row_count": 6,
+        "span_cell_count": 3,
+        "span_cells": [
+          {
+            "colspan": 2,
+            "column": 0,
+            "row": 0,
+            "rowspan": 1
+          },
+          {
+            "colspan": 2,
+            "column": 0,
+            "row": 1,
+            "rowspan": 1
+          },
+          {
+            "colspan": 2,
+            "column": 0,
+            "row": 2,
+            "rowspan": 1
+          }
+        ],
+        "title_row_count": 2,
+        "title_row_indexes": [
+          0,
+          2
+        ],
+        "total_cell_coverage_count": 12
+      },
+      "table_index": 1,
+      "table_type": "infobox",
+      "truncated": false
+    }
+  ],
+  "page_id": 30125638,
+  "pageview": {
+    "errors": [],
+    "fetch_status": "fetched",
+    "request": {
+      "article": "Cubic_metre",
+      "end": "2026050100",
+      "start": "2025060100",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Cubic_metre/monthly/2025060100/2026050100"
+    },
+    "response": {
+      "items": [
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2025060100",
+          "views": 6230
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2025070100",
+          "views": 6156
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2025080100",
+          "views": 6878
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2025090100",
+          "views": 6828
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2025100100",
+          "views": 7162
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2025110100",
+          "views": 7005
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2025120100",
+          "views": 5968
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2026010100",
+          "views": 6102
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2026020100",
+          "views": 5988
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2026030100",
+          "views": 6357
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2026040100",
+          "views": 6457
+        },
+        {
+          "access": "all-access",
+          "agent": "user",
+          "article": "Cubic_metre",
+          "granularity": "monthly",
+          "project": "en.wikipedia",
+          "timestamp": "2026050100",
+          "views": 191
+        }
+      ]
+    }
+  },
+  "pageview_prefilter": {
+    "archive_path": "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_b08e8b26844c2682346824c4c737cd5e303ea1a42432ed8bd6c7283889d648bc.json",
+    "decision": "reject",
+    "enabled": true,
+    "errors": [],
+    "incomplete_window": false,
+    "max_monthly_average_pageviews": 5000.0,
+    "max_observed_monthly": 7162,
+    "max_underfilled_monthly_pageviews": 10000.0,
+    "monthly_average": 5943.5,
+    "monthly_items": [
+      {
+        "timestamp": "2025060100",
+        "views": 6230
+      },
+      {
+        "timestamp": "2025070100",
+        "views": 6156
+      },
+      {
+        "timestamp": "2025080100",
+        "views": 6878
+      },
+      {
+        "timestamp": "2025090100",
+        "views": 6828
+      },
+      {
+        "timestamp": "2025100100",
+        "views": 7162
+      },
+      {
+        "timestamp": "2025110100",
+        "views": 7005
+      },
+      {
+        "timestamp": "2025120100",
+        "views": 5968
+      },
+      {
+        "timestamp": "2026010100",
+        "views": 6102
+      },
+      {
+        "timestamp": "2026020100",
+        "views": 5988
+      },
+      {
+        "timestamp": "2026030100",
+        "views": 6357
+      },
+      {
+        "timestamp": "2026040100",
+        "views": 6457
+      },
+      {
+        "timestamp": "2026050100",
+        "views": 191
+      }
+    ],
+    "monthly_sum": 71322,
+    "observed_month_count": 12,
+    "pageview": {
+      "errors": [],
+      "fetch_status": "fetched",
+      "request": {
+        "article": "Cubic_metre",
+        "end": "2026050100",
+        "start": "2025060100",
+        "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Cubic_metre/monthly/2025060100/2026050100"
+      },
+      "response": {
+        "items": [
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2025060100",
+            "views": 6230
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2025070100",
+            "views": 6156
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2025080100",
+            "views": 6878
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2025090100",
+            "views": 6828
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2025100100",
+            "views": 7162
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2025110100",
+            "views": 7005
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2025120100",
+            "views": 5968
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2026010100",
+            "views": 6102
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2026020100",
+            "views": 5988
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2026030100",
+            "views": 6357
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2026040100",
+            "views": 6457
+          },
+          {
+            "access": "all-access",
+            "agent": "user",
+            "article": "Cubic_metre",
+            "granularity": "monthly",
+            "project": "en.wikipedia",
+            "timestamp": "2026050100",
+            "views": 191
+          }
+        ]
+      }
+    },
+    "reason": "monthly_average_pageviews>5000.0000",
+    "request": {
+      "article": "Cubic_metre",
+      "end": "2026050100",
+      "start": "2025060100",
+      "url": "https://wikimedia.org/api/rest_v1/metrics/pageviews/per-article/en.wikipedia/all-access/user/Cubic_metre/monthly/2025060100/2026050100"
+    },
+    "required_month_count": 12,
+    "status": "ok",
+    "unavailable_policy": "allow",
+    "window_months": 12
+  },
+  "parse_api_url": "https://en.wikipedia.org/w/api.php?action=parse&prop=text%7Cdisplaytitle&format=json&formatversion=2&redirects=1&pageid=30125638",
+  "parse_payload": {
+    "parse": {
+      "displaytitle": "<span lang=\"en\" dir=\"ltr\"><span class=\"mw-page-title-main\">Cubic metre</span></span>",
+      "pageid": 30125638,
+      "redirects": [],
+      "text": "<div class=\"mw-content-ltr mw-parser-output\" lang=\"en\" dir=\"ltr\"><div class=\"shortdescription nomobile noexcerpt noprint searchaux\" style=\"display:none\">SI derived unit of volume</div>\n<style data-mw-deduplicate=\"TemplateStyles:r1353403208\">.mw-parser-output .infobox-subbox{padding:0;border:none;margin:-3px;width:auto;min-width:100%;font-size:100%;clear:none;float:none;background-color:transparent;color:inherit}.mw-parser-output .infobox-3cols-child{margin:-3px}.mw-parser-output .infobox .navbar{font-size:100%}@media screen{html.skin-theme-clientpref-night .mw-parser-output .infobox-full-data:not(.notheme)>div:not(.notheme)[style]{background:#1f1f23!important;color:#f8f9fa}}@media screen and (prefers-color-scheme:dark){html.skin-theme-clientpref-os .mw-parser-output .infobox-full-data:not(.notheme)>div:not(.notheme)[style]{background:#1f1f23!important;color:#f8f9fa}}@media(min-width:640px){body.skin--responsive .mw-parser-output .infobox-table{display:table!important}body.skin--responsive .mw-parser-output .infobox-table>caption{display:table-caption!important}body.skin--responsive .mw-parser-output .infobox-table>tbody{display:table-row-group}body.skin--responsive .mw-parser-output .infobox-table th,body.skin--responsive .mw-parser-output .infobox-table td{padding-left:inherit;padding-right:inherit}}</style><table class=\"infobox ib-unit\"><tbody><tr><th colspan=\"2\" class=\"infobox-above\">cubic metre</th></tr><tr><td colspan=\"2\" class=\"infobox-image\"><span class=\"mw-default-size\" typeof=\"mw:File/Frameless\"><a href=\"/wiki/File:Metre-cube-beton-p1040192.jpg\" class=\"mw-file-description\"><img src=\"//upload.wikimedia.org/wikipedia/commons/thumb/0/02/Metre-cube-beton-p1040192.jpg/250px-Metre-cube-beton-p1040192.jpg\" decoding=\"async\" width=\"250\" height=\"188\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/0/02/Metre-cube-beton-p1040192.jpg/500px-Metre-cube-beton-p1040192.jpg 2x\" data-file-width=\"2560\" data-file-height=\"1920\" /></a></span><div class=\"infobox-caption\">All eight cubes together form one cubic metre of <a href=\"/wiki/Concrete\" title=\"Concrete\">concrete</a> (representing the world annual production <a href=\"/wiki/Per_capita\" title=\"Per capita\">per capita</a>) (on the left).</div></td></tr><tr><th colspan=\"2\" class=\"infobox-header\">General information</th></tr><tr><th scope=\"row\" class=\"infobox-label\"><a href=\"/wiki/System_of_units_of_measurement\" title=\"System of units of measurement\">Unit system</a></th><td class=\"infobox-data\"><a href=\"/wiki/International_System_of_Units\" title=\"International System of Units\">SI</a></td></tr><tr><th scope=\"row\" class=\"infobox-label\">Unit&#160;of</th><td class=\"infobox-data\"><a href=\"/wiki/Volume\" title=\"Volume\">volume</a></td></tr><tr><th scope=\"row\" class=\"infobox-label\">Symbol</th><td class=\"infobox-data\">m<sup>3</sup></td></tr></tbody></table><style data-mw-deduplicate=\"TemplateStyles:r1236303919\">@media screen{html.skin-theme-clientpref-night .mw-parser-output .infobox-has-images-with-white-backgrounds img{background:white}}@media screen and (prefers-color-scheme:dark){html.skin-theme-clientpref-os .mw-parser-output .infobox-has-images-with-white-backgrounds img{background:white}}</style>\n<p>The <b>cubic metre</b> (in <a href=\"/wiki/American_and_British_English_spelling_differences#-re,_-er\" title=\"American and British English spelling differences\">Commonwealth English</a> and international spelling as used by the <a href=\"/wiki/International_Bureau_of_Weights_and_Measures\" title=\"International Bureau of Weights and Measures\">International Bureau of Weights and Measures</a>) or <b>cubic meter</b> (in <a href=\"/wiki/American_and_British_English_spelling_differences#-re,_-er\" title=\"American and British English spelling differences\">American English</a>) is the unit of <a href=\"/wiki/Volume\" title=\"Volume\">volume</a> in the <a href=\"/wiki/International_System_of_Units\" title=\"International System of Units\">International System of Units</a> (SI).<sup id=\"cite&#95;ref-bipm&#95;1-0\" class=\"reference\"><a href=\"#cite_note-bipm-1\"><span class=\"cite-bracket\">&#91;</span>1<span class=\"cite-bracket\">&#93;</span></a></sup> Its symbol is <b>m<sup>3</sup></b>.<sup id=\"cite&#95;ref-bipm&#95;1-1\" class=\"reference\"><a href=\"#cite_note-bipm-1\"><span class=\"cite-bracket\">&#91;</span>1<span class=\"cite-bracket\">&#93;</span></a></sup> It is the volume of a <a href=\"/wiki/Cube_(geometry)\" class=\"mw-redirect\" title=\"Cube (geometry)\">cube</a> with edges one <a href=\"/wiki/Metre\" title=\"Metre\">metre</a> in length.  An alternative name, which allowed a different usage with <a href=\"/wiki/Metric_prefix\" title=\"Metric prefix\">metric prefixes</a>, was the <a href=\"/wiki/St%C3%A8re\" class=\"mw-redirect\" title=\"Stère\">stère</a>, still sometimes used for <a href=\"/wiki/Dry_measure\" title=\"Dry measure\">dry measure</a> (for instance, in reference to <a href=\"/wiki/Wood\" title=\"Wood\">wood</a>). Another alternative name, no longer widely used, was the <b>kilolitre</b>.  The acronym <b>CBM</b> is in common use to describe a cubic metre.<sup id=\"cite&#95;ref-2\" class=\"reference\"><a href=\"#cite_note-2\"><span class=\"cite-bracket\">&#91;</span>2<span class=\"cite-bracket\">&#93;</span></a></sup>\n</p>\n<meta property=\"mw:PageProp/toc\" />\n<div class=\"mw-heading mw-heading2\"><h2 id=\"Conversions\">Conversions</h2><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=1\" title=\"Edit section: Conversions\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<figure class=\"mw-default-size\" typeof=\"mw:File/Thumb\"><a href=\"/wiki/File:Visualisation_litre_gram.svg\" class=\"mw-file-description\"><img src=\"//upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Visualisation_litre_gram.svg/250px-Visualisation_litre_gram.svg.png\" decoding=\"async\" width=\"250\" height=\"333\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Visualisation_litre_gram.svg/500px-Visualisation_litre_gram.svg.png 2x\" data-file-width=\"638\" data-file-height=\"850\" /></a><figcaption>Some SI units of volume to scale and approximate corresponding mass of water</figcaption></figure>\n<style data-mw-deduplicate=\"TemplateStyles:r1353705441\">.mw-parser-output .hatnote{font-style:italic}.mw-parser-output div.hatnote{padding-left:1.6em;margin-bottom:0.5em}.mw-parser-output .hatnote i{font-style:normal}.mw-parser-output .hatnote+span.mw-empty-elt+.hatnote,.mw-parser-output .hatnote+link+.hatnote{margin-top:-0.5em}@media print{body.ns-0 .mw-parser-output .hatnote{display:none!important}}</style><div role=\"note\" class=\"hatnote navigation-not-searchable\">Main article: <a href=\"/wiki/Unit_conversion\" class=\"mw-redirect\" title=\"Unit conversion\">Unit conversion</a></div>\n<dl><dd><table>\n\n<tbody><tr>\n<td rowspan=\"6\" valign=\"top\">1 cubic metre\n</td>\n<td>= <span class=\"nowrap\"><span data-sort-value=\"7003100000000000000♠\"></span>1000</span> <a href=\"/wiki/Litre\" title=\"Litre\">litres</a> (exactly)<sup id=\"cite&#95;ref-3\" class=\"reference\"><a href=\"#cite_note-3\"><span class=\"cite-bracket\">&#91;</span>3<span class=\"cite-bracket\">&#93;</span></a></sup><sup id=\"cite&#95;ref-4\" class=\"reference\"><a href=\"#cite_note-4\"><span class=\"cite-bracket\">&#91;</span>4<span class=\"cite-bracket\">&#93;</span></a></sup>\n</td></tr>\n<tr>\n<td>≈ 35.3146667 <a href=\"/wiki/Cubic_foot\" title=\"Cubic foot\">cubic feet</a>\n</td></tr>\n<tr>\n<td>≈ 1.3079506 <a href=\"/wiki/Cubic_yard\" title=\"Cubic yard\">cubic yards</a>\n</td></tr>\n<tr>\n<td>≈ 6.2898108 <a href=\"/wiki/Barrel_(unit)\" title=\"Barrel (unit)\">oil barrels</a>\n</td></tr>\n<tr>\n<td>≈ 219.96925 <a href=\"/wiki/Imperial_unit\" class=\"mw-redirect\" title=\"Imperial unit\">imperial</a> <a href=\"/wiki/Gallon\" title=\"Gallon\">gallons</a>\n</td></tr>\n<tr>\n<td>≈ 264.17205 <a href=\"/wiki/United_States_customary_units#Fluid_volume\" title=\"United States customary units\">US fluid</a> gallons\n</td></tr></tbody></table></dd></dl>\n<p>A cubic metre of pure water at the temperature of maximum density (3.983&#160;°C) and standard <a href=\"/wiki/Atmospheric_pressure\" title=\"Atmospheric pressure\">atmospheric pressure</a> (101.325&#160;kPa) has a <a href=\"/wiki/Mass\" title=\"Mass\">mass</a> of <span class=\"nowrap\"><span data-sort-value=\"7003100000000000000♠\"></span>1000&#160;<a href=\"/wiki/Kilogram\" title=\"Kilogram\">kg</a></span>, or one <a href=\"/wiki/Tonne\" title=\"Tonne\">tonne</a>, which makes its <a href=\"/wiki/Maximum\" class=\"mw-redirect\" title=\"Maximum\">maximum</a> <a href=\"/wiki/Density\" title=\"Density\">density</a> at 101.325 kPa 1 Mg/m<sup>3</sup>. At 0&#160;°C, the freezing point of water, a cubic metre of water has slightly less mass, 999.85 kilograms.<sup id=\"cite&#95;ref-5\" class=\"reference\"><a href=\"#cite_note-5\"><span class=\"cite-bracket\">&#91;</span>5<span class=\"cite-bracket\">&#93;</span></a></sup>\n</p><p>The \"cubic metre\" symbol is encoded by <a href=\"/wiki/Unicode\" title=\"Unicode\">Unicode</a> at code point <span class=\"nowrap\"><style data-mw-deduplicate=\"TemplateStyles:r886049734\">.mw-parser-output .monospaced{font-family:monospace,monospace}</style><span class=\"monospaced\">U+33A5</span>&#x20;</span><span style=\"font-size:125%;line-height:1em\">&#x33a5;</span> <span style=\"font-variant: small-caps; text-transform: lowercase; font-feature-settings: &#39;onum&#39;\">SQUARE M CUBED</span>.<sup id=\"cite&#95;ref-Unicode-U3300&#95;6-0\" class=\"reference\"><a href=\"#cite_note-Unicode-U3300-6\"><span class=\"cite-bracket\">&#91;</span>6<span class=\"cite-bracket\">&#93;</span></a></sup>\n</p>\n<div class=\"mw-heading mw-heading2\"><h2 id=\"Multiples_and_submultiples\">Multiples and submultiples</h2><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=2\" title=\"Edit section: Multiples and submultiples\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<link rel=\"mw-deduplicated-inline-style\" href=\"mw-data:TemplateStyles:r1353705441\" /><div role=\"note\" class=\"hatnote navigation-not-searchable\">Main articles: <a href=\"/wiki/Metric_prefix\" title=\"Metric prefix\">Metric prefix</a> and <a href=\"/wiki/Orders_of_magnitude_(volume)\" title=\"Orders of magnitude (volume)\">Orders of magnitude (volume)</a></div>\n<div class=\"mw-heading mw-heading3\"><h3 id=\"Multiples\">Multiples</h3><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=3\" title=\"Edit section: Multiples\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<dl><dt>Cubic decametre</dt>\n<dd>the volume of a cube of side length one decametre (10&#160;m)</dd>\n<dd>equal to a <a href=\"/wiki/Megalitre\" class=\"mw-redirect\" title=\"Megalitre\">megalitre</a></dd>\n<dd>1&#160;dam<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"7003100000000000000♠\"></span>1000&#160;m<sup>3</sup></span> = 1&#160;ML</dd></dl>\n<dl><dt>Cubic hectometre</dt>\n<dd>the volume of a cube of side length one hectometre (100 m)</dd>\n<dd>equal to a <a href=\"/wiki/Gigalitre\" class=\"mw-redirect\" title=\"Gigalitre\">gigalitre</a></dd>\n<dd><span class=\"anchor\" id=\"MCM\"></span>in civil engineering abbreviated MCM for million cubic metres</dd>\n<dd>1&#160;hm<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"7006100000000000000♠\"></span>1<span style=\"margin-left:.25em;\">000</span><span style=\"margin-left:.25em;\">000</span>&#160;m<sup>3</sup></span> = 1&#160;GL</dd></dl>\n<dl><dt>Cubic kilometre</dt>\n<dd>the volume of a cube of side length one kilometre (<span class=\"nowrap\"><span data-sort-value=\"7003100000000000000♠\"></span>1000&#160;m</span>)</dd>\n<dd>equal to a teralitre</dd>\n<dd>1&#160;km<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"7009100000000000000♠\"></span>1<span style=\"margin-left:.25em;\">000</span><span style=\"margin-left:.25em;\">000</span><span style=\"margin-left:.25em;\">000</span>&#160;m<sup>3</sup></span> = 1&#160;TL (810713.19 <a href=\"/wiki/Acre-foot\" title=\"Acre-foot\">acre-feet</a>; 0.239913 <a href=\"/wiki/Cubic_mile\" title=\"Cubic mile\">cubic miles</a>)</dd></dl>\n<div class=\"mw-heading mw-heading3\"><h3 id=\"Submultiples\">Submultiples</h3><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=4\" title=\"Edit section: Submultiples\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<dl><dt>Cubic decimetre</dt>\n<dd>the volume of a cube of side length one decimetre (0.1&#160;m)</dd>\n<dd>equal to a litre</dd>\n<dd>1&#160;dm<sup>3</sup> = 0.001&#160;m<sup>3</sup> = 1&#160;L</dd>\n<dd>(also known as DCM (=Deci Cubic Meter) in Rubber compound processing)</dd></dl>\n<dl><dt>Cubic centimetre<sup id=\"cite&#95;ref-7\" class=\"reference\"><a href=\"#cite_note-7\"><span class=\"cite-bracket\">&#91;</span>7<span class=\"cite-bracket\">&#93;</span></a></sup></dt>\n<dd>the volume of a cube of side length one centimetre (0.01&#160;m)</dd>\n<dd>equal to a millilitre</dd>\n<dd>1&#160;cm<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"6994100000000000000♠\"></span>0.000<span style=\"margin-left:.25em;\">001</span>&#160;m<sup>3</sup></span> = 10<sup>−6</sup>&#160;m<sup>3</sup> = 1&#160;mL</dd></dl>\n<dl><dt>Cubic millimetre</dt>\n<dd>the volume of a cube of side length one millimetre (0.001&#160;m)</dd>\n<dd>equal to a microlitre</dd>\n<dd>1&#160;mm<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"6991100000000000000♠\"></span>0.000<span style=\"margin-left:.25em;\">000</span><span style=\"margin-left:.25em;\">001</span>&#160;m<sup>3</sup></span> = 10<sup>−9</sup>&#160;m<sup>3</sup> = 1&#160;μL</dd></dl>\n<div class=\"mw-heading mw-heading2\"><h2 id=\"See_also\">See also</h2><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=5\" title=\"Edit section: See also\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<ul><li><a href=\"/wiki/Orders_of_magnitude_(volume)\" title=\"Orders of magnitude (volume)\">Orders of magnitude (volume)</a></li>\n<li><a href=\"/wiki/Reciprocal_cubic_metre\" class=\"mw-redirect\" title=\"Reciprocal cubic metre\">Reciprocal cubic metre</a></li>\n<li><a href=\"/wiki/Standard_cubic_foot\" title=\"Standard cubic foot\">Standard cubic foot</a></li></ul>\n<div class=\"mw-heading mw-heading2\"><h2 id=\"References\">References</h2><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=6\" title=\"Edit section: References\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<style data-mw-deduplicate=\"TemplateStyles:r1327269900\">.mw-parser-output .reflist-columns-2{column-width:30em}.mw-parser-output .reflist-columns-3{column-width:25em}body.skin-vector-2022 .mw-parser-output .reflist-columns-2{column-width:27em}body.skin-vector-2022 .mw-parser-output .reflist-columns-3{column-width:22.5em}.mw-parser-output .references[data-mw-group=upper-alpha]{list-style-type:upper-alpha}.mw-parser-output .references[data-mw-group=upper-roman]{list-style-type:upper-roman}.mw-parser-output .references[data-mw-group=lower-alpha]{list-style-type:lower-alpha}.mw-parser-output .references[data-mw-group=lower-greek]{list-style-type:lower-greek}.mw-parser-output .references[data-mw-group=lower-roman]{list-style-type:lower-roman}.mw-parser-output div.reflist-liststyle-upper-alpha .references{list-style-type:upper-alpha}.mw-parser-output div.reflist-liststyle-upper-roman .references{list-style-type:upper-roman}.mw-parser-output div.reflist-liststyle-lower-alpha .references{list-style-type:lower-alpha}.mw-parser-output div.reflist-liststyle-lower-greek .references{list-style-type:lower-greek}.mw-parser-output div.reflist-liststyle-lower-roman .references{list-style-type:lower-roman}</style><div>\n<div class=\"mw-references-wrap\"><ol class=\"references\">\n<li id=\"cite&#95;note-bipm-1\"><span class=\"mw-cite-backlink\">^ <a href=\"#cite_ref-bipm_1-0\"><sup><i><b>a</b></i></sup></a> <a href=\"#cite_ref-bipm_1-1\"><sup><i><b>b</b></i></sup></a></span> <span class=\"reference-text\"><a href=\"/wiki/International_Bureau_of_Weights_and_Measures\" title=\"International Bureau of Weights and Measures\">Bureau International de Poids et Mesures</a>. \"<a rel=\"nofollow\" class=\"external text\" href=\"http://www.bipm.org/en/si/derived_units/2-2-1.html\">Derived units expressed in terms of base units</a> <a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20120716204202/http://www1.bipm.org/en/si/derived_units/2-2-1.html\">Archived</a> 2012-07-16 at the <a href=\"/wiki/Wayback_Machine\" title=\"Wayback Machine\">Wayback Machine</a>\". 2014. Accessed 7 August 2014.</span>\n</li>\n<li id=\"cite&#95;note-2\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-2\">^</a></b></span> <span class=\"reference-text\"><a rel=\"nofollow\" class=\"external free\" href=\"https://www.fedex.com/en-hk/shipping/glossary/what-is-cbm.html\">https://www.fedex.com/en-hk/shipping/glossary/what-is-cbm.html</a></span>\n</li>\n<li id=\"cite&#95;note-3\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-3\">^</a></b></span> <span class=\"reference-text\">From 1901 to 1964 the litre was defined as the volume of one kilogram of pure <a href=\"/wiki/Water\" title=\"Water\">water</a> at 4&#160;°<a href=\"/wiki/Celsius\" title=\"Celsius\">C</a> and 760 <a href=\"/wiki/Torr\" title=\"Torr\">millimetres of mercury</a> pressure: during this time, a litre was about <span class=\"nowrap\"><span data-sort-value=\"6997100002800000000♠\"></span>1.000<span style=\"margin-left:.25em;\">028</span>&#160;dm<sup>3</sup></span>. In 1964 the original definition was reverted to.</span>\n</li>\n<li id=\"cite&#95;note-4\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-4\">^</a></b></span> <span class=\"reference-text\"><style data-mw-deduplicate=\"TemplateStyles:r1333433106\">.mw-parser-output cite.citation{font-style:inherit;word-wrap:break-word}.mw-parser-output .citation q{quotes:\"\\\"\"\"\\\"\"\"'\"\"'\"}.mw-parser-output .citation:target{background-color:rgba(0,127,255,0.133)}.mw-parser-output .id-lock-free.id-lock-free a{background:url(\"//upload.wikimedia.org/wikipedia/commons/6/65/Lock-green.svg\")right 0.1em center/9px no-repeat}.mw-parser-output .id-lock-limited.id-lock-limited a,.mw-parser-output .id-lock-registration.id-lock-registration a{background:url(\"//upload.wikimedia.org/wikipedia/commons/d/d6/Lock-gray-alt-2.svg\")right 0.1em center/9px no-repeat}.mw-parser-output .id-lock-subscription.id-lock-subscription a{background:url(\"//upload.wikimedia.org/wikipedia/commons/a/aa/Lock-red-alt-2.svg\")right 0.1em center/9px no-repeat}.mw-parser-output .cs1-ws-icon a{background:url(\"//upload.wikimedia.org/wikipedia/commons/4/4c/Wikisource-logo.svg\")right 0.1em center/12px no-repeat}body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .id-lock-free a,body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .id-lock-limited a,body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .id-lock-registration a,body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .id-lock-subscription a,body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .cs1-ws-icon a{background-size:contain;padding:0 1em 0 0}.mw-parser-output .cs1-code{color:inherit;background:inherit;border:none;padding:inherit}.mw-parser-output .cs1-hidden-error{display:none;color:var(--color-error,#bf3c2c)}.mw-parser-output .cs1-visible-error{color:var(--color-error,#bf3c2c)}.mw-parser-output .cs1-maint{display:none;color:#085;margin-left:0.3em}.mw-parser-output .cs1-kern-left{padding-left:0.2em}.mw-parser-output .cs1-kern-right{padding-right:0.2em}.mw-parser-output .citation .mw-selflink{font-weight:inherit}@media screen{.mw-parser-output .cs1-format{font-size:95%}html.skin-theme-clientpref-night .mw-parser-output .cs1-maint{color:#18911f}}@media screen and (prefers-color-scheme:dark){html.skin-theme-clientpref-os .mw-parser-output .cs1-maint{color:#18911f}}</style><cite class=\"citation web cs1\"><a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20091001100650/http://www.bipm.org/en/si/si_brochure/chapter4/table6.html\">\"BIPM – Table 6\"</a>. Archived from <a rel=\"nofollow\" class=\"external text\" href=\"http://www.bipm.org/en/si/si_brochure/chapter4/table6.html\">the original</a> on 2009-10-01<span class=\"reference-accessdate\">. Retrieved <span class=\"nowrap\">2010-03-05</span></span>.</cite><span title=\"ctx&#95;ver=Z39.88-2004&amp;rft&#95;val&#95;fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=unknown&amp;rft.btitle=BIPM+%E2%80%93+Table+6&amp;rft&#95;id=http%3A%2F%2Fwww.bipm.org%2Fen%2Fsi%2Fsi&#95;brochure%2Fchapter4%2Ftable6.html&amp;rfr&#95;id=info%3Asid%2Fen.wikipedia.org%3ACubic+metre\" class=\"Z3988\"></span></span>\n</li>\n<li id=\"cite&#95;note-5\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-5\">^</a></b></span> <span class=\"reference-text\"><link rel=\"mw-deduplicated-inline-style\" href=\"mw-data:TemplateStyles:r1333433106\" /><cite class=\"citation web cs1\"><a rel=\"nofollow\" class=\"external text\" href=\"https://www.engineeringtoolbox.com/water-density-specific-weight-d_595.html\">\"Water Density, Specific Weight and Thermal Expansion Coefficients – Temperature and Pressure Dependence\"</a>. <i>The Engineering ToolBox</i><span class=\"reference-accessdate\">. Retrieved <span class=\"nowrap\">2025-06-13</span></span>.</cite><span title=\"ctx&#95;ver=Z39.88-2004&amp;rft&#95;val&#95;fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;rft.genre=unknown&amp;rft.jtitle=The+Engineering+ToolBox&amp;rft.atitle=Water+Density%2C+Specific+Weight+and+Thermal+Expansion+Coefficients+%E2%80%93+Temperature+and+Pressure+Dependence&amp;rft&#95;id=https%3A%2F%2Fwww.engineeringtoolbox.com%2Fwater-density-specific-weight-d&#95;595.html&amp;rfr&#95;id=info%3Asid%2Fen.wikipedia.org%3ACubic+metre\" class=\"Z3988\"></span></span>\n</li>\n<li id=\"cite&#95;note-Unicode-U3300-6\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-Unicode-U3300_6-0\">^</a></b></span> <span class=\"reference-text\"><link rel=\"mw-deduplicated-inline-style\" href=\"mw-data:TemplateStyles:r1333433106\" /><cite id=\"CITEREFUnicode&#95;Consortium2019\" class=\"citation web cs1\"><a href=\"/wiki/Unicode_Consortium\" title=\"Unicode Consortium\">Unicode Consortium</a> (2019). <a rel=\"nofollow\" class=\"external text\" href=\"https://www.unicode.org/charts/PDF/U3300.pdf\">\"The Unicode Standard 12.0 – CJK Compatibility ❰ Range: 3300—33FF ❱\"</a> <span class=\"cs1-format\">(PDF)</span>. <i>Unicode.org</i><span class=\"reference-accessdate\">. Retrieved <span class=\"nowrap\">May 24,</span> 2019</span>.</cite><span title=\"ctx&#95;ver=Z39.88-2004&amp;rft&#95;val&#95;fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;rft.genre=unknown&amp;rft.jtitle=Unicode.org&amp;rft.atitle=The+Unicode+Standard+12.0+%E2%80%93+CJK+Compatibility+%E2%9D%B0+Range%3A+3300%E2%80%9433FF+%E2%9D%B1&amp;rft.date=2019&amp;rft.au=Unicode+Consortium&amp;rft&#95;id=https%3A%2F%2Fwww.unicode.org%2Fcharts%2FPDF%2FU3300.pdf&amp;rfr&#95;id=info%3Asid%2Fen.wikipedia.org%3ACubic+metre\" class=\"Z3988\"></span></span>\n</li>\n<li id=\"cite&#95;note-7\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-7\">^</a></b></span> <span class=\"reference-text\">The cubic centimetre is the base unit of volume of the <a href=\"/wiki/CGS_system\" class=\"mw-redirect\" title=\"CGS system\">CGS system</a> of units. The colloquial abbreviations \"cc\" and \"ccm\" are not SI but are common in some contexts such as cooking, <a href=\"/wiki/Engine_displacement\" title=\"Engine displacement\">engine displacement</a> and medicine.</span>\n</li>\n</ol></div></div>\n<style data-mw-deduplicate=\"TemplateStyles:r1314755338\">.mw-parser-output .side-box{margin:4px 0;box-sizing:border-box;border:1px solid #aaa;font-size:88%;line-height:1.25em;background-color:var(--background-color-interactive-subtle,#f8f9fa);color:inherit;display:flow-root}.mw-parser-output .infobox .side-box{font-size:100%}.mw-parser-output .side-box-abovebelow,.mw-parser-output .side-box-text{padding:0.25em 0.9em}.mw-parser-output .side-box-image{padding:2px 0 2px 0.9em;text-align:center}.mw-parser-output .side-box-imageright{padding:2px 0.9em 2px 0;text-align:center}@media(min-width:500px){.mw-parser-output .side-box-flex{display:flex;align-items:center}.mw-parser-output .side-box-text{flex:1;min-width:0}}@media(min-width:640px){.mw-parser-output .side-box{width:238px}.mw-parser-output .side-box-right{clear:right;float:right;margin-left:1em}.mw-parser-output .side-box-left{margin-right:1em}}</style><style data-mw-deduplicate=\"TemplateStyles:r1311551236\">@media print{body.ns-0 .mw-parser-output .sistersitebox{display:none!important}}@media screen{html.skin-theme-clientpref-night .mw-parser-output .sistersitebox img[src*=\"Wiktionary-logo-en-v2.svg\"]{filter:invert(1)brightness(55%)contrast(250%)hue-rotate(180deg)}}@media screen and (prefers-color-scheme:dark){html.skin-theme-clientpref-os .mw-parser-output .sistersitebox img[src*=\"Wiktionary-logo-en-v2.svg\"]{filter:invert(1)brightness(55%)contrast(250%)hue-rotate(180deg)}}</style><div class=\"side-box side-box-right plainlinks sistersitebox\"><style data-mw-deduplicate=\"TemplateStyles:r1126788409\">.mw-parser-output .plainlist ol,.mw-parser-output .plainlist ul{line-height:inherit;list-style:none;margin:0;padding:0}.mw-parser-output .plainlist ol li,.mw-parser-output .plainlist ul li{margin-bottom:0}</style>\n<div class=\"side-box-flex\">\n<div class=\"side-box-image\"><span class=\"noviewer skin-invert-image\" typeof=\"mw:File\"><a href=\"/wiki/File:Wiktionary-logo-en-v2.svg\" class=\"mw-file-description\"><img alt=\"Wiktionary logo\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/9/99/Wiktionary-logo-en-v2.svg/40px-Wiktionary-logo-en-v2.svg.png\" decoding=\"async\" width=\"40\" height=\"40\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/9/99/Wiktionary-logo-en-v2.svg/120px-Wiktionary-logo-en-v2.svg.png 2x\" data-file-width=\"512\" data-file-height=\"512\" /></a></span></div>\n<div class=\"side-box-text plainlist\">Look up <i><b><a href=\"https://en.wiktionary.org/wiki/cubic_metre\" class=\"extiw\" title=\"wiktionary:cubic metre\">cubic metre</a></b></i> in Wiktionary, the free dictionary.</div></div>\n</div>\n<!-- \nNewPP limit report\nParsed by mw‐web.codfw.main‐5749dd88d7‐5s54p\nCached time: 20260511221452\nCache expiry: 2592000\nCache expiry source: Module:Webarchive (os.date *t .year)\nReduced expiry: false\nComplications: [vary‐revision‐sha1, prevent‐selective‐update, show‐toc]\nCPU time usage: 0.279 seconds\nReal time usage: 0.353 seconds\nPreprocessor visited node count: 1559/1000000\nRevision size: 5848/2097152 bytes\nPost‐expand include size: 16570/2097152 bytes\nTemplate argument size: 1460/2097152 bytes\nHighest expansion depth: 23/100\nExpensive parser function count: 5/500\nUnstrip recursion depth: 1/20\nUnstrip post‐expand size: 18723/5000000 bytes\nLua time usage: 0.175/10.000 seconds\nLua memory usage: 6109572/52428800 bytes\nNumber of Wikibase entities loaded: 0/500\n-->\n<!--\nTransclusion expansion time report (%,ms,calls,template)\n100.00%  321.357      1 -total\n 32.06%  103.036      1 Template:Reflist\n 25.58%   82.194      3 Template:Cite_web\n 17.56%   56.423      1 Template:Short_description\n 12.66%   40.668      1 Template:Unichar\n 11.93%   38.329      1 Template:Unichar/main\n 10.76%   34.586      1 Template:Infobox_unit\n 10.75%   34.562      9 Template:Val\n  9.43%   30.304      2 Template:Pagetype\n  8.67%   27.853      1 Template:Infobox\n-->\n\n<!-- Render ID d5049777-4d86-11f1-a82c-4d2daed33bb9 -->\n\n<!-- Saved in parser cache with key enwiki:pcache:30125638:|#|:idhash:canonical and timestamp 20260511221452 and revision id 1342929208. Rendering was triggered because: page_view\n -->\n</div>",
+      "title": "Cubic metre"
+    }
+  },
+  "parsed_html": "<div class=\"mw-content-ltr mw-parser-output\" lang=\"en\" dir=\"ltr\"><div class=\"shortdescription nomobile noexcerpt noprint searchaux\" style=\"display:none\">SI derived unit of volume</div>\n<style data-mw-deduplicate=\"TemplateStyles:r1353403208\">.mw-parser-output .infobox-subbox{padding:0;border:none;margin:-3px;width:auto;min-width:100%;font-size:100%;clear:none;float:none;background-color:transparent;color:inherit}.mw-parser-output .infobox-3cols-child{margin:-3px}.mw-parser-output .infobox .navbar{font-size:100%}@media screen{html.skin-theme-clientpref-night .mw-parser-output .infobox-full-data:not(.notheme)>div:not(.notheme)[style]{background:#1f1f23!important;color:#f8f9fa}}@media screen and (prefers-color-scheme:dark){html.skin-theme-clientpref-os .mw-parser-output .infobox-full-data:not(.notheme)>div:not(.notheme)[style]{background:#1f1f23!important;color:#f8f9fa}}@media(min-width:640px){body.skin--responsive .mw-parser-output .infobox-table{display:table!important}body.skin--responsive .mw-parser-output .infobox-table>caption{display:table-caption!important}body.skin--responsive .mw-parser-output .infobox-table>tbody{display:table-row-group}body.skin--responsive .mw-parser-output .infobox-table th,body.skin--responsive .mw-parser-output .infobox-table td{padding-left:inherit;padding-right:inherit}}</style><table class=\"infobox ib-unit\"><tbody><tr><th colspan=\"2\" class=\"infobox-above\">cubic metre</th></tr><tr><td colspan=\"2\" class=\"infobox-image\"><span class=\"mw-default-size\" typeof=\"mw:File/Frameless\"><a href=\"/wiki/File:Metre-cube-beton-p1040192.jpg\" class=\"mw-file-description\"><img src=\"//upload.wikimedia.org/wikipedia/commons/thumb/0/02/Metre-cube-beton-p1040192.jpg/250px-Metre-cube-beton-p1040192.jpg\" decoding=\"async\" width=\"250\" height=\"188\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/0/02/Metre-cube-beton-p1040192.jpg/500px-Metre-cube-beton-p1040192.jpg 2x\" data-file-width=\"2560\" data-file-height=\"1920\" /></a></span><div class=\"infobox-caption\">All eight cubes together form one cubic metre of <a href=\"/wiki/Concrete\" title=\"Concrete\">concrete</a> (representing the world annual production <a href=\"/wiki/Per_capita\" title=\"Per capita\">per capita</a>) (on the left).</div></td></tr><tr><th colspan=\"2\" class=\"infobox-header\">General information</th></tr><tr><th scope=\"row\" class=\"infobox-label\"><a href=\"/wiki/System_of_units_of_measurement\" title=\"System of units of measurement\">Unit system</a></th><td class=\"infobox-data\"><a href=\"/wiki/International_System_of_Units\" title=\"International System of Units\">SI</a></td></tr><tr><th scope=\"row\" class=\"infobox-label\">Unit&#160;of</th><td class=\"infobox-data\"><a href=\"/wiki/Volume\" title=\"Volume\">volume</a></td></tr><tr><th scope=\"row\" class=\"infobox-label\">Symbol</th><td class=\"infobox-data\">m<sup>3</sup></td></tr></tbody></table><style data-mw-deduplicate=\"TemplateStyles:r1236303919\">@media screen{html.skin-theme-clientpref-night .mw-parser-output .infobox-has-images-with-white-backgrounds img{background:white}}@media screen and (prefers-color-scheme:dark){html.skin-theme-clientpref-os .mw-parser-output .infobox-has-images-with-white-backgrounds img{background:white}}</style>\n<p>The <b>cubic metre</b> (in <a href=\"/wiki/American_and_British_English_spelling_differences#-re,_-er\" title=\"American and British English spelling differences\">Commonwealth English</a> and international spelling as used by the <a href=\"/wiki/International_Bureau_of_Weights_and_Measures\" title=\"International Bureau of Weights and Measures\">International Bureau of Weights and Measures</a>) or <b>cubic meter</b> (in <a href=\"/wiki/American_and_British_English_spelling_differences#-re,_-er\" title=\"American and British English spelling differences\">American English</a>) is the unit of <a href=\"/wiki/Volume\" title=\"Volume\">volume</a> in the <a href=\"/wiki/International_System_of_Units\" title=\"International System of Units\">International System of Units</a> (SI).<sup id=\"cite&#95;ref-bipm&#95;1-0\" class=\"reference\"><a href=\"#cite_note-bipm-1\"><span class=\"cite-bracket\">&#91;</span>1<span class=\"cite-bracket\">&#93;</span></a></sup> Its symbol is <b>m<sup>3</sup></b>.<sup id=\"cite&#95;ref-bipm&#95;1-1\" class=\"reference\"><a href=\"#cite_note-bipm-1\"><span class=\"cite-bracket\">&#91;</span>1<span class=\"cite-bracket\">&#93;</span></a></sup> It is the volume of a <a href=\"/wiki/Cube_(geometry)\" class=\"mw-redirect\" title=\"Cube (geometry)\">cube</a> with edges one <a href=\"/wiki/Metre\" title=\"Metre\">metre</a> in length.  An alternative name, which allowed a different usage with <a href=\"/wiki/Metric_prefix\" title=\"Metric prefix\">metric prefixes</a>, was the <a href=\"/wiki/St%C3%A8re\" class=\"mw-redirect\" title=\"Stère\">stère</a>, still sometimes used for <a href=\"/wiki/Dry_measure\" title=\"Dry measure\">dry measure</a> (for instance, in reference to <a href=\"/wiki/Wood\" title=\"Wood\">wood</a>). Another alternative name, no longer widely used, was the <b>kilolitre</b>.  The acronym <b>CBM</b> is in common use to describe a cubic metre.<sup id=\"cite&#95;ref-2\" class=\"reference\"><a href=\"#cite_note-2\"><span class=\"cite-bracket\">&#91;</span>2<span class=\"cite-bracket\">&#93;</span></a></sup>\n</p>\n<meta property=\"mw:PageProp/toc\" />\n<div class=\"mw-heading mw-heading2\"><h2 id=\"Conversions\">Conversions</h2><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=1\" title=\"Edit section: Conversions\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<figure class=\"mw-default-size\" typeof=\"mw:File/Thumb\"><a href=\"/wiki/File:Visualisation_litre_gram.svg\" class=\"mw-file-description\"><img src=\"//upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Visualisation_litre_gram.svg/250px-Visualisation_litre_gram.svg.png\" decoding=\"async\" width=\"250\" height=\"333\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/e/e9/Visualisation_litre_gram.svg/500px-Visualisation_litre_gram.svg.png 2x\" data-file-width=\"638\" data-file-height=\"850\" /></a><figcaption>Some SI units of volume to scale and approximate corresponding mass of water</figcaption></figure>\n<style data-mw-deduplicate=\"TemplateStyles:r1353705441\">.mw-parser-output .hatnote{font-style:italic}.mw-parser-output div.hatnote{padding-left:1.6em;margin-bottom:0.5em}.mw-parser-output .hatnote i{font-style:normal}.mw-parser-output .hatnote+span.mw-empty-elt+.hatnote,.mw-parser-output .hatnote+link+.hatnote{margin-top:-0.5em}@media print{body.ns-0 .mw-parser-output .hatnote{display:none!important}}</style><div role=\"note\" class=\"hatnote navigation-not-searchable\">Main article: <a href=\"/wiki/Unit_conversion\" class=\"mw-redirect\" title=\"Unit conversion\">Unit conversion</a></div>\n<dl><dd><table>\n\n<tbody><tr>\n<td rowspan=\"6\" valign=\"top\">1 cubic metre\n</td>\n<td>= <span class=\"nowrap\"><span data-sort-value=\"7003100000000000000♠\"></span>1000</span> <a href=\"/wiki/Litre\" title=\"Litre\">litres</a> (exactly)<sup id=\"cite&#95;ref-3\" class=\"reference\"><a href=\"#cite_note-3\"><span class=\"cite-bracket\">&#91;</span>3<span class=\"cite-bracket\">&#93;</span></a></sup><sup id=\"cite&#95;ref-4\" class=\"reference\"><a href=\"#cite_note-4\"><span class=\"cite-bracket\">&#91;</span>4<span class=\"cite-bracket\">&#93;</span></a></sup>\n</td></tr>\n<tr>\n<td>≈ 35.3146667 <a href=\"/wiki/Cubic_foot\" title=\"Cubic foot\">cubic feet</a>\n</td></tr>\n<tr>\n<td>≈ 1.3079506 <a href=\"/wiki/Cubic_yard\" title=\"Cubic yard\">cubic yards</a>\n</td></tr>\n<tr>\n<td>≈ 6.2898108 <a href=\"/wiki/Barrel_(unit)\" title=\"Barrel (unit)\">oil barrels</a>\n</td></tr>\n<tr>\n<td>≈ 219.96925 <a href=\"/wiki/Imperial_unit\" class=\"mw-redirect\" title=\"Imperial unit\">imperial</a> <a href=\"/wiki/Gallon\" title=\"Gallon\">gallons</a>\n</td></tr>\n<tr>\n<td>≈ 264.17205 <a href=\"/wiki/United_States_customary_units#Fluid_volume\" title=\"United States customary units\">US fluid</a> gallons\n</td></tr></tbody></table></dd></dl>\n<p>A cubic metre of pure water at the temperature of maximum density (3.983&#160;°C) and standard <a href=\"/wiki/Atmospheric_pressure\" title=\"Atmospheric pressure\">atmospheric pressure</a> (101.325&#160;kPa) has a <a href=\"/wiki/Mass\" title=\"Mass\">mass</a> of <span class=\"nowrap\"><span data-sort-value=\"7003100000000000000♠\"></span>1000&#160;<a href=\"/wiki/Kilogram\" title=\"Kilogram\">kg</a></span>, or one <a href=\"/wiki/Tonne\" title=\"Tonne\">tonne</a>, which makes its <a href=\"/wiki/Maximum\" class=\"mw-redirect\" title=\"Maximum\">maximum</a> <a href=\"/wiki/Density\" title=\"Density\">density</a> at 101.325 kPa 1 Mg/m<sup>3</sup>. At 0&#160;°C, the freezing point of water, a cubic metre of water has slightly less mass, 999.85 kilograms.<sup id=\"cite&#95;ref-5\" class=\"reference\"><a href=\"#cite_note-5\"><span class=\"cite-bracket\">&#91;</span>5<span class=\"cite-bracket\">&#93;</span></a></sup>\n</p><p>The \"cubic metre\" symbol is encoded by <a href=\"/wiki/Unicode\" title=\"Unicode\">Unicode</a> at code point <span class=\"nowrap\"><style data-mw-deduplicate=\"TemplateStyles:r886049734\">.mw-parser-output .monospaced{font-family:monospace,monospace}</style><span class=\"monospaced\">U+33A5</span>&#x20;</span><span style=\"font-size:125%;line-height:1em\">&#x33a5;</span> <span style=\"font-variant: small-caps; text-transform: lowercase; font-feature-settings: &#39;onum&#39;\">SQUARE M CUBED</span>.<sup id=\"cite&#95;ref-Unicode-U3300&#95;6-0\" class=\"reference\"><a href=\"#cite_note-Unicode-U3300-6\"><span class=\"cite-bracket\">&#91;</span>6<span class=\"cite-bracket\">&#93;</span></a></sup>\n</p>\n<div class=\"mw-heading mw-heading2\"><h2 id=\"Multiples_and_submultiples\">Multiples and submultiples</h2><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=2\" title=\"Edit section: Multiples and submultiples\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<link rel=\"mw-deduplicated-inline-style\" href=\"mw-data:TemplateStyles:r1353705441\" /><div role=\"note\" class=\"hatnote navigation-not-searchable\">Main articles: <a href=\"/wiki/Metric_prefix\" title=\"Metric prefix\">Metric prefix</a> and <a href=\"/wiki/Orders_of_magnitude_(volume)\" title=\"Orders of magnitude (volume)\">Orders of magnitude (volume)</a></div>\n<div class=\"mw-heading mw-heading3\"><h3 id=\"Multiples\">Multiples</h3><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=3\" title=\"Edit section: Multiples\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<dl><dt>Cubic decametre</dt>\n<dd>the volume of a cube of side length one decametre (10&#160;m)</dd>\n<dd>equal to a <a href=\"/wiki/Megalitre\" class=\"mw-redirect\" title=\"Megalitre\">megalitre</a></dd>\n<dd>1&#160;dam<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"7003100000000000000♠\"></span>1000&#160;m<sup>3</sup></span> = 1&#160;ML</dd></dl>\n<dl><dt>Cubic hectometre</dt>\n<dd>the volume of a cube of side length one hectometre (100 m)</dd>\n<dd>equal to a <a href=\"/wiki/Gigalitre\" class=\"mw-redirect\" title=\"Gigalitre\">gigalitre</a></dd>\n<dd><span class=\"anchor\" id=\"MCM\"></span>in civil engineering abbreviated MCM for million cubic metres</dd>\n<dd>1&#160;hm<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"7006100000000000000♠\"></span>1<span style=\"margin-left:.25em;\">000</span><span style=\"margin-left:.25em;\">000</span>&#160;m<sup>3</sup></span> = 1&#160;GL</dd></dl>\n<dl><dt>Cubic kilometre</dt>\n<dd>the volume of a cube of side length one kilometre (<span class=\"nowrap\"><span data-sort-value=\"7003100000000000000♠\"></span>1000&#160;m</span>)</dd>\n<dd>equal to a teralitre</dd>\n<dd>1&#160;km<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"7009100000000000000♠\"></span>1<span style=\"margin-left:.25em;\">000</span><span style=\"margin-left:.25em;\">000</span><span style=\"margin-left:.25em;\">000</span>&#160;m<sup>3</sup></span> = 1&#160;TL (810713.19 <a href=\"/wiki/Acre-foot\" title=\"Acre-foot\">acre-feet</a>; 0.239913 <a href=\"/wiki/Cubic_mile\" title=\"Cubic mile\">cubic miles</a>)</dd></dl>\n<div class=\"mw-heading mw-heading3\"><h3 id=\"Submultiples\">Submultiples</h3><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=4\" title=\"Edit section: Submultiples\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<dl><dt>Cubic decimetre</dt>\n<dd>the volume of a cube of side length one decimetre (0.1&#160;m)</dd>\n<dd>equal to a litre</dd>\n<dd>1&#160;dm<sup>3</sup> = 0.001&#160;m<sup>3</sup> = 1&#160;L</dd>\n<dd>(also known as DCM (=Deci Cubic Meter) in Rubber compound processing)</dd></dl>\n<dl><dt>Cubic centimetre<sup id=\"cite&#95;ref-7\" class=\"reference\"><a href=\"#cite_note-7\"><span class=\"cite-bracket\">&#91;</span>7<span class=\"cite-bracket\">&#93;</span></a></sup></dt>\n<dd>the volume of a cube of side length one centimetre (0.01&#160;m)</dd>\n<dd>equal to a millilitre</dd>\n<dd>1&#160;cm<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"6994100000000000000♠\"></span>0.000<span style=\"margin-left:.25em;\">001</span>&#160;m<sup>3</sup></span> = 10<sup>−6</sup>&#160;m<sup>3</sup> = 1&#160;mL</dd></dl>\n<dl><dt>Cubic millimetre</dt>\n<dd>the volume of a cube of side length one millimetre (0.001&#160;m)</dd>\n<dd>equal to a microlitre</dd>\n<dd>1&#160;mm<sup>3</sup> = <span class=\"nowrap\"><span data-sort-value=\"6991100000000000000♠\"></span>0.000<span style=\"margin-left:.25em;\">000</span><span style=\"margin-left:.25em;\">001</span>&#160;m<sup>3</sup></span> = 10<sup>−9</sup>&#160;m<sup>3</sup> = 1&#160;μL</dd></dl>\n<div class=\"mw-heading mw-heading2\"><h2 id=\"See_also\">See also</h2><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=5\" title=\"Edit section: See also\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<ul><li><a href=\"/wiki/Orders_of_magnitude_(volume)\" title=\"Orders of magnitude (volume)\">Orders of magnitude (volume)</a></li>\n<li><a href=\"/wiki/Reciprocal_cubic_metre\" class=\"mw-redirect\" title=\"Reciprocal cubic metre\">Reciprocal cubic metre</a></li>\n<li><a href=\"/wiki/Standard_cubic_foot\" title=\"Standard cubic foot\">Standard cubic foot</a></li></ul>\n<div class=\"mw-heading mw-heading2\"><h2 id=\"References\">References</h2><span class=\"mw-editsection\"><span class=\"mw-editsection-bracket\">[</span><a href=\"/w/index.php?title=Cubic_metre&amp;action=edit&amp;section=6\" title=\"Edit section: References\"><span>edit</span></a><span class=\"mw-editsection-bracket\">]</span></span></div>\n<style data-mw-deduplicate=\"TemplateStyles:r1327269900\">.mw-parser-output .reflist-columns-2{column-width:30em}.mw-parser-output .reflist-columns-3{column-width:25em}body.skin-vector-2022 .mw-parser-output .reflist-columns-2{column-width:27em}body.skin-vector-2022 .mw-parser-output .reflist-columns-3{column-width:22.5em}.mw-parser-output .references[data-mw-group=upper-alpha]{list-style-type:upper-alpha}.mw-parser-output .references[data-mw-group=upper-roman]{list-style-type:upper-roman}.mw-parser-output .references[data-mw-group=lower-alpha]{list-style-type:lower-alpha}.mw-parser-output .references[data-mw-group=lower-greek]{list-style-type:lower-greek}.mw-parser-output .references[data-mw-group=lower-roman]{list-style-type:lower-roman}.mw-parser-output div.reflist-liststyle-upper-alpha .references{list-style-type:upper-alpha}.mw-parser-output div.reflist-liststyle-upper-roman .references{list-style-type:upper-roman}.mw-parser-output div.reflist-liststyle-lower-alpha .references{list-style-type:lower-alpha}.mw-parser-output div.reflist-liststyle-lower-greek .references{list-style-type:lower-greek}.mw-parser-output div.reflist-liststyle-lower-roman .references{list-style-type:lower-roman}</style><div>\n<div class=\"mw-references-wrap\"><ol class=\"references\">\n<li id=\"cite&#95;note-bipm-1\"><span class=\"mw-cite-backlink\">^ <a href=\"#cite_ref-bipm_1-0\"><sup><i><b>a</b></i></sup></a> <a href=\"#cite_ref-bipm_1-1\"><sup><i><b>b</b></i></sup></a></span> <span class=\"reference-text\"><a href=\"/wiki/International_Bureau_of_Weights_and_Measures\" title=\"International Bureau of Weights and Measures\">Bureau International de Poids et Mesures</a>. \"<a rel=\"nofollow\" class=\"external text\" href=\"http://www.bipm.org/en/si/derived_units/2-2-1.html\">Derived units expressed in terms of base units</a> <a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20120716204202/http://www1.bipm.org/en/si/derived_units/2-2-1.html\">Archived</a> 2012-07-16 at the <a href=\"/wiki/Wayback_Machine\" title=\"Wayback Machine\">Wayback Machine</a>\". 2014. Accessed 7 August 2014.</span>\n</li>\n<li id=\"cite&#95;note-2\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-2\">^</a></b></span> <span class=\"reference-text\"><a rel=\"nofollow\" class=\"external free\" href=\"https://www.fedex.com/en-hk/shipping/glossary/what-is-cbm.html\">https://www.fedex.com/en-hk/shipping/glossary/what-is-cbm.html</a></span>\n</li>\n<li id=\"cite&#95;note-3\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-3\">^</a></b></span> <span class=\"reference-text\">From 1901 to 1964 the litre was defined as the volume of one kilogram of pure <a href=\"/wiki/Water\" title=\"Water\">water</a> at 4&#160;°<a href=\"/wiki/Celsius\" title=\"Celsius\">C</a> and 760 <a href=\"/wiki/Torr\" title=\"Torr\">millimetres of mercury</a> pressure: during this time, a litre was about <span class=\"nowrap\"><span data-sort-value=\"6997100002800000000♠\"></span>1.000<span style=\"margin-left:.25em;\">028</span>&#160;dm<sup>3</sup></span>. In 1964 the original definition was reverted to.</span>\n</li>\n<li id=\"cite&#95;note-4\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-4\">^</a></b></span> <span class=\"reference-text\"><style data-mw-deduplicate=\"TemplateStyles:r1333433106\">.mw-parser-output cite.citation{font-style:inherit;word-wrap:break-word}.mw-parser-output .citation q{quotes:\"\\\"\"\"\\\"\"\"'\"\"'\"}.mw-parser-output .citation:target{background-color:rgba(0,127,255,0.133)}.mw-parser-output .id-lock-free.id-lock-free a{background:url(\"//upload.wikimedia.org/wikipedia/commons/6/65/Lock-green.svg\")right 0.1em center/9px no-repeat}.mw-parser-output .id-lock-limited.id-lock-limited a,.mw-parser-output .id-lock-registration.id-lock-registration a{background:url(\"//upload.wikimedia.org/wikipedia/commons/d/d6/Lock-gray-alt-2.svg\")right 0.1em center/9px no-repeat}.mw-parser-output .id-lock-subscription.id-lock-subscription a{background:url(\"//upload.wikimedia.org/wikipedia/commons/a/aa/Lock-red-alt-2.svg\")right 0.1em center/9px no-repeat}.mw-parser-output .cs1-ws-icon a{background:url(\"//upload.wikimedia.org/wikipedia/commons/4/4c/Wikisource-logo.svg\")right 0.1em center/12px no-repeat}body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .id-lock-free a,body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .id-lock-limited a,body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .id-lock-registration a,body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .id-lock-subscription a,body:not(.skin-timeless):not(.skin-minerva) .mw-parser-output .cs1-ws-icon a{background-size:contain;padding:0 1em 0 0}.mw-parser-output .cs1-code{color:inherit;background:inherit;border:none;padding:inherit}.mw-parser-output .cs1-hidden-error{display:none;color:var(--color-error,#bf3c2c)}.mw-parser-output .cs1-visible-error{color:var(--color-error,#bf3c2c)}.mw-parser-output .cs1-maint{display:none;color:#085;margin-left:0.3em}.mw-parser-output .cs1-kern-left{padding-left:0.2em}.mw-parser-output .cs1-kern-right{padding-right:0.2em}.mw-parser-output .citation .mw-selflink{font-weight:inherit}@media screen{.mw-parser-output .cs1-format{font-size:95%}html.skin-theme-clientpref-night .mw-parser-output .cs1-maint{color:#18911f}}@media screen and (prefers-color-scheme:dark){html.skin-theme-clientpref-os .mw-parser-output .cs1-maint{color:#18911f}}</style><cite class=\"citation web cs1\"><a rel=\"nofollow\" class=\"external text\" href=\"https://web.archive.org/web/20091001100650/http://www.bipm.org/en/si/si_brochure/chapter4/table6.html\">\"BIPM – Table 6\"</a>. Archived from <a rel=\"nofollow\" class=\"external text\" href=\"http://www.bipm.org/en/si/si_brochure/chapter4/table6.html\">the original</a> on 2009-10-01<span class=\"reference-accessdate\">. Retrieved <span class=\"nowrap\">2010-03-05</span></span>.</cite><span title=\"ctx&#95;ver=Z39.88-2004&amp;rft&#95;val&#95;fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Abook&amp;rft.genre=unknown&amp;rft.btitle=BIPM+%E2%80%93+Table+6&amp;rft&#95;id=http%3A%2F%2Fwww.bipm.org%2Fen%2Fsi%2Fsi&#95;brochure%2Fchapter4%2Ftable6.html&amp;rfr&#95;id=info%3Asid%2Fen.wikipedia.org%3ACubic+metre\" class=\"Z3988\"></span></span>\n</li>\n<li id=\"cite&#95;note-5\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-5\">^</a></b></span> <span class=\"reference-text\"><link rel=\"mw-deduplicated-inline-style\" href=\"mw-data:TemplateStyles:r1333433106\" /><cite class=\"citation web cs1\"><a rel=\"nofollow\" class=\"external text\" href=\"https://www.engineeringtoolbox.com/water-density-specific-weight-d_595.html\">\"Water Density, Specific Weight and Thermal Expansion Coefficients – Temperature and Pressure Dependence\"</a>. <i>The Engineering ToolBox</i><span class=\"reference-accessdate\">. Retrieved <span class=\"nowrap\">2025-06-13</span></span>.</cite><span title=\"ctx&#95;ver=Z39.88-2004&amp;rft&#95;val&#95;fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;rft.genre=unknown&amp;rft.jtitle=The+Engineering+ToolBox&amp;rft.atitle=Water+Density%2C+Specific+Weight+and+Thermal+Expansion+Coefficients+%E2%80%93+Temperature+and+Pressure+Dependence&amp;rft&#95;id=https%3A%2F%2Fwww.engineeringtoolbox.com%2Fwater-density-specific-weight-d&#95;595.html&amp;rfr&#95;id=info%3Asid%2Fen.wikipedia.org%3ACubic+metre\" class=\"Z3988\"></span></span>\n</li>\n<li id=\"cite&#95;note-Unicode-U3300-6\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-Unicode-U3300_6-0\">^</a></b></span> <span class=\"reference-text\"><link rel=\"mw-deduplicated-inline-style\" href=\"mw-data:TemplateStyles:r1333433106\" /><cite id=\"CITEREFUnicode&#95;Consortium2019\" class=\"citation web cs1\"><a href=\"/wiki/Unicode_Consortium\" title=\"Unicode Consortium\">Unicode Consortium</a> (2019). <a rel=\"nofollow\" class=\"external text\" href=\"https://www.unicode.org/charts/PDF/U3300.pdf\">\"The Unicode Standard 12.0 – CJK Compatibility ❰ Range: 3300—33FF ❱\"</a> <span class=\"cs1-format\">(PDF)</span>. <i>Unicode.org</i><span class=\"reference-accessdate\">. Retrieved <span class=\"nowrap\">May 24,</span> 2019</span>.</cite><span title=\"ctx&#95;ver=Z39.88-2004&amp;rft&#95;val&#95;fmt=info%3Aofi%2Ffmt%3Akev%3Amtx%3Ajournal&amp;rft.genre=unknown&amp;rft.jtitle=Unicode.org&amp;rft.atitle=The+Unicode+Standard+12.0+%E2%80%93+CJK+Compatibility+%E2%9D%B0+Range%3A+3300%E2%80%9433FF+%E2%9D%B1&amp;rft.date=2019&amp;rft.au=Unicode+Consortium&amp;rft&#95;id=https%3A%2F%2Fwww.unicode.org%2Fcharts%2FPDF%2FU3300.pdf&amp;rfr&#95;id=info%3Asid%2Fen.wikipedia.org%3ACubic+metre\" class=\"Z3988\"></span></span>\n</li>\n<li id=\"cite&#95;note-7\"><span class=\"mw-cite-backlink\"><b><a href=\"#cite_ref-7\">^</a></b></span> <span class=\"reference-text\">The cubic centimetre is the base unit of volume of the <a href=\"/wiki/CGS_system\" class=\"mw-redirect\" title=\"CGS system\">CGS system</a> of units. The colloquial abbreviations \"cc\" and \"ccm\" are not SI but are common in some contexts such as cooking, <a href=\"/wiki/Engine_displacement\" title=\"Engine displacement\">engine displacement</a> and medicine.</span>\n</li>\n</ol></div></div>\n<style data-mw-deduplicate=\"TemplateStyles:r1314755338\">.mw-parser-output .side-box{margin:4px 0;box-sizing:border-box;border:1px solid #aaa;font-size:88%;line-height:1.25em;background-color:var(--background-color-interactive-subtle,#f8f9fa);color:inherit;display:flow-root}.mw-parser-output .infobox .side-box{font-size:100%}.mw-parser-output .side-box-abovebelow,.mw-parser-output .side-box-text{padding:0.25em 0.9em}.mw-parser-output .side-box-image{padding:2px 0 2px 0.9em;text-align:center}.mw-parser-output .side-box-imageright{padding:2px 0.9em 2px 0;text-align:center}@media(min-width:500px){.mw-parser-output .side-box-flex{display:flex;align-items:center}.mw-parser-output .side-box-text{flex:1;min-width:0}}@media(min-width:640px){.mw-parser-output .side-box{width:238px}.mw-parser-output .side-box-right{clear:right;float:right;margin-left:1em}.mw-parser-output .side-box-left{margin-right:1em}}</style><style data-mw-deduplicate=\"TemplateStyles:r1311551236\">@media print{body.ns-0 .mw-parser-output .sistersitebox{display:none!important}}@media screen{html.skin-theme-clientpref-night .mw-parser-output .sistersitebox img[src*=\"Wiktionary-logo-en-v2.svg\"]{filter:invert(1)brightness(55%)contrast(250%)hue-rotate(180deg)}}@media screen and (prefers-color-scheme:dark){html.skin-theme-clientpref-os .mw-parser-output .sistersitebox img[src*=\"Wiktionary-logo-en-v2.svg\"]{filter:invert(1)brightness(55%)contrast(250%)hue-rotate(180deg)}}</style><div class=\"side-box side-box-right plainlinks sistersitebox\"><style data-mw-deduplicate=\"TemplateStyles:r1126788409\">.mw-parser-output .plainlist ol,.mw-parser-output .plainlist ul{line-height:inherit;list-style:none;margin:0;padding:0}.mw-parser-output .plainlist ol li,.mw-parser-output .plainlist ul li{margin-bottom:0}</style>\n<div class=\"side-box-flex\">\n<div class=\"side-box-image\"><span class=\"noviewer skin-invert-image\" typeof=\"mw:File\"><a href=\"/wiki/File:Wiktionary-logo-en-v2.svg\" class=\"mw-file-description\"><img alt=\"Wiktionary logo\" src=\"//upload.wikimedia.org/wikipedia/commons/thumb/9/99/Wiktionary-logo-en-v2.svg/40px-Wiktionary-logo-en-v2.svg.png\" decoding=\"async\" width=\"40\" height=\"40\" class=\"mw-file-element\" srcset=\"//upload.wikimedia.org/wikipedia/commons/thumb/9/99/Wiktionary-logo-en-v2.svg/120px-Wiktionary-logo-en-v2.svg.png 2x\" data-file-width=\"512\" data-file-height=\"512\" /></a></span></div>\n<div class=\"side-box-text plainlist\">Look up <i><b><a href=\"https://en.wiktionary.org/wiki/cubic_metre\" class=\"extiw\" title=\"wiktionary:cubic metre\">cubic metre</a></b></i> in Wiktionary, the free dictionary.</div></div>\n</div>\n<!-- \nNewPP limit report\nParsed by mw‐web.codfw.main‐5749dd88d7‐5s54p\nCached time: 20260511221452\nCache expiry: 2592000\nCache expiry source: Module:Webarchive (os.date *t .year)\nReduced expiry: false\nComplications: [vary‐revision‐sha1, prevent‐selective‐update, show‐toc]\nCPU time usage: 0.279 seconds\nReal time usage: 0.353 seconds\nPreprocessor visited node count: 1559/1000000\nRevision size: 5848/2097152 bytes\nPost‐expand include size: 16570/2097152 bytes\nTemplate argument size: 1460/2097152 bytes\nHighest expansion depth: 23/100\nExpensive parser function count: 5/500\nUnstrip recursion depth: 1/20\nUnstrip post‐expand size: 18723/5000000 bytes\nLua time usage: 0.175/10.000 seconds\nLua memory usage: 6109572/52428800 bytes\nNumber of Wikibase entities loaded: 0/500\n-->\n<!--\nTransclusion expansion time report (%,ms,calls,template)\n100.00%  321.357      1 -total\n 32.06%  103.036      1 Template:Reflist\n 25.58%   82.194      3 Template:Cite_web\n 17.56%   56.423      1 Template:Short_description\n 12.66%   40.668      1 Template:Unichar\n 11.93%   38.329      1 Template:Unichar/main\n 10.76%   34.586      1 Template:Infobox_unit\n 10.75%   34.562      9 Template:Val\n  9.43%   30.304      2 Template:Pagetype\n  8.67%   27.853      1 Template:Infobox\n-->\n\n<!-- Render ID d5049777-4d86-11f1-a82c-4d2daed33bb9 -->\n\n<!-- Saved in parser cache with key enwiki:pcache:30125638:|#|:idhash:canonical and timestamp 20260511221452 and revision id 1342929208. Rendering was triggered because: page_view\n -->\n</div>",
+  "prose_text": "SI derived unit of volume The cubic metre (in Commonwealth English and international spelling as used by the International Bureau of Weights and Measures ) or cubic meter (in American English ) is the unit of volume in the International System of Units (SI). [ 1 ] Its symbol is m 3 . [ 1 ] It is the volume of a cube with edges one metre in length. An alternative name, which allowed a different usage with metric prefixes , was the stère , still sometimes used for dry measure (for instance, in reference to wood ). Another alternative name, no longer widely used, was the kilolitre . The acronym CBM is in common use to describe a cubic metre. [ 2 ] Conversions [ edit ] Some SI units of volume to scale and approximate corresponding mass of water Main article: Unit conversion A cubic metre of pure water at the temperature of maximum density (3.983 °C) and standard atmospheric pressure (101.325 kPa) has a mass of 1000 kg , or one tonne , which makes its maximum density at 101.325 kPa 1 Mg/m 3 . At 0 °C, the freezing point of water, a cubic metre of water has slightly less mass, 999.85 kilograms. [ 5 ] The \"cubic metre\" symbol is encoded by Unicode at code point U+33A5 ㎥ SQUARE M CUBED . [ 6 ] Multiples and submultiples [ edit ] Main articles: Metric prefix and Orders of magnitude (volume) Multiples [ edit ] Cubic decametre the volume of a cube of side length one decametre (10 m) equal to a megalitre 1 dam 3 = 1000 m 3 = 1 ML Cubic hectometre the volume of a cube of side length one hectometre (100 m) equal to a gigalitre in civil engineering abbreviated MCM for million cubic metres 1 hm 3 = 1 000 000 m 3 = 1 GL Cubic kilometre the volume of a cube of side length one kilometre ( 1000 m ) equal to a teralitre 1 km 3 = 1 000 000 000 m 3 = 1 TL (810713.19 acre-feet ; 0.239913 cubic miles ) Submultiples [ edit ] Cubic decimetre the volume of a cube of side length one decimetre (0.1 m) equal to a litre 1 dm 3 = 0.001 m 3 = 1 L (also known as DCM (=Deci Cubic Meter) in Rubber compound processing) Cubic centimetre [ 7 ] the volume of a cube of side length one centimetre (0.01 m) equal to a millilitre 1 cm 3 = 0.000 001 m 3 = 10 −6 m 3 = 1 mL Cubic millimetre the volume of a cube of side length one millimetre (0.001 m) equal to a microlitre 1 mm 3 = 0.000 000 001 m 3 = 10 −9 m 3 = 1 μL See also [ edit ] Orders of magnitude (volume) Reciprocal cubic metre Standard cubic foot References [ edit ] ^ a b Bureau International de Poids et Mesures . \" Derived units expressed in terms of base units Archived 2012-07-16 at the Wayback Machine \". 2014. Accessed 7 August 2014. ^ https://www.fedex.com/en-hk/shipping/glossary/what-is-cbm.html ^ From 1901 to 1964 the litre was defined as the volume of one kilogram of pure water at 4 ° C and 760 millimetres of mercury pressure: during this time, a litre was about 1.000 028 dm 3 . In 1964 the original definition was reverted to. ^ \"BIPM – Table 6\" . Archived from the original on 2009-10-01 . Retrieved 2010-03-05 . ^ \"Water Density, Specific Weight and Thermal Expansion Coefficients – Temperature and Pressure Dependence\" . The Engineering ToolBox . Retrieved 2025-06-13 . ^ Unicode Consortium (2019). \"The Unicode Standard 12.0 – CJK Compatibility ❰ Range: 3300—33FF ❱\" (PDF) . Unicode.org . Retrieved May 24, 2019 . ^ The cubic centimetre is the base unit of volume of the CGS system of units. The colloquial abbreviations \"cc\" and \"ccm\" are not SI but are common in some contexts such as cooking, engine displacement and medicine. Look up cubic metre in Wiktionary, the free dictionary.",
+  "source_url": "https://en.wikipedia.org/w/index.php?pageid=30125638",
+  "title": "Cubic metre",
+  "updated_at": "2026-06-08T10:11:52.112308+00:00"
+}

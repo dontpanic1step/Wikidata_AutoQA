@@ -1,0 +1,213 @@
+{
+  "settings": {
+    "input_files": [
+      "outputs/aws_route3_place_infobox_rowfilter_test_2026_06_03/01_place_200_rowfilter_test_accepted.jsonl",
+      "outputs/aws_route3_place_infobox_rowfilter_test_2026_06_03/01_place_200_rowfilter_test_rejected.jsonl"
+    ],
+    "max_records": 2,
+    "top_k": 5,
+    "timeout_seconds": 3.0,
+    "proxy": "none"
+  },
+  "summary": {
+    "query_count": 2,
+    "ok_count": 0,
+    "error_count": 2,
+    "duration_seconds_total": 48.1967,
+    "duration_seconds_max": 24.1136,
+    "errors": [
+      [
+        "URLError: <urlopen error timed out>",
+        2
+      ]
+    ],
+    "attempts": [
+      [
+        "URLError::direct",
+        6
+      ],
+      [
+        "URLError::direct_fallback",
+        6
+      ]
+    ]
+  },
+  "results": [
+    {
+      "source_file": "outputs/aws_route3_place_infobox_rowfilter_test_2026_06_03/01_place_200_rowfilter_test_accepted.jsonl",
+      "page_id": null,
+      "page_title": "Colima",
+      "question": "What is the capital city of the Mexican state that was admitted to the federation on December 9, 1856, and is ranked 23rd in order of admission?",
+      "answer": "Colima",
+      "answer_type": "Place",
+      "query_name": "full_question",
+      "query": "What is the capital city of the Mexican state that was admitted to the federation on December 9, 1856, and is ranked 23rd in order of admission?",
+      "ok": false,
+      "duration_seconds": 24.1136,
+      "error_type": "URLError",
+      "error_message": "<urlopen error timed out>",
+      "exception_type": "DuckDuckGoSearchError",
+      "exception_message": "DuckDuckGo search request failed after 6 attempts: <urlopen error timed out>",
+      "request_events": [
+        {
+          "url": "https://html.duckduckgo.com/html/?q=What+is+the+capital+city+of+the+Mexican+state+that+was+admitted+to+the+federation+on+December+9%2C+1856%2C+and+is+ranked+23rd+in+order+of+admission%3F",
+          "cache_hit": false,
+          "duration_ms": 24084,
+          "failed": true,
+          "error_type": "URLError",
+          "error_message": "<urlopen error timed out>",
+          "attempts": [
+            {
+              "attempt": 1,
+              "path": "direct",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3035,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 2,
+              "path": "direct",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3004,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 3,
+              "path": "direct",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3004,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 1,
+              "path": "direct_fallback",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3003,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 2,
+              "path": "direct_fallback",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3004,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 3,
+              "path": "direct_fallback",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3003,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "source_file": "outputs/aws_route3_place_infobox_rowfilter_test_2026_06_03/01_place_200_rowfilter_test_accepted.jsonl",
+      "page_id": null,
+      "page_title": "Colima",
+      "question": "What is the capital city of the Mexican state that was admitted to the federation on December 9, 1856, and is ranked 23rd in order of admission?",
+      "answer": "Colima",
+      "answer_type": "Place",
+      "query_name": "generated_1",
+      "query": "capital city of Mexican state admitted December 9, 1856",
+      "ok": false,
+      "duration_seconds": 24.0831,
+      "error_type": "URLError",
+      "error_message": "<urlopen error timed out>",
+      "exception_type": "DuckDuckGoSearchError",
+      "exception_message": "DuckDuckGo search request failed after 6 attempts: <urlopen error timed out>",
+      "request_events": [
+        {
+          "url": "https://html.duckduckgo.com/html/?q=capital+city+of+Mexican+state+admitted+December+9%2C+1856",
+          "cache_hit": false,
+          "duration_ms": 24054,
+          "failed": true,
+          "error_type": "URLError",
+          "error_message": "<urlopen error timed out>",
+          "attempts": [
+            {
+              "attempt": 1,
+              "path": "direct",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3003,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 2,
+              "path": "direct",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3004,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 3,
+              "path": "direct",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3003,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 1,
+              "path": "direct_fallback",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3003,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 2,
+              "path": "direct_fallback",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3005,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            },
+            {
+              "attempt": 3,
+              "path": "direct_fallback",
+              "proxy_configured": false,
+              "timeout_seconds": 3.0,
+              "duration_ms": 3004,
+              "ok": false,
+              "error_type": "URLError",
+              "error_message": "<urlopen error timed out>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

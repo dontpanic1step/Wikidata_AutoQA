@@ -118,3 +118,91 @@ What is the only U.S. state that does not have a rectangular flag?
 Netflix founder Reed Hastings claimed (possibly falsely) that he thought of the idea for his company after receiving a $40 late fee from Blockbuster. What was the movie he said he failed to return?
 
 先抽几条模板回复检测长尾性
+
+------------------------------
+1, 去掉大数字占比过高的表格；不要带有population, census, ...的表格
+2, 把simpleqa给出题者的指导改成prompt。
+3，random seed
+----------------------------
+把字母覆盖率不足的表格直接去掉，去掉带小数的（短跑纪录是一个不错的、确定的案例，如果最后需要再补回来。）
+不要惩罚infobox
+改parser，改成parse成markdown而非字典
+---------
+person: 常用词表去掉常用任命，如果答案里这些大于等于1/2就视为错误。去掉什么带bros之类的。看看false positive，多想几条规则，降低LLM负担。
+
+------
+代码和数据要以simpleqa 的格式公开，github链接给金戈一份。
+筛掉reward+ what year类问题，重新平衡。
+接受杜夏安的数据和代码，整合进论文。
+原始代码中超过4000字符的被截断了！
+做token使用量分析，做和wikipage 热度的关联分析
+
+最重要的还是，你愿意做什么，付出多少。金戈的建议：最好找个文科类的工作。
+
+筛掉的问题
+date_23: award + what year，删
+date_47: 原始图表理解没有错误，但 https://en.wikipedia.org/wiki/Salle_Favart说It was destroyed by fire on the night of 14 or 15 January 1838. 9个模型回答不统一。删
+date_53: 原始图表理解没有错误，但更加准确的西班牙语wiki https://es.wikipedia.org/wiki/Federaci%C3%B3n_Venezolana_de_F%C3%BAtbol 说Venezuelan Football Federation and joined FIFA in 1952. 8/9模型回答一致都是1952.删
+number_7: 原始图表理解错误。删
+number_37: 复杂图表parsing正确，题目理解错误,9/9理解一致。删
+number_43: 图表理解错误。答案应为10，这个问题保留。可能小模型数数有困难，10这个数字还是太大了。留
+number_45: 原始图表错误，模型9/9正确。删
+number_15: 答案应为401 BC.已留。
+number_46: 图表理解有误，原题所需要的知识太多了我看不懂。问题改为How many Republican-held Senate seats were not up for election before the 1952 United States Senate elections?，答案不变。留。
+other_35: 原始图表有问题，模型理解不一致。删
+other_103：题目意思不明，删。表格处于external links，考虑要不要都删掉。
+other_6: 上下文过少，把一大堆表格中的一个拿出来问。删。
+other_13: 图表理解错误，模型回答不一致。问题改为Who was the regent of Tidore during 1779–1780? 答案不变，answer type改为person。留。
+other_27: 问题设计least，答案可能随时间变化。问法本身也有争议，什么是least woodlandes。删。
+other_32: 表格理解有误，模型回复不一致。问题和答案改为：Which organization's response to child sexual abuse was examined in a public hearing held in Sydney from 18 to 27 November 2013? North Coast Children's Home。留。
+person_16: external links里就没有好东西。删
+person_72: 表格理解错误，1981 season表述不清，模型大多答对。删。
+person_19：移入other类。留。
+person_28：没有明说是不是US house，改问题为Who was the incumbent representative for the 4th district in the 2012 Florida House of Representatives election?
+place_6, place_55:表格理解错误（把球队名理解成地名），模型8/9答对。删。
+place_11: 题目理解错误，改成In the June 2015 Turkish general election, which country where Turkish consulates held voting periods had a tied result?答案Greece。
+place_36, place_48: 删。
+place_13: 问题改为What city is referenced in the titles of William Walton's musical scores cue for Battle of Britain?答案Berlin
+place_17：问题改为In which countries did the album Sandinista! reach its highest peak position of number 3 on the official albums chart during 1980–1981? 答案Canada, New Zealand
+place_19: 答案改为Llanwrtyd Wells Urban District
+
+
+
+
+
+需要把生成的wikipedia_stream xxx id变成answer-type_wikipedia_stream_xxx（遵循生成时的answer type，避免rebalance/重新归类时导致溯源困难）。
+对Parser的设计：按照answer-type做，优先黑体，再匹配答案类型，最后按照附近单词和问题单词
+
+下周做的事情：
+和夏安肉眼看418条。用verification辅助审查。
+得回答审稿人的问题：如果是人提问而非这样流水线生成，题目会变成什么样？
+
+infobox质量比较高，在我的数据中占多少？为什么看起来没有？表格打分出了什么问题？是不是检测prose leakage害的？
+
+现在修改代码，同步更新design.md和default settings清单（忘了哪个文件了）：
+1、清理.mw-parser-output噪声。
+2、可以configure生成过程只使用infobox/wikitable/两个都用（默认为两个都用）
+3、把infobox图片占比阈值调到占非标题行50%以上才拒绝
+4、row count部分，不再加减分，直接拒绝只有两行及以下的表格（含标题行）。
+
+prose leakage: 改成可开关的，默认改为<0.2＋0.5分，>0.8扣0.5分。
+需要做infobox only + prose leakage off，试图增加place和person
+
+爬下来的html之类的，要本地存档。
+infobox要使用单独prompt，要解决答案不在表格的问题，这个应该很简单
+rejected要全面存档，比如使用的prompt，llm完整回复，拒绝compact！
+infobox被删掉过多行就要拒绝
+一次llm rewrite，生成5个类别的问题，生成不了可以拒绝，然后一个个拒绝。
+页面要先筛掉热度大的。
+
+对答案也筛选：答案是热门国家（United States, China, United Kingdom, Russia的一律不要），记为answer_too_popular，在rewrite后筛选。
+接下来，在chat里给我print all5, wikitable only, infobox only, wikitable or infobox这几种模式下使用的prompt，我来做手动修改
+
+文件的流转过程是这样的：首先，我给你的那个是原始文件，它经过rule-based筛选，final llm filtering得到一个结果，然后经过rebalance筛选得到一批rebalanced结果，rebalanced结果第一次有了date_11这类id，然后我对rebalanced结果中的一小部分做了肉眼审核/修改，也就是tmp filter中的white list。我用新的标准
+（还没写完，后续可能有用）
+
+把pageviews筛选改成可选项，先默认禁用，注意不要影响后续流程，不要搞出错误的占位符/占位错误原因。
+llm_discard_reason清单揭示，是不是有一个slot有LLM拒绝，整个url对应的多个问题都显示了拒绝？把所有正常accepted的url-slot抢救回accepted。
+
+按时间顺序分块看是：16.7% -> 46.2% -> 46.2% -> 46.2% -> 53.9%。最后一小段 61-64 里是 3/4 = 75%，
+所以更像是后段网络/search verifier 状态在恶化，不是从头到尾完全连续失败。 说明需要更加尊重ddg重试时间。我觉得可能是aws网速太快了导致的，毕竟本地跑一般没事。

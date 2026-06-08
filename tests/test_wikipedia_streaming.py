@@ -79,6 +79,29 @@ class WikipediaStreamingTests(unittest.TestCase):
             )
         self.assertEqual(reserved_again, [100])
 
+    def test_mark_rerun_persists_error_details_in_state_and_event(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = Path(tmpdir) / "state.json"
+            state = PageIdStreamState.load(path)
+            state.mark_rerun(
+                100,
+                reason="search_longtail_verifier_error",
+                error_type="URLError",
+                error_message="timed out while searching",
+            )
+            reloaded = PageIdStreamState.load(path)
+
+        self.assertEqual(
+            reloaded.rerun_error_details[100],
+            {
+                "error_type": "URLError",
+                "error_message": "timed out while searching",
+            },
+        )
+        self.assertEqual(reloaded.events[-1]["event"], "rerun")
+        self.assertEqual(reloaded.events[-1]["error_type"], "URLError")
+        self.assertEqual(reloaded.events[-1]["error_message"], "timed out while searching")
+
     def test_endpoint_sync_marks_decided_ids_and_removes_rerun_entries(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             path = Path(tmpdir) / "state.json"

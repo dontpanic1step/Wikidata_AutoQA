@@ -5,6 +5,7 @@ from __future__ import annotations
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 import json
 import re
+from time import perf_counter
 from typing import Any
 
 from .cheap_model_qa import parse_json_object
@@ -115,6 +116,15 @@ ISO_MONTH_PATTERN = re.compile(r"^(?P<year>\d{4})-(?P<month>\d{2})$")
 LONG_DATE_PATTERN = re.compile(
     r"^(?P<month>[a-z]+)\s+(?P<day>\d{1,2})\s+(?P<year>\d{4})$"
 )
+
+
+class SearchLongtailVerifierError(RuntimeError):
+    """Raised when search long-tail verification fails with audit features."""
+
+    def __init__(self, message: str, *, features: dict[str, Any], original_error: BaseException | None = None) -> None:
+        super().__init__(message)
+        self.features = features
+        self.original_error = original_error
 DMY_DATE_PATTERN = re.compile(
     r"^(?P<day>\d{1,2})\s+(?P<month>[a-z]+)\s+(?P<year>\d{4})$"
 )
@@ -230,7 +240,6 @@ def _validate_wikipedia_infobox_candidate(
             candidate,
             cutoff_year=cutoff_year,
         ) is None,
-        "route_local_factual_validation": False,
         "route_validation_policy": "provenance_only_for_wikipedia_infobox_route",
     }
     return all(
@@ -389,6 +398,7 @@ def run_search_based_longtail_verifier(
         "max_parallel_queries": max_parallel_queries,
         "early_stopped": False,
         "queries": [],
+        "query_errors": [],
         "category_hit_rates": {},
         "thresholds": {
             "full_question": max_full_question_hit_rate,
@@ -427,6 +437,15 @@ def run_search_based_longtail_verifier(
                 row = future.result()
                 features["queries"].append(row)
                 features["queries"].sort(key=lambda item: int(item.get("query_index", 0)))
+                if row.get("error"):
+                    features["passed"] = False
+                    features["triggered_rule"] = f"{row.get('query_name', 'query')}:query_error"
+                    features["early_stopped"] = True
+                    features["query_errors"].append(_longtail_query_error_payload(row))
+                    for pending_future in pending:
+                        pending_future.cancel()
+                    pending.clear()
+                    break
                 if row.get("exact_question_hit") and not features["triggered_rule"]:
                     features["passed"] = False
                     features["triggered_rule"] = f"{row.get('query_name', 'query')}:exact_question_hit"
@@ -466,6 +485,16 @@ def run_search_based_longtail_verifier(
     for row in features["queries"]:
         row.pop("query_index", None)
     features["category_hit_rates"] = _compute_category_hit_rates(features["queries"])
+    if features["query_errors"]:
+        first_error = features["query_errors"][0]
+        raise SearchLongtailVerifierError(
+            (
+                "Search long-tail verifier query failed: "
+                f"{first_error.get('query_name', 'query')} "
+                f"{first_error.get('error_type', 'Error')}: {first_error.get('error_message', '')}"
+            ),
+            features=features,
+        )
     if features["triggered_rule"]:
         return False, features
 
@@ -517,7 +546,24 @@ def _run_one_longtail_query(
     query_name = str(query_plan_row["query_name"])
     query_text = str(query_plan_row["query_text"])
     query_category = str(query_plan_row["query_category"])
-    results = search_client.search(query_text, max_results=top_k)
+    query_started = perf_counter()
+    request_event_start = _search_request_event_count(search_client)
+    try:
+        results = search_client.search(query_text, max_results=top_k)
+    except Exception as exc:  # noqa: BLE001
+        return {
+            "query_index": int(query_plan_row["query_index"]),
+            "query_name": query_name,
+            "query_category": query_category,
+            "query": query_text,
+            "duration_seconds": round(perf_counter() - query_started, 4),
+            "error": True,
+            "error_type": _root_error_type(exc),
+            "error_message": _root_error_message(exc),
+            "exception_type": type(exc).__name__,
+            "exception_message": str(exc),
+            "search_request_events": _search_request_events_since(search_client, request_event_start),
+        }
     title_hits = 0
     snippet_hits = 0
     exact_question_hit = False
@@ -552,6 +598,9 @@ def _run_one_longtail_query(
         "query_name": query_name,
         "query_category": query_category,
         "query": query_text,
+        "duration_seconds": round(perf_counter() - query_started, 4),
+        "error": False,
+        "search_request_events": _search_request_events_since(search_client, request_event_start),
         "result_count": len(results),
         "title_hits": title_hits,
         "snippet_hits": snippet_hits,
@@ -559,6 +608,51 @@ def _run_one_longtail_query(
         "exact_question_hit": exact_question_hit,
         "results": serialized_results,
     }
+
+
+def _longtail_query_error_payload(row: dict[str, Any]) -> dict[str, Any]:
+    """Return compact query-error diagnostics for candidate-level metadata."""
+    return {
+        "query_name": row.get("query_name", ""),
+        "query_category": row.get("query_category", ""),
+        "query": row.get("query", ""),
+        "duration_seconds": row.get("duration_seconds"),
+        "error_type": row.get("error_type", ""),
+        "error_message": row.get("error_message", ""),
+        "exception_type": row.get("exception_type", ""),
+        "exception_message": row.get("exception_message", ""),
+        "search_request_events": row.get("search_request_events", []),
+    }
+
+
+def _search_request_event_count(search_client: Any) -> int:
+    """Return the current search-client request event count, if available."""
+    events = getattr(search_client, "request_events", None)
+    return len(events) if isinstance(events, list) else 0
+
+
+def _search_request_events_since(search_client: Any, start_index: int) -> list[dict[str, Any]]:
+    """Return search-client request events observed since one index."""
+    events = getattr(search_client, "request_events", None)
+    if not isinstance(events, list):
+        return []
+    return [dict(event) for event in events[start_index:]]
+
+
+def _root_error_type(exc: BaseException) -> str:
+    """Return the original network error type when wrapped by the search client."""
+    original = getattr(exc, "original_error", None)
+    if isinstance(original, BaseException):
+        return type(original).__name__
+    return type(exc).__name__
+
+
+def _root_error_message(exc: BaseException) -> str:
+    """Return the original network error message when wrapped by the search client."""
+    original = getattr(exc, "original_error", None)
+    if isinstance(original, BaseException):
+        return str(original)
+    return str(exc)
 
 
 def _impossible_hit_rate_recovery_rule(

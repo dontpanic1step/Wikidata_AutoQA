@@ -7,6 +7,7 @@ import unittest
 from test_support import ROOT  # noqa: F401
 from unittest.mock import patch
 
+from wikidata_simpleqa.cheap_model_qa import OpenRouterCheapModelQAClient
 from wikidata_simpleqa.llm_rewrite import (
     OPENROUTER_REFERER,
     OPENROUTER_TITLE,
@@ -204,6 +205,68 @@ class LLMRewriteTests(unittest.TestCase):
             result = client.rewrite_question({"canonical_question": "Where did Peter Kelland study?"})
         self.assertEqual(result["rewritten_question"], "Where was Peter Kelland educated?")
         request_with_retry.assert_called_once()
+
+    def test_openrouter_rewrite_audit_keeps_full_response_and_sanitized_request(self) -> None:
+        config = LLMConfig(
+            provider="openrouter",
+            model="openai/gpt-4.1-mini",
+            api_key_env="OPENROUTER_API_KEY",
+        )
+        response_body = {
+            "id": "resp-1",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {
+                        "role": "assistant",
+                        "content": '{"rewritten_question":"Where was Peter Kelland educated?","search_queries":[],"discard_reason":null}',
+                    },
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {"prompt_tokens": 10, "completion_tokens": 5},
+        }
+        with (
+            patch.dict("os.environ", {"OPENROUTER_API_KEY": "test-key"}),
+            patch.object(OpenRouterRewriteClient, "_request_with_retry", return_value=response_body),
+        ):
+            client = OpenRouterRewriteClient(config=config, timeout_seconds=30.0)
+            audit = client.rewrite_question_with_audit({"canonical_question": "Where did Peter Kelland study?"})
+
+        self.assertEqual(audit["response_body"], response_body)
+        self.assertEqual(audit["raw_text"], response_body["choices"][0]["message"]["content"])
+        self.assertEqual(audit["parsed_response"]["rewritten_question"], "Where was Peter Kelland educated?")
+        self.assertNotIn("Authorization", audit["request_payload"])
+        self.assertIn("messages", audit["request_payload"])
+
+    def test_openrouter_generation_audit_keeps_full_response_and_sanitized_request(self) -> None:
+        config = LLMConfig(
+            provider="openrouter",
+            model="openai/gpt-4.1-mini",
+            api_key_env="OPENROUTER_API_KEY",
+        )
+        response_body = {
+            "id": "resp-2",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": "{\"ok\": true}"},
+                    "finish_reason": "stop",
+                }
+            ],
+            "usage": {"prompt_tokens": 3, "completion_tokens": 2},
+        }
+        with (
+            patch.dict("os.environ", {"OPENROUTER_API_KEY": "test-key"}),
+            patch.object(OpenRouterCheapModelQAClient, "_request_with_retry", return_value=response_body),
+        ):
+            client = OpenRouterCheapModelQAClient(config=config, timeout_seconds=30.0)
+            audit = client.complete_text_with_audit("Generate one question.")
+
+        self.assertEqual(audit["text"], "{\"ok\": true}")
+        self.assertEqual(audit["response_body"], response_body)
+        self.assertNotIn("Authorization", audit["request_payload"])
+        self.assertEqual(audit["request_payload"]["messages"][-1]["content"], "Generate one question.")
 
     def test_anchor_preservation_passes_when_all_anchors_remain(self) -> None:
         self.assertTrue(

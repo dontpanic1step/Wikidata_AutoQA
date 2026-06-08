@@ -2,7 +2,7 @@
 
 This file is the defaults ledger for the current branch. When a code default changes, update this file in the same change.
 
-Last updated: 2026-05-21.
+Last updated: 2026-06-08.
 
 ## Route 1 Multi-Hop Join Runner
 
@@ -127,9 +127,12 @@ These defaults come from `scripts/run_wikipedia_infobox_pipeline.py`.
 | --- | --- | --- |
 | Fetch API | `action=parse` | Route 3 parses page title, HTML text, infoboxes, and wikitables from MediaWiki parse payloads. |
 | First paragraph source | parse HTML only | Extracted from the already-fetched parse HTML. |
+| Parser noise suppression | enabled | Table/prose extraction skips `script` and `style` text, including `.mw-parser-output` CSS fragments that otherwise leak into cells and marker checks. |
 | REST summary fallback | `False` | `--enable-rest-summary-fallback` opts in. Missing parse paragraphs should not create another network dependency by default. |
+| Route 3 page archive cache | `cache/route3_pages` | Unified per-page JSON archive containing parse payload, parsed HTML, extracted table metadata, optional pageview request/response, computed pageview metrics when present, hashes, timestamps, and errors. |
 | Shared rewrite first paragraph | not passed | Route 3 keeps using the generic shared rewrite payload; first paragraph is only in the Route 3 generation prompt and metadata. |
 | Minimum table score | `0.0` | `--min-table-score`. Tables with rank score below this value are dropped before first-paragraph alias/context extraction and before Route 3 generation. If no table survives, the page is rejected before any LLM call. |
+| Minimum total table rows | `3` | Tables with two or fewer parsed rows, counting title/header rows, are rejected before generation. Row count is not used to add or subtract ranking score. |
 | Wikipedia request attempts per path | `2` | `WIKIPEDIA_REQUEST_ATTEMPTS_PER_PATH`. |
 | Wikipedia retry initial sleep | `0.5` seconds | Exponential backoff base. |
 | Wikipedia retry max sleep | `4.0` seconds | Per retry sleep cap. |
@@ -191,9 +194,24 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | DuckDuckGo parallel queries | `3` | `--duckduckgo-parallel-queries`. |
 | Generated search query count | `2` | Route 3 prompt asks for this many answer-blind queries. Fast default for initial Route 3 streaming; run slower survivor review separately when needed. |
 | Minimum table score | `0.0` | `--min-table-score`. The same cutoff is used for URL and streaming Route 3 runs. |
+| Route 3 reasoning types | `single_fact` | `--route3-reasoning-type`. When omitted, Route 3 prompts use the fixed `single_fact` reasoning contract and Route 3 writes `reasoning_type=single_fact` directly into candidates without asking the model to output that field. Repeat the flag or pass comma-separated values to let the model choose among multiple reasoning types such as `max`, `min`, `count`, or `ordinal`. |
+| Route 3 prose-leakage scoring | enabled | `--route3-prose-leakage-scoring` / `--no-route3-prose-leakage-scoring`. When enabled, table value leakage below `0.2` adds `0.5` points and leakage above `0.8` subtracts `0.5` points. Leakage stats are still recorded when scoring is disabled. |
+| Route 3 answer-type table hints | enabled only for single-mode, single-answer-type runs | Shared wikitable/infobox table ranking adds answer-type bonuses only when `--route3-answer-type-mode single` and exactly one `--route3-answer-type` are configured: `Person` +1 for adjacent initial-capitalized non-common words, `Place` +2 for seeded place-category markers, and `Date` +2 for month names, no-comma 1500-2040 years, or numeric month/day/year markers such as `3/6/2026`. These bonuses do not apply to `all5`, unspecified answer-type runs, or multiple allowed answer types. |
+| Route 3 table source types | `infobox`, `wikitable` | `--route3-table-source-type` can restrict generation to only `infobox`, only `wikitable`, or both/all. The same setting is passed through recipe segments and recorded in summaries/metadata. |
 | Route 3 LLM table choice | disabled | By default only the single top-ranked surviving table is passed to the generation LLM. `--route3-llm-choose-table` passes the top three surviving ranked tables and includes table-choice prompt text. |
-| Route 3 table filter modes | `no_picture_heavy_tables`, `no_incomplete_tables`, `not_number_dominant`, `no_social_science_research` | `--route3-table-filter-mode` enables modes and `--disable-route3-table-filter-mode` removes defaults for a run. These filters drop matching tables before the generation prompt. The incomplete marker gate also rejects approximate-value and citation-needed markers. |
-| Big batch mode | disabled | `--big-batch-mode` is intended for large Route 3 recipes. It writes compact accepted/rejected JSONL records, retries transient table-search discovery failures, and aligns `--stream-batch-size` with `--stream-search-limit` for table-search streams. |
+| Route 3 table filter modes | `no_external_links_tables`, `no_horizontal_companion_tables`, `no_picture_heavy_tables`, `no_incomplete_tables`, `not_number_dominant`, `no_social_science_research` | `--route3-table-filter-mode` enables modes and `--disable-route3-table-filter-mode` removes defaults for a run. These filters drop matching wikitables before the generation prompt. Infoboxes are cleaned before ranking: image-bearing rows and precise media captions/titles are removed, then each key-value row is checked against incomplete, number-dominance, and social-science markers; failing rows are removed. |
+| Route 3 answer-type mode | `single` | `--route3-answer-type-mode`. `single` preserves the legacy one-candidate output shape. `all5` asks one generation prompt to return exactly five fixed slots, one each for `Person`, `Place`, `Number`, `Date`, and `Other`; unsupported slots are rejected with `discard_reason` while supported slots can still produce candidates. |
+| Route 3 pageview prefilter | disabled | `--route3-pageview-prefilter` / `--no-route3-pageview-prefilter`. When disabled, metadata records `enabled=false`, `status=disabled`, `decision=allow`, and `reason=pageview_prefilter_disabled`; no pageview request is made and no pageview placeholder rejection is emitted. When enabled, it runs before table grading and before the generation LLM. |
+| Route 3 pageview window | `12` months | `--route3-pageview-window-months`. Uses the most recent complete months available in the page archive/pageview response. |
+| Route 3 pageview max monthly average | `5000` | `--route3-max-monthly-average-pageviews`. Pages with the full 12-month window observed and above this average are rejected as too popular before table grading. |
+| Route 3 underfilled-window max single-month pageviews | `10000` | `--route3-max-underfilled-monthly-pageviews`. When fewer than 12 months are observed, pages with any observed month above this value are rejected; otherwise they are allowed and the underfilled-window rule is recorded. |
+| Route 3 pageview unavailable policy | `allow` | `--route3-pageview-unavailable-policy`. Applies only when the pageview prefilter is enabled. Missing or failed pageview data is recorded but does not block generation by default. |
+| Route 3 infobox removed-row max rate | `0.60` | `--route3-infobox-max-removed-row-rate`. Infoboxes with a removed non-header row rate greater than this value are rejected. Exactly `0.60` is allowed by this rule. |
+| Route 3 infobox minimum remaining rows | `5` | `--route3-infobox-min-remaining-rows`. After cleanup, infoboxes with fewer than five remaining non-header rows are rejected before ranking. |
+| Route 3 prompt channel | source-specific | Infoboxes and wikitables use separate prompt builders and filter/ranking channels. The initial prompts are near-copies of the existing Route 3 prompt for later manual tuning. |
+| Big batch mode | disabled | `--big-batch-mode` is intended for large Route 3 recipes. It retries transient table-search discovery failures and aligns `--stream-batch-size` with `--stream-search-limit` for table-search streams. It does not compact accepted or rejected records. |
+| Compact output | disabled and ignored for Route 3 | `--compact-output` is deprecated for Route 3. Accepted and rejected records retain full audit metadata in every mode. |
+| Compact rejected output | disabled and ignored for Route 3 | `--compact-rejected-output` is deprecated for Route 3. Rejected records retain full audit metadata, including prompts, page archive metadata, pageview metadata/data, LLM responses, search evidence, and grading evidence. |
 | Search full-question hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search keyword hit-rate threshold | `0.3` | Reject when above threshold. |
 | Search overall hit-rate threshold | `0.3` | Reject when above threshold. |

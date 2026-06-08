@@ -6,7 +6,10 @@ import socket
 from urllib.parse import urlparse
 from urllib.request import ProxyHandler, build_opener, install_opener
 
-import socks
+try:
+    import socks
+except ImportError:  # pragma: no cover - exercised only on minimal remote runners.
+    socks = None
 
 ORIGINAL_SOCKET = socket.socket
 
@@ -24,6 +27,8 @@ def install_proxy(proxy: str | None) -> None:
         return
 
     if scheme in {"socks5", "socks5h"}:
+        if socks is None:
+            raise RuntimeError("PySocks is required when using a SOCKS proxy.")
         socks.set_default_proxy(
             socks.SOCKS5,
             parsed.hostname,
