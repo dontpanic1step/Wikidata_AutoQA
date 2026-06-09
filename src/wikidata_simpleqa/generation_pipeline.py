@@ -127,12 +127,7 @@ def run_generation_pipeline(
             cache_dir=settings.cache_dir,
         )
     if search_client is None:
-        search_client = DuckDuckGoSearchClient(
-            user_agent=settings.user_agent,
-            proxy=settings.proxy,
-            timeout_seconds=settings.timeout_seconds,
-            cache_dir=settings.cache_dir,
-        )
+        search_client = DuckDuckGoSearchClient(**settings.duckduckgo_client_kwargs())
     rewrite_client = None
     if settings.rewrite_enabled:
         rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds)

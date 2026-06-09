@@ -15,6 +15,11 @@ if str(SRC) not in sys.path:
 from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.config import LLMConfig
 from wikidata_simpleqa.generation_pipeline import run_generation_pipeline
+from wikidata_simpleqa.search_cli import (
+    add_duckduckgo_transport_args,
+    duckduckgo_settings_kwargs,
+    duckduckgo_summary_fields,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -26,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--harvest-limit", type=int, default=100)
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
+    add_duckduckgo_transport_args(parser)
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--disable-route1-light-fallback", action="store_true")
     parser.add_argument("--enable-rewrite", action="store_true")
@@ -85,6 +91,7 @@ def main() -> int:
         rejected_output_path=args.rejected_output,
         rewrite_enabled=args.enable_rewrite,
         rewrite_llm=rewrite_llm,
+        **duckduckgo_settings_kwargs(args),
     )
     result = run_generation_pipeline(settings)
     summary = {
@@ -92,6 +99,7 @@ def main() -> int:
         "rejected": len(result.rejected),
         "output_path": str(settings.output_path),
         "rejected_output_path": str(settings.rejected_output_path),
+        **duckduckgo_summary_fields(settings),
     }
     print(json.dumps(summary, indent=2))
     return 0

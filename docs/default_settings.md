@@ -116,7 +116,14 @@ These defaults come from `scripts/run_wikipedia_infobox_pipeline.py`.
 | `--cutoff-year` | `2025` | Avoid generated question text depending on this year or later. |
 | `--timeout-seconds` | `30.0` | Used by Wikipedia, search, and LLM clients. |
 | `--proxy` | `socks5://127.0.0.1:7897` | Use `--proxy none` to disable. |
+| `--duckduckgo-prefer-ddgs` | `True` | `--no-duckduckgo-prefer-ddgs` disables the `ddgs` primary path for diagnosis. |
+| `--duckduckgo-ddgs-backend` | `auto` | Passed to `DDGS.text(..., backend=...)`. |
+| `--duckduckgo-ddgs-max-attempts` | `2` | Bounded `ddgs` attempts before legacy fallback. |
 | `--duckduckgo-disable-fallback` | `[]` | Diagnostic-only fallback disable list. Default leaves `ddgs`, legacy HTML/Lite, Lite endpoint fallback, and direct fallback enabled. Repeat the flag or pass comma-separated values such as `ddgs`, `legacy`, `lite`, or `direct`. |
+| `--duckduckgo-cooldown` | `True` | `--no-duckduckgo-cooldown` disables process-global cooldown for repeated DDG throttle/transport failures. |
+| `--duckduckgo-cooldown-failure-threshold` | `3` | Consecutive cooldown-worthy failures before sleeping. |
+| `--duckduckgo-cooldown-initial-seconds` | `60.0` | First shared cooldown sleep. |
+| `--duckduckgo-cooldown-max-seconds` | `300.0` | Maximum shared cooldown sleep. |
 | `--output` | `outputs/wikipedia_infobox_accepted.jsonl` | Accepted JSONL. |
 | `--rejected-output` | `outputs/wikipedia_infobox_rejected.jsonl` | Rejected JSONL. |
 | `--summary-output` | `outputs/wikipedia_infobox_summary.json` | Run summary JSON. |
@@ -196,7 +203,10 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | Second-stage early stop | enabled | If the first panel model is graded correct and that alone exceeds the accuracy threshold, remaining panel answers are skipped. |
 | DuckDuckGo top K | `5` | `--duckduckgo-top-k`. Fast default for initial Route 3 streaming; run slower survivor review separately when needed. |
 | DuckDuckGo parallel queries | `3` | `--duckduckgo-parallel-queries`. |
+| DuckDuckGo ddgs backend | `auto` | `--duckduckgo-ddgs-backend`. Recipe segments pass this through to the Route 3 pipeline. |
+| DuckDuckGo ddgs attempts | `2` | `--duckduckgo-ddgs-max-attempts`. |
 | DuckDuckGo disabled fallbacks | `[]` | `--duckduckgo-disable-fallback`. Normal runs leave every fallback enabled; use this only for path-isolation probes. |
+| DuckDuckGo global cooldown | enabled | Controlled by `--duckduckgo-cooldown` / `--no-duckduckgo-cooldown` plus the threshold/initial/max cooldown flags. |
 | Generated search query count | `2` | Route 3 prompt asks for this many answer-blind queries. Fast default for initial Route 3 streaming; run slower survivor review separately when needed. |
 | Minimum table score | `0.0` | `--min-table-score`. The same cutoff is used for URL and streaming Route 3 runs. |
 | Route 3 reasoning types | `single_fact` | `--route3-reasoning-type`. When omitted, Route 3 prompts use the fixed `single_fact` reasoning contract and Route 3 writes `reasoning_type=single_fact` directly into candidates without asking the model to output that field. Repeat the flag or pass comma-separated values to let the model choose among multiple reasoning types such as `max`, `min`, `count`, or `ordinal`. |
@@ -228,17 +238,17 @@ These defaults come from `src/wikidata_simpleqa/search_client.py` and apply to r
 | Setting | Default | Notes |
 | --- | --- | --- |
 | Primary backend | `ddgs` | The client tries the optional `ddgs` package before legacy HTML/Lite search. Install `ddgs` in production and probe environments that run DuckDuckGo search. |
-| `ddgs_backend` | `auto` | Passed to `DDGS.text(..., backend=...)`. Use explicit values such as `duckduckgo` only for path-isolation probes. |
-| `ddgs_max_attempts` | `2` | Two bounded attempts before legacy fallback. |
+| `--duckduckgo-ddgs-backend` / `ddgs_backend` | `auto` | Passed to `DDGS.text(..., backend=...)`. Use explicit values such as `duckduckgo` only for path-isolation probes. |
+| `--duckduckgo-ddgs-max-attempts` / `ddgs_max_attempts` | `2` | Two bounded attempts before legacy fallback. |
 | Legacy HTML/Lite fallback | enabled | Used when `ddgs` is unavailable or fails, unless disabled by the diagnostic fallback list. |
 | HTML holding-status fallback | `202`, `403`, `429`, `500`, `502`, `503`, `504` | Matching HTML responses switch to Lite instead of retrying HTML. |
 | Lite max attempts | `2` | Bounded retry for Lite holding/rate-limit/transient failures. |
 | Direct fallback | enabled when a proxy path fails | A direct pass is meaningful only after a configured proxy path fails. |
 | Disabled fallbacks | none | Diagnostic names include `ddgs`, `legacy`/`html`, `lite`, and `direct`/`direct_fallback`. |
-| Global cooldown enabled | `True` | Shared process-level cooldown for repeated DDG 202/403 or transport failures. |
-| Cooldown failure threshold | `3` | Consecutive cooldown-worthy DDG failures before triggering sleep. |
-| Cooldown initial sleep | `60.0` seconds | Minute-level pause after the threshold is reached. |
-| Cooldown max sleep | `300.0` seconds | Consecutive cooldowns grow up to this cap. |
+| `--duckduckgo-cooldown` / global cooldown enabled | `True` | Shared process-level cooldown for repeated DDG 202/403 or transport failures. |
+| `--duckduckgo-cooldown-failure-threshold` | `3` | Consecutive cooldown-worthy DDG failures before triggering sleep. |
+| `--duckduckgo-cooldown-initial-seconds` | `60.0` seconds | Minute-level pause after the threshold is reached. |
+| `--duckduckgo-cooldown-max-seconds` | `300.0` seconds | Consecutive cooldowns grow up to this cap. |
 | `ddgs_no_results` cooldown behavior | not cooldown-worthy | A plain `ddgs` "No results found" outcome is recorded but does not trigger global cooldown. |
 | SOCKS dependency | `PySocks` | Required for the legacy urllib client to use `socks5://...` proxies. Without it, proxy setup failure is recorded and direct fallback may still run. |
 

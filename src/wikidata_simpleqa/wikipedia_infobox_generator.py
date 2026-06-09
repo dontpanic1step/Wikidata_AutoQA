@@ -81,7 +81,7 @@ ROUTE3_REASONING_TYPE_PROMPT_RULES = {
 ROUTE3_ANSWER_TYPE_PROMPT_RULES = {
     "Person": "answer must be a person's name, not a team's name, an official position or a named group of people. Do not ask `Who ...` unless the answer is a person's name",
     "Place": "answer must be a place name, location, or geographic entity on Earth, not a company/award/ceremony/planet/sports club etc.",
-    "Number": "answer must be numeric",
+    "Number": "answer must be numeric, do not ask `what year`",
     "Date": "answer must be a date, a month, or a year, do not ask `how many years` or ask about a time range",
     "Other": "answer must not be a person, place, number, or date; exclude numeric measurements, percentages, counts, scores, indices, rates, temperatures, durations, ranges, dates, years, people, and places",
 }

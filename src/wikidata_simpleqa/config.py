@@ -71,6 +71,14 @@ class Settings:
     )
     duckduckgo_top_k: int = 10
     duckduckgo_parallel_queries: int = 3
+    duckduckgo_prefer_ddgs: bool = True
+    duckduckgo_ddgs_backend: str = "auto"
+    duckduckgo_ddgs_max_attempts: int = 2
+    duckduckgo_disable_fallbacks: str | tuple[str, ...] | list[str] | set[str] | None = field(default_factory=tuple)
+    duckduckgo_cooldown_enabled: bool = True
+    duckduckgo_cooldown_failure_threshold: int = 3
+    duckduckgo_cooldown_initial_seconds: float = 60.0
+    duckduckgo_cooldown_max_seconds: float = 300.0
     generated_search_query_count: int = 3
     second_stage_grading_enabled: bool = False
     second_stage_grading_models: tuple[LLMConfig, ...] = field(
@@ -119,6 +127,22 @@ class Settings:
             raise ValueError("second_stage_grading_accuracy_threshold must be between 0.0 and 1.0")
         if self.duckduckgo_parallel_queries < 1:
             raise ValueError("duckduckgo_parallel_queries must be at least 1")
+        self.duckduckgo_ddgs_backend = self.duckduckgo_ddgs_backend.strip() or "auto"
+        self.duckduckgo_ddgs_max_attempts = int(self.duckduckgo_ddgs_max_attempts)
+        if self.duckduckgo_ddgs_max_attempts < 1:
+            raise ValueError("duckduckgo_ddgs_max_attempts must be at least 1")
+        self.duckduckgo_disable_fallbacks = _normalize_sequence(self.duckduckgo_disable_fallbacks)
+        self.duckduckgo_cooldown_failure_threshold = int(self.duckduckgo_cooldown_failure_threshold)
+        if self.duckduckgo_cooldown_failure_threshold < 1:
+            raise ValueError("duckduckgo_cooldown_failure_threshold must be at least 1")
+        self.duckduckgo_cooldown_initial_seconds = float(self.duckduckgo_cooldown_initial_seconds)
+        self.duckduckgo_cooldown_max_seconds = float(self.duckduckgo_cooldown_max_seconds)
+        if self.duckduckgo_cooldown_initial_seconds < 0.0:
+            raise ValueError("duckduckgo_cooldown_initial_seconds must be non-negative")
+        if self.duckduckgo_cooldown_max_seconds < 0.0:
+            raise ValueError("duckduckgo_cooldown_max_seconds must be non-negative")
+        if self.duckduckgo_cooldown_max_seconds < self.duckduckgo_cooldown_initial_seconds:
+            raise ValueError("duckduckgo_cooldown_max_seconds must be at least duckduckgo_cooldown_initial_seconds")
         if self.generated_search_query_count < 0:
             raise ValueError("generated_search_query_count must be non-negative")
         if self.route1_subject_seed_window_granularity not in {"year", "month", "day"}:
@@ -144,6 +168,23 @@ class Settings:
             return f"{parts[0]}-{parts[1]}-01"
         return self.target_time
 
+    def duckduckgo_client_kwargs(self) -> dict[str, object]:
+        """Return keyword arguments for the shared DuckDuckGo search client."""
+        return {
+            "user_agent": self.user_agent,
+            "proxy": self.proxy,
+            "timeout_seconds": self.timeout_seconds,
+            "cache_dir": self.cache_dir,
+            "prefer_ddgs": self.duckduckgo_prefer_ddgs,
+            "ddgs_backend": self.duckduckgo_ddgs_backend,
+            "ddgs_max_attempts": self.duckduckgo_ddgs_max_attempts,
+            "disable_fallbacks": self.duckduckgo_disable_fallbacks,
+            "cooldown_enabled": self.duckduckgo_cooldown_enabled,
+            "cooldown_failure_threshold": self.duckduckgo_cooldown_failure_threshold,
+            "cooldown_initial_seconds": self.duckduckgo_cooldown_initial_seconds,
+            "cooldown_max_seconds": self.duckduckgo_cooldown_max_seconds,
+        }
+
     def _validate_target_time(self) -> None:
         """Validate the accepted target-time formats."""
         pattern = r"^\d{4}(-\d{2}){0,2}$"
@@ -152,3 +193,16 @@ class Settings:
                 "target_time must use one of these formats: YYYY, YYYY-MM, or YYYY-MM-DD"
             )
         _ = date.fromisoformat(self.target_start_date)
+
+
+def _normalize_sequence(value: str | tuple[str, ...] | list[str] | set[str] | None) -> tuple[str, ...]:
+    """Normalize CLI-style repeated or comma-separated string values."""
+    if value is None:
+        return ()
+    if isinstance(value, str):
+        raw_items = re.split(r"[,;\s]+", value)
+    else:
+        raw_items = []
+        for item in value:
+            raw_items.extend(re.split(r"[,;\s]+", str(item)))
+    return tuple(item.strip() for item in raw_items if item.strip())

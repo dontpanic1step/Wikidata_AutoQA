@@ -17,6 +17,11 @@ from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.io import write_jsonl
 from wikidata_simpleqa.kelm_generator import KELMTSVGenerator
 from wikidata_simpleqa.llm_rewrite import make_rewrite_client
+from wikidata_simpleqa.search_cli import (
+    add_duckduckgo_transport_args,
+    duckduckgo_settings_kwargs,
+    duckduckgo_summary_fields,
+)
 from wikidata_simpleqa.search_client import DuckDuckGoSearchClient
 from wikidata_simpleqa.wikidata_client import WikidataClient
 
@@ -33,6 +38,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-date", type=str, default=None)
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
+    add_duckduckgo_transport_args(parser)
     parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-keyword-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-overall-hit-rate", type=float, default=0.3)
@@ -86,6 +92,7 @@ def main() -> int:
         rejected_output_path=args.rejected_output,
         rewrite_enabled=args.enable_rewrite,
         rewrite_llm=rewrite_llm,
+        **duckduckgo_settings_kwargs(args),
     )
     client = WikidataClient(
         user_agent=settings.user_agent,
@@ -93,12 +100,7 @@ def main() -> int:
         timeout_seconds=settings.timeout_seconds,
         cache_dir=settings.cache_dir,
     )
-    search_client = DuckDuckGoSearchClient(
-        user_agent=settings.user_agent,
-        proxy=settings.proxy,
-        timeout_seconds=settings.timeout_seconds,
-        cache_dir=settings.cache_dir,
-    )
+    search_client = DuckDuckGoSearchClient(**settings.duckduckgo_client_kwargs())
     rewrite_client = None
     if settings.rewrite_enabled:
         rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds)
@@ -121,6 +123,7 @@ def main() -> int:
         "output_path": str(args.output),
         "rejected_output_path": str(args.rejected_output),
         "rewrite_enabled": bool(args.enable_rewrite),
+        **duckduckgo_summary_fields(settings),
         "telemetry": result.telemetry,
     }
     write_jsonl(args.output, result.accepted)

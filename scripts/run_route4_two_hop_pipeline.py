@@ -39,6 +39,11 @@ from wikidata_simpleqa.route4_two_hop import (
     route4_two_hop_seed_unit_from_candidate,
 )
 from wikidata_simpleqa.route1_multihop import Route1QidSeedState
+from wikidata_simpleqa.search_cli import (
+    add_duckduckgo_transport_args,
+    duckduckgo_settings_kwargs,
+    duckduckgo_summary_fields,
+)
 from wikidata_simpleqa.search_client import DuckDuckGoSearchClient
 from wikidata_simpleqa.wikidata_client import WikidataClient
 
@@ -91,6 +96,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--duckduckgo-parallel-queries", type=int, default=3)
+    add_duckduckgo_transport_args(parser)
     parser.add_argument("--generated-search-query-count", type=int, default=2)
     parser.add_argument("--candidate-workers", type=int, default=4)
     parser.add_argument("--wikidata-concurrency-limit", type=int, default=1)
@@ -171,6 +177,7 @@ def main() -> int:
         rejected_output_path=args.rejected_output,
         rewrite_enabled=args.enable_rewrite,
         rewrite_llm=rewrite_llm,
+        **duckduckgo_settings_kwargs(args),
     )
     endpoint_resume = _load_endpoint_resume(args)
     state = Route1QidSeedState(path=args.state) if args.reset_state else Route1QidSeedState.load(args.state)
@@ -197,12 +204,7 @@ def main() -> int:
         {"sparql_query", "get_entities", "search_entities"},
     )
     search_client = SemaphoreWrappedClient(
-        DuckDuckGoSearchClient(
-            user_agent=settings.user_agent,
-            proxy=settings.proxy,
-            timeout_seconds=settings.timeout_seconds,
-            cache_dir=settings.cache_dir,
-        ),
+        DuckDuckGoSearchClient(**settings.duckduckgo_client_kwargs()),
         concurrency.duckduckgo_semaphore,
         {"search"},
     )
@@ -311,6 +313,7 @@ def main() -> int:
         "settings": {
             "duckduckgo_top_k": settings.duckduckgo_top_k,
             "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
+            **duckduckgo_summary_fields(settings),
             "generated_search_query_count": settings.generated_search_query_count,
             "rewrite_enabled": settings.rewrite_enabled,
             "second_stage_grading_enabled": settings.second_stage_grading_enabled,

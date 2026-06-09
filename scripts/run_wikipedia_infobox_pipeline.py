@@ -39,6 +39,11 @@ from wikidata_simpleqa.page_id_lists import (
     read_page_id_entries,
 )
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids, route3_record_id
+from wikidata_simpleqa.search_cli import (
+    add_duckduckgo_transport_args,
+    duckduckgo_settings_kwargs,
+    duckduckgo_summary_fields,
+)
 from wikidata_simpleqa.search_client import DuckDuckGoSearchClient
 from wikidata_simpleqa.wikipedia_client import WikipediaClient, normalize_wikipedia_page_id, normalize_wikipedia_title
 from wikidata_simpleqa.wikipedia_infobox_generator import (
@@ -479,15 +484,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--duckduckgo-parallel-queries", type=int, default=3)
-    parser.add_argument(
-        "--duckduckgo-disable-fallback",
-        action="append",
-        default=[],
-        help=(
-            "Disable a DuckDuckGo fallback path for debugging. Repeat or pass comma-separated values. "
-            "Known values: ddgs, legacy/html, lite, direct/direct_fallback. Default: no disabled fallbacks."
-        ),
-    )
+    add_duckduckgo_transport_args(parser)
     parser.add_argument("--generated-search-query-count", type=int, default=2)
     parser.add_argument(
         "--min-table-score",
@@ -822,6 +819,7 @@ def main() -> int:
         rejected_output_path=args.rejected_output,
         rewrite_enabled=args.enable_rewrite,
         rewrite_llm=rewrite_llm,
+        **duckduckgo_settings_kwargs(args),
     )
     wikipedia_client = WikipediaClient(
         user_agent=settings.user_agent,
@@ -832,13 +830,7 @@ def main() -> int:
         rate_limit_max_backoff_seconds=args.wikipedia_429_max_backoff_seconds,
         rate_limit_recovery_seconds=args.wikipedia_429_recovery_seconds,
     )
-    search_client = DuckDuckGoSearchClient(
-        user_agent=settings.user_agent,
-        proxy=settings.proxy,
-        timeout_seconds=settings.timeout_seconds,
-        cache_dir=settings.cache_dir,
-        disable_fallbacks=args.duckduckgo_disable_fallback,
-    )
+    search_client = DuckDuckGoSearchClient(**settings.duckduckgo_client_kwargs())
     llm_client = make_cheap_model_qa_client(small_llm, settings.timeout_seconds)
     rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds) if settings.rewrite_enabled else None
     if args.stream_random_page_ids:
@@ -949,6 +941,7 @@ def main() -> int:
         "second_stage_grading_enabled": settings.second_stage_grading_enabled,
         "duckduckgo_top_k": settings.duckduckgo_top_k,
         "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
+        **duckduckgo_summary_fields(settings),
         "generated_search_query_count": settings.generated_search_query_count,
         "min_table_score": args.min_table_score,
         "route3_reasoning_types": args.route3_reasoning_type,
@@ -1802,7 +1795,7 @@ def _run_streaming_page_id_pipeline(
         "second_stage_grading_enabled": settings.second_stage_grading_enabled,
         "duckduckgo_top_k": settings.duckduckgo_top_k,
         "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
-        "duckduckgo_disabled_fallbacks": args.duckduckgo_disable_fallback,
+        **duckduckgo_summary_fields(settings),
         "generated_search_query_count": settings.generated_search_query_count,
         "min_table_score": args.min_table_score,
         "route3_reasoning_types": args.route3_reasoning_type,
@@ -3056,6 +3049,26 @@ def _write_stream_walkthrough(
     lines.append(f"- DuckDuckGo top K: {summary.get('duckduckgo_top_k', '')}")
     lines.append(f"- Generated search queries per QA: {summary.get('generated_search_query_count', '')}")
     lines.append(f"- DuckDuckGo parallel queries: {summary.get('duckduckgo_parallel_queries', '')}")
+    if "duckduckgo_prefer_ddgs" in summary:
+        lines.append(
+            "- DuckDuckGo ddgs primary path: "
+            f"`{'enabled' if summary.get('duckduckgo_prefer_ddgs') else 'disabled'}`, "
+            f"backend `{summary.get('duckduckgo_ddgs_backend', '')}`, "
+            f"attempts {summary.get('duckduckgo_ddgs_max_attempts', '')}"
+        )
+    if summary.get("duckduckgo_disabled_fallbacks"):
+        lines.append(
+            "- DuckDuckGo disabled fallbacks: "
+            f"`{', '.join(str(item) for item in summary.get('duckduckgo_disabled_fallbacks', []))}`"
+        )
+    if "duckduckgo_cooldown_enabled" in summary:
+        lines.append(
+            "- DuckDuckGo global cooldown: "
+            f"`{'enabled' if summary.get('duckduckgo_cooldown_enabled') else 'disabled'}`, "
+            f"threshold {summary.get('duckduckgo_cooldown_failure_threshold', '')}, "
+            f"{summary.get('duckduckgo_cooldown_initial_seconds', '')}s to "
+            f"{summary.get('duckduckgo_cooldown_max_seconds', '')}s"
+        )
     if summary.get("min_table_score") is not None:
         lines.append(f"- Minimum Route 3 table score: {summary.get('min_table_score', '')}")
     if summary.get("route3_reasoning_types"):

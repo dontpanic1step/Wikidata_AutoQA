@@ -45,6 +45,41 @@ class ConfigTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             Settings(target_time="2026", generated_search_query_count=-1)
 
+    def test_duckduckgo_client_kwargs_include_transport_settings(self) -> None:
+        settings = Settings(
+            target_time="2026",
+            proxy="socks5://127.0.0.1:7890",
+            duckduckgo_ddgs_backend="duckduckgo",
+            duckduckgo_ddgs_max_attempts=3,
+            duckduckgo_disable_fallbacks=("ddgs,legacy", "direct"),
+            duckduckgo_cooldown_failure_threshold=4,
+            duckduckgo_cooldown_initial_seconds=120.0,
+            duckduckgo_cooldown_max_seconds=600.0,
+        )
+        kwargs = settings.duckduckgo_client_kwargs()
+        self.assertEqual(kwargs["proxy"], "socks5://127.0.0.1:7890")
+        self.assertTrue(kwargs["prefer_ddgs"])
+        self.assertEqual(kwargs["ddgs_backend"], "duckduckgo")
+        self.assertEqual(kwargs["ddgs_max_attempts"], 3)
+        self.assertEqual(kwargs["disable_fallbacks"], ("ddgs", "legacy", "direct"))
+        self.assertEqual(kwargs["cooldown_failure_threshold"], 4)
+        self.assertEqual(kwargs["cooldown_initial_seconds"], 120.0)
+        self.assertEqual(kwargs["cooldown_max_seconds"], 600.0)
+
+    def test_invalid_duckduckgo_transport_settings_raise(self) -> None:
+        with self.assertRaises(ValueError):
+            Settings(target_time="2026", duckduckgo_ddgs_max_attempts=0)
+        with self.assertRaises(ValueError):
+            Settings(target_time="2026", duckduckgo_cooldown_failure_threshold=0)
+        with self.assertRaises(ValueError):
+            Settings(target_time="2026", duckduckgo_cooldown_initial_seconds=-1.0)
+        with self.assertRaises(ValueError):
+            Settings(
+                target_time="2026",
+                duckduckgo_cooldown_initial_seconds=120.0,
+                duckduckgo_cooldown_max_seconds=60.0,
+            )
+
     def test_default_search_hit_rate_thresholds_are_uniform_point_three(self) -> None:
         settings = Settings(target_time="2026")
         self.assertEqual(settings.search_longtail_max_full_question_hit_rate, 0.3)

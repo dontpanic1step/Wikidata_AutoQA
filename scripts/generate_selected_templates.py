@@ -15,6 +15,11 @@ if str(SRC) not in sys.path:
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.domain_templates import get_template_by_key
 from wikidata_simpleqa.generation_pipeline import run_generation_pipeline
+from wikidata_simpleqa.search_cli import (
+    add_duckduckgo_transport_args,
+    duckduckgo_settings_kwargs,
+    duckduckgo_summary_fields,
+)
 
 
 def parse_args() -> argparse.Namespace:
@@ -26,6 +31,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--harvest-limit", type=int, default=10)
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--duckduckgo-top-k", type=int, default=10)
+    add_duckduckgo_transport_args(parser)
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--disable-route1-light-fallback", action="store_true")
     parser.add_argument(
@@ -112,6 +118,7 @@ def main() -> int:
         rejected_output_path=args.rejected_output,
         rewrite_enabled=args.enable_rewrite,
         rewrite_llm=rewrite_llm,
+        **duckduckgo_settings_kwargs(args),
     )
     result = run_generation_pipeline(settings=settings, templates=templates)
     summary = {
@@ -130,6 +137,7 @@ def main() -> int:
             "route1_subject_seed_window_granularity": settings.route1_subject_seed_window_granularity,
             "enabled_routes": list(settings.enabled_routes),
             "duckduckgo_top_k": settings.duckduckgo_top_k,
+            **duckduckgo_summary_fields(settings),
             "search_longtail_thresholds": {
                 "full_question": settings.search_longtail_max_full_question_hit_rate,
                 "keyword_queries": settings.search_longtail_max_keyword_hit_rate,

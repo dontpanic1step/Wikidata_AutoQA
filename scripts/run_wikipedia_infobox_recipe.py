@@ -26,6 +26,7 @@ from wikidata_simpleqa.page_id_lists import (
     write_page_id_entries,
 )
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids
+from wikidata_simpleqa.search_cli import add_duckduckgo_transport_args, duckduckgo_settings_kwargs
 from wikidata_simpleqa.wikipedia_infobox_generator import (
     DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
     DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE,
@@ -224,15 +225,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.1)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--duckduckgo-parallel-queries", type=int, default=3)
-    parser.add_argument(
-        "--duckduckgo-disable-fallback",
-        action="append",
-        default=[],
-        help=(
-            "Disable a DuckDuckGo fallback path in each segment. Repeat or pass comma-separated values. "
-            "Known values: ddgs, legacy/html, lite, direct/direct_fallback."
-        ),
-    )
+    add_duckduckgo_transport_args(parser)
     parser.add_argument("--generated-search-query-count", type=int, default=2)
     parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-keyword-hit-rate", type=float, default=0.3)
@@ -1022,6 +1015,16 @@ def _segment_command(
         str(args.duckduckgo_top_k),
         "--duckduckgo-parallel-queries",
         str(args.duckduckgo_parallel_queries),
+        "--duckduckgo-ddgs-backend",
+        str(args.duckduckgo_ddgs_backend),
+        "--duckduckgo-ddgs-max-attempts",
+        str(args.duckduckgo_ddgs_max_attempts),
+        "--duckduckgo-cooldown-failure-threshold",
+        str(args.duckduckgo_cooldown_failure_threshold),
+        "--duckduckgo-cooldown-initial-seconds",
+        str(args.duckduckgo_cooldown_initial_seconds),
+        "--duckduckgo-cooldown-max-seconds",
+        str(args.duckduckgo_cooldown_max_seconds),
         "--generated-search-query-count",
         str(args.generated_search_query_count),
         "--search-longtail-max-full-question-hit-rate",
@@ -1085,6 +1088,8 @@ def _segment_command(
     ]
     for fallback in args.duckduckgo_disable_fallback:
         command.extend(["--duckduckgo-disable-fallback", str(fallback)])
+    command.append("--duckduckgo-prefer-ddgs" if args.duckduckgo_prefer_ddgs else "--no-duckduckgo-prefer-ddgs")
+    command.append("--duckduckgo-cooldown" if args.duckduckgo_cooldown else "--no-duckduckgo-cooldown")
     if args.stream_reuse_cached_page_count > 0:
         command.extend(["--stream-reuse-cached-page-used-id-file", str(stream_exclusion_file)])
     for path in args.stream_reuse_cached_page_used_id_file:
@@ -1263,6 +1268,7 @@ def _recipe_summary(
         4,
     )
     displayed_wall_clock_seconds = round(max(segment_wall_clock_seconds, wall_clock_seconds), 4)
+    ddg_settings = duckduckgo_settings_kwargs(args)
     return {
         "run_group_id": run_id,
         "run_segment_id": "recipe_combined",
@@ -1342,7 +1348,14 @@ def _recipe_summary(
         "second_stage_grading_enabled": bool(args.enable_second_stage_grading),
         "duckduckgo_top_k": args.duckduckgo_top_k,
         "duckduckgo_parallel_queries": args.duckduckgo_parallel_queries,
-        "duckduckgo_disabled_fallbacks": args.duckduckgo_disable_fallback,
+        "duckduckgo_prefer_ddgs": ddg_settings["duckduckgo_prefer_ddgs"],
+        "duckduckgo_ddgs_backend": ddg_settings["duckduckgo_ddgs_backend"],
+        "duckduckgo_ddgs_max_attempts": ddg_settings["duckduckgo_ddgs_max_attempts"],
+        "duckduckgo_disabled_fallbacks": list(ddg_settings["duckduckgo_disable_fallbacks"]),
+        "duckduckgo_cooldown_enabled": ddg_settings["duckduckgo_cooldown_enabled"],
+        "duckduckgo_cooldown_failure_threshold": ddg_settings["duckduckgo_cooldown_failure_threshold"],
+        "duckduckgo_cooldown_initial_seconds": ddg_settings["duckduckgo_cooldown_initial_seconds"],
+        "duckduckgo_cooldown_max_seconds": ddg_settings["duckduckgo_cooldown_max_seconds"],
         "generated_search_query_count": args.generated_search_query_count,
         "route3_reasoning_types": reasoning_types,
         "route3_answer_types": [item.answer_type for item in recipe_items],
