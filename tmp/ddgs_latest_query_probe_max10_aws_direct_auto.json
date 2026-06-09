@@ -1,0 +1,3916 @@
+{
+  "created_at": "2026-06-09T11:24:31",
+  "run_dir": "/home/chenyue/Wikidata_Framework_aws/tmp/aws_ddgs_probe_seed",
+  "settings": {
+    "max_qa": 10,
+    "top_k": 5,
+    "proxy": "",
+    "timeout_seconds": 8.0,
+    "ddgs_backend": "auto",
+    "stage_mode": "incremental",
+    "disabled_fallbacks": [],
+    "cooldown_failure_threshold": 3,
+    "cooldown_initial_seconds": 30.0,
+    "cooldown_max_seconds": 60.0
+  },
+  "qa_records": [
+    [
+      {
+        "qa_index": 1,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?"
+      },
+      {
+        "qa_index": 1,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "average five-year survival rate brain tumor US"
+      },
+      {
+        "qa_index": 1,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 3,
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "brain tumor prognosis five-year survival rate"
+      }
+    ],
+    [
+      {
+        "qa_index": 2,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p19746798_date_infobox",
+        "question": "What year was Here Technologies founded under the name Here?",
+        "answer": "2012",
+        "subject": "Here Technologies",
+        "answer_type": "Date",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What year was Here Technologies founded under the name Here?"
+      },
+      {
+        "qa_index": 2,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p19746798_date_infobox",
+        "question": "What year was Here Technologies founded under the name Here?",
+        "answer": "2012",
+        "subject": "Here Technologies",
+        "answer_type": "Date",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "year Here Technologies founded as Here"
+      }
+    ],
+    [
+      {
+        "qa_index": 3,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage03_qa03",
+        "question": "What part of the brain is shown to have brain metastasis from lung cancer in the provided MRI image?",
+        "answer": "right cerebral hemisphere",
+        "subject": "Brain tumor",
+        "answer_type": "Place",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "fallback_record_question",
+        "query": "What part of the brain is shown to have brain metastasis from lung cancer in the provided MRI image?"
+      },
+      {
+        "qa_index": 3,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage03_qa03",
+        "question": "What part of the brain is shown to have brain metastasis from lung cancer in the provided MRI image?",
+        "answer": "right cerebral hemisphere",
+        "subject": "Brain tumor",
+        "answer_type": "Place",
+        "query_index": 2,
+        "query_name": "search_query_1",
+        "query_category": "fallback_search_queries",
+        "query": "brain metastasis location in MRI from lung cancer"
+      }
+    ],
+    [
+      {
+        "qa_index": 4,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage04_qa04",
+        "question": "Which government department presents the U.S. Army Distinguished Service Medal?",
+        "answer": "United States Department of the Army",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Place",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "Which government department presents the U.S. Army Distinguished Service Medal?"
+      },
+      {
+        "qa_index": 4,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage04_qa04",
+        "question": "Which government department presents the U.S. Army Distinguished Service Medal?",
+        "answer": "United States Department of the Army",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Place",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "U.S. Army Distinguished Service Medal presenting department"
+      },
+      {
+        "qa_index": 4,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage04_qa04",
+        "question": "Which government department presents the U.S. Army Distinguished Service Medal?",
+        "answer": "United States Department of the Army",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Place",
+        "query_index": 3,
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "Which department awards the Distinguished Service Medal US Army"
+      }
+    ],
+    [
+      {
+        "qa_index": 5,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage05_qa05",
+        "question": "In what year was the U.S. Army Distinguished Service Medal established?",
+        "answer": "1918",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "fallback_record_question",
+        "query": "In what year was the U.S. Army Distinguished Service Medal established?"
+      }
+    ],
+    [
+      {
+        "qa_index": 6,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage06_qa06",
+        "question": "What month, day, and year was the first U.S. Army Distinguished Service Medal awarded?",
+        "answer": "January 12, 1918",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Date",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What month, day, and year was the first U.S. Army Distinguished Service Medal awarded?"
+      }
+    ],
+    [
+      {
+        "qa_index": 7,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage07_qa07",
+        "question": "What type of medal is the U.S. Army Distinguished Service Medal classified as?",
+        "answer": "Military medal Distinguished service medal",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Other",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What type of medal is the U.S. Army Distinguished Service Medal classified as?"
+      }
+    ],
+    [
+      {
+        "qa_index": 8,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage08_qa08",
+        "question": "What county is the consolidated city-county of Butte located in?",
+        "answer": "Silver Bow",
+        "subject": "Butte, Montana",
+        "answer_type": "Place",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What county is the consolidated city-county of Butte located in?"
+      }
+    ],
+    [
+      {
+        "qa_index": 9,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage09_qa09",
+        "question": "What was the population of Butte, Montana according to the 2020 census?",
+        "answer": "34494",
+        "subject": "Butte, Montana",
+        "answer_type": "Number",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "fallback_record_question",
+        "query": "What was the population of Butte, Montana according to the 2020 census?"
+      },
+      {
+        "qa_index": 9,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage09_qa09",
+        "question": "What was the population of Butte, Montana according to the 2020 census?",
+        "answer": "34494",
+        "subject": "Butte, Montana",
+        "answer_type": "Number",
+        "query_index": 2,
+        "query_name": "search_query_1",
+        "query_category": "fallback_search_queries",
+        "query": "Butte Montana population 2020 census"
+      },
+      {
+        "qa_index": 9,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage09_qa09",
+        "question": "What was the population of Butte, Montana according to the 2020 census?",
+        "answer": "34494",
+        "subject": "Butte, Montana",
+        "answer_type": "Number",
+        "query_index": 3,
+        "query_name": "search_query_2",
+        "query_category": "fallback_search_queries",
+        "query": "population of Butte-Silver Bow 2020"
+      }
+    ],
+    [
+      {
+        "qa_index": 10,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage10_qa10",
+        "question": "In what year was Butte, Montana settled?",
+        "answer": "1864",
+        "subject": "Butte, Montana",
+        "answer_type": "Date",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "In what year was Butte, Montana settled?"
+      }
+    ]
+  ],
+  "stages": [
+    {
+      "stage": 1,
+      "qa_count": 1,
+      "stage_query_count": 3,
+      "stage_summary": {
+        "total_queries": 3,
+        "ok_queries": 3,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 3
+        },
+        "error_counts": {},
+        "ddgs_successes": 3,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 3,
+        "ok_queries": 3,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 3
+        },
+        "error_counts": {},
+        "ddgs_successes": 3,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    },
+    {
+      "stage": 2,
+      "qa_count": 2,
+      "stage_query_count": 2,
+      "stage_summary": {
+        "total_queries": 2,
+        "ok_queries": 2,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 2
+        },
+        "error_counts": {},
+        "ddgs_successes": 2,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 5,
+        "ok_queries": 5,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 5
+        },
+        "error_counts": {},
+        "ddgs_successes": 5,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    },
+    {
+      "stage": 3,
+      "qa_count": 3,
+      "stage_query_count": 2,
+      "stage_summary": {
+        "total_queries": 2,
+        "ok_queries": 2,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 2
+        },
+        "error_counts": {},
+        "ddgs_successes": 2,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 7,
+        "ok_queries": 7,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 7
+        },
+        "error_counts": {},
+        "ddgs_successes": 7,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    },
+    {
+      "stage": 4,
+      "qa_count": 4,
+      "stage_query_count": 3,
+      "stage_summary": {
+        "total_queries": 3,
+        "ok_queries": 3,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 3
+        },
+        "error_counts": {},
+        "ddgs_successes": 3,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 10,
+        "ok_queries": 10,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 10
+        },
+        "error_counts": {},
+        "ddgs_successes": 10,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    },
+    {
+      "stage": 5,
+      "qa_count": 5,
+      "stage_query_count": 1,
+      "stage_summary": {
+        "total_queries": 1,
+        "ok_queries": 1,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 1
+        },
+        "error_counts": {},
+        "ddgs_successes": 1,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 11,
+        "ok_queries": 11,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 11
+        },
+        "error_counts": {},
+        "ddgs_successes": 11,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    },
+    {
+      "stage": 6,
+      "qa_count": 6,
+      "stage_query_count": 1,
+      "stage_summary": {
+        "total_queries": 1,
+        "ok_queries": 1,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 1
+        },
+        "error_counts": {},
+        "ddgs_successes": 1,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 12,
+        "ok_queries": 12,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 12
+        },
+        "error_counts": {},
+        "ddgs_successes": 12,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    },
+    {
+      "stage": 7,
+      "qa_count": 7,
+      "stage_query_count": 1,
+      "stage_summary": {
+        "total_queries": 1,
+        "ok_queries": 1,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 1
+        },
+        "error_counts": {},
+        "ddgs_successes": 1,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 13,
+        "ok_queries": 13,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 13
+        },
+        "error_counts": {},
+        "ddgs_successes": 13,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    },
+    {
+      "stage": 8,
+      "qa_count": 8,
+      "stage_query_count": 1,
+      "stage_summary": {
+        "total_queries": 1,
+        "ok_queries": 1,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 1
+        },
+        "error_counts": {},
+        "ddgs_successes": 1,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 14,
+        "ok_queries": 14,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 14
+        },
+        "error_counts": {},
+        "ddgs_successes": 14,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    },
+    {
+      "stage": 9,
+      "qa_count": 9,
+      "stage_query_count": 3,
+      "stage_summary": {
+        "total_queries": 3,
+        "ok_queries": 3,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 3
+        },
+        "error_counts": {},
+        "ddgs_successes": 3,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 17,
+        "ok_queries": 17,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 17
+        },
+        "error_counts": {},
+        "ddgs_successes": 17,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    },
+    {
+      "stage": 10,
+      "qa_count": 10,
+      "stage_query_count": 1,
+      "stage_summary": {
+        "total_queries": 1,
+        "ok_queries": 1,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 1
+        },
+        "error_counts": {},
+        "ddgs_successes": 1,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 18,
+        "ok_queries": 18,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "ddgs": 18
+        },
+        "error_counts": {},
+        "ddgs_successes": 18,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 0,
+        "cooldown_wait_count": 0
+      }
+    }
+  ],
+  "summary": {
+    "total_queries": 18,
+    "ok_queries": 18,
+    "failed_queries": 0,
+    "ok_rate": 1.0,
+    "backend_counts": {
+      "ddgs": 18
+    },
+    "error_counts": {},
+    "ddgs_successes": 18,
+    "legacy_fallback_successes": 0,
+    "cooldown_trigger_count": 0,
+    "cooldown_wait_count": 0
+  },
+  "current_format_record_count": 10,
+  "current_format_records_output": "tmp/ddgs_latest_query_probe_max10_aws_direct_auto_records.jsonl",
+  "results": [
+    {
+      "qa": {
+        "qa_index": 1,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?"
+      },
+      "ok": true,
+      "duration_seconds": 1.2732,
+      "result_count": 5,
+      "first_titles": [
+        "Survival Rates for Selected Adult Brain Tumors",
+        "Brain Tumor Facts",
+        "Brain and Other Nervous System Cancer — Cancer Stat Facts"
+      ],
+      "results": [
+        {
+          "title": "Survival Rates for Selected Adult Brain Tumors",
+          "snippet": "A relative survival rate compares people with the same type of tumor to people in the overall population. For example, if the 5-year relative survival rate for a specific type of brain tumor is 70%, it means that people who have that tumor are, on average, about 70% as likely as people who don't have that tumor to live for at least 5 years ...",
+          "url": "https://www.cancer.org/cancer/types/brain-spinal-cord-tumors-adults/detection-diagnosis-staging/survival-rates.html"
+        },
+        {
+          "title": "Brain Tumor Facts",
+          "snippet": "The most common primary non-malignant brain tumor, meningioma, has an average five-year survival of 88.2% after diagnosis For the most common form of primary malignant brain tumors, glioblastoma, the five-year relative survival rate is only 7.0% and median survival is only 8 months",
+          "url": "https://braintumor.org/brain-tumors/about-brain-tumors/brain-tumor-facts/"
+        },
+        {
+          "title": "Brain and Other Nervous System Cancer — Cancer Stat Facts",
+          "snippet": "How Many People Survive 5 Years Or More after Being Diagnosed with Brain and Other Nervous System Cancer? Relative survival is an estimate of the percentage of patients who would be expected to survive the effects of their cancer. It excludes the risk of dying from other causes. Because survival statistics are based on large groups of people, they cannot be used to predict exactly what will ...",
+          "url": "https://seer.cancer.gov/statfacts/html/brain.html"
+        },
+        {
+          "title": "Brain Tumor Survival Outcomes - Aaron Cohen-Gadol, MD",
+          "snippet": "Brain tumor survival rates can vary depending on several factors, such as the type of brain tumor and its growth rate (aggressiveness), its size and location, the age and overall health of the person, and the treatment options available. Here are some general statistics and considerations: The overall 5-year survival rate, or the percentage of patients alive 5 years after diagnosis, for all ...",
+          "url": "https://www.aaroncohen-gadol.com/en/patients/brain-tumor/survival/survival-outcomes"
+        },
+        {
+          "title": "Survival for Brain Cancer - Roswell Park Comprehensive Cancer Center",
+          "snippet": "Cancer survival rates are typically discussed in terms of 5-year relative survival, which means the proportion of patients alive five years after their diagnosis. Keep in mind that statistics like these are based on large groups of people, includes all subtypes of the disease, and cannot predict what might happen with an individual patient.In addition, the most current national data is from ...",
+          "url": "https://www.roswellpark.org/cancer/brain/survival-rates"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1272,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "duration_seconds": 1.2732,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+            "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+            "cache_hit": false,
+            "duration_ms": 1272,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1272,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Survival Rates for Selected Adult Brain Tumors",
+            "snippet": "A relative survival rate compares people with the same type of tumor to people in the overall population. For example, if the 5-year relative survival rate for a specific type of brain tumor is 70%, it means that people who have that tumor are, on average, about 70% as likely as people who don't have that tumor to live for at least 5 years ...",
+            "url": "https://www.cancer.org/cancer/types/brain-spinal-cord-tumors-adults/detection-diagnosis-staging/survival-rates.html"
+          },
+          {
+            "title": "Brain Tumor Facts",
+            "snippet": "The most common primary non-malignant brain tumor, meningioma, has an average five-year survival of 88.2% after diagnosis For the most common form of primary malignant brain tumors, glioblastoma, the five-year relative survival rate is only 7.0% and median survival is only 8 months",
+            "url": "https://braintumor.org/brain-tumors/about-brain-tumors/brain-tumor-facts/"
+          },
+          {
+            "title": "Brain and Other Nervous System Cancer — Cancer Stat Facts",
+            "snippet": "How Many People Survive 5 Years Or More after Being Diagnosed with Brain and Other Nervous System Cancer? Relative survival is an estimate of the percentage of patients who would be expected to survive the effects of their cancer. It excludes the risk of dying from other causes. Because survival statistics are based on large groups of people, they cannot be used to predict exactly what will ...",
+            "url": "https://seer.cancer.gov/statfacts/html/brain.html"
+          },
+          {
+            "title": "Brain Tumor Survival Outcomes - Aaron Cohen-Gadol, MD",
+            "snippet": "Brain tumor survival rates can vary depending on several factors, such as the type of brain tumor and its growth rate (aggressiveness), its size and location, the age and overall health of the person, and the treatment options available. Here are some general statistics and considerations: The overall 5-year survival rate, or the percentage of patients alive 5 years after diagnosis, for all ...",
+            "url": "https://www.aaroncohen-gadol.com/en/patients/brain-tumor/survival/survival-outcomes"
+          },
+          {
+            "title": "Survival for Brain Cancer - Roswell Park Comprehensive Cancer Center",
+            "snippet": "Cancer survival rates are typically discussed in terms of 5-year relative survival, which means the proportion of patients alive five years after their diagnosis. Keep in mind that statistics like these are based on large groups of people, includes all subtypes of the disease, and cannot predict what might happen with an individual patient.In addition, the most current national data is from ...",
+            "url": "https://www.roswellpark.org/cancer/brain/survival-rates"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1272,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "cache_hit": false,
+        "duration_ms": 1272,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1272,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 1,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 1,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "average five-year survival rate brain tumor US"
+      },
+      "ok": true,
+      "duration_seconds": 1.209,
+      "result_count": 5,
+      "first_titles": [
+        "What is the average glioblastoma survival rate?",
+        "Brain Tumor Facts",
+        "Survival Rates for Selected Adult Brain Tumors"
+      ],
+      "results": [
+        {
+          "title": "What is the average glioblastoma survival rate?",
+          "snippet": "According to the National Brain Tumor Society, the five-year glioblastoma survival rate for patients is only 6.8 percent. A five-year relative glioblastoma ...",
+          "url": "https://www.gbmresearch.org/blog/glioblastoma-survival-rate"
+        },
+        {
+          "title": "Brain Tumor Facts",
+          "snippet": "For patients with non-malignant brain tumors, the average five-year relative survival rate is 91.7%. The most common primary non-malignant brain tumor ...",
+          "url": "https://braintumor.org/brain-tumors/about-brain-tumors/brain-tumor-facts/"
+        },
+        {
+          "title": "Survival Rates for Selected Adult Brain Tumors",
+          "snippet": "Jan 5, 2026 · Survival rates for more common adult brain and spinal cord tumors ; Anaplastic astrocytoma. 64%. 21% ; Glioblastoma. 28%. 6% ; Oligodendroglioma.",
+          "url": "https://www.cancer.org/cancer/types/brain-spinal-cord-tumors-adults/detection-diagnosis-staging/survival-rates.html"
+        },
+        {
+          "title": "Conditional Survival of All Primary Brain Tumor Patients by Age ... - PMC",
+          "snippet": "The overall 1-, 2-, 5-, 10-, and 15-year relative survival rates were 67.8, 58.6, 52.6, 49.5, and 47.2%, respectively (table 1). One-year relative survival ...",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3665939/"
+        },
+        {
+          "title": "Cancer Stat Facts: Brain and Other Nervous System Cancer",
+          "snippet": "Death Rate — U.S., 5-Year Relative Survival — SEER 8. Observed, Modeled Trend ... Percent of Cases & 5-Year Relative Survival by Stage at Diagnosis: Brain and ...",
+          "url": "https://seer.cancer.gov/statfacts/html/brain.html"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1208,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "average five-year survival rate brain tumor US",
+        "duration_seconds": 1.209,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+            "query": "average five-year survival rate brain tumor US",
+            "cache_hit": false,
+            "duration_ms": 1208,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1208,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "What is the average glioblastoma survival rate?",
+            "snippet": "According to the National Brain Tumor Society, the five-year glioblastoma survival rate for patients is only 6.8 percent. A five-year relative glioblastoma ...",
+            "url": "https://www.gbmresearch.org/blog/glioblastoma-survival-rate"
+          },
+          {
+            "title": "Brain Tumor Facts",
+            "snippet": "For patients with non-malignant brain tumors, the average five-year relative survival rate is 91.7%. The most common primary non-malignant brain tumor ...",
+            "url": "https://braintumor.org/brain-tumors/about-brain-tumors/brain-tumor-facts/"
+          },
+          {
+            "title": "Survival Rates for Selected Adult Brain Tumors",
+            "snippet": "Jan 5, 2026 · Survival rates for more common adult brain and spinal cord tumors ; Anaplastic astrocytoma. 64%. 21% ; Glioblastoma. 28%. 6% ; Oligodendroglioma.",
+            "url": "https://www.cancer.org/cancer/types/brain-spinal-cord-tumors-adults/detection-diagnosis-staging/survival-rates.html"
+          },
+          {
+            "title": "Conditional Survival of All Primary Brain Tumor Patients by Age ... - PMC",
+            "snippet": "The overall 1-, 2-, 5-, 10-, and 15-year relative survival rates were 67.8, 58.6, 52.6, 49.5, and 47.2%, respectively (table 1). One-year relative survival ...",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC3665939/"
+          },
+          {
+            "title": "Cancer Stat Facts: Brain and Other Nervous System Cancer",
+            "snippet": "Death Rate — U.S., 5-Year Relative Survival — SEER 8. Observed, Modeled Trend ... Percent of Cases & 5-Year Relative Survival by Stage at Diagnosis: Brain and ...",
+            "url": "https://seer.cancer.gov/statfacts/html/brain.html"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1208,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+        "query": "average five-year survival rate brain tumor US",
+        "cache_hit": false,
+        "duration_ms": 1208,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1208,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 1,
+      "probe_stage_query_index": 2
+    },
+    {
+      "qa": {
+        "qa_index": 1,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 3,
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "brain tumor prognosis five-year survival rate"
+      },
+      "ok": true,
+      "duration_seconds": 1.5261,
+      "result_count": 5,
+      "first_titles": [
+        "Medulloblastoma - Wikipedia",
+        "Can You Live with a Brain Tumor? Key Facts - Liv Hospital",
+        "Adult Brain Tumor Early Detection... | American Cancer Society"
+      ],
+      "results": [
+        {
+          "title": "Medulloblastoma - Wikipedia",
+          "snippet": "Medulloblastoma is a common type of primary brain cancer in children. It originates in the part of the brain that is towards the back and the bottom, on the floor of the skull, in the cerebellum, or posterior fossa.",
+          "url": "https://en.wikipedia.org/wiki/Medulloblastoma"
+        },
+        {
+          "title": "Can You Live with a Brain Tumor? Key Facts - Liv Hospital",
+          "snippet": "Tumor Location. Typical Prognosis. Five-Year Survival Rate. Brain Stem.Yes, many people survive brain tumors. Early diagnosis and effective treatment are key. Survival rates differ based on the tumor type and other factors.",
+          "url": "https://int.livhospital.com/can-you-live-with-a-brain-tumor-vital/"
+        },
+        {
+          "title": "Adult Brain Tumor Early Detection... | American Cancer Society",
+          "snippet": "When caught early, the 5-year survival rate for many cancers is over 90%, thanks largely to the American Cancer Society. Your gift supports the research behind it.Can brain tumors be found early? How are brain tumors diagnosed? What affects brain tumor prognosis?",
+          "url": "https://www.cancer.org/cancer/types/brain-spinal-cord-tumors-adults/detection-diagnosis-staging.html"
+        },
+        {
+          "title": "Cancer survival rates | Nuffield Trust",
+          "snippet": "Please visit Cancer Research UK to learn more about cancer survival, and Macmillan Cancer Support for information and support on managing prognosis.The cancers with the lowest five-year survival estimates were pancreatic cancer (8.3%), brain cancer (12.9%) and liver cancer (13.4%).",
+          "url": "https://www.nuffieldtrust.org.uk/resource/cancer-survival-rates"
+        },
+        {
+          "title": "The Pediatric Brain Tumor Prognosis Insights Outcomes",
+          "snippet": "The five-year survival rate for some low-grade tumors exceeds 90%, whereas high-grade tumors still pose a significant challenge, with survival rates often below 20-30%.",
+          "url": "https://www.acibademhealthpoint.com/the-pediatric-brain-tumor-prognosis-insights-outcomes/"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1525,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "brain tumor prognosis five-year survival rate",
+        "duration_seconds": 1.5261,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+            "query": "brain tumor prognosis five-year survival rate",
+            "cache_hit": false,
+            "duration_ms": 1525,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1525,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Medulloblastoma - Wikipedia",
+            "snippet": "Medulloblastoma is a common type of primary brain cancer in children. It originates in the part of the brain that is towards the back and the bottom, on the floor of the skull, in the cerebellum, or posterior fossa.",
+            "url": "https://en.wikipedia.org/wiki/Medulloblastoma"
+          },
+          {
+            "title": "Can You Live with a Brain Tumor? Key Facts - Liv Hospital",
+            "snippet": "Tumor Location. Typical Prognosis. Five-Year Survival Rate. Brain Stem.Yes, many people survive brain tumors. Early diagnosis and effective treatment are key. Survival rates differ based on the tumor type and other factors.",
+            "url": "https://int.livhospital.com/can-you-live-with-a-brain-tumor-vital/"
+          },
+          {
+            "title": "Adult Brain Tumor Early Detection... | American Cancer Society",
+            "snippet": "When caught early, the 5-year survival rate for many cancers is over 90%, thanks largely to the American Cancer Society. Your gift supports the research behind it.Can brain tumors be found early? How are brain tumors diagnosed? What affects brain tumor prognosis?",
+            "url": "https://www.cancer.org/cancer/types/brain-spinal-cord-tumors-adults/detection-diagnosis-staging.html"
+          },
+          {
+            "title": "Cancer survival rates | Nuffield Trust",
+            "snippet": "Please visit Cancer Research UK to learn more about cancer survival, and Macmillan Cancer Support for information and support on managing prognosis.The cancers with the lowest five-year survival estimates were pancreatic cancer (8.3%), brain cancer (12.9%) and liver cancer (13.4%).",
+            "url": "https://www.nuffieldtrust.org.uk/resource/cancer-survival-rates"
+          },
+          {
+            "title": "The Pediatric Brain Tumor Prognosis Insights Outcomes",
+            "snippet": "The five-year survival rate for some low-grade tumors exceeds 90%, whereas high-grade tumors still pose a significant challenge, with survival rates often below 20-30%.",
+            "url": "https://www.acibademhealthpoint.com/the-pediatric-brain-tumor-prognosis-insights-outcomes/"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1525,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+        "query": "brain tumor prognosis five-year survival rate",
+        "cache_hit": false,
+        "duration_ms": 1525,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1525,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 1,
+      "probe_stage_query_index": 3
+    },
+    {
+      "qa": {
+        "qa_index": 2,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p19746798_date_infobox",
+        "question": "What year was Here Technologies founded under the name Here?",
+        "answer": "2012",
+        "subject": "Here Technologies",
+        "answer_type": "Date",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What year was Here Technologies founded under the name Here?"
+      },
+      "ok": true,
+      "duration_seconds": 0.6991,
+      "result_count": 5,
+      "first_titles": [
+        "Here WeGo - Wikipedia",
+        "HERE at 40: what's next for the leader in location technology?",
+        "Location Technology | Autonomous World | About Us | HERE"
+      ],
+      "results": [
+        {
+          "title": "Here WeGo - Wikipedia",
+          "snippet": "The service was originally released by Nokia as Nokia Maps in 2007 for Symbian and Windows Mobile. Nokia later acquired Navteq which provided location data and ...Features · History · 2007–2013 · Platforms and versions",
+          "url": "https://en.wikipedia.org/wiki/Here_WeGo"
+        },
+        {
+          "title": "HERE at 40: what's next for the leader in location technology?",
+          "snippet": "May 16, 2025 · The HERE story begins in 1985 with an ambitious vision to revolutionize navigation using digital maps. Founders Barry Karlin and Galen Collins ...",
+          "url": "https://www.here.com/learn/blog/here-technologies-40-year-history"
+        },
+        {
+          "title": "Location Technology | Autonomous World | About Us | HERE",
+          "snippet": "HERE is the world's leading mapping company. Forty years ago, we started with a digital map of San Francisco. Today, we set the standard for automotive-grade ...",
+          "url": "https://www.here.com/about"
+        },
+        {
+          "title": "HERE Technologies Chicago - Crunchbase Company Profile ...",
+          "snippet": "HERE Technologies creates living three-dimensional maps that grow upwards, breathing with layers of information and insights.",
+          "url": "https://www.crunchbase.com/organization/here-technologies"
+        },
+        {
+          "title": "HERE Technologies - LinkedIn",
+          "snippet": "Jan 20, 2020 · For over 40 years, from launching our first digital map in 1985, to shaping the future of software-defined vehicles today.",
+          "url": "https://www.linkedin.com/company/here"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 698,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What year was Here Technologies founded under the name Here?",
+        "duration_seconds": 0.6991,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=What+year+was+Here+Technologies+founded+under+the+name+Here%3F",
+            "query": "What year was Here Technologies founded under the name Here?",
+            "cache_hit": false,
+            "duration_ms": 698,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 698,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Here WeGo - Wikipedia",
+            "snippet": "The service was originally released by Nokia as Nokia Maps in 2007 for Symbian and Windows Mobile. Nokia later acquired Navteq which provided location data and ...Features · History · 2007–2013 · Platforms and versions",
+            "url": "https://en.wikipedia.org/wiki/Here_WeGo"
+          },
+          {
+            "title": "HERE at 40: what's next for the leader in location technology?",
+            "snippet": "May 16, 2025 · The HERE story begins in 1985 with an ambitious vision to revolutionize navigation using digital maps. Founders Barry Karlin and Galen Collins ...",
+            "url": "https://www.here.com/learn/blog/here-technologies-40-year-history"
+          },
+          {
+            "title": "Location Technology | Autonomous World | About Us | HERE",
+            "snippet": "HERE is the world's leading mapping company. Forty years ago, we started with a digital map of San Francisco. Today, we set the standard for automotive-grade ...",
+            "url": "https://www.here.com/about"
+          },
+          {
+            "title": "HERE Technologies Chicago - Crunchbase Company Profile ...",
+            "snippet": "HERE Technologies creates living three-dimensional maps that grow upwards, breathing with layers of information and insights.",
+            "url": "https://www.crunchbase.com/organization/here-technologies"
+          },
+          {
+            "title": "HERE Technologies - LinkedIn",
+            "snippet": "Jan 20, 2020 · For over 40 years, from launching our first digital map in 1985, to shaping the future of software-defined vehicles today.",
+            "url": "https://www.linkedin.com/company/here"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 698,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=What+year+was+Here+Technologies+founded+under+the+name+Here%3F",
+        "query": "What year was Here Technologies founded under the name Here?",
+        "cache_hit": false,
+        "duration_ms": 698,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 698,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 2,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 2,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "route3_20260608_p19746798_date_infobox",
+        "question": "What year was Here Technologies founded under the name Here?",
+        "answer": "2012",
+        "subject": "Here Technologies",
+        "answer_type": "Date",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "year Here Technologies founded as Here"
+      },
+      "ok": true,
+      "duration_seconds": 1.2923,
+      "result_count": 5,
+      "first_titles": [
+        "Here (компания) — Википедия",
+        "Technology - Wikipedia",
+        "HERE Technologies 2026 Company Profile: Valuation... | PitchBook"
+      ],
+      "results": [
+        {
+          "title": "Here (компания) — Википедия",
+          "snippet": "HERE (ранее NAVTEQ (1985—2011), Nokia Maps (2011—2012), Ovi Maps (2007—2011), HERE, a Nokia business (2011—2015), HERE Technologies (2015 — по настоящее время) — это международная технологическая компания, которая занимается разработкой...",
+          "url": "https://ru.wikipedia.org/wiki/Here_(компания)"
+        },
+        {
+          "title": "Technology - Wikipedia",
+          "snippet": "While technology contributes to economic development and improves human prosperity, it can also have negative impacts such as pollution and resource depletion, and can cause social harms like technological unemployment resulting from automation.",
+          "url": "https://en.wikipedia.org/wiki/Technology"
+        },
+        {
+          "title": "HERE Technologies 2026 Company Profile: Valuation... | PitchBook",
+          "snippet": "HERE Technologies Overview. Update this profile. Year Founded.HERE Technologies Related Research & Analysis. Explore institutional-grade private market research from our team of analysts.",
+          "url": "https://pitchbook.com/profiles/company/94509-91"
+        },
+        {
+          "title": "HERE Technologies | The world's #1 Location Platform & Mapping...",
+          "snippet": "Power your enterprise applications and real-world AI with HERE. Access high-quality global map data, advanced routing APIs, and location intelligence solutions.",
+          "url": "https://www.here.com/"
+        },
+        {
+          "title": "HERE Technologies (@here) on X",
+          "snippet": "HERE Technologies (@here) on X. HERE, a location data and technology platform, moves people, businesses and cities forward by harnessing the power of location.",
+          "url": "https://twitter.com/here"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1291,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "year Here Technologies founded as Here",
+        "duration_seconds": 1.2923,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=year+Here+Technologies+founded+as+Here",
+            "query": "year Here Technologies founded as Here",
+            "cache_hit": false,
+            "duration_ms": 1291,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1291,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Here (компания) — Википедия",
+            "snippet": "HERE (ранее NAVTEQ (1985—2011), Nokia Maps (2011—2012), Ovi Maps (2007—2011), HERE, a Nokia business (2011—2015), HERE Technologies (2015 — по настоящее время) — это международная технологическая компания, которая занимается разработкой...",
+            "url": "https://ru.wikipedia.org/wiki/Here_(компания)"
+          },
+          {
+            "title": "Technology - Wikipedia",
+            "snippet": "While technology contributes to economic development and improves human prosperity, it can also have negative impacts such as pollution and resource depletion, and can cause social harms like technological unemployment resulting from automation.",
+            "url": "https://en.wikipedia.org/wiki/Technology"
+          },
+          {
+            "title": "HERE Technologies 2026 Company Profile: Valuation... | PitchBook",
+            "snippet": "HERE Technologies Overview. Update this profile. Year Founded.HERE Technologies Related Research & Analysis. Explore institutional-grade private market research from our team of analysts.",
+            "url": "https://pitchbook.com/profiles/company/94509-91"
+          },
+          {
+            "title": "HERE Technologies | The world's #1 Location Platform & Mapping...",
+            "snippet": "Power your enterprise applications and real-world AI with HERE. Access high-quality global map data, advanced routing APIs, and location intelligence solutions.",
+            "url": "https://www.here.com/"
+          },
+          {
+            "title": "HERE Technologies (@here) on X",
+            "snippet": "HERE Technologies (@here) on X. HERE, a location data and technology platform, moves people, businesses and cities forward by harnessing the power of location.",
+            "url": "https://twitter.com/here"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1291,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=year+Here+Technologies+founded+as+Here",
+        "query": "year Here Technologies founded as Here",
+        "cache_hit": false,
+        "duration_ms": 1291,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1291,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 2,
+      "probe_stage_query_index": 2
+    },
+    {
+      "qa": {
+        "qa_index": 3,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage03_qa03",
+        "question": "What part of the brain is shown to have brain metastasis from lung cancer in the provided MRI image?",
+        "answer": "right cerebral hemisphere",
+        "subject": "Brain tumor",
+        "answer_type": "Place",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "fallback_record_question",
+        "query": "What part of the brain is shown to have brain metastasis from lung cancer in the provided MRI image?"
+      },
+      "ok": true,
+      "duration_seconds": 3.159,
+      "result_count": 5,
+      "first_titles": [
+        "Matched MRI, Segmentations, and Histopathologic Images of ...",
+        "Brain Metastases - Neurosurgery | UCLA Health",
+        "Brain-Mets-Lung-MRI-Path-Segs - The Cancer Imaging Archive (TCIA)"
+      ],
+      "results": [
+        {
+          "title": "Matched MRI, Segmentations, and Histopathologic Images of ...",
+          "snippet": "Jan 10, 2026 · We present such a dataset composed of 111 cases of magnetic resonance (MR) and histopathologic imaging from patients with brain metastasis from primary lung cancer.",
+          "url": "https://www.nature.com/articles/s41597-025-06353-2"
+        },
+        {
+          "title": "Brain Metastases - Neurosurgery | UCLA Health",
+          "snippet": "Common brain metastases in adults come from the lung, breast, kidney, colon and skin (melanoma). Computed tomography (CT) or magnetic resonance imaging (MRI) scans are used to identify the tumors within the brain. Multiple tumors are found 35 percent to 50 percent of the time.",
+          "url": "https://www.uclahealth.org/medical-services/neurosurgery/conditions-treated/brain-metastases"
+        },
+        {
+          "title": "Brain-Mets-Lung-MRI-Path-Segs - The Cancer Imaging Archive (TCIA)",
+          "snippet": "Aug 22, 2025 · Prospectively collected data from the Yale Central Nervous System (CNS) Metastasis Biorepository was queried for patients who had a diagnosis of brain metastasis consistent with primary lung cancer.",
+          "url": "https://www.cancerimagingarchive.net/collection/Brain-Mets-Lung-MRI-Path-Segs/"
+        },
+        {
+          "title": "Neuroanatomical location of lung cancer brain metastases in ...",
+          "snippet": "Wang et al. [5] examined 335 lung cancer patients and found (based on imaging) that lung adenocarcinomas metastasize predominantly to the frontal lobe, while small cell carcinomas (SCLC) and squamous cell carcinomas show predilection for the cerebellum [5, 6].",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11581295/"
+        },
+        {
+          "title": "Imaging of brain metastasis in non-small-cell lung cancer ...",
+          "snippet": "Mar 1, 2023 · Brain parenchymal metastases can have varied imaging appearances, and it is pertinent to be aware of the various molecular risk factors for brain metastasis from NSCLC along with their suggestive imaging appearances, so as to identify them early.",
+          "url": "https://www.sciencedirect.com/science/article/pii/S0009926022007140"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 3158,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "fallback_record_question",
+        "query": "What part of the brain is shown to have brain metastasis from lung cancer in the provided MRI image?",
+        "duration_seconds": 3.159,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=What+part+of+the+brain+is+shown+to+have+brain+metastasis+from+lung+cancer+in+the+provided+MRI+image%3F",
+            "query": "What part of the brain is shown to have brain metastasis from lung cancer in the provided MRI image?",
+            "cache_hit": false,
+            "duration_ms": 3158,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 3158,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Matched MRI, Segmentations, and Histopathologic Images of ...",
+            "snippet": "Jan 10, 2026 · We present such a dataset composed of 111 cases of magnetic resonance (MR) and histopathologic imaging from patients with brain metastasis from primary lung cancer.",
+            "url": "https://www.nature.com/articles/s41597-025-06353-2"
+          },
+          {
+            "title": "Brain Metastases - Neurosurgery | UCLA Health",
+            "snippet": "Common brain metastases in adults come from the lung, breast, kidney, colon and skin (melanoma). Computed tomography (CT) or magnetic resonance imaging (MRI) scans are used to identify the tumors within the brain. Multiple tumors are found 35 percent to 50 percent of the time.",
+            "url": "https://www.uclahealth.org/medical-services/neurosurgery/conditions-treated/brain-metastases"
+          },
+          {
+            "title": "Brain-Mets-Lung-MRI-Path-Segs - The Cancer Imaging Archive (TCIA)",
+            "snippet": "Aug 22, 2025 · Prospectively collected data from the Yale Central Nervous System (CNS) Metastasis Biorepository was queried for patients who had a diagnosis of brain metastasis consistent with primary lung cancer.",
+            "url": "https://www.cancerimagingarchive.net/collection/Brain-Mets-Lung-MRI-Path-Segs/"
+          },
+          {
+            "title": "Neuroanatomical location of lung cancer brain metastases in ...",
+            "snippet": "Wang et al. [5] examined 335 lung cancer patients and found (based on imaging) that lung adenocarcinomas metastasize predominantly to the frontal lobe, while small cell carcinomas (SCLC) and squamous cell carcinomas show predilection for the cerebellum [5, 6].",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11581295/"
+          },
+          {
+            "title": "Imaging of brain metastasis in non-small-cell lung cancer ...",
+            "snippet": "Mar 1, 2023 · Brain parenchymal metastases can have varied imaging appearances, and it is pertinent to be aware of the various molecular risk factors for brain metastasis from NSCLC along with their suggestive imaging appearances, so as to identify them early.",
+            "url": "https://www.sciencedirect.com/science/article/pii/S0009926022007140"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 3158,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=What+part+of+the+brain+is+shown+to+have+brain+metastasis+from+lung+cancer+in+the+provided+MRI+image%3F",
+        "query": "What part of the brain is shown to have brain metastasis from lung cancer in the provided MRI image?",
+        "cache_hit": false,
+        "duration_ms": 3158,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 3158,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 3,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 3,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage03_qa03",
+        "question": "What part of the brain is shown to have brain metastasis from lung cancer in the provided MRI image?",
+        "answer": "right cerebral hemisphere",
+        "subject": "Brain tumor",
+        "answer_type": "Place",
+        "query_index": 2,
+        "query_name": "search_query_1",
+        "query_category": "fallback_search_queries",
+        "query": "brain metastasis location in MRI from lung cancer"
+      },
+      "ok": true,
+      "duration_seconds": 1.3742,
+      "result_count": 5,
+      "first_titles": [
+        "Brain Metastasis from Lung Cancer | American Lung Association",
+        "Brain-Mets-Lung-MRI-Path-Segs - The Cancer Imaging Archive (TCIA)",
+        "Magnetic resonance imaging characteristics of brain metastases in small cell lung cancer - PMC"
+      ],
+      "results": [
+        {
+          "title": "Brain Metastasis from Lung Cancer | American Lung Association",
+          "snippet": "One indicator is if your symptoms come and go or if they are chronic. If you are experiencing a symptom that comes and goes, it is less likely to be related to cancer. Talk with your doctor about any symptoms you are experiencing. ... Usually, brain mets are first diagnosed using an MRI with contrast.",
+          "url": "https://www.lung.org/lung-health-diseases/lung-disease-lookup/lung-cancer/symptoms-diagnosis/lung-cancer-staging/brain-metastasis"
+        },
+        {
+          "title": "Brain-Mets-Lung-MRI-Path-Segs - The Cancer Imaging Archive (TCIA)",
+          "snippet": "November 24, 2025 - Prospectively collected data from the Yale Central Nervous System (CNS) Metastasis Biorepository was queried for patients who had a diagnosis of brain metastasis consistent with primary lung cancer. Of the 129 cases meeting this criterion, 6 cases were excluded for lacking any available pre-operative brain MRI with T1CE enhancement and/or FLAIR hyperintensity.",
+          "url": "https://www.cancerimagingarchive.net/collection/brain-mets-lung-mri-path-segs/"
+        },
+        {
+          "title": "Magnetic resonance imaging characteristics of brain metastases in small cell lung cancer - PMC",
+          "snippet": "... Pattern III of brain metastases in SCLC. Pattern III: A 71‐year‐old man without history of smoking was diagnosed with SCLC. A follow‐up head MRI examination revealed the presence of three intracranial lesions located in the right periventricular, callosum, and left centrum semiovale.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10417172/"
+        },
+        {
+          "title": "A systematic review of brain metastases from lung cancer using magnetic resonance neuroimaging: Clinical and technical aspects - PMC",
+          "snippet": "Asymptomatic brain metastases (BM) in small cell lung cancer (SCLC): MR‐imaging is useful at initial diagnosis. J Neurooncol 2000; 48: 243–248. [DOI] [PubMed] [Google Scholar] 55. Kim SY, Kim JS, Park HS, et al. Screening of brain metastasis with limited magnetic resonance imaging (MRI): Clinical implications of using limited brain MRI during initial staging for non‐small cell lung cancer patients.",
+          "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11177032/"
+        },
+        {
+          "title": "Brain Metastasis Imaging: Practice Essentials, Radiography, Computed Tomography",
+          "snippet": "August 24, 2022 - Axial contrast-enhanced T1-weighted MRI of a patient with known lung cancer. Multiple, small ring-enhancing lesions are seen in both hemispheres. Sagittal contrast-enhanced MRI of a patient with known prostate cancer. The solitary enhancing right parietal extra-axial lesion is a surgically proven dural metastasis. Coronal contrast-enhanced MRI of a patient with known melanoma. Note linear enhancement in the sulci and brain surface of the right frontal and temporal lobes suggestive of leptomeningeal carcinomatosis.",
+          "url": "https://emedicine.medscape.com/article/338239-overview"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1373,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "search_query_1",
+        "query_category": "fallback_search_queries",
+        "query": "brain metastasis location in MRI from lung cancer",
+        "duration_seconds": 1.3742,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=brain+metastasis+location+in+MRI+from+lung+cancer",
+            "query": "brain metastasis location in MRI from lung cancer",
+            "cache_hit": false,
+            "duration_ms": 1373,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1373,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Brain Metastasis from Lung Cancer | American Lung Association",
+            "snippet": "One indicator is if your symptoms come and go or if they are chronic. If you are experiencing a symptom that comes and goes, it is less likely to be related to cancer. Talk with your doctor about any symptoms you are experiencing. ... Usually, brain mets are first diagnosed using an MRI with contrast.",
+            "url": "https://www.lung.org/lung-health-diseases/lung-disease-lookup/lung-cancer/symptoms-diagnosis/lung-cancer-staging/brain-metastasis"
+          },
+          {
+            "title": "Brain-Mets-Lung-MRI-Path-Segs - The Cancer Imaging Archive (TCIA)",
+            "snippet": "November 24, 2025 - Prospectively collected data from the Yale Central Nervous System (CNS) Metastasis Biorepository was queried for patients who had a diagnosis of brain metastasis consistent with primary lung cancer. Of the 129 cases meeting this criterion, 6 cases were excluded for lacking any available pre-operative brain MRI with T1CE enhancement and/or FLAIR hyperintensity.",
+            "url": "https://www.cancerimagingarchive.net/collection/brain-mets-lung-mri-path-segs/"
+          },
+          {
+            "title": "Magnetic resonance imaging characteristics of brain metastases in small cell lung cancer - PMC",
+            "snippet": "... Pattern III of brain metastases in SCLC. Pattern III: A 71‐year‐old man without history of smoking was diagnosed with SCLC. A follow‐up head MRI examination revealed the presence of three intracranial lesions located in the right periventricular, callosum, and left centrum semiovale.",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC10417172/"
+          },
+          {
+            "title": "A systematic review of brain metastases from lung cancer using magnetic resonance neuroimaging: Clinical and technical aspects - PMC",
+            "snippet": "Asymptomatic brain metastases (BM) in small cell lung cancer (SCLC): MR‐imaging is useful at initial diagnosis. J Neurooncol 2000; 48: 243–248. [DOI] [PubMed] [Google Scholar] 55. Kim SY, Kim JS, Park HS, et al. Screening of brain metastasis with limited magnetic resonance imaging (MRI): Clinical implications of using limited brain MRI during initial staging for non‐small cell lung cancer patients.",
+            "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC11177032/"
+          },
+          {
+            "title": "Brain Metastasis Imaging: Practice Essentials, Radiography, Computed Tomography",
+            "snippet": "August 24, 2022 - Axial contrast-enhanced T1-weighted MRI of a patient with known lung cancer. Multiple, small ring-enhancing lesions are seen in both hemispheres. Sagittal contrast-enhanced MRI of a patient with known prostate cancer. The solitary enhancing right parietal extra-axial lesion is a surgically proven dural metastasis. Coronal contrast-enhanced MRI of a patient with known melanoma. Note linear enhancement in the sulci and brain surface of the right frontal and temporal lobes suggestive of leptomeningeal carcinomatosis.",
+            "url": "https://emedicine.medscape.com/article/338239-overview"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1373,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=brain+metastasis+location+in+MRI+from+lung+cancer",
+        "query": "brain metastasis location in MRI from lung cancer",
+        "cache_hit": false,
+        "duration_ms": 1373,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1373,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 3,
+      "probe_stage_query_index": 2
+    },
+    {
+      "qa": {
+        "qa_index": 4,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage04_qa04",
+        "question": "Which government department presents the U.S. Army Distinguished Service Medal?",
+        "answer": "United States Department of the Army",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Place",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "Which government department presents the U.S. Army Distinguished Service Medal?"
+      },
+      "ok": true,
+      "duration_seconds": 1.61,
+      "result_count": 5,
+      "first_titles": [
+        "Distinguished Service Medal (U.S. Army) - Wikipedia",
+        "Distinguished Service Medal (Army)",
+        "10 USC 7273: Distinguished-service medal: award"
+      ],
+      "results": [
+        {
+          "title": "Distinguished Service Medal (U.S. Army) - Wikipedia",
+          "snippet": "The Distinguished Service Medal (DSM) [2] is a military decoration of the United States Army that is presented to soldiers who have distinguished themselves by exceptionally meritorious service to the government in a duty of great responsibility.",
+          "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Medal_(U.S._Army)"
+        },
+        {
+          "title": "Distinguished Service Medal (Army)",
+          "snippet": "3 days ago · The Act of Congress on July 9, 1918, recognized the need for different types and degrees of heroism and meritorious service and included such provisions for award criteria.",
+          "url": "https://tioh.army.mil/Catalog/Heraldry.aspx?HeraldryId=15240&CategoryId=3"
+        },
+        {
+          "title": "10 USC 7273: Distinguished-service medal: award",
+          "snippet": "The President may award a distinguished-service medal of appropriate design and a ribbon, together with a rosette or other device to be worn in place thereof, to a person who, while serving in any capacity with the Army, distinguishes himself by exceptionally meritorious service to the United States in a duty of great responsibility.",
+          "url": "https://uscode.house.gov/view.xhtml?req=granuleid:USC-2023-title10-section7273&num=0&edition=2023"
+        },
+        {
+          "title": "Distinguished Service Medal (U.S. Army) - grokipedia.com",
+          "snippet": "The U.S. Army Distinguished Service Medal has been awarded to select senior officers from other U.S. military branches, typically for exceptionally meritorious service in joint commands, wartime leadership, or contributions directly benefiting Army operations.",
+          "url": "https://grokipedia.com/page/Distinguished_Service_Medal_(U.S._Army)"
+        },
+        {
+          "title": "U.S.C. Title 10 - ARMED FORCES - GovInfo",
+          "snippet": "The Defense Distinguished Service Medal or device may be awarded posthumously and, when so awarded, may be presented to such representative of the deceased as may be deemed appropriate by the Secretary of Defense.",
+          "url": "https://www.govinfo.gov/content/pkg/USCODE-2023-title10/html/USCODE-2023-title10-subtitleA-partII-chap57-sec1125.htm"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1609,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "Which government department presents the U.S. Army Distinguished Service Medal?",
+        "duration_seconds": 1.61,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=Which+government+department+presents+the+U.S.+Army+Distinguished+Service+Medal%3F",
+            "query": "Which government department presents the U.S. Army Distinguished Service Medal?",
+            "cache_hit": false,
+            "duration_ms": 1609,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1609,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Distinguished Service Medal (U.S. Army) - Wikipedia",
+            "snippet": "The Distinguished Service Medal (DSM) [2] is a military decoration of the United States Army that is presented to soldiers who have distinguished themselves by exceptionally meritorious service to the government in a duty of great responsibility.",
+            "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Medal_(U.S._Army)"
+          },
+          {
+            "title": "Distinguished Service Medal (Army)",
+            "snippet": "3 days ago · The Act of Congress on July 9, 1918, recognized the need for different types and degrees of heroism and meritorious service and included such provisions for award criteria.",
+            "url": "https://tioh.army.mil/Catalog/Heraldry.aspx?HeraldryId=15240&CategoryId=3"
+          },
+          {
+            "title": "10 USC 7273: Distinguished-service medal: award",
+            "snippet": "The President may award a distinguished-service medal of appropriate design and a ribbon, together with a rosette or other device to be worn in place thereof, to a person who, while serving in any capacity with the Army, distinguishes himself by exceptionally meritorious service to the United States in a duty of great responsibility.",
+            "url": "https://uscode.house.gov/view.xhtml?req=granuleid:USC-2023-title10-section7273&num=0&edition=2023"
+          },
+          {
+            "title": "Distinguished Service Medal (U.S. Army) - grokipedia.com",
+            "snippet": "The U.S. Army Distinguished Service Medal has been awarded to select senior officers from other U.S. military branches, typically for exceptionally meritorious service in joint commands, wartime leadership, or contributions directly benefiting Army operations.",
+            "url": "https://grokipedia.com/page/Distinguished_Service_Medal_(U.S._Army)"
+          },
+          {
+            "title": "U.S.C. Title 10 - ARMED FORCES - GovInfo",
+            "snippet": "The Defense Distinguished Service Medal or device may be awarded posthumously and, when so awarded, may be presented to such representative of the deceased as may be deemed appropriate by the Secretary of Defense.",
+            "url": "https://www.govinfo.gov/content/pkg/USCODE-2023-title10/html/USCODE-2023-title10-subtitleA-partII-chap57-sec1125.htm"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1609,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=Which+government+department+presents+the+U.S.+Army+Distinguished+Service+Medal%3F",
+        "query": "Which government department presents the U.S. Army Distinguished Service Medal?",
+        "cache_hit": false,
+        "duration_ms": 1609,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1609,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 4,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 4,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage04_qa04",
+        "question": "Which government department presents the U.S. Army Distinguished Service Medal?",
+        "answer": "United States Department of the Army",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Place",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "U.S. Army Distinguished Service Medal presenting department"
+      },
+      "ok": true,
+      "duration_seconds": 1.2141,
+      "result_count": 5,
+      "first_titles": [
+        "Distinguished Service Medal (U.S. Army) - Wikipedia",
+        "Defense Distinguished Service Medal - Wikipedia",
+        "Army Distinguished Service Medal - Military Roll of Honor"
+      ],
+      "results": [
+        {
+          "title": "Distinguished Service Medal (U.S. Army) - Wikipedia",
+          "snippet": "The Distinguished Service Medal (DSM) is a military decoration of the United States Army that is presented to soldiers who have distinguished themselves by ...",
+          "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Medal_(U.S._Army)"
+        },
+        {
+          "title": "Defense Distinguished Service Medal - Wikipedia",
+          "snippet": "The Defense Distinguished Service Medal (DDSM) is a military decoration of the United States Department of Defense. It is awarded to members of the United ...",
+          "url": "https://en.wikipedia.org/wiki/Defense_Distinguished_Service_Medal"
+        },
+        {
+          "title": "Army Distinguished Service Medal - Military Roll of Honor",
+          "snippet": "Establishing Authority The Army Distinguished Service Medal was established at the direction of President Woodrow Wilson by War Department General Orders ...",
+          "url": "https://www.rollofhonor.org/public/htmldetails.aspx?Cat=award&EntID=3868"
+        },
+        {
+          "title": "U.S. Army Service, Campaign Medals and Foreign Awards Information",
+          "snippet": "The medal was worn either suspended from the neck or pinned over the left breast in precedence to other military decorations. f. The present neck ribbon was ...",
+          "url": "https://veteranmedals.army.mil/home/us-army-medals-award-badges-ribbon-and-attachments-information/us-army-service-campaign-medals-and-foreign-awards-information"
+        },
+        {
+          "title": "Defense Distinguished Service Military Medal & Military Ribbon",
+          "snippet": "Authorized by E.O. 11545. The Defense Distinguished Service Medal (DDSM) shall only be awarded to officers of the Armed Forces of the United States whose ...",
+          "url": "https://www.officialmilitaryribbons.com/military_ribbon_info/usmc_military_ribbons/defense_distinguished_service_military_ribbon.html"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1212,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "U.S. Army Distinguished Service Medal presenting department",
+        "duration_seconds": 1.2141,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=U.S.+Army+Distinguished+Service+Medal+presenting+department",
+            "query": "U.S. Army Distinguished Service Medal presenting department",
+            "cache_hit": false,
+            "duration_ms": 1212,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1212,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Distinguished Service Medal (U.S. Army) - Wikipedia",
+            "snippet": "The Distinguished Service Medal (DSM) is a military decoration of the United States Army that is presented to soldiers who have distinguished themselves by ...",
+            "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Medal_(U.S._Army)"
+          },
+          {
+            "title": "Defense Distinguished Service Medal - Wikipedia",
+            "snippet": "The Defense Distinguished Service Medal (DDSM) is a military decoration of the United States Department of Defense. It is awarded to members of the United ...",
+            "url": "https://en.wikipedia.org/wiki/Defense_Distinguished_Service_Medal"
+          },
+          {
+            "title": "Army Distinguished Service Medal - Military Roll of Honor",
+            "snippet": "Establishing Authority The Army Distinguished Service Medal was established at the direction of President Woodrow Wilson by War Department General Orders ...",
+            "url": "https://www.rollofhonor.org/public/htmldetails.aspx?Cat=award&EntID=3868"
+          },
+          {
+            "title": "U.S. Army Service, Campaign Medals and Foreign Awards Information",
+            "snippet": "The medal was worn either suspended from the neck or pinned over the left breast in precedence to other military decorations. f. The present neck ribbon was ...",
+            "url": "https://veteranmedals.army.mil/home/us-army-medals-award-badges-ribbon-and-attachments-information/us-army-service-campaign-medals-and-foreign-awards-information"
+          },
+          {
+            "title": "Defense Distinguished Service Military Medal & Military Ribbon",
+            "snippet": "Authorized by E.O. 11545. The Defense Distinguished Service Medal (DDSM) shall only be awarded to officers of the Armed Forces of the United States whose ...",
+            "url": "https://www.officialmilitaryribbons.com/military_ribbon_info/usmc_military_ribbons/defense_distinguished_service_military_ribbon.html"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1212,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=U.S.+Army+Distinguished+Service+Medal+presenting+department",
+        "query": "U.S. Army Distinguished Service Medal presenting department",
+        "cache_hit": false,
+        "duration_ms": 1212,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1212,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 4,
+      "probe_stage_query_index": 2
+    },
+    {
+      "qa": {
+        "qa_index": 4,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage04_qa04",
+        "question": "Which government department presents the U.S. Army Distinguished Service Medal?",
+        "answer": "United States Department of the Army",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Place",
+        "query_index": 3,
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "Which department awards the Distinguished Service Medal US Army"
+      },
+      "ok": true,
+      "duration_seconds": 1.0346,
+      "result_count": 5,
+      "first_titles": [
+        "Distinguished Service Medal (U.S. Army) - Wikipedia",
+        "Defense Distinguished Service Medal - Wikipedia",
+        "U.S. Army Service, Campaign Medals and Foreign Awards Information"
+      ],
+      "results": [
+        {
+          "title": "Distinguished Service Medal (U.S. Army) - Wikipedia",
+          "snippet": "The Distinguished Service Medal (DSM) is a military decoration of the United States Army that is presented to soldiers who have distinguished themselves by ...",
+          "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Medal_(U.S._Army)"
+        },
+        {
+          "title": "Defense Distinguished Service Medal - Wikipedia",
+          "snippet": "The Defense Distinguished Service Medal (DDSM) is a military decoration of the United States Department of Defense. It is awarded to members of the United ...",
+          "url": "https://en.wikipedia.org/wiki/Defense_Distinguished_Service_Medal"
+        },
+        {
+          "title": "U.S. Army Service, Campaign Medals and Foreign Awards Information",
+          "snippet": "The performance must be such as to merit recognition for service which is clearly exceptional. Exceptional performance of normal duty will not alone justify an ...",
+          "url": "https://veteranmedals.army.mil/home/us-army-medals-award-badges-ribbon-and-attachments-information/us-army-service-campaign-medals-and-foreign-awards-information"
+        },
+        {
+          "title": "Army - Distinguished Service Cross Recipients",
+          "snippet": "The sole purpose of the information provided on this website is to publicly recognize those U.S. military members who are recipients of a Medal of Honor, ...",
+          "url": "https://valor.defense.gov/recipients/army-distinguished-service-cross-recipients/"
+        },
+        {
+          "title": "Defense Distinguished Service Military Medal & Military Ribbon",
+          "snippet": "The Defense Distinguished Service Medal (DDSM) shall only be awarded to officers of the Armed Forces of the United States whose exceptional performance of duty ...",
+          "url": "https://www.officialmilitaryribbons.com/military_ribbon_info/usmc_military_ribbons/defense_distinguished_service_military_ribbon.html"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1033,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "Which department awards the Distinguished Service Medal US Army",
+        "duration_seconds": 1.0346,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=Which+department+awards+the+Distinguished+Service+Medal+US+Army",
+            "query": "Which department awards the Distinguished Service Medal US Army",
+            "cache_hit": false,
+            "duration_ms": 1033,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1033,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Distinguished Service Medal (U.S. Army) - Wikipedia",
+            "snippet": "The Distinguished Service Medal (DSM) is a military decoration of the United States Army that is presented to soldiers who have distinguished themselves by ...",
+            "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Medal_(U.S._Army)"
+          },
+          {
+            "title": "Defense Distinguished Service Medal - Wikipedia",
+            "snippet": "The Defense Distinguished Service Medal (DDSM) is a military decoration of the United States Department of Defense. It is awarded to members of the United ...",
+            "url": "https://en.wikipedia.org/wiki/Defense_Distinguished_Service_Medal"
+          },
+          {
+            "title": "U.S. Army Service, Campaign Medals and Foreign Awards Information",
+            "snippet": "The performance must be such as to merit recognition for service which is clearly exceptional. Exceptional performance of normal duty will not alone justify an ...",
+            "url": "https://veteranmedals.army.mil/home/us-army-medals-award-badges-ribbon-and-attachments-information/us-army-service-campaign-medals-and-foreign-awards-information"
+          },
+          {
+            "title": "Army - Distinguished Service Cross Recipients",
+            "snippet": "The sole purpose of the information provided on this website is to publicly recognize those U.S. military members who are recipients of a Medal of Honor, ...",
+            "url": "https://valor.defense.gov/recipients/army-distinguished-service-cross-recipients/"
+          },
+          {
+            "title": "Defense Distinguished Service Military Medal & Military Ribbon",
+            "snippet": "The Defense Distinguished Service Medal (DDSM) shall only be awarded to officers of the Armed Forces of the United States whose exceptional performance of duty ...",
+            "url": "https://www.officialmilitaryribbons.com/military_ribbon_info/usmc_military_ribbons/defense_distinguished_service_military_ribbon.html"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1033,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=Which+department+awards+the+Distinguished+Service+Medal+US+Army",
+        "query": "Which department awards the Distinguished Service Medal US Army",
+        "cache_hit": false,
+        "duration_ms": 1033,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1033,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 4,
+      "probe_stage_query_index": 3
+    },
+    {
+      "qa": {
+        "qa_index": 5,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage05_qa05",
+        "question": "In what year was the U.S. Army Distinguished Service Medal established?",
+        "answer": "1918",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "fallback_record_question",
+        "query": "In what year was the U.S. Army Distinguished Service Medal established?"
+      },
+      "ok": true,
+      "duration_seconds": 1.5672,
+      "result_count": 5,
+      "first_titles": [
+        "Distinguished Service Medal (U.S. Army) - Wikipedia",
+        "Distinguished Service Medal (Army)",
+        "Army Distinguished Service Medal - rollofhonor.org"
+      ],
+      "results": [
+        {
+          "title": "Distinguished Service Medal (U.S. Army) - Wikipedia",
+          "snippet": "The Distinguished Service Medal (DSM) [2] is a military decoration of the United States Army that is presented to soldiers who have distinguished themselves by exceptionally meritorious service to the government in a duty of great responsibility. The performance must be such as to merit recognition for service that is clearly exceptional.",
+          "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Medal_(U.S._Army)"
+        },
+        {
+          "title": "Distinguished Service Medal (Army)",
+          "snippet": "The Act of Congress on July 9, 1918, recognized the need for different types and degrees of heroism and meritorious service and included such provisions for award criteria. The current statutory authorization for the Distinguished Service Medal is Title 10, United States Code, Section 3743. b.",
+          "url": "https://tioh.army.mil/Catalog/Heraldry.aspx?HeraldryId=15240&CategoryId=3&grp=4&menu=Decorations+and+Medals&ps=24"
+        },
+        {
+          "title": "Army Distinguished Service Medal - rollofhonor.org",
+          "snippet": "The Army Distinguished Service Medal was established at the direction of President Woodrow Wilson by War Department General Orders Number 6 of January 12, 1918, and confirmed (with minor modifications) by Act of Congress on July 9, 1918 (Public Law 193, 65th Congress).",
+          "url": "https://www.rollofhonor.org/public/htmldetails.aspx?Cat=award&EntID=3868"
+        },
+        {
+          "title": "1918 Distinguished Service Medal - Army Facts",
+          "snippet": "The Distinguished Service Medal was established by Act of Congress 9 July, 1918. An Act of Congress is a formal written enactment that legally commands something regarding the United States of America. Congress commanded the creation of the Distinguished Service Medal granting national recognition to the recipients of this medal.",
+          "url": "https://armyfacts.com/distinguished-service-medal/"
+        },
+        {
+          "title": "Distinguished Service Medal (U.S. Army) - grokipedia.com",
+          "snippet": "The Distinguished Service Medal is the highest United States Army award for non-combat service, conferred upon individuals who distinguish themselves by exceptionally meritorious performance in a duty of great responsibility while serving in any capacity with the Army. Authorized by presidential order on January 2, 1918, and confirmed by Congress on July 9, 1918, the medal was first awarded ...",
+          "url": "https://grokipedia.com/page/Distinguished_Service_Medal_(U.S._Army)"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1566,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "fallback_record_question",
+        "query": "In what year was the U.S. Army Distinguished Service Medal established?",
+        "duration_seconds": 1.5672,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=In+what+year+was+the+U.S.+Army+Distinguished+Service+Medal+established%3F",
+            "query": "In what year was the U.S. Army Distinguished Service Medal established?",
+            "cache_hit": false,
+            "duration_ms": 1566,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1566,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Distinguished Service Medal (U.S. Army) - Wikipedia",
+            "snippet": "The Distinguished Service Medal (DSM) [2] is a military decoration of the United States Army that is presented to soldiers who have distinguished themselves by exceptionally meritorious service to the government in a duty of great responsibility. The performance must be such as to merit recognition for service that is clearly exceptional.",
+            "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Medal_(U.S._Army)"
+          },
+          {
+            "title": "Distinguished Service Medal (Army)",
+            "snippet": "The Act of Congress on July 9, 1918, recognized the need for different types and degrees of heroism and meritorious service and included such provisions for award criteria. The current statutory authorization for the Distinguished Service Medal is Title 10, United States Code, Section 3743. b.",
+            "url": "https://tioh.army.mil/Catalog/Heraldry.aspx?HeraldryId=15240&CategoryId=3&grp=4&menu=Decorations+and+Medals&ps=24"
+          },
+          {
+            "title": "Army Distinguished Service Medal - rollofhonor.org",
+            "snippet": "The Army Distinguished Service Medal was established at the direction of President Woodrow Wilson by War Department General Orders Number 6 of January 12, 1918, and confirmed (with minor modifications) by Act of Congress on July 9, 1918 (Public Law 193, 65th Congress).",
+            "url": "https://www.rollofhonor.org/public/htmldetails.aspx?Cat=award&EntID=3868"
+          },
+          {
+            "title": "1918 Distinguished Service Medal - Army Facts",
+            "snippet": "The Distinguished Service Medal was established by Act of Congress 9 July, 1918. An Act of Congress is a formal written enactment that legally commands something regarding the United States of America. Congress commanded the creation of the Distinguished Service Medal granting national recognition to the recipients of this medal.",
+            "url": "https://armyfacts.com/distinguished-service-medal/"
+          },
+          {
+            "title": "Distinguished Service Medal (U.S. Army) - grokipedia.com",
+            "snippet": "The Distinguished Service Medal is the highest United States Army award for non-combat service, conferred upon individuals who distinguish themselves by exceptionally meritorious performance in a duty of great responsibility while serving in any capacity with the Army. Authorized by presidential order on January 2, 1918, and confirmed by Congress on July 9, 1918, the medal was first awarded ...",
+            "url": "https://grokipedia.com/page/Distinguished_Service_Medal_(U.S._Army)"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1566,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+was+the+U.S.+Army+Distinguished+Service+Medal+established%3F",
+        "query": "In what year was the U.S. Army Distinguished Service Medal established?",
+        "cache_hit": false,
+        "duration_ms": 1566,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1566,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 5,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 6,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage06_qa06",
+        "question": "What month, day, and year was the first U.S. Army Distinguished Service Medal awarded?",
+        "answer": "January 12, 1918",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Date",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What month, day, and year was the first U.S. Army Distinguished Service Medal awarded?"
+      },
+      "ok": true,
+      "duration_seconds": 0.9253,
+      "result_count": 5,
+      "first_titles": [
+        "Distinguished Service Cross (United States) - Wikipedia",
+        "U.S. Army Service, Campaign Medals and Foreign Awards Information",
+        "Distinguished Service Medal Recipients - The American Legion"
+      ],
+      "results": [
+        {
+          "title": "Distinguished Service Cross (United States) - Wikipedia",
+          "snippet": "Distinguished Service Cross (United States) ; United States Army soldiers · Currently awarded · 18 March 1918 · 13,462.",
+          "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Cross_(United_States)"
+        },
+        {
+          "title": "U.S. Army Service, Campaign Medals and Foreign Awards Information",
+          "snippet": "Legislation was introduced in the Senate on 17 February 1862, which authorized the medal for the Army and followed the pattern of a similar award approved for ...",
+          "url": "https://veteranmedals.army.mil/home/us-army-medals-award-badges-ribbon-and-attachments-information/us-army-service-campaign-medals-and-foreign-awards-information"
+        },
+        {
+          "title": "Distinguished Service Medal Recipients - The American Legion",
+          "snippet": "In 1980, The American Legion awarded its Distinguished Service Medal to the dead and missing of the Vietnam War. Numbering more than 58,000, these Americans ...",
+          "url": "https://www.legion.org/information-center/honor-remembrance/distinguished-service-medal"
+        },
+        {
+          "title": "Army Distinguished Service Medal - Military Roll of Honor",
+          "snippet": "The first Army Distinguished Service Medals were presented on October 21, 1918, to the following officers: Marshall of France, Ferdinand Foch, Commander-in- ...",
+          "url": "https://www.rollofhonor.org/public/htmldetails.aspx?Cat=award"
+        },
+        {
+          "title": "TRA Distinguished Service Medal - Theodore Roosevelt Association",
+          "snippet": "The first Medals (1923-25) were presented by the President at the White House. For many years thereafter, Medals were awarded on TR's birthday, October 27 ...",
+          "url": "https://www.theodoreroosevelt.org/content.aspx?page_id=22"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 924,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What month, day, and year was the first U.S. Army Distinguished Service Medal awarded?",
+        "duration_seconds": 0.9253,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=What+month%2C+day%2C+and+year+was+the+first+U.S.+Army+Distinguished+Service+Medal+awarded%3F",
+            "query": "What month, day, and year was the first U.S. Army Distinguished Service Medal awarded?",
+            "cache_hit": false,
+            "duration_ms": 924,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 924,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Distinguished Service Cross (United States) - Wikipedia",
+            "snippet": "Distinguished Service Cross (United States) ; United States Army soldiers · Currently awarded · 18 March 1918 · 13,462.",
+            "url": "https://en.wikipedia.org/wiki/Distinguished_Service_Cross_(United_States)"
+          },
+          {
+            "title": "U.S. Army Service, Campaign Medals and Foreign Awards Information",
+            "snippet": "Legislation was introduced in the Senate on 17 February 1862, which authorized the medal for the Army and followed the pattern of a similar award approved for ...",
+            "url": "https://veteranmedals.army.mil/home/us-army-medals-award-badges-ribbon-and-attachments-information/us-army-service-campaign-medals-and-foreign-awards-information"
+          },
+          {
+            "title": "Distinguished Service Medal Recipients - The American Legion",
+            "snippet": "In 1980, The American Legion awarded its Distinguished Service Medal to the dead and missing of the Vietnam War. Numbering more than 58,000, these Americans ...",
+            "url": "https://www.legion.org/information-center/honor-remembrance/distinguished-service-medal"
+          },
+          {
+            "title": "Army Distinguished Service Medal - Military Roll of Honor",
+            "snippet": "The first Army Distinguished Service Medals were presented on October 21, 1918, to the following officers: Marshall of France, Ferdinand Foch, Commander-in- ...",
+            "url": "https://www.rollofhonor.org/public/htmldetails.aspx?Cat=award"
+          },
+          {
+            "title": "TRA Distinguished Service Medal - Theodore Roosevelt Association",
+            "snippet": "The first Medals (1923-25) were presented by the President at the White House. For many years thereafter, Medals were awarded on TR's birthday, October 27 ...",
+            "url": "https://www.theodoreroosevelt.org/content.aspx?page_id=22"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 924,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=What+month%2C+day%2C+and+year+was+the+first+U.S.+Army+Distinguished+Service+Medal+awarded%3F",
+        "query": "What month, day, and year was the first U.S. Army Distinguished Service Medal awarded?",
+        "cache_hit": false,
+        "duration_ms": 924,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 924,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 6,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 7,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage07_qa07",
+        "question": "What type of medal is the U.S. Army Distinguished Service Medal classified as?",
+        "answer": "Military medal Distinguished service medal",
+        "subject": "Distinguished Service Medal (U.S. Army)",
+        "answer_type": "Other",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What type of medal is the U.S. Army Distinguished Service Medal classified as?"
+      },
+      "ok": true,
+      "duration_seconds": 1.4894,
+      "result_count": 5,
+      "first_titles": [
+        "Awards and decorations of the United States Armed Forces - Wikipedia",
+        "Seven on calvet’s medal of honor wall also earned distinguished...",
+        "The History of the Purple Heart | The National WWII Museum"
+      ],
+      "results": [
+        {
+          "title": "Awards and decorations of the United States Armed Forces - Wikipedia",
+          "snippet": "Various medals, service ribbons, ribbon devices, and specific badges recognize military service and personal accomplishments of members of the U.S. Armed Forces.",
+          "url": "https://en.wikipedia.org/wiki/Awards_and_decorations_of_the_United_States_Armed_Forces"
+        },
+        {
+          "title": "Seven on calvet’s medal of honor wall also earned distinguished...",
+          "snippet": "U.S. Army Distinguished Service Cross. Thus, Pershing – the Commander in Chief of the American Expeditionary Forces in France – proposed the creation of another level of recognition.The US Army Medal of Honor is the highest distinction for heroic acts.",
+          "url": "https://calvetconnect.blog/2021/01/12/medalofhonor/"
+        },
+        {
+          "title": "The History of the Purple Heart | The National WWII Museum",
+          "snippet": "Apart from the Medal of Honor, one of the most recognizable awards in the US Armed Forces is the Purple Heart.Congress reacted by creating the Distinguished Service Cross and the Distinguished Service Medal.",
+          "url": "https://www.nationalww2museum.org/war/articles/history-of-the-purple-heart"
+        },
+        {
+          "title": "What Is a Silver Star Medal? History of the Silver Star",
+          "snippet": "The medal is suspended on a ribbon of red, white and blue stripes. The awarding of successive Silver Medals is noted by a bronze oak leaf, if a member of the U.S. Army or Air Force, or a bronze star, if a member of the U.S. Navy, Marine Corps or Coast Guard.",
+          "url": "https://www.medalsofamerica.com/blog/what-is-a-silver-star-medal/"
+        },
+        {
+          "title": "U.S. Army Ranks List - Lowest to Highest",
+          "snippet": "An enlisted member enters the Army as a Private. After completing basic training, the enlisted recuits advances to Private First Class. The next notable advancement is to a Noncommissioned Officer. The highest rank attainable in the Army is the five-star General of the Army.",
+          "url": "https://www.federalpay.org/military/army/ranks"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1488,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What type of medal is the U.S. Army Distinguished Service Medal classified as?",
+        "duration_seconds": 1.4894,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=What+type+of+medal+is+the+U.S.+Army+Distinguished+Service+Medal+classified+as%3F",
+            "query": "What type of medal is the U.S. Army Distinguished Service Medal classified as?",
+            "cache_hit": false,
+            "duration_ms": 1488,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1488,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Awards and decorations of the United States Armed Forces - Wikipedia",
+            "snippet": "Various medals, service ribbons, ribbon devices, and specific badges recognize military service and personal accomplishments of members of the U.S. Armed Forces.",
+            "url": "https://en.wikipedia.org/wiki/Awards_and_decorations_of_the_United_States_Armed_Forces"
+          },
+          {
+            "title": "Seven on calvet’s medal of honor wall also earned distinguished...",
+            "snippet": "U.S. Army Distinguished Service Cross. Thus, Pershing – the Commander in Chief of the American Expeditionary Forces in France – proposed the creation of another level of recognition.The US Army Medal of Honor is the highest distinction for heroic acts.",
+            "url": "https://calvetconnect.blog/2021/01/12/medalofhonor/"
+          },
+          {
+            "title": "The History of the Purple Heart | The National WWII Museum",
+            "snippet": "Apart from the Medal of Honor, one of the most recognizable awards in the US Armed Forces is the Purple Heart.Congress reacted by creating the Distinguished Service Cross and the Distinguished Service Medal.",
+            "url": "https://www.nationalww2museum.org/war/articles/history-of-the-purple-heart"
+          },
+          {
+            "title": "What Is a Silver Star Medal? History of the Silver Star",
+            "snippet": "The medal is suspended on a ribbon of red, white and blue stripes. The awarding of successive Silver Medals is noted by a bronze oak leaf, if a member of the U.S. Army or Air Force, or a bronze star, if a member of the U.S. Navy, Marine Corps or Coast Guard.",
+            "url": "https://www.medalsofamerica.com/blog/what-is-a-silver-star-medal/"
+          },
+          {
+            "title": "U.S. Army Ranks List - Lowest to Highest",
+            "snippet": "An enlisted member enters the Army as a Private. After completing basic training, the enlisted recuits advances to Private First Class. The next notable advancement is to a Noncommissioned Officer. The highest rank attainable in the Army is the five-star General of the Army.",
+            "url": "https://www.federalpay.org/military/army/ranks"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1488,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=What+type+of+medal+is+the+U.S.+Army+Distinguished+Service+Medal+classified+as%3F",
+        "query": "What type of medal is the U.S. Army Distinguished Service Medal classified as?",
+        "cache_hit": false,
+        "duration_ms": 1488,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1488,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 7,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 8,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage08_qa08",
+        "question": "What county is the consolidated city-county of Butte located in?",
+        "answer": "Silver Bow",
+        "subject": "Butte, Montana",
+        "answer_type": "Place",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What county is the consolidated city-county of Butte located in?"
+      },
+      "ok": true,
+      "duration_seconds": 0.8834,
+      "result_count": 5,
+      "first_titles": [
+        "Butte, Montana - Wikipedia",
+        "Silver Bow County, Montana - Wikipedia",
+        "Butte County, California - Wikipedia"
+      ],
+      "results": [
+        {
+          "title": "Butte, Montana - Wikipedia",
+          "snippet": "May 5, 2026 - Butte (/bjuːt/ BYEWT) is a consolidated city-county in and the county seat of Silver Bow County, Montana, United States. In 1977, the city and county governments consolidated to form the sole entity of Butte-Silver Bow. The city covers 718 square miles (1,860 km2), and, according to the 2020 ...",
+          "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+        },
+        {
+          "title": "Silver Bow County, Montana - Wikipedia",
+          "snippet": "April 15, 2026 - Silver Bow County is a county in the U.S. state of Montana. As of the 2020 census, the population was 35,133. Its county seat is Butte. In 1977, the city and county governments consolidated to form the single entity of Butte-Silver Bow.",
+          "url": "https://en.wikipedia.org/wiki/Silver_Bow_County,_Montana"
+        },
+        {
+          "title": "Butte County, California - Wikipedia",
+          "snippet": "1 month ago - Butte County (/ˈbjuːt/ ⓘ) is a county located in the northern central part of the U.S. state of California. In the 2020 census, its population was 211,632. The county seat is Oroville.",
+          "url": "https://en.wikipedia.org/wiki/Butte_County,_California"
+        },
+        {
+          "title": "Butte MT - Consolidated city-county hall, mayor, stats, schools, attractions, and more",
+          "snippet": "Located in Montana, the Consolidated city-county of Butte has a lot to discover. Find more about its Consolidated city-county Hall, Mayor, Schools, Banks, Passport Facilities, and Leisure Activities.",
+          "url": "https://www.citydirectory.us/city-butte-montana.html"
+        },
+        {
+          "title": "City and County of Butte-Silver Bow, MT | Official Website",
+          "snippet": "We are proud to be a consolidated city-county government, led by an elected Chief Executive and twelve Council of Commissioners who represent our districts. Together, we are committed to honoring our past while building a bright future. That means protecting our land, water, and people, supporting responsible modern mining practices, and embracing sustainable development that creates new opportunities for residents and businesses alike. Butte-Silver Bow is more than its mining history.",
+          "url": "https://www.co.silverbow.mt.us/"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 882,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What county is the consolidated city-county of Butte located in?",
+        "duration_seconds": 0.8834,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=What+county+is+the+consolidated+city-county+of+Butte+located+in%3F",
+            "query": "What county is the consolidated city-county of Butte located in?",
+            "cache_hit": false,
+            "duration_ms": 882,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 882,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Butte, Montana - Wikipedia",
+            "snippet": "May 5, 2026 - Butte (/bjuːt/ BYEWT) is a consolidated city-county in and the county seat of Silver Bow County, Montana, United States. In 1977, the city and county governments consolidated to form the sole entity of Butte-Silver Bow. The city covers 718 square miles (1,860 km2), and, according to the 2020 ...",
+            "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+          },
+          {
+            "title": "Silver Bow County, Montana - Wikipedia",
+            "snippet": "April 15, 2026 - Silver Bow County is a county in the U.S. state of Montana. As of the 2020 census, the population was 35,133. Its county seat is Butte. In 1977, the city and county governments consolidated to form the single entity of Butte-Silver Bow.",
+            "url": "https://en.wikipedia.org/wiki/Silver_Bow_County,_Montana"
+          },
+          {
+            "title": "Butte County, California - Wikipedia",
+            "snippet": "1 month ago - Butte County (/ˈbjuːt/ ⓘ) is a county located in the northern central part of the U.S. state of California. In the 2020 census, its population was 211,632. The county seat is Oroville.",
+            "url": "https://en.wikipedia.org/wiki/Butte_County,_California"
+          },
+          {
+            "title": "Butte MT - Consolidated city-county hall, mayor, stats, schools, attractions, and more",
+            "snippet": "Located in Montana, the Consolidated city-county of Butte has a lot to discover. Find more about its Consolidated city-county Hall, Mayor, Schools, Banks, Passport Facilities, and Leisure Activities.",
+            "url": "https://www.citydirectory.us/city-butte-montana.html"
+          },
+          {
+            "title": "City and County of Butte-Silver Bow, MT | Official Website",
+            "snippet": "We are proud to be a consolidated city-county government, led by an elected Chief Executive and twelve Council of Commissioners who represent our districts. Together, we are committed to honoring our past while building a bright future. That means protecting our land, water, and people, supporting responsible modern mining practices, and embracing sustainable development that creates new opportunities for residents and businesses alike. Butte-Silver Bow is more than its mining history.",
+            "url": "https://www.co.silverbow.mt.us/"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 882,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=What+county+is+the+consolidated+city-county+of+Butte+located+in%3F",
+        "query": "What county is the consolidated city-county of Butte located in?",
+        "cache_hit": false,
+        "duration_ms": 882,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 882,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 8,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 9,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage09_qa09",
+        "question": "What was the population of Butte, Montana according to the 2020 census?",
+        "answer": "34494",
+        "subject": "Butte, Montana",
+        "answer_type": "Number",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "fallback_record_question",
+        "query": "What was the population of Butte, Montana according to the 2020 census?"
+      },
+      "ok": true,
+      "duration_seconds": 1.9342,
+      "result_count": 5,
+      "first_titles": [
+        "Butte, Montana - Wikipedia",
+        "Montana (USA): State, Major Cities & Places - Population Statistics...",
+        "What is the population of Butte according to the 2020 census?"
+      ],
+      "results": [
+        {
+          "title": "Butte, Montana - Wikipedia",
+          "snippet": "The city covers 718 square miles, and, according to the 2020 census, has a population of 34,494, making it Montana's fifth-largest city. It is served by Bert Mooney Airport with airport code BTM.",
+          "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+        },
+        {
+          "title": "Montana (USA): State, Major Cities & Places - Population Statistics...",
+          "snippet": "Population Census (C) 2020-04-01. Population Estimate (E) 2025-07-01. Montana.The population of all cities and places in Montana with more than 7,500 inhabitants according to census results and latest official estimates.",
+          "url": "https://www.citypopulation.de/en/usa/cities/montana/"
+        },
+        {
+          "title": "What is the population of Butte according to the 2020 census?",
+          "snippet": "Discover the Hidden Gem: Exploring Butte, Montana.When did the city and county governments of Butte and Silver Bow consolidate? What is the name of the largest hard rock mining disaster in world history that occurred in Butte?",
+          "url": "https://letsquiz.com/quiz/butte/what-is-the-population-of-butte-according-to-the-2020-census"
+        },
+        {
+          "title": "Largest Cities In Montana By Population: A Guide To Municipalities...",
+          "snippet": "How Has the Population of Bozeman, Montana Changed Over Time? What Are Key Demographics for Butte, Montana’s Population?According to the U.S. Census Bureau data from 2020, Billings saw a population growth of over 10% from 2010 to 2020.",
+          "url": "https://travelpander.com/cities-in-montana-by-population/"
+        },
+        {
+          "title": "Butte, ND Population by Year - 2024 Update | Neilsberg",
+          "snippet": "Is Butte, ND population increasing or decreasing? According to the latest data from U.S. Census Bureau's population estimates, Butte's population decreased by 0 between 2021 and 2023.",
+          "url": "https://www.neilsberg.com/insights/butte-nd-population-by-year/"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1933,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "fallback_record_question",
+        "query": "What was the population of Butte, Montana according to the 2020 census?",
+        "duration_seconds": 1.9342,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=What+was+the+population+of+Butte%2C+Montana+according+to+the+2020+census%3F",
+            "query": "What was the population of Butte, Montana according to the 2020 census?",
+            "cache_hit": false,
+            "duration_ms": 1933,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1933,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Butte, Montana - Wikipedia",
+            "snippet": "The city covers 718 square miles, and, according to the 2020 census, has a population of 34,494, making it Montana's fifth-largest city. It is served by Bert Mooney Airport with airport code BTM.",
+            "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+          },
+          {
+            "title": "Montana (USA): State, Major Cities & Places - Population Statistics...",
+            "snippet": "Population Census (C) 2020-04-01. Population Estimate (E) 2025-07-01. Montana.The population of all cities and places in Montana with more than 7,500 inhabitants according to census results and latest official estimates.",
+            "url": "https://www.citypopulation.de/en/usa/cities/montana/"
+          },
+          {
+            "title": "What is the population of Butte according to the 2020 census?",
+            "snippet": "Discover the Hidden Gem: Exploring Butte, Montana.When did the city and county governments of Butte and Silver Bow consolidate? What is the name of the largest hard rock mining disaster in world history that occurred in Butte?",
+            "url": "https://letsquiz.com/quiz/butte/what-is-the-population-of-butte-according-to-the-2020-census"
+          },
+          {
+            "title": "Largest Cities In Montana By Population: A Guide To Municipalities...",
+            "snippet": "How Has the Population of Bozeman, Montana Changed Over Time? What Are Key Demographics for Butte, Montana’s Population?According to the U.S. Census Bureau data from 2020, Billings saw a population growth of over 10% from 2010 to 2020.",
+            "url": "https://travelpander.com/cities-in-montana-by-population/"
+          },
+          {
+            "title": "Butte, ND Population by Year - 2024 Update | Neilsberg",
+            "snippet": "Is Butte, ND population increasing or decreasing? According to the latest data from U.S. Census Bureau's population estimates, Butte's population decreased by 0 between 2021 and 2023.",
+            "url": "https://www.neilsberg.com/insights/butte-nd-population-by-year/"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1933,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=What+was+the+population+of+Butte%2C+Montana+according+to+the+2020+census%3F",
+        "query": "What was the population of Butte, Montana according to the 2020 census?",
+        "cache_hit": false,
+        "duration_ms": 1933,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1933,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 9,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 9,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage09_qa09",
+        "question": "What was the population of Butte, Montana according to the 2020 census?",
+        "answer": "34494",
+        "subject": "Butte, Montana",
+        "answer_type": "Number",
+        "query_index": 2,
+        "query_name": "search_query_1",
+        "query_category": "fallback_search_queries",
+        "query": "Butte Montana population 2020 census"
+      },
+      "ok": true,
+      "duration_seconds": 0.9873,
+      "result_count": 5,
+      "first_titles": [
+        "Butte, Montana - Wikipedia",
+        "Butte-Silver Bow (balance), Montana - U.S. Census Bureau QuickFacts",
+        "Butte-Silver Bow, MT Urban Area - Profile data - Census Reporter"
+      ],
+      "results": [
+        {
+          "title": "Butte, Montana - Wikipedia",
+          "snippet": "The city covers 718 square miles (1,860 km 2), and, according to the 2020 census, has a population of 34,494, making it Montana's fifth-largest city. It is ...",
+          "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+        },
+        {
+          "title": "Butte-Silver Bow (balance), Montana - U.S. Census Bureau QuickFacts",
+          "snippet": "Population estimates, July 1, 2024, (V2024).. 35,480 ...",
+          "url": "https://www.census.gov/quickfacts/fact/table/buttesilverbowbalancemontana/PST045224"
+        },
+        {
+          "title": "Butte-Silver Bow, MT Urban Area - Profile data - Census Reporter",
+          "snippet": "Census data for Butte-Silver Bow, MT Urban Area (pop. 30538), including age, race, sex, income, poverty, marital status, education and more.",
+          "url": "http://censusreporter.org/profiles/40000US12052-butte-silver-bow-mt-urban-area/"
+        },
+        {
+          "title": "Butte-Silver Bow, MT | Data USA",
+          "snippet": "Butte-Silver Bow, MT is home to a population of 35.8k people, from which 99.4% are citizens. As of 2024, 1.23% of Butte-Silver Bow, MT residents were born ...",
+          "url": "https://datausa.io/profile/geo/butte-silver-bow-mt"
+        },
+        {
+          "title": "Population | Montana Department of Commerce",
+          "snippet": "Butte-Silver Bow .. Image ... The Montana 2020 Census Population and Housing dashboard contains data from the 2020 Census.",
+          "url": "https://commerce.mt.gov/Data-Research/People-Housing/Population"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 986,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "search_query_1",
+        "query_category": "fallback_search_queries",
+        "query": "Butte Montana population 2020 census",
+        "duration_seconds": 0.9873,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=Butte+Montana+population+2020+census",
+            "query": "Butte Montana population 2020 census",
+            "cache_hit": false,
+            "duration_ms": 986,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 986,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Butte, Montana - Wikipedia",
+            "snippet": "The city covers 718 square miles (1,860 km 2), and, according to the 2020 census, has a population of 34,494, making it Montana's fifth-largest city. It is ...",
+            "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+          },
+          {
+            "title": "Butte-Silver Bow (balance), Montana - U.S. Census Bureau QuickFacts",
+            "snippet": "Population estimates, July 1, 2024, (V2024).. 35,480 ...",
+            "url": "https://www.census.gov/quickfacts/fact/table/buttesilverbowbalancemontana/PST045224"
+          },
+          {
+            "title": "Butte-Silver Bow, MT Urban Area - Profile data - Census Reporter",
+            "snippet": "Census data for Butte-Silver Bow, MT Urban Area (pop. 30538), including age, race, sex, income, poverty, marital status, education and more.",
+            "url": "http://censusreporter.org/profiles/40000US12052-butte-silver-bow-mt-urban-area/"
+          },
+          {
+            "title": "Butte-Silver Bow, MT | Data USA",
+            "snippet": "Butte-Silver Bow, MT is home to a population of 35.8k people, from which 99.4% are citizens. As of 2024, 1.23% of Butte-Silver Bow, MT residents were born ...",
+            "url": "https://datausa.io/profile/geo/butte-silver-bow-mt"
+          },
+          {
+            "title": "Population | Montana Department of Commerce",
+            "snippet": "Butte-Silver Bow .. Image ... The Montana 2020 Census Population and Housing dashboard contains data from the 2020 Census.",
+            "url": "https://commerce.mt.gov/Data-Research/People-Housing/Population"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 986,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=Butte+Montana+population+2020+census",
+        "query": "Butte Montana population 2020 census",
+        "cache_hit": false,
+        "duration_ms": 986,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 986,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 9,
+      "probe_stage_query_index": 2
+    },
+    {
+      "qa": {
+        "qa_index": 9,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage09_qa09",
+        "question": "What was the population of Butte, Montana according to the 2020 census?",
+        "answer": "34494",
+        "subject": "Butte, Montana",
+        "answer_type": "Number",
+        "query_index": 3,
+        "query_name": "search_query_2",
+        "query_category": "fallback_search_queries",
+        "query": "population of Butte-Silver Bow 2020"
+      },
+      "ok": true,
+      "duration_seconds": 0.903,
+      "result_count": 5,
+      "first_titles": [
+        "Butte, Montana - Wikipedia",
+        "U.S. Census Bureau QuickFacts: Butte-Silver Bow (balance ...Butte-Silver Bow, Montana Population 2026Butte - Silver Bow - City PopulationCensus 2020 | City and County of Butte-Silver Bow, MTButte, Montana - WikipediaButte-Silver Bow (balance), Montana Demographics and Housing ...Silver Bow County, Montana Explained",
+        "Butte-Silver Bow, Montana Population 2026"
+      ],
+      "results": [
+        {
+          "title": "Butte, Montana - Wikipedia",
+          "snippet": "In 1977, the city and county governments consolidated to form the sole entity of Butte-Silver Bow. The city covers 718 square miles (1,860 km 2), and, according to the 2020 census, has a population of 34,494, making it Montana's fifth-largest city.",
+          "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+        },
+        {
+          "title": "U.S. Census Bureau QuickFacts: Butte-Silver Bow (balance ...Butte-Silver Bow, Montana Population 2026Butte - Silver Bow - City PopulationCensus 2020 | City and County of Butte-Silver Bow, MTButte, Montana - WikipediaButte-Silver Bow (balance), Montana Demographics and Housing ...Silver Bow County, Montana Explained",
+          "snippet": "Jul 1, 2024 · N Data for this geographic area cannot be displayed because the number of sample cases is too small. Butte-Silver Bow is currently growing at a rate of 0.61% annually and its population has increased by 3.22% since the most recent census, which recorded a population of 34,574 in 2020. Butte - Silver Bow (Micropolitan Statistical Area, Metropolitan Areas, USA) with population statistics, charts, map and location. Contact Us Butte-Silver Bow County, MT 155 W Granite Street Butte, MT 59701 Phone: 406-497-6200 Fax: 406-497-6328 Quick Links Employee Portal Office 365 In 1977, the city and county governments consolidated to form the sole entity of Butte-Silver Bow. The city covers 718 square miles (1,860 km 2), and, according to the 2020 census, has a population of 34,494, making it Montana's fifth-largest city. Other Areas in Butte-Silver Bow (balance), Montana Area Summary Race / Ethnicity - Total Population Race / Ethnicity - Age 18 and Over Housing Population in Group Quarters As of the 2020 census, the population was 35,133. [1] . Its county seat is Butte. [2] . In 1977, the city and county governments consolidated to form the single entity of Butte-Silver Bow. Additionally, the town of Walkerville is a separate municipality from Butte and is within the county.",
+          "url": "https://www.census.gov/quickfacts/fact/table/buttesilverbowbalancemontana/PST045224"
+        },
+        {
+          "title": "Butte-Silver Bow, Montana Population 2026",
+          "snippet": "Butte-Silver Bow is currently growing at a rate of 0.61% annually and its population has increased by 3.22% since the most recent census, which recorded a population of 34,574 in 2020.",
+          "url": "https://worldpopulationreview.com/us-cities/montana/butte-silver-bow"
+        },
+        {
+          "title": "Butte - Silver Bow - City Population",
+          "snippet": "Butte - Silver Bow (Micropolitan Statistical Area, Metropolitan Areas, USA) with population statistics, charts, map and location.",
+          "url": "https://www.citypopulation.de/en/usa/metro/15580__butte_silver_bow/"
+        },
+        {
+          "title": "Census 2020 | City and County of Butte-Silver Bow, MT",
+          "snippet": "Contact Us Butte-Silver Bow County, MT 155 W Granite Street Butte, MT 59701 Phone: 406-497-6200 Fax: 406-497-6328 Quick Links Employee Portal Office 365",
+          "url": "https://www.co.silverbow.mt.us/2176/21769/Census-2020"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 902,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "search_query_2",
+        "query_category": "fallback_search_queries",
+        "query": "population of Butte-Silver Bow 2020",
+        "duration_seconds": 0.903,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=population+of+Butte-Silver+Bow+2020",
+            "query": "population of Butte-Silver Bow 2020",
+            "cache_hit": false,
+            "duration_ms": 902,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 902,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Butte, Montana - Wikipedia",
+            "snippet": "In 1977, the city and county governments consolidated to form the sole entity of Butte-Silver Bow. The city covers 718 square miles (1,860 km 2), and, according to the 2020 census, has a population of 34,494, making it Montana's fifth-largest city.",
+            "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+          },
+          {
+            "title": "U.S. Census Bureau QuickFacts: Butte-Silver Bow (balance ...Butte-Silver Bow, Montana Population 2026Butte - Silver Bow - City PopulationCensus 2020 | City and County of Butte-Silver Bow, MTButte, Montana - WikipediaButte-Silver Bow (balance), Montana Demographics and Housing ...Silver Bow County, Montana Explained",
+            "snippet": "Jul 1, 2024 · N Data for this geographic area cannot be displayed because the number of sample cases is too small. Butte-Silver Bow is currently growing at a rate of 0.61% annually and its population has increased by 3.22% since the most recent census, which recorded a population of 34,574 in 2020. Butte - Silver Bow (Micropolitan Statistical Area, Metropolitan Areas, USA) with population statistics, charts, map and location. Contact Us Butte-Silver Bow County, MT 155 W Granite Street Butte, MT 59701 Phone: 406-497-6200 Fax: 406-497-6328 Quick Links Employee Portal Office 365 In 1977, the city and county governments consolidated to form the sole entity of Butte-Silver Bow. The city covers 718 square miles (1,860 km 2), and, according to the 2020 census, has a population of 34,494, making it Montana's fifth-largest city. Other Areas in Butte-Silver Bow (balance), Montana Area Summary Race / Ethnicity - Total Population Race / Ethnicity - Age 18 and Over Housing Population in Group Quarters As of the 2020 census, the population was 35,133. [1] . Its county seat is Butte. [2] . In 1977, the city and county governments consolidated to form the single entity of Butte-Silver Bow. Additionally, the town of Walkerville is a separate municipality from Butte and is within the county.",
+            "url": "https://www.census.gov/quickfacts/fact/table/buttesilverbowbalancemontana/PST045224"
+          },
+          {
+            "title": "Butte-Silver Bow, Montana Population 2026",
+            "snippet": "Butte-Silver Bow is currently growing at a rate of 0.61% annually and its population has increased by 3.22% since the most recent census, which recorded a population of 34,574 in 2020.",
+            "url": "https://worldpopulationreview.com/us-cities/montana/butte-silver-bow"
+          },
+          {
+            "title": "Butte - Silver Bow - City Population",
+            "snippet": "Butte - Silver Bow (Micropolitan Statistical Area, Metropolitan Areas, USA) with population statistics, charts, map and location.",
+            "url": "https://www.citypopulation.de/en/usa/metro/15580__butte_silver_bow/"
+          },
+          {
+            "title": "Census 2020 | City and County of Butte-Silver Bow, MT",
+            "snippet": "Contact Us Butte-Silver Bow County, MT 155 W Granite Street Butte, MT 59701 Phone: 406-497-6200 Fax: 406-497-6328 Quick Links Employee Portal Office 365",
+            "url": "https://www.co.silverbow.mt.us/2176/21769/Census-2020"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 902,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=population+of+Butte-Silver+Bow+2020",
+        "query": "population of Butte-Silver Bow 2020",
+        "cache_hit": false,
+        "duration_ms": 902,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 902,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 9,
+      "probe_stage_query_index": 3
+    },
+    {
+      "qa": {
+        "qa_index": 10,
+        "record_source": "accepted:seed_accepted.jsonl",
+        "record_id": "ddgs_probe_stage10_qa10",
+        "question": "In what year was Butte, Montana settled?",
+        "answer": "1864",
+        "subject": "Butte, Montana",
+        "answer_type": "Date",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "In what year was Butte, Montana settled?"
+      },
+      "ok": true,
+      "duration_seconds": 1.1122,
+      "result_count": 5,
+      "first_titles": [
+        "History of Butte, Montana - Wikipedia",
+        "Butte, Montana - Wikipedia",
+        "History & Culture | City and County of Butte-Silver Bow, MT"
+      ],
+      "results": [
+        {
+          "title": "History of Butte, Montana - Wikipedia",
+          "snippet": "Butte is a city in southwestern Montana established as a mining camp in the 1860s in the northern Rocky Mountains straddling the Continental Divide.History · 1889–1899: Industrial...",
+          "url": "https://en.wikipedia.org/wiki/History_of_Butte,_Montana"
+        },
+        {
+          "title": "Butte, Montana - Wikipedia",
+          "snippet": "Established in 1864 as a mining camp in the northern Rocky Mountains on the Continental Divide, Butte experienced rapid development in the late 19th century, ...History · Geography · Education · Media",
+          "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+        },
+        {
+          "title": "History & Culture | City and County of Butte-Silver Bow, MT",
+          "snippet": "Butte began in the late 1800s as a gold and silver mining camp. At the turn of the century, the development of electricity and the industrialization of America ...",
+          "url": "https://co.silverbow.mt.us/481/History-Culture"
+        },
+        {
+          "title": "Story of Butte",
+          "snippet": "Despite living in a rugged mining town, Butte residents of the early 1900s longed to create a sense of culture and beauty in their surroundings. The ...",
+          "url": "https://storyofbutte.org/"
+        },
+        {
+          "title": "Butte - Montana Historical Society",
+          "snippet": "In 1870, the Silver Bow and Butte City Mining Camps were home to predominantly Chinese miners and European born prospectors. The census of that year lists only ...",
+          "url": "https://mhs.mt.gov/Shpo/AfricanAmericans/Places/PropertyRecords/Butte"
+        }
+      ],
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": false,
+        "duration_ms": 1111,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 1,
+        "endpoint_counts": {
+          "ddgs": 1
+        },
+        "path_counts": {
+          "ddgs": 1
+        },
+        "statuses": [
+          200
+        ],
+        "errors": {},
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "In what year was Butte, Montana settled?",
+        "duration_seconds": 1.1122,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=In+what+year+was+Butte%2C+Montana+settled%3F",
+            "query": "In what year was Butte, Montana settled?",
+            "cache_hit": false,
+            "duration_ms": 1111,
+            "used_ddgs": true,
+            "used_legacy_fallback": false,
+            "used_direct_fallback": false,
+            "used_lite_fallback": false,
+            "failed": false,
+            "backend": "ddgs",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1111,
+                "ok": true,
+                "endpoint": "ddgs",
+                "status": 200,
+                "result_count": 5
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "History of Butte, Montana - Wikipedia",
+            "snippet": "Butte is a city in southwestern Montana established as a mining camp in the 1860s in the northern Rocky Mountains straddling the Continental Divide.History · 1889–1899: Industrial...",
+            "url": "https://en.wikipedia.org/wiki/History_of_Butte,_Montana"
+          },
+          {
+            "title": "Butte, Montana - Wikipedia",
+            "snippet": "Established in 1864 as a mining camp in the northern Rocky Mountains on the Continental Divide, Butte experienced rapid development in the late 19th century, ...History · Geography · Education · Media",
+            "url": "https://en.wikipedia.org/wiki/Butte,_Montana"
+          },
+          {
+            "title": "History & Culture | City and County of Butte-Silver Bow, MT",
+            "snippet": "Butte began in the late 1800s as a gold and silver mining camp. At the turn of the century, the development of electricity and the industrialization of America ...",
+            "url": "https://co.silverbow.mt.us/481/History-Culture"
+          },
+          {
+            "title": "Story of Butte",
+            "snippet": "Despite living in a rugged mining town, Butte residents of the early 1900s longed to create a sense of culture and beauty in their surroundings. The ...",
+            "url": "https://storyofbutte.org/"
+          },
+          {
+            "title": "Butte - Montana Historical Society",
+            "snippet": "In 1870, the Silver Bow and Butte City Mining Camps were home to predominantly Chinese miners and European born prospectors. The census of that year lists only ...",
+            "url": "https://mhs.mt.gov/Shpo/AfricanAmericans/Places/PropertyRecords/Butte"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": false,
+          "duration_ms": 1111,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 1,
+          "endpoint_counts": {
+            "ddgs": 1
+          },
+          "path_counts": {
+            "ddgs": 1
+          },
+          "statuses": [
+            200
+          ],
+          "errors": {},
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+was+Butte%2C+Montana+settled%3F",
+        "query": "In what year was Butte, Montana settled?",
+        "cache_hit": false,
+        "duration_ms": 1111,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1111,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      "probe_stage": 10,
+      "probe_stage_query_index": 1
+    }
+  ]
+}

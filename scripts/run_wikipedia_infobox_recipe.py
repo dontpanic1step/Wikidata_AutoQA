@@ -224,6 +224,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.1)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--duckduckgo-parallel-queries", type=int, default=3)
+    parser.add_argument(
+        "--duckduckgo-disable-fallback",
+        action="append",
+        default=[],
+        help=(
+            "Disable a DuckDuckGo fallback path in each segment. Repeat or pass comma-separated values. "
+            "Known values: ddgs, legacy/html, lite, direct/direct_fallback."
+        ),
+    )
     parser.add_argument("--generated-search-query-count", type=int, default=2)
     parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-keyword-hit-rate", type=float, default=0.3)
@@ -1074,6 +1083,8 @@ def _segment_command(
         "--route3-infobox-min-remaining-rows",
         str(args.route3_infobox_min_remaining_rows),
     ]
+    for fallback in args.duckduckgo_disable_fallback:
+        command.extend(["--duckduckgo-disable-fallback", str(fallback)])
     if args.stream_reuse_cached_page_count > 0:
         command.extend(["--stream-reuse-cached-page-used-id-file", str(stream_exclusion_file)])
     for path in args.stream_reuse_cached_page_used_id_file:
@@ -1331,6 +1342,7 @@ def _recipe_summary(
         "second_stage_grading_enabled": bool(args.enable_second_stage_grading),
         "duckduckgo_top_k": args.duckduckgo_top_k,
         "duckduckgo_parallel_queries": args.duckduckgo_parallel_queries,
+        "duckduckgo_disabled_fallbacks": args.duckduckgo_disable_fallback,
         "generated_search_query_count": args.generated_search_query_count,
         "route3_reasoning_types": reasoning_types,
         "route3_answer_types": [item.answer_type for item in recipe_items],

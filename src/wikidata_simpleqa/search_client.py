@@ -9,8 +9,9 @@ from dataclasses import dataclass, field
 from html import unescape
 from http.client import RemoteDisconnected
 from pathlib import Path
+from threading import Lock
 from time import perf_counter, sleep
-from typing import Any
+from typing import Any, ClassVar
 from urllib.parse import quote_plus
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
@@ -34,9 +35,22 @@ TAG_PATTERN = re.compile(r"<[^>]+>")
 NETWORK_ERRORS = (HTTPError, URLError, TimeoutError, OSError, RemoteDisconnected)
 DUCKDUCKGO_HTML_SEARCH_URL = "https://html.duckduckgo.com/html/?q="
 DUCKDUCKGO_LITE_SEARCH_URL = "https://lite.duckduckgo.com/lite/?q="
+DUCKDUCKGO_DDGS_MAX_ATTEMPTS = 2
 DUCKDUCKGO_LITE_MAX_ATTEMPTS = 2
 DUCKDUCKGO_HTML_FALLBACK_HTTP_STATUSES = {202, 403, 429, 500, 502, 503, 504}
 DUCKDUCKGO_LITE_RETRYABLE_HTTP_STATUSES = {202, 429, 500, 502, 503, 504}
+DUCKDUCKGO_COOLDOWN_HTTP_STATUSES = {202, 403}
+DUCKDUCKGO_COOLDOWN_FAILURE_THRESHOLD = 3
+DUCKDUCKGO_COOLDOWN_INITIAL_SECONDS = 60.0
+DUCKDUCKGO_COOLDOWN_MAX_SECONDS = 300.0
+DUCKDUCKGO_FALLBACK_ALIASES = {
+    "ddgs": {"ddgs"},
+    "legacy": {"legacy", "html", "html_lite", "html-lite", "html+lite"},
+    "html": {"legacy", "html", "html_lite", "html-lite", "html+lite"},
+    "lite": {"lite", "html_to_lite", "html-to-lite", "html_lite", "html-lite", "html+lite"},
+    "direct": {"direct", "direct_fallback", "direct-fallback"},
+    "direct_fallback": {"direct", "direct_fallback", "direct-fallback"},
+}
 
 
 @dataclass(slots=True)
@@ -71,16 +85,31 @@ class DuckDuckGoSearchError(RuntimeError):
 class DuckDuckGoSearchClient:
     """Very small DuckDuckGo HTML search client."""
 
+    _global_cooldown_lock: ClassVar[Lock] = Lock()
+    _global_cooldown_resume_at: ClassVar[float] = 0.0
+    _global_cooldown_consecutive_failures: ClassVar[int] = 0
+    _global_cooldown_last_sleep_seconds: ClassVar[float] = 0.0
+
     user_agent: str
     proxy: str | None = None
     timeout_seconds: float = 30.0
     cache_dir: Path | None = None
+    prefer_ddgs: bool = True
+    ddgs_backend: str = "auto"
+    ddgs_max_attempts: int = DUCKDUCKGO_DDGS_MAX_ATTEMPTS
+    disable_fallbacks: str | tuple[str, ...] | list[str] | set[str] | None = None
+    cooldown_enabled: bool = True
+    cooldown_failure_threshold: int = DUCKDUCKGO_COOLDOWN_FAILURE_THRESHOLD
+    cooldown_initial_seconds: float = DUCKDUCKGO_COOLDOWN_INITIAL_SECONDS
+    cooldown_max_seconds: float = DUCKDUCKGO_COOLDOWN_MAX_SECONDS
+    _disabled_fallbacks: frozenset[str] = field(init=False, default_factory=frozenset)
     request_events: list[dict[str, Any]] = field(init=False, default_factory=list)
 
     def __post_init__(self) -> None:
-        install_proxy(self.proxy)
+        self._install_initial_proxy_if_available()
         if self.cache_dir is not None:
             self.cache_dir.mkdir(parents=True, exist_ok=True)
+        self._disabled_fallbacks = _normalize_disabled_fallbacks(self.disable_fallbacks)
         self.request_events = []
 
     def search(self, query: str, *, max_results: int = 5) -> list[SearchResult]:
@@ -101,38 +130,199 @@ class DuckDuckGoSearchClient:
             )
             return self._parse_results(html, max_results=max_results)
 
+        request_started = perf_counter()
+        ddgs_attempt_events: list[dict[str, Any]] = []
+        if self.prefer_ddgs and not self._fallback_disabled("ddgs"):
+            try:
+                results, ddgs_duration_ms, ddgs_attempt_events = self._search_with_ddgs(
+                    query,
+                    max_results=max_results,
+                )
+            except DuckDuckGoSearchError as ddgs_exc:
+                ddgs_attempt_events = ddgs_exc.attempt_events
+                if self._fallback_disabled("legacy"):
+                    duration_ms = int((perf_counter() - request_started) * 1000)
+                    self._record_global_cooldown_failure_if_needed(ddgs_attempt_events)
+                    self.request_events.append(
+                        {
+                            "url": url,
+                            "query": query,
+                            "cache_hit": False,
+                            "duration_ms": duration_ms,
+                            "failed": True,
+                            "backend": "ddgs",
+                            "used_ddgs": True,
+                            "legacy_fallback_disabled": True,
+                            "error_type": type(ddgs_exc.original_error).__name__,
+                            "error_message": str(ddgs_exc.original_error),
+                            "attempts": ddgs_attempt_events,
+                        }
+                    )
+                    raise DuckDuckGoSearchError(
+                        f"DuckDuckGo ddgs request failed after {len(ddgs_attempt_events)} attempts: "
+                        f"{ddgs_exc.original_error}",
+                        url=url,
+                        duration_ms=duration_ms,
+                        attempt_events=ddgs_attempt_events,
+                        original_error=ddgs_exc.original_error,
+                    ) from ddgs_exc
+            else:
+                if not self._record_global_cooldown_failure_if_needed(ddgs_attempt_events):
+                    self._record_global_cooldown_success()
+                self.request_events.append(
+                    {
+                        "url": url,
+                        "query": query,
+                        "cache_hit": False,
+                        "duration_ms": ddgs_duration_ms,
+                        "used_ddgs": True,
+                        "used_legacy_fallback": False,
+                        "used_direct_fallback": False,
+                        "used_lite_fallback": False,
+                        "failed": False,
+                        "backend": "ddgs",
+                        "attempts": ddgs_attempt_events,
+                    }
+                )
+                return results
+
         try:
             html, used_direct_fallback, used_lite_fallback, duration_ms, attempt_events = self._fetch_html(
                 url,
                 lite_url,
             )
         except DuckDuckGoSearchError as exc:
+            combined_attempts = ddgs_attempt_events + exc.attempt_events
+            duration_ms = int((perf_counter() - request_started) * 1000)
+            self._record_global_cooldown_failure_if_needed(combined_attempts)
             self.request_events.append(
                 {
                     "url": url,
+                    "query": query,
                     "cache_hit": False,
-                    "duration_ms": exc.duration_ms,
+                    "duration_ms": duration_ms,
                     "failed": True,
+                    "backend": "legacy",
+                    "used_ddgs": bool(ddgs_attempt_events),
+                    "used_legacy_fallback": bool(ddgs_attempt_events),
                     "error_type": type(exc.original_error).__name__,
                     "error_message": str(exc.original_error),
-                    "attempts": exc.attempt_events,
+                    "attempts": combined_attempts,
                 }
             )
-            raise
+            raise DuckDuckGoSearchError(
+                f"DuckDuckGo search request failed after {len(combined_attempts)} attempts: {exc.original_error}",
+                url=url,
+                duration_ms=duration_ms,
+                attempt_events=combined_attempts,
+                original_error=exc.original_error,
+            ) from exc
         if cache_path is not None:
             cache_path.write_text(html, encoding="utf-8")
+        combined_attempts = ddgs_attempt_events + attempt_events
+        if not self._record_global_cooldown_failure_if_needed(combined_attempts):
+            self._record_global_cooldown_success()
         self.request_events.append(
             {
                 "url": url,
+                "query": query,
                 "cache_hit": False,
-                "duration_ms": duration_ms,
+                "duration_ms": int((perf_counter() - request_started) * 1000),
+                "used_ddgs": bool(ddgs_attempt_events),
+                "used_legacy_fallback": bool(ddgs_attempt_events),
                 "used_direct_fallback": used_direct_fallback,
                 "used_lite_fallback": used_lite_fallback,
                 "failed": False,
-                "attempts": attempt_events,
+                "backend": "legacy",
+                "attempts": combined_attempts,
             }
         )
         return self._parse_results(html, max_results=max_results)
+
+    def _search_with_ddgs(
+        self,
+        query: str,
+        *,
+        max_results: int,
+    ) -> tuple[list[SearchResult], int, list[dict[str, Any]]]:
+        """Search through the optional ddgs package before falling back to HTML/Lite."""
+        started = perf_counter()
+        attempt_events: list[dict[str, Any]] = []
+        self._wait_for_global_cooldown(attempt_events)
+        try:
+            from ddgs import DDGS  # type: ignore[import-not-found]
+        except Exception as exc:  # noqa: BLE001
+            attempt_started = perf_counter()
+            attempt_events.append(
+                _attempt_event(
+                    attempt=1,
+                    path="ddgs",
+                    proxy=self.proxy,
+                    timeout_seconds=self.timeout_seconds,
+                    started=attempt_started,
+                    endpoint="ddgs",
+                    error=exc,
+                )
+            )
+            raise DuckDuckGoSearchError(
+                f"ddgs import failed: {exc}",
+                url="ddgs",
+                duration_ms=int((perf_counter() - started) * 1000),
+                attempt_events=attempt_events,
+                original_error=exc,
+            ) from exc
+
+        last_error: BaseException | None = None
+        max_attempts = max(1, int(self.ddgs_max_attempts))
+        for attempt in range(1, max_attempts + 1):
+            if attempt > 1:
+                sleep(_duckduckgo_retry_sleep_seconds(attempt - 1))
+            attempt_started = perf_counter()
+            try:
+                ddgs_kwargs: dict[str, Any] = {"timeout": max(1, int(round(self.timeout_seconds)))}
+                if self.proxy:
+                    ddgs_kwargs["proxy"] = self.proxy
+                with DDGS(**ddgs_kwargs) as ddgs:
+                    rows = ddgs.text(query, max_results=max_results, backend=self.ddgs_backend)
+                results = _search_results_from_ddgs_rows(rows, max_results=max_results)
+                attempt_events.append(
+                    _attempt_event(
+                        attempt=attempt,
+                        path="ddgs",
+                        proxy=self.proxy,
+                        timeout_seconds=self.timeout_seconds,
+                        started=attempt_started,
+                        endpoint="ddgs",
+                        status=200,
+                    )
+                )
+                attempt_events[-1]["result_count"] = len(results)
+                return results, int((perf_counter() - started) * 1000), attempt_events
+            except Exception as exc:  # noqa: BLE001
+                last_error = exc
+                attempt_events.append(
+                    _attempt_event(
+                        attempt=attempt,
+                        path="ddgs",
+                        proxy=self.proxy,
+                        timeout_seconds=self.timeout_seconds,
+                        started=attempt_started,
+                        endpoint="ddgs",
+                        error=exc,
+                    )
+                )
+                attempt_events[-1]["retry_reason"] = _ddgs_retry_reason_for_error(exc)
+                attempt_events[-1]["ok"] = False
+                if attempt == max_attempts:
+                    break
+        assert last_error is not None
+        raise DuckDuckGoSearchError(
+            f"ddgs request failed after {max_attempts} attempts: {last_error}",
+            url="ddgs",
+            duration_ms=int((perf_counter() - started) * 1000),
+            attempt_events=attempt_events,
+            original_error=last_error,
+        ) from last_error
 
     def _fetch_html(
         self,
@@ -143,8 +333,9 @@ class DuckDuckGoSearchClient:
         started = perf_counter()
         attempt_events: list[dict[str, Any]] = []
         last_error: BaseException | None = None
+        self._wait_for_global_cooldown(attempt_events)
         try:
-            install_proxy(self.proxy)
+            self._install_proxy_for_legacy_path(started=started, attempt_events=attempt_events)
             html = self._fetch_from_network_path(
                 url,
                 lite_url,
@@ -163,7 +354,7 @@ class DuckDuckGoSearchClient:
             )
         except NETWORK_ERRORS as exc:
             last_error = exc
-            if not self.proxy:
+            if not self.proxy or self._fallback_disabled("direct_fallback"):
                 raise DuckDuckGoSearchError(
                     f"DuckDuckGo search request failed after {len(attempt_events)} attempts: {exc}",
                     url=url,
@@ -200,7 +391,7 @@ class DuckDuckGoSearchClient:
                 ) from fallback_exc
         finally:
             if self.proxy:
-                install_proxy(self.proxy)
+                self._install_initial_proxy_if_available()
             else:
                 clear_proxy()
         if last_error is not None:
@@ -241,6 +432,8 @@ class DuckDuckGoSearchClient:
             )
             if html is not None:
                 return html
+        if self._fallback_disabled("lite"):
+            raise URLError("DuckDuckGo Lite fallback disabled")
         return self._fetch_lite_endpoint_with_bounded_retry(
             lite_url,
             path=path,
@@ -458,10 +651,183 @@ class DuckDuckGoSearchClient:
         digest = hashlib.sha256(url.encode("utf-8")).hexdigest()
         return self.cache_dir / f"search_{digest}.html"
 
+    def _fallback_disabled(self, fallback_name: str) -> bool:
+        """Return whether one fallback family has been disabled for debugging."""
+        aliases = DUCKDUCKGO_FALLBACK_ALIASES.get(fallback_name, {fallback_name})
+        return bool(self._disabled_fallbacks.intersection(aliases))
+
+    def _install_initial_proxy_if_available(self) -> None:
+        """Install urllib proxy state when the optional SOCKS dependency is present."""
+        try:
+            install_proxy(self.proxy)
+        except RuntimeError:
+            if not self.proxy:
+                raise
+            clear_proxy()
+
+    def _install_proxy_for_legacy_path(self, *, started: float, attempt_events: list[dict[str, Any]]) -> None:
+        """Install urllib proxy state and record missing proxy support as a path failure."""
+        try:
+            install_proxy(self.proxy)
+        except RuntimeError as exc:
+            if not self.proxy:
+                raise
+            attempt_events.append(
+                _attempt_event(
+                    attempt=1,
+                    path="configured_proxy",
+                    proxy=self.proxy,
+                    timeout_seconds=self.timeout_seconds,
+                    started=started,
+                    endpoint="proxy_setup",
+                    error=exc,
+                )
+            )
+            raise URLError(str(exc)) from exc
+
+    def _wait_for_global_cooldown(self, attempt_events: list[dict[str, Any]]) -> None:
+        """Sleep when another DDG request recently triggered the shared cooldown."""
+        if not self.cooldown_enabled:
+            return
+        with self._global_cooldown_lock:
+            resume_at = self._global_cooldown_resume_at
+        remaining_seconds = resume_at - perf_counter()
+        if remaining_seconds <= 0:
+            return
+        sleep_seconds = min(remaining_seconds, max(0.0, float(self.cooldown_max_seconds)))
+        cooldown_started = perf_counter()
+        attempt_events.append(
+            {
+                "endpoint": "global_cooldown",
+                "path": "global_cooldown",
+                "ok": True,
+                "cooldown_sleep_seconds": round(sleep_seconds, 3),
+                "duration_ms": 0,
+            }
+        )
+        sleep(sleep_seconds)
+        attempt_events[-1]["duration_ms"] = int((perf_counter() - cooldown_started) * 1000)
+
+    def _record_global_cooldown_failure_if_needed(self, attempt_events: list[dict[str, Any]]) -> bool:
+        """Trigger shared cooldown after repeated DDG throttling or transport failures."""
+        if not self.cooldown_enabled or not _is_cooldown_worthy_failure(attempt_events):
+            return False
+        threshold = max(1, int(self.cooldown_failure_threshold))
+        initial_seconds = max(0.0, float(self.cooldown_initial_seconds))
+        max_seconds = max(initial_seconds, float(self.cooldown_max_seconds))
+        with self._global_cooldown_lock:
+            type(self)._global_cooldown_consecutive_failures += 1
+            consecutive_failures = type(self)._global_cooldown_consecutive_failures
+            if consecutive_failures < threshold:
+                return True
+            previous_sleep = type(self)._global_cooldown_last_sleep_seconds
+            sleep_seconds = initial_seconds if previous_sleep <= 0 else min(previous_sleep * 2, max_seconds)
+            type(self)._global_cooldown_last_sleep_seconds = sleep_seconds
+            type(self)._global_cooldown_resume_at = max(
+                type(self)._global_cooldown_resume_at,
+                perf_counter() + sleep_seconds,
+            )
+        attempt_events.append(
+            {
+                "endpoint": "global_cooldown",
+                "path": "global_cooldown",
+                "ok": False,
+                "cooldown_triggered": True,
+                "cooldown_sleep_seconds": round(sleep_seconds, 3),
+                "cooldown_consecutive_failures": consecutive_failures,
+                "duration_ms": 0,
+            }
+        )
+        return True
+
+    def _record_global_cooldown_success(self) -> None:
+        """Reset the shared DDG cooldown failure streak after a successful request."""
+        if not self.cooldown_enabled:
+            return
+        with self._global_cooldown_lock:
+            type(self)._global_cooldown_resume_at = 0.0
+            type(self)._global_cooldown_consecutive_failures = 0
+            type(self)._global_cooldown_last_sleep_seconds = 0.0
+
+    @classmethod
+    def reset_global_cooldown(cls) -> None:
+        """Clear shared cooldown state; useful for isolated probes and tests."""
+        with cls._global_cooldown_lock:
+            cls._global_cooldown_resume_at = 0.0
+            cls._global_cooldown_consecutive_failures = 0
+            cls._global_cooldown_last_sleep_seconds = 0.0
+
 
 def _clean_html_text(text: str) -> str:
     """Strip HTML tags and entities from one snippet fragment."""
     return unescape(TAG_PATTERN.sub("", text)).strip()
+
+
+def _normalize_disabled_fallbacks(
+    disable_fallbacks: str | tuple[str, ...] | list[str] | set[str] | None,
+) -> frozenset[str]:
+    """Normalize fallback-disable debug flags."""
+    if disable_fallbacks is None:
+        return frozenset()
+    if isinstance(disable_fallbacks, str):
+        raw_items = re.split(r"[,;\s]+", disable_fallbacks)
+    else:
+        raw_items = []
+        for item in disable_fallbacks:
+            raw_items.extend(re.split(r"[,;\s]+", str(item)))
+    return frozenset(item.strip().lower() for item in raw_items if item.strip())
+
+
+def _search_results_from_ddgs_rows(rows: list[dict[str, Any]], *, max_results: int) -> list[SearchResult]:
+    """Convert ddgs result dictionaries into the repository search-result shape."""
+    results: list[SearchResult] = []
+    for row in rows[:max_results]:
+        title = str(row.get("title") or "").strip()
+        url = str(row.get("href") or row.get("url") or "").strip()
+        snippet = str(row.get("body") or row.get("snippet") or row.get("content") or "").strip()
+        if not title and not url and not snippet:
+            continue
+        results.append(SearchResult(title=title, snippet=snippet, url=url))
+    return results
+
+
+def _ddgs_retry_reason_for_error(error: BaseException) -> str:
+    """Return a stable retry reason for a ddgs exception."""
+    if isinstance(error, HTTPError):
+        return f"ddgs_status_{int(error.code)}"
+    message = str(error).lower()
+    if "no results found" in message:
+        return "ddgs_no_results"
+    for status in sorted(DUCKDUCKGO_COOLDOWN_HTTP_STATUSES):
+        if f"{status}" in message:
+            return f"ddgs_status_{status}"
+    return "ddgs_transport_error"
+
+
+def _is_cooldown_worthy_failure(attempt_events: list[dict[str, Any]]) -> bool:
+    """Return whether failed attempts look like DDG throttling or transport failure."""
+    if not attempt_events:
+        return False
+    failed_attempts = [event for event in attempt_events if event.get("ok") is False]
+    if not failed_attempts:
+        return False
+    for event in failed_attempts:
+        status = event.get("status", event.get("http_status"))
+        if status is not None and int(status) in DUCKDUCKGO_COOLDOWN_HTTP_STATUSES:
+            return True
+        retry_reason = str(event.get("retry_reason") or event.get("fallback_reason") or "").lower()
+        if any(f"status_{status}" in retry_reason for status in DUCKDUCKGO_COOLDOWN_HTTP_STATUSES):
+            return True
+        if retry_reason == "ddgs_no_results":
+            continue
+        error_type = str(event.get("error_type") or "")
+        if error_type in {"HTTPError"}:
+            continue
+        if retry_reason.endswith("transport_error") or "transport" in retry_reason:
+            return True
+        if error_type in {"URLError", "TimeoutError", "OSError", "RemoteDisconnected"}:
+            return True
+    return False
 
 
 def _attempt_event(

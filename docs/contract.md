@@ -156,6 +156,8 @@ The shared filtering flow is:
 
 Stage 1 long-tail filtering is DuckDuckGo search-based evidence. Stage 2 is optional SimpleQA-style model grading. The search verifier stores queries, result counts, titles, snippets, URLs, answer-hit flags, category hit rates, thresholds, and triggered rules.
 
+DuckDuckGo search uses the shared search client. The primary path is the optional `ddgs` package with `backend="auto"` and two bounded attempts. Runtime environments that use a SOCKS proxy should install `PySocks` alongside `ddgs`; without `PySocks`, the legacy urllib proxy path cannot use `socks5://...` and must record proxy setup failure before any direct fallback. If the `ddgs` primary path is unavailable or fails, the client may fall back to the legacy DuckDuckGo HTML/Lite path unless that fallback has been disabled for debugging. Normal runs disable no fallback paths by default.
+
 Rule-based validation must run before both long-tail stages once a final candidate question and answer are available. Route-specific small-model output constraints, such as Route 3 allowed `reasoning_type` or `answer_type`, may run during generation before the shared flow; the shared route-aware validator then catches cross-route deterministic failures before spending DuckDuckGo or model-grading calls.
 
 Do not use a standalone cheap-model exact-match QA phase as a rejection gate. LLMs are allowed for rewriting and optional review, but not for inventing facts, proving uniqueness, or serving as the primary factuality validator.
@@ -210,6 +212,10 @@ Route 4 two-hop validation reuses the Wikidata strict validation policy where it
 The search verifier always includes the full final question. It uses route-provided answer-blind `search_queries` when present; otherwise it may add subject/relation fallback queries for non-special routes.
 
 Answer hits are detected in titles and snippets using normalized answer strings, aliases, conservative country/date variants, and numeric variants or margins where applicable. Date answers are normalized before first-stage matching in the same spirit as number answers. Exact final-question hits and answer-hit rates can reject a candidate according to configured thresholds. Search queries may run with bounded per-candidate parallelism and may early-reject when a threshold can no longer be recovered.
+
+Each DuckDuckGo request event must record the selected backend (`ddgs` or legacy), whether `ddgs` was tried, whether legacy fallback was used, whether direct or Lite fallback was used, and attempt-level endpoint/path/status/error diagnostics. Supported diagnostic fallback-disable families are `ddgs`, legacy HTML/Lite, Lite endpoint fallback, and direct fallback; disabling a fallback is for probes and must be explicit. Search records should remain complete JSONL audit records rather than compact summaries.
+
+The DuckDuckGo client has a process-global cooldown for repeated service-throttling or transport failures. Consecutive HTTP 202/403 responses or transport failures across DDG attempts increment the cooldown counter, including cases where the request ultimately succeeds through fallback after an earlier DDG failure. Once the threshold is reached, later DDG attempts wait for a minute-level shared cooldown that can grow up to the configured cap. A `ddgs` "No results found" outcome is not treated as a transport failure and must not trigger cooldown by itself.
 
 ## Grading Contract
 

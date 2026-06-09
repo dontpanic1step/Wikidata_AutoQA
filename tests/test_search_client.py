@@ -13,6 +13,7 @@ from wikidata_simpleqa.search_client import (
     DUCKDUCKGO_LITE_SEARCH_URL,
     DuckDuckGoSearchError,
     DuckDuckGoSearchClient,
+    SearchResult,
 )
 
 
@@ -32,12 +33,16 @@ class FakeSearchResponse:
 
 
 class DuckDuckGoSearchClientTests(unittest.TestCase):
+    def tearDown(self) -> None:
+        DuckDuckGoSearchClient.reset_global_cooldown()
+
     def test_parses_lite_result_link_rows(self) -> None:
         client = DuckDuckGoSearchClient(
             user_agent="test-agent",
             proxy=None,
             timeout_seconds=1.0,
             cache_dir=None,
+            prefer_ddgs=False,
         )
         html = """
         <html>
@@ -59,6 +64,7 @@ class DuckDuckGoSearchClientTests(unittest.TestCase):
             proxy=None,
             timeout_seconds=1.0,
             cache_dir=None,
+            prefer_ddgs=False,
         )
         lite_html = """
         <html>
@@ -101,6 +107,7 @@ class DuckDuckGoSearchClientTests(unittest.TestCase):
             proxy=None,
             timeout_seconds=1.0,
             cache_dir=None,
+            prefer_ddgs=False,
         )
         lite_html = """
         <html>
@@ -135,6 +142,7 @@ class DuckDuckGoSearchClientTests(unittest.TestCase):
             proxy=None,
             timeout_seconds=1.0,
             cache_dir=None,
+            prefer_ddgs=False,
         )
         lite_html = """
         <html>
@@ -175,6 +183,7 @@ class DuckDuckGoSearchClientTests(unittest.TestCase):
             proxy=None,
             timeout_seconds=1.0,
             cache_dir=None,
+            prefer_ddgs=False,
         )
 
         with patch("wikidata_simpleqa.search_client.urlopen", side_effect=URLError("timed out")), patch(
@@ -217,6 +226,7 @@ class DuckDuckGoSearchClientTests(unittest.TestCase):
                 proxy="socks5://127.0.0.1:9999",
                 timeout_seconds=1.0,
                 cache_dir=None,
+                prefer_ddgs=False,
             )
             results = client.search("example query")
 
@@ -236,6 +246,192 @@ class DuckDuckGoSearchClientTests(unittest.TestCase):
         self.assertEqual([attempt["endpoint"] for attempt in event["attempts"]], ["html", "html"])
         self.assertEqual(len(results), 1)
         self.assertEqual(results[0].title, "Direct Result")
+
+    def test_ddgs_is_preferred_before_legacy_html(self) -> None:
+        client = DuckDuckGoSearchClient(
+            user_agent="test-agent",
+            proxy="socks5://127.0.0.1:7890",
+            timeout_seconds=1.0,
+            cache_dir=None,
+        )
+        ddgs_results = [SearchResult(title="DDGS Result", snippet="DDGS snippet", url="https://example.com/ddgs")]
+
+        with patch.object(
+            DuckDuckGoSearchClient,
+            "_search_with_ddgs",
+            return_value=(ddgs_results, 12, [{"endpoint": "ddgs", "path": "ddgs", "ok": True}]),
+        ) as mocked_ddgs, patch("wikidata_simpleqa.search_client.urlopen") as mocked_urlopen:
+            results = client.search("example query")
+
+        mocked_ddgs.assert_called_once()
+        mocked_urlopen.assert_not_called()
+        self.assertEqual(results, ddgs_results)
+        event = client.request_events[-1]
+        self.assertEqual(event["backend"], "ddgs")
+        self.assertTrue(event["used_ddgs"])
+        self.assertFalse(event["used_legacy_fallback"])
+
+    def test_ddgs_failure_falls_back_to_legacy_by_default(self) -> None:
+        client = DuckDuckGoSearchClient(
+            user_agent="test-agent",
+            proxy=None,
+            timeout_seconds=1.0,
+            cache_dir=None,
+        )
+        ddgs_error = DuckDuckGoSearchError(
+            "ddgs failed",
+            url="ddgs",
+            duration_ms=1,
+            attempt_events=[
+                {
+                    "attempt": 1,
+                    "path": "ddgs",
+                    "endpoint": "ddgs",
+                    "ok": False,
+                    "error_type": "URLError",
+                    "error_message": "timed out",
+                    "retry_reason": "ddgs_transport_error",
+                }
+            ],
+            original_error=URLError("timed out"),
+        )
+        html = """
+        <html>
+          <a class="result__a" href="https://example.com/html">HTML Result</a>
+        </html>
+        """
+
+        with patch.object(DuckDuckGoSearchClient, "_search_with_ddgs", side_effect=ddgs_error), patch(
+            "wikidata_simpleqa.search_client.urlopen",
+            return_value=FakeSearchResponse(status=200, html=html),
+        ):
+            results = client.search("example query")
+
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0].title, "HTML Result")
+        event = client.request_events[-1]
+        self.assertEqual(event["backend"], "legacy")
+        self.assertTrue(event["used_ddgs"])
+        self.assertTrue(event["used_legacy_fallback"])
+        self.assertEqual([attempt["endpoint"] for attempt in event["attempts"]], ["ddgs", "html"])
+
+    def test_disabled_legacy_fallback_raises_after_ddgs_failure(self) -> None:
+        client = DuckDuckGoSearchClient(
+            user_agent="test-agent",
+            proxy=None,
+            timeout_seconds=1.0,
+            cache_dir=None,
+            disable_fallbacks=("legacy",),
+        )
+        ddgs_error = DuckDuckGoSearchError(
+            "ddgs failed",
+            url="ddgs",
+            duration_ms=1,
+            attempt_events=[
+                {
+                    "attempt": 1,
+                    "path": "ddgs",
+                    "endpoint": "ddgs",
+                    "ok": False,
+                    "error_type": "URLError",
+                    "error_message": "timed out",
+                    "retry_reason": "ddgs_transport_error",
+                }
+            ],
+            original_error=URLError("timed out"),
+        )
+
+        with patch.object(DuckDuckGoSearchClient, "_search_with_ddgs", side_effect=ddgs_error), patch(
+            "wikidata_simpleqa.search_client.urlopen"
+        ) as mocked_urlopen:
+            with self.assertRaises(DuckDuckGoSearchError):
+                client.search("example query")
+
+        mocked_urlopen.assert_not_called()
+        event = client.request_events[-1]
+        self.assertTrue(event["failed"])
+        self.assertTrue(event["legacy_fallback_disabled"])
+        self.assertEqual(event["backend"], "ddgs")
+
+    def test_disabled_direct_fallback_blocks_proxy_to_direct_retry(self) -> None:
+        with patch("wikidata_simpleqa.search_client.install_proxy"), patch(
+            "wikidata_simpleqa.search_client.clear_proxy"
+        ), patch("wikidata_simpleqa.search_client.urlopen", side_effect=URLError("proxy unavailable")) as mocked_urlopen:
+            client = DuckDuckGoSearchClient(
+                user_agent="test-agent",
+                proxy="socks5://127.0.0.1:9999",
+                timeout_seconds=1.0,
+                cache_dir=None,
+                prefer_ddgs=False,
+                disable_fallbacks=("direct",),
+            )
+            with self.assertRaises(DuckDuckGoSearchError):
+                client.search("example query")
+
+        self.assertEqual(mocked_urlopen.call_count, 1)
+        event = client.request_events[-1]
+        self.assertTrue(event["failed"])
+        self.assertEqual([attempt["path"] for attempt in event["attempts"]], ["configured_proxy"])
+
+    def test_global_cooldown_waits_after_consecutive_transport_failures(self) -> None:
+        client = DuckDuckGoSearchClient(
+            user_agent="test-agent",
+            proxy=None,
+            timeout_seconds=1.0,
+            cache_dir=None,
+            prefer_ddgs=False,
+            cooldown_failure_threshold=1,
+            cooldown_initial_seconds=5.0,
+            cooldown_max_seconds=5.0,
+        )
+        html = """
+        <html>
+          <a class="result__a" href="https://example.com/recovered">Recovered</a>
+        </html>
+        """
+
+        with patch("wikidata_simpleqa.search_client.sleep", return_value=None) as mocked_sleep:
+            with patch("wikidata_simpleqa.search_client.urlopen", side_effect=URLError("timed out")):
+                with self.assertRaises(DuckDuckGoSearchError):
+                    client.search("first query")
+            with patch("wikidata_simpleqa.search_client.urlopen", return_value=FakeSearchResponse(status=200, html=html)):
+                results = client.search("second query")
+
+        self.assertEqual(len(results), 1)
+        sleep_values = [call.args[0] for call in mocked_sleep.call_args_list]
+        self.assertTrue(any(value >= 4.0 for value in sleep_values))
+        self.assertEqual(client.request_events[-1]["attempts"][0]["endpoint"], "global_cooldown")
+
+    def test_global_cooldown_counts_retryable_failures_even_when_fallback_succeeds(self) -> None:
+        client = DuckDuckGoSearchClient(
+            user_agent="test-agent",
+            proxy=None,
+            timeout_seconds=1.0,
+            cache_dir=None,
+            prefer_ddgs=False,
+            cooldown_failure_threshold=1,
+            cooldown_initial_seconds=5.0,
+            cooldown_max_seconds=5.0,
+        )
+        lite_html = """
+        <html>
+          <a class="result-link" href="https://example.com/lite">Lite Result</a>
+        </html>
+        """
+
+        with patch(
+            "wikidata_simpleqa.search_client.urlopen",
+            side_effect=[
+                FakeSearchResponse(status=202, html=""),
+                FakeSearchResponse(status=200, html=lite_html),
+            ],
+        ):
+            results = client.search("example query")
+
+        self.assertEqual(len(results), 1)
+        attempts = client.request_events[-1]["attempts"]
+        self.assertTrue(attempts[-1]["cooldown_triggered"])
+        self.assertEqual(attempts[-1]["endpoint"], "global_cooldown")
 
 
 if __name__ == "__main__":

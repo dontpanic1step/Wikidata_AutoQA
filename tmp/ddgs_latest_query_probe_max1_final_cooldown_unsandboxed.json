@@ -1,0 +1,1031 @@
+{
+  "created_at": "2026-06-09T17:37:57",
+  "run_dir": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\route3_reuse_cached_all5_infobox_only_2026_06_08_222053",
+  "settings": {
+    "max_qa": 1,
+    "top_k": 5,
+    "proxy": "socks5://127.0.0.1:7890",
+    "timeout_seconds": 8.0,
+    "ddgs_backend": "duckduckgo",
+    "stage_mode": "incremental",
+    "disabled_fallbacks": [],
+    "cooldown_failure_threshold": 3,
+    "cooldown_initial_seconds": 2.0,
+    "cooldown_max_seconds": 4.0
+  },
+  "qa_records": [
+    [
+      {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?"
+      },
+      {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "average five-year survival rate brain tumor US"
+      },
+      {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 3,
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "brain tumor prognosis five-year survival rate"
+      }
+    ]
+  ],
+  "stages": [
+    {
+      "stage": 1,
+      "qa_count": 1,
+      "stage_query_count": 3,
+      "stage_summary": {
+        "total_queries": 3,
+        "ok_queries": 3,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "legacy": 3
+        },
+        "error_counts": {},
+        "ddgs_successes": 0,
+        "legacy_fallback_successes": 3,
+        "cooldown_trigger_count": 1,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 3,
+        "ok_queries": 3,
+        "failed_queries": 0,
+        "ok_rate": 1.0,
+        "backend_counts": {
+          "legacy": 3
+        },
+        "error_counts": {},
+        "ddgs_successes": 0,
+        "legacy_fallback_successes": 3,
+        "cooldown_trigger_count": 1,
+        "cooldown_wait_count": 0
+      }
+    }
+  ],
+  "summary": {
+    "total_queries": 3,
+    "ok_queries": 3,
+    "failed_queries": 0,
+    "ok_rate": 1.0,
+    "backend_counts": {
+      "legacy": 3
+    },
+    "error_counts": {},
+    "ddgs_successes": 0,
+    "legacy_fallback_successes": 3,
+    "cooldown_trigger_count": 1,
+    "cooldown_wait_count": 0
+  },
+  "current_format_record_count": 1,
+  "current_format_records_output": "tmp\\ddgs_latest_query_probe_max1_final_cooldown_unsandboxed_records.jsonl",
+  "results": [
+    {
+      "qa": {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?"
+      },
+      "ok": true,
+      "duration_seconds": 4.6049,
+      "result_count": 5,
+      "first_titles": [
+        "Survival Rates for Selected Adult Brain Tumors",
+        "Brain Tumor Facts",
+        "Brain and Other Nervous System Cancer — Cancer Stat Facts"
+      ],
+      "results": [
+        {
+          "title": "Survival Rates for Selected Adult Brain Tumors",
+          "snippet": "A relative survival rate compares people with the same type of tumor to people in the overall population. For example, if the 5-year relative survival rate for a specific type of brain tumor is 70%, it means that people who have that tumor are, on average, about 70% as likely as people who don't have that tumor to live for at least 5 years ...",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.cancer.org%2Fcancer%2Ftypes%2Fbrain%2Dspinal%2Dcord%2Dtumors%2Dadults%2Fdetection%2Ddiagnosis%2Dstaging%2Fsurvival%2Drates.html&rut=7f32e149b18ef38b6ed1e3ac9a4b071bf8d6b56dab03475027e6509c10c634d0"
+        },
+        {
+          "title": "Brain Tumor Facts",
+          "snippet": "The most common primary non-malignant brain tumor, meningioma, has an average five-year survival of 88.2% after diagnosis For the most common form of primary malignant brain tumors, glioblastoma, the five-year relative survival rate is only 7.0% and median survival is only 8 months",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fbraintumor.org%2Fbrain%2Dtumors%2Fabout%2Dbrain%2Dtumors%2Fbrain%2Dtumor%2Dfacts%2F&rut=3d232956d582b79b1b6559424d5cc59909509a9e15d1b6d7d2ee79e0fe153346"
+        },
+        {
+          "title": "Brain and Other Nervous System Cancer — Cancer Stat Facts",
+          "snippet": "How Many People Survive 5 Years Or More after Being Diagnosed with Brain and Other Nervous System Cancer? Relative survival is an estimate of the percentage of patients who would be expected to survive the effects of their cancer. It excludes the risk of dying from other causes. Because survival statistics are based on large groups of people, they cannot be used to predict exactly what will ...",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fseer.cancer.gov%2Fstatfacts%2Fhtml%2Fbrain.html&rut=741e407e3593e1ec5c7286bd5e4447128b609f71f59f74c41e85be068505b3fe"
+        },
+        {
+          "title": "Brain Tumor Survival Outcomes - Aaron Cohen-Gadol, MD",
+          "snippet": "Brain tumor survival rates can vary depending on several factors, such as the type of brain tumor and its growth rate (aggressiveness), its size and location, the age and overall health of the person, and the treatment options available. Here are some general statistics and considerations: The overall 5-year survival rate, or the percentage of patients alive 5 years after diagnosis, for all ...",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.aaroncohen%2Dgadol.com%2Fen%2Fpatients%2Fbrain%2Dtumor%2Fsurvival%2Fsurvival%2Doutcomes&rut=99275c5455c668eb1b7c1f0925750bb86ebec61b00a8f0439f18849621c0ba16"
+        },
+        {
+          "title": "Survival for Brain Cancer - Roswell Park Comprehensive Cancer Center",
+          "snippet": "Cancer survival rates are typically discussed in terms of 5-year relative survival, which means the proportion of patients alive five years after their diagnosis. Keep in mind that statistics like these are based on large groups of people, includes all subtypes of the disease, and cannot predict what might happen with an individual patient.In addition, the most current national data is from ...",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.roswellpark.org%2Fcancer%2Fbrain%2Fsurvival%2Drates&rut=37eccc3e4ba28a4648ae576f094caaa5dacb22f237c4f77bdf347eea4cf04bcc"
+        }
+      ],
+      "event_summary": {
+        "backend": "legacy",
+        "failed": false,
+        "duration_ms": 4603,
+        "used_ddgs": true,
+        "used_legacy_fallback": true,
+        "used_direct_fallback": true,
+        "used_lite_fallback": true,
+        "attempt_count": 5,
+        "endpoint_counts": {
+          "ddgs": 2,
+          "html": 2,
+          "lite": 1
+        },
+        "path_counts": {
+          "ddgs": 2,
+          "configured_proxy": 1,
+          "direct_fallback": 2
+        },
+        "statuses": [
+          202,
+          200
+        ],
+        "errors": {
+          "DDGSException": 2,
+          "URLError": 1,
+          "html_status_202": 1
+        },
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "duration_seconds": 4.6049,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+            "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+            "cache_hit": false,
+            "duration_ms": 4603,
+            "used_ddgs": true,
+            "used_legacy_fallback": true,
+            "used_direct_fallback": true,
+            "used_lite_fallback": true,
+            "failed": false,
+            "backend": "legacy",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1410,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "attempt": 2,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 313,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "attempt": 1,
+                "path": "configured_proxy",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 311,
+                "ok": false,
+                "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+                "endpoint": "html",
+                "error_type": "URLError",
+                "error_message": "<urlopen error Remote end closed connection without response>"
+              },
+              {
+                "attempt": 1,
+                "path": "direct_fallback",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 428,
+                "ok": false,
+                "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+                "endpoint": "html",
+                "status": 202,
+                "fallback_reason": "html_status_202",
+                "switched_to_endpoint": "lite"
+              },
+              {
+                "attempt": 1,
+                "path": "direct_fallback",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1125,
+                "ok": true,
+                "url": "https://lite.duckduckgo.com/lite/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+                "endpoint": "lite",
+                "status": 200
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Survival Rates for Selected Adult Brain Tumors",
+            "snippet": "A relative survival rate compares people with the same type of tumor to people in the overall population. For example, if the 5-year relative survival rate for a specific type of brain tumor is 70%, it means that people who have that tumor are, on average, about 70% as likely as people who don't have that tumor to live for at least 5 years ...",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.cancer.org%2Fcancer%2Ftypes%2Fbrain%2Dspinal%2Dcord%2Dtumors%2Dadults%2Fdetection%2Ddiagnosis%2Dstaging%2Fsurvival%2Drates.html&rut=7f32e149b18ef38b6ed1e3ac9a4b071bf8d6b56dab03475027e6509c10c634d0"
+          },
+          {
+            "title": "Brain Tumor Facts",
+            "snippet": "The most common primary non-malignant brain tumor, meningioma, has an average five-year survival of 88.2% after diagnosis For the most common form of primary malignant brain tumors, glioblastoma, the five-year relative survival rate is only 7.0% and median survival is only 8 months",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fbraintumor.org%2Fbrain%2Dtumors%2Fabout%2Dbrain%2Dtumors%2Fbrain%2Dtumor%2Dfacts%2F&rut=3d232956d582b79b1b6559424d5cc59909509a9e15d1b6d7d2ee79e0fe153346"
+          },
+          {
+            "title": "Brain and Other Nervous System Cancer — Cancer Stat Facts",
+            "snippet": "How Many People Survive 5 Years Or More after Being Diagnosed with Brain and Other Nervous System Cancer? Relative survival is an estimate of the percentage of patients who would be expected to survive the effects of their cancer. It excludes the risk of dying from other causes. Because survival statistics are based on large groups of people, they cannot be used to predict exactly what will ...",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fseer.cancer.gov%2Fstatfacts%2Fhtml%2Fbrain.html&rut=741e407e3593e1ec5c7286bd5e4447128b609f71f59f74c41e85be068505b3fe"
+          },
+          {
+            "title": "Brain Tumor Survival Outcomes - Aaron Cohen-Gadol, MD",
+            "snippet": "Brain tumor survival rates can vary depending on several factors, such as the type of brain tumor and its growth rate (aggressiveness), its size and location, the age and overall health of the person, and the treatment options available. Here are some general statistics and considerations: The overall 5-year survival rate, or the percentage of patients alive 5 years after diagnosis, for all ...",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.aaroncohen%2Dgadol.com%2Fen%2Fpatients%2Fbrain%2Dtumor%2Fsurvival%2Fsurvival%2Doutcomes&rut=99275c5455c668eb1b7c1f0925750bb86ebec61b00a8f0439f18849621c0ba16"
+          },
+          {
+            "title": "Survival for Brain Cancer - Roswell Park Comprehensive Cancer Center",
+            "snippet": "Cancer survival rates are typically discussed in terms of 5-year relative survival, which means the proportion of patients alive five years after their diagnosis. Keep in mind that statistics like these are based on large groups of people, includes all subtypes of the disease, and cannot predict what might happen with an individual patient.In addition, the most current national data is from ...",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.roswellpark.org%2Fcancer%2Fbrain%2Fsurvival%2Drates&rut=37eccc3e4ba28a4648ae576f094caaa5dacb22f237c4f77bdf347eea4cf04bcc"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "legacy",
+          "failed": false,
+          "duration_ms": 4603,
+          "used_ddgs": true,
+          "used_legacy_fallback": true,
+          "used_direct_fallback": true,
+          "used_lite_fallback": true,
+          "attempt_count": 5,
+          "endpoint_counts": {
+            "ddgs": 2,
+            "html": 2,
+            "lite": 1
+          },
+          "path_counts": {
+            "ddgs": 2,
+            "configured_proxy": 1,
+            "direct_fallback": 2
+          },
+          "statuses": [
+            202,
+            200
+          ],
+          "errors": {
+            "DDGSException": 2,
+            "URLError": 1,
+            "html_status_202": 1
+          },
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "cache_hit": false,
+        "duration_ms": 4603,
+        "used_ddgs": true,
+        "used_legacy_fallback": true,
+        "used_direct_fallback": true,
+        "used_lite_fallback": true,
+        "failed": false,
+        "backend": "legacy",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1410,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "attempt": 2,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 313,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "attempt": 1,
+            "path": "configured_proxy",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 311,
+            "ok": false,
+            "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+            "endpoint": "html",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          },
+          {
+            "attempt": 1,
+            "path": "direct_fallback",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 428,
+            "ok": false,
+            "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+            "endpoint": "html",
+            "status": 202,
+            "fallback_reason": "html_status_202",
+            "switched_to_endpoint": "lite"
+          },
+          {
+            "attempt": 1,
+            "path": "direct_fallback",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1125,
+            "ok": true,
+            "url": "https://lite.duckduckgo.com/lite/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+            "endpoint": "lite",
+            "status": 200
+          }
+        ]
+      },
+      "probe_stage": 1,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "average five-year survival rate brain tumor US"
+      },
+      "ok": true,
+      "duration_seconds": 3.4993,
+      "result_count": 5,
+      "first_titles": [
+        "Survival Rates for Selected Adult Brain Tumors",
+        "Key Statistics for Brain Tumors - American Cancer Society",
+        "Brain and Other Nervous System Cancer — Cancer Stat Facts"
+      ],
+      "results": [
+        {
+          "title": "Survival Rates for Selected Adult Brain Tumors",
+          "snippet": "For example, if the 5-year relative survival rate for a specific type of brain tumor is 70%, it means that people who have that tumor are, on average, about 70% as likely as people who don't have that tumor to live for at least 5 years after being diagnosed. Survival rates for more common adult brain and spinal cord tumors",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.cancer.org%2Fcancer%2Ftypes%2Fbrain%2Dspinal%2Dcord%2Dtumors%2Dadults%2Fdetection%2Ddiagnosis%2Dstaging%2Fsurvival%2Drates.html&rut=7f32e149b18ef38b6ed1e3ac9a4b071bf8d6b56dab03475027e6509c10c634d0"
+        },
+        {
+          "title": "Key Statistics for Brain Tumors - American Cancer Society",
+          "snippet": "The average age at the time of diagnosis is 61 years. Survival rates for brain tumors Survival rates for brain tumors and spinal cord tumors vary widely, depending on the type of tumor and other factors. Rates for some of the more common types of brain and spinal cord tumors are discussed in Survival Rates for Selected Adult Brain Tumors. Learn ...",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.cancer.org%2Fcancer%2Ftypes%2Fbrain%2Dspinal%2Dcord%2Dtumors%2Dadults%2Fkey%2Dstatistics.html&rut=1d2795a9ec422c4d01cf6324913047c5d9df573c2ae628edbcc840c460323609"
+        },
+        {
+          "title": "Brain and Other Nervous System Cancer — Cancer Stat Facts",
+          "snippet": "Brain and other nervous system cancer is the ninth leading cause of cancer death in the United States. The death rate was 4.4 per 100,000 men and women per year based on 2020-2024 deaths, age-adjusted.",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fseer.cancer.gov%2Fstatfacts%2Fhtml%2Fbrain.html&rut=741e407e3593e1ec5c7286bd5e4447128b609f71f59f74c41e85be068505b3fe"
+        },
+        {
+          "title": "Glioblastoma - Survival rates - Mayo Clinic",
+          "snippet": "Survival rates describe how groups of people with glioblastoma have done over time. These numbers cannot predict exactly what will happen for you, but they can give a general sense of how this cancer behaves and how age and treatment may affect outlook. 5-year and 10-year survival rates for glioblastoma Glioblastoma is a fast-growing brain cancer.",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.mayoclinic.org%2Fdiseases%2Dconditions%2Fglioblastoma%2Fsurvival%2Drates%2Fgnc%2D20596050&rut=9dd93d30e03f4af0a37b2d3f9a5a712a040ab55f28090ddcf8edc8b1dc6ec59f"
+        },
+        {
+          "title": "Brain Cancer Survival Rate: 5 Key Facts on Prognosis, Life Expectancy ...",
+          "snippet": "In the United States, the five-year survival rate for malignant brain cancers is about 33 to 36 percent. This means about one-third of patients with malignant brain cancer live five years after diagnosis.",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fint.livhospital.com%2Fbrain%2Dcancer%2Dsurvival%2Drate%2D5%2Dkey%2Dfacts%2Don%2Dprognosis%2Dlife%2Dexpectancy%2Dand%2Dtumor%2Dsize%2F&rut=74692becf274a4e9f7bec1a0cb621de03a11b7a7883f9ea20f6c4f74640cf538"
+        }
+      ],
+      "event_summary": {
+        "backend": "legacy",
+        "failed": false,
+        "duration_ms": 3498,
+        "used_ddgs": true,
+        "used_legacy_fallback": true,
+        "used_direct_fallback": true,
+        "used_lite_fallback": true,
+        "attempt_count": 5,
+        "endpoint_counts": {
+          "ddgs": 2,
+          "html": 2,
+          "lite": 1
+        },
+        "path_counts": {
+          "ddgs": 2,
+          "configured_proxy": 1,
+          "direct_fallback": 2
+        },
+        "statuses": [
+          202,
+          200
+        ],
+        "errors": {
+          "DDGSException": 2,
+          "URLError": 1,
+          "html_status_202": 1
+        },
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "average five-year survival rate brain tumor US",
+        "duration_seconds": 3.4993,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+            "query": "average five-year survival rate brain tumor US",
+            "cache_hit": false,
+            "duration_ms": 3498,
+            "used_ddgs": true,
+            "used_legacy_fallback": true,
+            "used_direct_fallback": true,
+            "used_lite_fallback": true,
+            "failed": false,
+            "backend": "legacy",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 290,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "attempt": 2,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 288,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "attempt": 1,
+                "path": "configured_proxy",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 309,
+                "ok": false,
+                "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+                "endpoint": "html",
+                "error_type": "URLError",
+                "error_message": "<urlopen error Remote end closed connection without response>"
+              },
+              {
+                "attempt": 1,
+                "path": "direct_fallback",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 423,
+                "ok": false,
+                "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+                "endpoint": "html",
+                "status": 202,
+                "fallback_reason": "html_status_202",
+                "switched_to_endpoint": "lite"
+              },
+              {
+                "attempt": 1,
+                "path": "direct_fallback",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1177,
+                "ok": true,
+                "url": "https://lite.duckduckgo.com/lite/?q=average+five-year+survival+rate+brain+tumor+US",
+                "endpoint": "lite",
+                "status": 200
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Survival Rates for Selected Adult Brain Tumors",
+            "snippet": "For example, if the 5-year relative survival rate for a specific type of brain tumor is 70%, it means that people who have that tumor are, on average, about 70% as likely as people who don't have that tumor to live for at least 5 years after being diagnosed. Survival rates for more common adult brain and spinal cord tumors",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.cancer.org%2Fcancer%2Ftypes%2Fbrain%2Dspinal%2Dcord%2Dtumors%2Dadults%2Fdetection%2Ddiagnosis%2Dstaging%2Fsurvival%2Drates.html&rut=7f32e149b18ef38b6ed1e3ac9a4b071bf8d6b56dab03475027e6509c10c634d0"
+          },
+          {
+            "title": "Key Statistics for Brain Tumors - American Cancer Society",
+            "snippet": "The average age at the time of diagnosis is 61 years. Survival rates for brain tumors Survival rates for brain tumors and spinal cord tumors vary widely, depending on the type of tumor and other factors. Rates for some of the more common types of brain and spinal cord tumors are discussed in Survival Rates for Selected Adult Brain Tumors. Learn ...",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.cancer.org%2Fcancer%2Ftypes%2Fbrain%2Dspinal%2Dcord%2Dtumors%2Dadults%2Fkey%2Dstatistics.html&rut=1d2795a9ec422c4d01cf6324913047c5d9df573c2ae628edbcc840c460323609"
+          },
+          {
+            "title": "Brain and Other Nervous System Cancer — Cancer Stat Facts",
+            "snippet": "Brain and other nervous system cancer is the ninth leading cause of cancer death in the United States. The death rate was 4.4 per 100,000 men and women per year based on 2020-2024 deaths, age-adjusted.",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fseer.cancer.gov%2Fstatfacts%2Fhtml%2Fbrain.html&rut=741e407e3593e1ec5c7286bd5e4447128b609f71f59f74c41e85be068505b3fe"
+          },
+          {
+            "title": "Glioblastoma - Survival rates - Mayo Clinic",
+            "snippet": "Survival rates describe how groups of people with glioblastoma have done over time. These numbers cannot predict exactly what will happen for you, but they can give a general sense of how this cancer behaves and how age and treatment may affect outlook. 5-year and 10-year survival rates for glioblastoma Glioblastoma is a fast-growing brain cancer.",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.mayoclinic.org%2Fdiseases%2Dconditions%2Fglioblastoma%2Fsurvival%2Drates%2Fgnc%2D20596050&rut=9dd93d30e03f4af0a37b2d3f9a5a712a040ab55f28090ddcf8edc8b1dc6ec59f"
+          },
+          {
+            "title": "Brain Cancer Survival Rate: 5 Key Facts on Prognosis, Life Expectancy ...",
+            "snippet": "In the United States, the five-year survival rate for malignant brain cancers is about 33 to 36 percent. This means about one-third of patients with malignant brain cancer live five years after diagnosis.",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fint.livhospital.com%2Fbrain%2Dcancer%2Dsurvival%2Drate%2D5%2Dkey%2Dfacts%2Don%2Dprognosis%2Dlife%2Dexpectancy%2Dand%2Dtumor%2Dsize%2F&rut=74692becf274a4e9f7bec1a0cb621de03a11b7a7883f9ea20f6c4f74640cf538"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "legacy",
+          "failed": false,
+          "duration_ms": 3498,
+          "used_ddgs": true,
+          "used_legacy_fallback": true,
+          "used_direct_fallback": true,
+          "used_lite_fallback": true,
+          "attempt_count": 5,
+          "endpoint_counts": {
+            "ddgs": 2,
+            "html": 2,
+            "lite": 1
+          },
+          "path_counts": {
+            "ddgs": 2,
+            "configured_proxy": 1,
+            "direct_fallback": 2
+          },
+          "statuses": [
+            202,
+            200
+          ],
+          "errors": {
+            "DDGSException": 2,
+            "URLError": 1,
+            "html_status_202": 1
+          },
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+        "query": "average five-year survival rate brain tumor US",
+        "cache_hit": false,
+        "duration_ms": 3498,
+        "used_ddgs": true,
+        "used_legacy_fallback": true,
+        "used_direct_fallback": true,
+        "used_lite_fallback": true,
+        "failed": false,
+        "backend": "legacy",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 290,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "attempt": 2,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 288,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "attempt": 1,
+            "path": "configured_proxy",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 309,
+            "ok": false,
+            "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+            "endpoint": "html",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          },
+          {
+            "attempt": 1,
+            "path": "direct_fallback",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 423,
+            "ok": false,
+            "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+            "endpoint": "html",
+            "status": 202,
+            "fallback_reason": "html_status_202",
+            "switched_to_endpoint": "lite"
+          },
+          {
+            "attempt": 1,
+            "path": "direct_fallback",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1177,
+            "ok": true,
+            "url": "https://lite.duckduckgo.com/lite/?q=average+five-year+survival+rate+brain+tumor+US",
+            "endpoint": "lite",
+            "status": 200
+          }
+        ]
+      },
+      "probe_stage": 1,
+      "probe_stage_query_index": 2
+    },
+    {
+      "qa": {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 3,
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "brain tumor prognosis five-year survival rate"
+      },
+      "ok": true,
+      "duration_seconds": 3.6476,
+      "result_count": 5,
+      "first_titles": [
+        "Is Brain Cancer Curable? Survival Rates, Treatment, Outlook",
+        "How Long Can You Live With Brain Cancer? Prognosis, Survival Rates, and ...",
+        "Glioblastoma - Survival rates - Mayo Clinic"
+      ],
+      "results": [
+        {
+          "title": "Is Brain Cancer Curable? Survival Rates, Treatment, Outlook",
+          "snippet": "Experts use the 5-year relative survival rate to calculate a person's outlook. Survival rates for brain cancer vary significantly based on cancer type, tumor grade, location, and size, genetic ...",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.healthline.com%2Fhealth%2Fbrain%2Dtumor%2Fis%2Dbrain%2Dcancer%2Dcurable&rut=21b6e630e6d072cabe4856eea0afcbea26404d9a1d8fd1d025afbf812a8378a4"
+        },
+        {
+          "title": "How Long Can You Live With Brain Cancer? Prognosis, Survival Rates, and ...",
+          "snippet": "The five-year relative survival rate for all primary brain and central nervous system tumors combined is about 33-36%. We will explore the various factors that influence survival rates and life expectancy for brain cancer patients.",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fint.livhospital.com%2Fhow%2Dlong%2Dcan%2Dyou%2Dlive%2Dwith%2Dbrain%2Dcancer%2Dprognosis%2Dsurvival%2Drates%2Dand%2Dlife%2Dexpectancy%2F&rut=00483fb70d185be8747f2537cb2f75263dd6f9611edb780c8cd0d5bd37367f6d"
+        },
+        {
+          "title": "Glioblastoma - Survival rates - Mayo Clinic",
+          "snippet": "Survival rates describe how groups of people with glioblastoma have done over time. These numbers cannot predict exactly what will happen for you, but they can give a general sense of how this cancer behaves and how age and treatment may affect outlook. 5-year and 10-year survival rates for glioblastoma Glioblastoma is a fast-growing brain cancer.",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.mayoclinic.org%2Fdiseases%2Dconditions%2Fglioblastoma%2Fsurvival%2Drates%2Fgnc%2D20596050&rut=9dd93d30e03f4af0a37b2d3f9a5a712a040ab55f28090ddcf8edc8b1dc6ec59f"
+        },
+        {
+          "title": "Brain Tumor Survival Outcomes - Aaron Cohen-Gadol, MD",
+          "snippet": "Brain tumor survival rates can vary depending on several factors, such as the type of brain tumor and its growth rate (aggressiveness), its size and location, the age and overall health of the person, and the treatment options available. Here are some general statistics and considerations: The overall 5-year survival rate, or the percentage of patients alive 5 years after diagnosis, for all ...",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.aaroncohen%2Dgadol.com%2Fen%2Fpatients%2Fbrain%2Dtumor%2Fsurvival%2Fsurvival%2Doutcomes&rut=99275c5455c668eb1b7c1f0925750bb86ebec61b00a8f0439f18849621c0ba16"
+        },
+        {
+          "title": "Survival Rates for Selected Adult Brain Tumors",
+          "snippet": "For example, if the 5-year relative survival rate for a specific type of brain tumor is 70%, it means that people who have that tumor are, on average, about 70% as likely as people who don't have that tumor to live for at least 5 years after being diagnosed. Survival rates for more common adult brain and spinal cord tumors",
+          "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.cancer.org%2Fcancer%2Ftypes%2Fbrain%2Dspinal%2Dcord%2Dtumors%2Dadults%2Fdetection%2Ddiagnosis%2Dstaging%2Fsurvival%2Drates.html&rut=7f32e149b18ef38b6ed1e3ac9a4b071bf8d6b56dab03475027e6509c10c634d0"
+        }
+      ],
+      "event_summary": {
+        "backend": "legacy",
+        "failed": false,
+        "duration_ms": 3645,
+        "used_ddgs": true,
+        "used_legacy_fallback": true,
+        "used_direct_fallback": true,
+        "used_lite_fallback": true,
+        "attempt_count": 6,
+        "endpoint_counts": {
+          "ddgs": 2,
+          "html": 2,
+          "lite": 1,
+          "global_cooldown": 1
+        },
+        "path_counts": {
+          "ddgs": 2,
+          "configured_proxy": 1,
+          "direct_fallback": 2,
+          "global_cooldown": 1
+        },
+        "statuses": [
+          202,
+          200
+        ],
+        "errors": {
+          "DDGSException": 2,
+          "URLError": 1,
+          "html_status_202": 1
+        },
+        "cooldown_triggered": true,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "brain tumor prognosis five-year survival rate",
+        "duration_seconds": 3.6476,
+        "error": false,
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+            "query": "brain tumor prognosis five-year survival rate",
+            "cache_hit": false,
+            "duration_ms": 3645,
+            "used_ddgs": true,
+            "used_legacy_fallback": true,
+            "used_direct_fallback": true,
+            "used_lite_fallback": true,
+            "failed": false,
+            "backend": "legacy",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 342,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "attempt": 2,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 302,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "attempt": 1,
+                "path": "configured_proxy",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 324,
+                "ok": false,
+                "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+                "endpoint": "html",
+                "error_type": "URLError",
+                "error_message": "<urlopen error Remote end closed connection without response>"
+              },
+              {
+                "attempt": 1,
+                "path": "direct_fallback",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 443,
+                "ok": false,
+                "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+                "endpoint": "html",
+                "status": 202,
+                "fallback_reason": "html_status_202",
+                "switched_to_endpoint": "lite"
+              },
+              {
+                "attempt": 1,
+                "path": "direct_fallback",
+                "proxy_configured": false,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1225,
+                "ok": true,
+                "url": "https://lite.duckduckgo.com/lite/?q=brain+tumor+prognosis+five-year+survival+rate",
+                "endpoint": "lite",
+                "status": 200
+              },
+              {
+                "endpoint": "global_cooldown",
+                "path": "global_cooldown",
+                "ok": false,
+                "cooldown_triggered": true,
+                "cooldown_sleep_seconds": 2.0,
+                "cooldown_consecutive_failures": 3,
+                "duration_ms": 0
+              }
+            ]
+          }
+        ],
+        "result_count": 5,
+        "results": [
+          {
+            "title": "Is Brain Cancer Curable? Survival Rates, Treatment, Outlook",
+            "snippet": "Experts use the 5-year relative survival rate to calculate a person's outlook. Survival rates for brain cancer vary significantly based on cancer type, tumor grade, location, and size, genetic ...",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.healthline.com%2Fhealth%2Fbrain%2Dtumor%2Fis%2Dbrain%2Dcancer%2Dcurable&rut=21b6e630e6d072cabe4856eea0afcbea26404d9a1d8fd1d025afbf812a8378a4"
+          },
+          {
+            "title": "How Long Can You Live With Brain Cancer? Prognosis, Survival Rates, and ...",
+            "snippet": "The five-year relative survival rate for all primary brain and central nervous system tumors combined is about 33-36%. We will explore the various factors that influence survival rates and life expectancy for brain cancer patients.",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fint.livhospital.com%2Fhow%2Dlong%2Dcan%2Dyou%2Dlive%2Dwith%2Dbrain%2Dcancer%2Dprognosis%2Dsurvival%2Drates%2Dand%2Dlife%2Dexpectancy%2F&rut=00483fb70d185be8747f2537cb2f75263dd6f9611edb780c8cd0d5bd37367f6d"
+          },
+          {
+            "title": "Glioblastoma - Survival rates - Mayo Clinic",
+            "snippet": "Survival rates describe how groups of people with glioblastoma have done over time. These numbers cannot predict exactly what will happen for you, but they can give a general sense of how this cancer behaves and how age and treatment may affect outlook. 5-year and 10-year survival rates for glioblastoma Glioblastoma is a fast-growing brain cancer.",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.mayoclinic.org%2Fdiseases%2Dconditions%2Fglioblastoma%2Fsurvival%2Drates%2Fgnc%2D20596050&rut=9dd93d30e03f4af0a37b2d3f9a5a712a040ab55f28090ddcf8edc8b1dc6ec59f"
+          },
+          {
+            "title": "Brain Tumor Survival Outcomes - Aaron Cohen-Gadol, MD",
+            "snippet": "Brain tumor survival rates can vary depending on several factors, such as the type of brain tumor and its growth rate (aggressiveness), its size and location, the age and overall health of the person, and the treatment options available. Here are some general statistics and considerations: The overall 5-year survival rate, or the percentage of patients alive 5 years after diagnosis, for all ...",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.aaroncohen%2Dgadol.com%2Fen%2Fpatients%2Fbrain%2Dtumor%2Fsurvival%2Fsurvival%2Doutcomes&rut=99275c5455c668eb1b7c1f0925750bb86ebec61b00a8f0439f18849621c0ba16"
+          },
+          {
+            "title": "Survival Rates for Selected Adult Brain Tumors",
+            "snippet": "For example, if the 5-year relative survival rate for a specific type of brain tumor is 70%, it means that people who have that tumor are, on average, about 70% as likely as people who don't have that tumor to live for at least 5 years after being diagnosed. Survival rates for more common adult brain and spinal cord tumors",
+            "url": "//duckduckgo.com/l/?uddg=https%3A%2F%2Fwww.cancer.org%2Fcancer%2Ftypes%2Fbrain%2Dspinal%2Dcord%2Dtumors%2Dadults%2Fdetection%2Ddiagnosis%2Dstaging%2Fsurvival%2Drates.html&rut=7f32e149b18ef38b6ed1e3ac9a4b071bf8d6b56dab03475027e6509c10c634d0"
+          }
+        ],
+        "probe_event_summary": {
+          "backend": "legacy",
+          "failed": false,
+          "duration_ms": 3645,
+          "used_ddgs": true,
+          "used_legacy_fallback": true,
+          "used_direct_fallback": true,
+          "used_lite_fallback": true,
+          "attempt_count": 6,
+          "endpoint_counts": {
+            "ddgs": 2,
+            "html": 2,
+            "lite": 1,
+            "global_cooldown": 1
+          },
+          "path_counts": {
+            "ddgs": 2,
+            "configured_proxy": 1,
+            "direct_fallback": 2,
+            "global_cooldown": 1
+          },
+          "statuses": [
+            202,
+            200
+          ],
+          "errors": {
+            "DDGSException": 2,
+            "URLError": 1,
+            "html_status_202": 1
+          },
+          "cooldown_triggered": true,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+        "query": "brain tumor prognosis five-year survival rate",
+        "cache_hit": false,
+        "duration_ms": 3645,
+        "used_ddgs": true,
+        "used_legacy_fallback": true,
+        "used_direct_fallback": true,
+        "used_lite_fallback": true,
+        "failed": false,
+        "backend": "legacy",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 342,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "attempt": 2,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 302,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "attempt": 1,
+            "path": "configured_proxy",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 324,
+            "ok": false,
+            "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+            "endpoint": "html",
+            "error_type": "URLError",
+            "error_message": "<urlopen error Remote end closed connection without response>"
+          },
+          {
+            "attempt": 1,
+            "path": "direct_fallback",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 443,
+            "ok": false,
+            "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+            "endpoint": "html",
+            "status": 202,
+            "fallback_reason": "html_status_202",
+            "switched_to_endpoint": "lite"
+          },
+          {
+            "attempt": 1,
+            "path": "direct_fallback",
+            "proxy_configured": false,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1225,
+            "ok": true,
+            "url": "https://lite.duckduckgo.com/lite/?q=brain+tumor+prognosis+five-year+survival+rate",
+            "endpoint": "lite",
+            "status": 200
+          },
+          {
+            "endpoint": "global_cooldown",
+            "path": "global_cooldown",
+            "ok": false,
+            "cooldown_triggered": true,
+            "cooldown_sleep_seconds": 2.0,
+            "cooldown_consecutive_failures": 3,
+            "duration_ms": 0
+          }
+        ]
+      },
+      "probe_stage": 1,
+      "probe_stage_query_index": 3
+    }
+  ]
+}

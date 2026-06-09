@@ -479,6 +479,15 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--duckduckgo-parallel-queries", type=int, default=3)
+    parser.add_argument(
+        "--duckduckgo-disable-fallback",
+        action="append",
+        default=[],
+        help=(
+            "Disable a DuckDuckGo fallback path for debugging. Repeat or pass comma-separated values. "
+            "Known values: ddgs, legacy/html, lite, direct/direct_fallback. Default: no disabled fallbacks."
+        ),
+    )
     parser.add_argument("--generated-search-query-count", type=int, default=2)
     parser.add_argument(
         "--min-table-score",
@@ -828,6 +837,7 @@ def main() -> int:
         proxy=settings.proxy,
         timeout_seconds=settings.timeout_seconds,
         cache_dir=settings.cache_dir,
+        disable_fallbacks=args.duckduckgo_disable_fallback,
     )
     llm_client = make_cheap_model_qa_client(small_llm, settings.timeout_seconds)
     rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds) if settings.rewrite_enabled else None
@@ -1792,6 +1802,7 @@ def _run_streaming_page_id_pipeline(
         "second_stage_grading_enabled": settings.second_stage_grading_enabled,
         "duckduckgo_top_k": settings.duckduckgo_top_k,
         "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
+        "duckduckgo_disabled_fallbacks": args.duckduckgo_disable_fallback,
         "generated_search_query_count": settings.generated_search_query_count,
         "min_table_score": args.min_table_score,
         "route3_reasoning_types": args.route3_reasoning_type,

@@ -1,0 +1,607 @@
+{
+  "created_at": "2026-06-09T17:32:57",
+  "run_dir": "D:\\Study\\AI\\My-research\\Wikidata_Framework\\outputs\\recipe_segments\\route3_reuse_cached_all5_infobox_only_2026_06_08_222053",
+  "settings": {
+    "max_qa": 1,
+    "top_k": 3,
+    "proxy": "socks5://127.0.0.1:7890",
+    "timeout_seconds": 8.0,
+    "ddgs_backend": "duckduckgo",
+    "stage_mode": "incremental",
+    "disabled_fallbacks": [
+      "legacy"
+    ],
+    "cooldown_failure_threshold": 3,
+    "cooldown_initial_seconds": 60.0,
+    "cooldown_max_seconds": 300.0
+  },
+  "qa_records": [
+    [
+      {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?"
+      },
+      {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "average five-year survival rate brain tumor US"
+      },
+      {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 3,
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "brain tumor prognosis five-year survival rate"
+      }
+    ]
+  ],
+  "stages": [
+    {
+      "stage": 1,
+      "qa_count": 1,
+      "stage_query_count": 3,
+      "stage_summary": {
+        "total_queries": 3,
+        "ok_queries": 0,
+        "failed_queries": 3,
+        "ok_rate": 0.0,
+        "backend_counts": {
+          "ddgs": 3
+        },
+        "error_counts": {
+          "DDGSException": 3
+        },
+        "ddgs_successes": 0,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 1,
+        "cooldown_wait_count": 0
+      },
+      "cumulative_summary": {
+        "total_queries": 3,
+        "ok_queries": 0,
+        "failed_queries": 3,
+        "ok_rate": 0.0,
+        "backend_counts": {
+          "ddgs": 3
+        },
+        "error_counts": {
+          "DDGSException": 3
+        },
+        "ddgs_successes": 0,
+        "legacy_fallback_successes": 0,
+        "cooldown_trigger_count": 1,
+        "cooldown_wait_count": 0
+      }
+    }
+  ],
+  "summary": {
+    "total_queries": 3,
+    "ok_queries": 0,
+    "failed_queries": 3,
+    "ok_rate": 0.0,
+    "backend_counts": {
+      "ddgs": 3
+    },
+    "error_counts": {
+      "DDGSException": 3
+    },
+    "ddgs_successes": 0,
+    "legacy_fallback_successes": 0,
+    "cooldown_trigger_count": 1,
+    "cooldown_wait_count": 0
+  },
+  "current_format_record_count": 1,
+  "current_format_records_output": "tmp\\ddgs_only_probe_max1_proxy7890_unsandboxed_records.jsonl",
+  "results": [
+    {
+      "qa": {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 1,
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?"
+      },
+      "ok": false,
+      "duration_seconds": 2.6079,
+      "result_count": 0,
+      "error_type": "DDGSException",
+      "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": true,
+        "duration_ms": 2607,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 2,
+        "endpoint_counts": {
+          "ddgs": 2
+        },
+        "path_counts": {
+          "ddgs": 2
+        },
+        "statuses": [],
+        "errors": {
+          "DDGSException": 2
+        },
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "full_question",
+        "query_category": "full_question",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "duration_seconds": 2.6079,
+        "error": true,
+        "error_type": "DDGSException",
+        "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+            "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+            "cache_hit": false,
+            "duration_ms": 2607,
+            "failed": true,
+            "backend": "ddgs",
+            "used_ddgs": true,
+            "legacy_fallback_disabled": true,
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 1287,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "attempt": 2,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 305,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              }
+            ]
+          }
+        ],
+        "result_count": 0,
+        "results": [],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": true,
+          "duration_ms": 2607,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 2,
+          "endpoint_counts": {
+            "ddgs": 2
+          },
+          "path_counts": {
+            "ddgs": 2
+          },
+          "statuses": [],
+          "errors": {
+            "DDGSException": 2
+          },
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+average+five-year+survival+rate+percentage+for+brain+tumor+patients+in+the+US%3F",
+        "query": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "cache_hit": false,
+        "duration_ms": 2607,
+        "failed": true,
+        "backend": "ddgs",
+        "used_ddgs": true,
+        "legacy_fallback_disabled": true,
+        "error_type": "DDGSException",
+        "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 1287,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "attempt": 2,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 305,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          }
+        ]
+      },
+      "probe_stage": 1,
+      "probe_stage_query_index": 1
+    },
+    {
+      "qa": {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 2,
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "average five-year survival rate brain tumor US"
+      },
+      "ok": false,
+      "duration_seconds": 1.5872,
+      "result_count": 0,
+      "error_type": "DDGSException",
+      "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": true,
+        "duration_ms": 1586,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 2,
+        "endpoint_counts": {
+          "ddgs": 2
+        },
+        "path_counts": {
+          "ddgs": 2
+        },
+        "statuses": [],
+        "errors": {
+          "DDGSException": 2
+        },
+        "cooldown_triggered": false,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "keyword_query_1",
+        "query_category": "keyword_queries",
+        "query": "average five-year survival rate brain tumor US",
+        "duration_seconds": 1.5872,
+        "error": true,
+        "error_type": "DDGSException",
+        "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+            "query": "average five-year survival rate brain tumor US",
+            "cache_hit": false,
+            "duration_ms": 1586,
+            "failed": true,
+            "backend": "ddgs",
+            "used_ddgs": true,
+            "legacy_fallback_disabled": true,
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 293,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "attempt": 2,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 290,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              }
+            ]
+          }
+        ],
+        "result_count": 0,
+        "results": [],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": true,
+          "duration_ms": 1586,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 2,
+          "endpoint_counts": {
+            "ddgs": 2
+          },
+          "path_counts": {
+            "ddgs": 2
+          },
+          "statuses": [],
+          "errors": {
+            "DDGSException": 2
+          },
+          "cooldown_triggered": false,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=average+five-year+survival+rate+brain+tumor+US",
+        "query": "average five-year survival rate brain tumor US",
+        "cache_hit": false,
+        "duration_ms": 1586,
+        "failed": true,
+        "backend": "ddgs",
+        "used_ddgs": true,
+        "legacy_fallback_disabled": true,
+        "error_type": "DDGSException",
+        "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 293,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "attempt": 2,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 290,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          }
+        ]
+      },
+      "probe_stage": 1,
+      "probe_stage_query_index": 2
+    },
+    {
+      "qa": {
+        "qa_index": 1,
+        "record_source": "accepted:reuse_cached_all5_infobox_only_accepted.jsonl",
+        "record_id": "route3_20260608_p37284_number_infobox",
+        "question": "What is the average five-year survival rate percentage for brain tumor patients in the US?",
+        "answer": "33",
+        "subject": "Brain tumor",
+        "answer_type": "Number",
+        "query_index": 3,
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "brain tumor prognosis five-year survival rate"
+      },
+      "ok": false,
+      "duration_seconds": 1.6322,
+      "result_count": 0,
+      "error_type": "DDGSException",
+      "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+      "event_summary": {
+        "backend": "ddgs",
+        "failed": true,
+        "duration_ms": 1632,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "attempt_count": 3,
+        "endpoint_counts": {
+          "ddgs": 2,
+          "global_cooldown": 1
+        },
+        "path_counts": {
+          "ddgs": 2,
+          "global_cooldown": 1
+        },
+        "statuses": [],
+        "errors": {
+          "DDGSException": 2
+        },
+        "cooldown_triggered": true,
+        "cooldown_waited": false
+      },
+      "query_record": {
+        "query_name": "keyword_query_2",
+        "query_category": "keyword_queries",
+        "query": "brain tumor prognosis five-year survival rate",
+        "duration_seconds": 1.6322,
+        "error": true,
+        "error_type": "DDGSException",
+        "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+        "search_request_events": [
+          {
+            "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+            "query": "brain tumor prognosis five-year survival rate",
+            "cache_hit": false,
+            "duration_ms": 1632,
+            "failed": true,
+            "backend": "ddgs",
+            "used_ddgs": true,
+            "legacy_fallback_disabled": true,
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "attempts": [
+              {
+                "attempt": 1,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 295,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "attempt": 2,
+                "path": "ddgs",
+                "proxy_configured": true,
+                "timeout_seconds": 8.0,
+                "duration_ms": 331,
+                "ok": false,
+                "endpoint": "ddgs",
+                "error_type": "DDGSException",
+                "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+                "retry_reason": "ddgs_transport_error"
+              },
+              {
+                "endpoint": "global_cooldown",
+                "path": "global_cooldown",
+                "ok": false,
+                "cooldown_triggered": true,
+                "cooldown_sleep_seconds": 60.0,
+                "cooldown_consecutive_failures": 3,
+                "duration_ms": 0
+              }
+            ]
+          }
+        ],
+        "result_count": 0,
+        "results": [],
+        "probe_event_summary": {
+          "backend": "ddgs",
+          "failed": true,
+          "duration_ms": 1632,
+          "used_ddgs": true,
+          "used_legacy_fallback": false,
+          "used_direct_fallback": false,
+          "used_lite_fallback": false,
+          "attempt_count": 3,
+          "endpoint_counts": {
+            "ddgs": 2,
+            "global_cooldown": 1
+          },
+          "path_counts": {
+            "ddgs": 2,
+            "global_cooldown": 1
+          },
+          "statuses": [],
+          "errors": {
+            "DDGSException": 2
+          },
+          "cooldown_triggered": true,
+          "cooldown_waited": false
+        }
+      },
+      "request_event": {
+        "url": "https://html.duckduckgo.com/html/?q=brain+tumor+prognosis+five-year+survival+rate",
+        "query": "brain tumor prognosis five-year survival rate",
+        "cache_hit": false,
+        "duration_ms": 1632,
+        "failed": true,
+        "backend": "ddgs",
+        "used_ddgs": true,
+        "legacy_fallback_disabled": true,
+        "error_type": "DDGSException",
+        "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 295,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "attempt": 2,
+            "path": "ddgs",
+            "proxy_configured": true,
+            "timeout_seconds": 8.0,
+            "duration_ms": 331,
+            "ok": false,
+            "endpoint": "ddgs",
+            "error_type": "DDGSException",
+            "error_message": "ProtocolError: ProtocolError('Malformed reply')",
+            "retry_reason": "ddgs_transport_error"
+          },
+          {
+            "endpoint": "global_cooldown",
+            "path": "global_cooldown",
+            "ok": false,
+            "cooldown_triggered": true,
+            "cooldown_sleep_seconds": 60.0,
+            "cooldown_consecutive_failures": 3,
+            "duration_ms": 0
+          }
+        ]
+      },
+      "probe_stage": 1,
+      "probe_stage_query_index": 3
+    }
+  ]
+}
