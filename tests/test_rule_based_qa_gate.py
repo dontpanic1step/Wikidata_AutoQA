@@ -443,6 +443,7 @@ class RuleBasedQAGateTests(unittest.TestCase):
         self.assertEqual(normalize_gate_date_answer("04-1940"), "April 1940")
         self.assertEqual(normalize_gate_date_answer("2026-05-25"), "May 25, 2026")
         self.assertEqual(normalize_gate_date_answer("924-07-17"), "July 17, 924")
+        self.assertEqual(normalize_gate_date_answer("-0200-07-17"), "July 17, 200 BC")
         self.assertEqual(normalize_gate_date_answer("5/25/2026"), "May 25, 2026")
         self.assertEqual(normalize_gate_date_answer("7/17/924"), "July 17, 924")
 

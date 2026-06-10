@@ -18,7 +18,7 @@ from typing import Any, Iterable
 from .cheap_model_qa import parse_json_object
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .entity_normalization import normalize_name
-from .date_reference import normalize_date_answer
+from .date_reference import normalize_date_answer, normalize_gate_date_answer
 from .llm_rewrite import NO_SOCIAL_SCIENCE_RESEARCH_PROMPT
 from .number_reference import parse_number_token
 from .route3_quality_rules import external_links_table_filter_reason
@@ -5295,9 +5295,8 @@ def _normalize_answer_type(value: Any, answer: str, question: str) -> str:
 def _looks_like_temporal_answer(answer: str) -> bool:
     """Return whether an answer string looks like a date/year answer."""
     stripped = str(answer or "").strip()
-    normalized_date = normalize_date_answer(stripped, "Date")
     return (
-        normalized_date != stripped
+        normalize_gate_date_answer(stripped) is not None
         or re.fullmatch(r"\d{4}(?:\s*\W+\s*\d{2,4})?", stripped) is not None
         or ERA_QUALIFIED_YEAR_PATTERN.fullmatch(stripped) is not None
     )

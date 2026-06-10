@@ -19,11 +19,21 @@ class DateReferenceTests(unittest.TestCase):
         self.assertEqual(normalize_date_answer("2026-05-21", "Date"), "May 21, 2026")
         self.assertEqual(normalize_date_answer("2026/5/21", "Date"), "May 21, 2026")
         self.assertEqual(normalize_date_answer("5/21/2026", "Date"), "May 21, 2026")
-        self.assertEqual(normalize_date_answer("January 2020", "Date"), "2020-01")
+        self.assertEqual(normalize_date_answer("January 2020", "Date"), "January 2020")
         self.assertEqual(normalize_date_answer("2020", "Date"), "2020")
         self.assertEqual(normalize_date_answer("2024-2025", "Date"), "2024-2025")
-        self.assertEqual(normalize_date_answer("2014-15", "Date"), "2014-2015")
+        self.assertEqual(normalize_date_answer("2014-15", "Date"), "2014-15")
         self.assertEqual(normalize_date_answer("Jane Doe", "Person"), "Jane Doe")
+
+    def test_normalize_date_answer_handles_short_years_and_eras(self) -> None:
+        self.assertEqual(normalize_date_answer("March 3, 0924", "Date"), "March 3, 924")
+        self.assertEqual(normalize_date_answer("924-03-03", "Date"), "March 3, 924")
+        self.assertEqual(normalize_date_answer("03-0924", "Date"), "March 924")
+        self.assertEqual(normalize_date_answer("0924", "Date"), "924")
+        self.assertEqual(normalize_date_answer("200 BC", "Date"), "200 BC")
+        self.assertEqual(normalize_date_answer("200 bce", "Date"), "200 BCE")
+        self.assertEqual(normalize_date_answer("March 3, 200 BC", "Date"), "March 3, 200 BC")
+        self.assertEqual(normalize_date_answer("-0200-03-03", "Date"), "March 3, 200 BC")
 
     def test_generated_candidate_normalizes_date_answers(self) -> None:
         candidate = GeneratedCandidate(

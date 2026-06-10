@@ -7,6 +7,7 @@ from datetime import date
 from typing import Iterable
 
 from .constants import MONTH_NAMES, TEMPORAL_PHRASES
+from .date_reference import date_answer_sort_key
 from .entity_normalization import normalize_name
 from .geographic_leakage import question_leaks_geographic_answer_context
 from .models import CandidateFact, DomainTemplate
@@ -143,6 +144,10 @@ def violates_cutoff_year_policy(text: str, cutoff_year: int) -> bool:
 
 def is_settled_by_run_date(date_value: str, run_date: str) -> bool:
     """Return whether the candidate date is not in the future."""
+    candidate_key = date_answer_sort_key(date_value)
+    pipeline_key = date_answer_sort_key(run_date)
+    if candidate_key is not None and pipeline_key is not None:
+        return candidate_key <= pipeline_key
     candidate_date = date.fromisoformat(date_value[:10])
     pipeline_date = date.fromisoformat(run_date)
     return candidate_date <= pipeline_date

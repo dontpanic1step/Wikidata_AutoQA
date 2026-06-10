@@ -53,6 +53,14 @@ class TimeInvarianceTests(unittest.TestCase):
         candidate = make_candidate(date_value="2026-12-01")
         self.assertFalse(candidate_is_time_invariant(candidate, "2026-05-05"))
 
+    def test_allows_short_year_settled_candidate_date(self) -> None:
+        candidate = make_candidate(date_value="924-03-03")
+        self.assertTrue(candidate_is_time_invariant(candidate, "2026-05-05"))
+
+    def test_allows_bc_settled_candidate_date(self) -> None:
+        candidate = make_candidate(date_value="-200-03-03")
+        self.assertTrue(candidate_is_time_invariant(candidate, "2026-05-05"))
+
     def test_rejects_mutable_relationship_property(self) -> None:
         candidate = make_candidate(target_property_pid="P26")
         self.assertFalse(candidate_is_time_invariant(candidate, "2026-05-05"))

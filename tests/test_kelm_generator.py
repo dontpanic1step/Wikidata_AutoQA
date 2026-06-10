@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 
 from test_support import ROOT  # noqa: F401
-from wikidata_simpleqa.kelm_generator import KELMTSVGenerator
+from wikidata_simpleqa.kelm_generator import KELMTSVGenerator, _normalize_date_value, _render_date_answer
 
 
 class FakeWikidataClient:
@@ -111,6 +111,13 @@ class KELMGeneratorTests(unittest.TestCase):
             )
         self.assertEqual(len(generated), 1)
         self.assertIn("entity_grounding_failed", generated[0].notes)
+
+    def test_literal_date_helpers_handle_bc_years(self) -> None:
+        self.assertEqual(_normalize_date_value("01 January 200 BC"), "-200-01-01")
+        self.assertEqual(
+            _render_date_answer("01 January 200 BC", relation_text="inception"),
+            "200 BC",
+        )
 
 
 if __name__ == "__main__":

@@ -17,6 +17,8 @@ from wikidata_simpleqa.template_status import (
     _build_status_detail,
     _resolve_template_status,
     build_template_status_index,
+    read_json,
+    read_jsonl,
     render_template_status_markdown,
 )
 
@@ -124,6 +126,17 @@ class TemplateStatusTests(unittest.TestCase):
         self.assertEqual(row["current_status"], "rejected_only")
         self.assertEqual(row["latest_live_status"], "unproven_no_result")
         self.assertEqual(row["best_known_semantic_status"], "rejected_only")
+
+    def test_artifact_readers_accept_utf8_bom(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            summary_path = root / "summary.json"
+            rejected_path = root / "rejected.jsonl"
+            summary_path.write_text('{"status": "ok"}', encoding="utf-8-sig")
+            rejected_path.write_text('{"rejection_reason": "x"}\n', encoding="utf-8-sig")
+
+            self.assertEqual(read_json(summary_path), {"status": "ok"})
+            self.assertEqual(read_jsonl(rejected_path), [{"rejection_reason": "x"}])
 
     def test_reliability_summary_tracks_pass_rate_and_semantic_repro(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

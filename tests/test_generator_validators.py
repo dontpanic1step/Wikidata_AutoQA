@@ -417,6 +417,64 @@ class GeneratorValidatorTests(unittest.TestCase):
         self.assertEqual(features["triggered_rule"], "keyword_queries:hit_rate_exceeded")
         self.assertEqual(features["queries"][1]["snippet_hits"], 1)
 
+    def test_search_verifier_matches_short_year_date_variants_in_snippets(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "0924-03-03"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Date"
+        client = FakeSearchClient(
+            {
+                "Who directed Example Film?": [],
+                "Example Film director": [
+                    {
+                        "title": "Archived record",
+                        "snippet": "The relevant date was March 3 924.",
+                        "url": "https://example.test/date",
+                    }
+                ],
+            }
+        )
+        passed, features = run_search_based_longtail_verifier(
+            candidate,
+            search_client=client,
+            top_k=5,
+            max_full_question_hit_rate=0.0,
+            max_keyword_hit_rate=0.1,
+            max_overall_hit_rate=0.1,
+        )
+        self.assertFalse(passed)
+        self.assertEqual(features["triggered_rule"], "keyword_queries:hit_rate_exceeded")
+        self.assertEqual(features["queries"][1]["snippet_hits"], 1)
+
+    def test_search_verifier_matches_bc_date_variants_in_snippets(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "200 BC"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Date"
+        client = FakeSearchClient(
+            {
+                "Who directed Example Film?": [],
+                "Example Film director": [
+                    {
+                        "title": "Archived record",
+                        "snippet": "The relevant year was 200 BCE.",
+                        "url": "https://example.test/date",
+                    }
+                ],
+            }
+        )
+        passed, features = run_search_based_longtail_verifier(
+            candidate,
+            search_client=client,
+            top_k=5,
+            max_full_question_hit_rate=0.0,
+            max_keyword_hit_rate=0.1,
+            max_overall_hit_rate=0.1,
+        )
+        self.assertFalse(passed)
+        self.assertEqual(features["triggered_rule"], "keyword_queries:hit_rate_exceeded")
+        self.assertEqual(features["queries"][1]["snippet_hits"], 1)
+
     def test_search_verifier_matches_number_with_comma_in_snippets(self) -> None:
         candidate = make_generated_candidate()
         candidate.answer = "1200"

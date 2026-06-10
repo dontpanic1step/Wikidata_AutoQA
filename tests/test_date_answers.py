@@ -18,9 +18,19 @@ class DateAnswerTests(unittest.TestCase):
             normalize_wikidata_date_literal("1988-01-22T00:00:00Z"),
             "1988-01-22",
         )
+        self.assertEqual(
+            normalize_wikidata_date_literal("+0924-03-03T00:00:00Z"),
+            "924-03-03",
+        )
+        self.assertEqual(
+            normalize_wikidata_date_literal("-0200-01-01T00:00:00Z"),
+            "-200-01-01",
+        )
 
     def test_formats_iso_date_as_month_day_year(self) -> None:
         self.assertEqual(format_iso_date_for_answer("1988-01-22"), "January 22, 1988")
+        self.assertEqual(format_iso_date_for_answer("0924-03-03"), "March 3, 924")
+        self.assertEqual(format_iso_date_for_answer("-0200-01-01"), "January 1, 200 BC")
 
     def test_date_answer_candidate_allows_temporal_answer_hop_label(self) -> None:
         candidate = CandidateFact(

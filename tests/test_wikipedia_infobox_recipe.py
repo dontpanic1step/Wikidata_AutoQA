@@ -32,6 +32,12 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _segment_stream_search_initial_offset,
     _segment_command,
 )
+from wikidata_simpleqa.search_client import (  # noqa: E402
+    DUCKDUCKGO_COOLDOWN_FAILURE_THRESHOLD,
+    DUCKDUCKGO_COOLDOWN_INITIAL_SECONDS,
+    DUCKDUCKGO_COOLDOWN_MAX_SECONDS,
+    DUCKDUCKGO_DDGS_MAX_ATTEMPTS,
+)
 
 
 def _recipe_args(**overrides):
@@ -50,6 +56,14 @@ def _recipe_args(**overrides):
         "small_model_max_tokens": 1200,
         "duckduckgo_top_k": 5,
         "duckduckgo_parallel_queries": 3,
+        "duckduckgo_prefer_ddgs": True,
+        "duckduckgo_ddgs_backend": "auto",
+        "duckduckgo_ddgs_max_attempts": DUCKDUCKGO_DDGS_MAX_ATTEMPTS,
+        "duckduckgo_disable_fallback": [],
+        "duckduckgo_cooldown": True,
+        "duckduckgo_cooldown_failure_threshold": DUCKDUCKGO_COOLDOWN_FAILURE_THRESHOLD,
+        "duckduckgo_cooldown_initial_seconds": DUCKDUCKGO_COOLDOWN_INITIAL_SECONDS,
+        "duckduckgo_cooldown_max_seconds": DUCKDUCKGO_COOLDOWN_MAX_SECONDS,
         "generated_search_query_count": 2,
         "search_longtail_max_full_question_hit_rate": 0.3,
         "search_longtail_max_keyword_hit_rate": 0.3,
@@ -61,6 +75,8 @@ def _recipe_args(**overrides):
         "stream_discovery_max_retries": 5,
         "stream_discovery_retry_backoff_seconds": 10.0,
         "stream_discovery_retry_max_sleep_seconds": 60.0,
+        "stream_reuse_cached_page_count": 0,
+        "stream_reuse_cached_page_used_id_file": [],
         "wikipedia_429_backoff_seconds": 30.0,
         "wikipedia_429_max_backoff_seconds": 300.0,
         "wikipedia_429_recovery_seconds": 120.0,

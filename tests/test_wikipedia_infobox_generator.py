@@ -4091,6 +4091,14 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             ),
             "Date",
         )
+        self.assertEqual(
+            _normalize_answer_type(
+                "Number",
+                "924",
+                "What year was the monastery first mentioned?",
+            ),
+            "Date",
+        )
 
     def test_temporal_question_overrides_mislabeled_era_qualified_year_answer(self) -> None:
         self.assertEqual(

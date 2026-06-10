@@ -9,6 +9,7 @@ from time import perf_counter
 from typing import Any
 
 from .cheap_model_qa import parse_json_object
+from .date_reference import date_answer_variant_strings
 from .entity_normalization import normalize_name
 from .generation_models import GeneratedCandidate
 from .number_reference import extract_number_mentions, format_decimal, get_number_reference_margin, number_margin_hits, parse_number_token
@@ -46,25 +47,6 @@ ALLOW_RELATION_FAMILY_KEYWORDS = {
     "original language",
 }
 
-MONTH_VARIANTS = {
-    "january": ("january", "jan"),
-    "february": ("february", "feb"),
-    "march": ("march", "mar"),
-    "april": ("april", "apr"),
-    "may": ("may",),
-    "june": ("june", "jun"),
-    "july": ("july", "jul"),
-    "august": ("august", "aug"),
-    "september": ("september", "sep", "sept"),
-    "october": ("october", "oct"),
-    "november": ("november", "nov"),
-    "december": ("december", "dec"),
-}
-MONTH_INDEX = {
-    alias: index
-    for index, aliases in enumerate(MONTH_VARIANTS.values(), start=1)
-    for alias in aliases
-}
 POSITIVE_NUMBER_WORDS = {
     0: "zero",
     1: "one",
@@ -111,13 +93,6 @@ COUNTRY_ALIAS_GROUPS = [
     {"united kingdom", "uk", "u k", "great britain", "britain"},
     {"united arab emirates", "uae", "u a e"},
 ]
-ISO_DATE_PATTERN = re.compile(r"^(?P<year>\d{4})-(?P<month>\d{2})-(?P<day>\d{2})$")
-ISO_MONTH_PATTERN = re.compile(r"^(?P<year>\d{4})-(?P<month>\d{2})$")
-LONG_DATE_PATTERN = re.compile(
-    r"^(?P<month>[a-z]+)\s+(?P<day>\d{1,2})\s+(?P<year>\d{4})$"
-)
-
-
 class SearchLongtailVerifierError(RuntimeError):
     """Raised when search long-tail verification fails with audit features."""
 
@@ -125,9 +100,6 @@ class SearchLongtailVerifierError(RuntimeError):
         super().__init__(message)
         self.features = features
         self.original_error = original_error
-DMY_DATE_PATTERN = re.compile(
-    r"^(?P<day>\d{1,2})\s+(?P<month>[a-z]+)\s+(?P<year>\d{4})$"
-)
 INTEGER_PATTERN = re.compile(r"^-?\d+$")
 NUMBER_IN_TEXT_PATTERN = re.compile(r"\b\d[\d,]*\b")
 GENERIC_TABLE_SOURCE_PATTERN = re.compile(
@@ -911,41 +883,11 @@ def _date_variants(value: str) -> set[str]:
     """Return normalized date variants for search matching."""
     normalized = normalize_name(value)
     variants = {normalized} if normalized else set()
-    match = ISO_DATE_PATTERN.fullmatch(value.strip())
-    if match:
-        year = match.group("year")
-        month = int(match.group("month"))
-        day = int(match.group("day"))
-        for month_alias in MONTH_VARIANTS.get(list(MONTH_VARIANTS.keys())[month - 1], ()):
-            variants.add(normalize_name(f"{month_alias} {day} {year}"))
-            variants.add(normalize_name(f"{day} {month_alias} {year}"))
-        variants.add(normalize_name(f"{year} {month} {day}"))
-        return variants
-    match = ISO_MONTH_PATTERN.fullmatch(value.strip())
-    if match:
-        year = match.group("year")
-        month = int(match.group("month"))
-        if 1 <= month <= 12:
-            for month_alias in MONTH_VARIANTS.get(list(MONTH_VARIANTS.keys())[month - 1], ()):
-                variants.add(normalize_name(f"{month_alias} {year}"))
-                variants.add(normalize_name(f"{year} {month_alias}"))
-            variants.add(normalize_name(f"{year} {month}"))
-        return variants
-    for pattern in (LONG_DATE_PATTERN, DMY_DATE_PATTERN):
-        match = pattern.fullmatch(normalized)
-        if not match:
-            continue
-        year = match.group("year")
-        month_name = match.group("month")
-        day = int(match.group("day"))
-        month_number = MONTH_INDEX.get(month_name)
-        if month_number is None:
-            return variants
-        for month_alias in MONTH_VARIANTS.get(list(MONTH_VARIANTS.keys())[month_number - 1], ()):
-            variants.add(normalize_name(f"{month_alias} {day} {year}"))
-            variants.add(normalize_name(f"{day} {month_alias} {year}"))
-        variants.add(normalize_name(f"{year} {month_number} {day}"))
-        return variants
+    variants.update(
+        normalize_name(variant)
+        for variant in date_answer_variant_strings(value)
+        if normalize_name(variant)
+    )
     return variants
 
 

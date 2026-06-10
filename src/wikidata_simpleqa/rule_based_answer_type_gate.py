@@ -10,6 +10,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+from .date_reference import normalize_gate_date_answer
 from .generation_models import GeneratedCandidate
 
 DEFAULT_LEXICON_DIR = Path("cache") / "rule_based_qa_gate"
@@ -50,34 +51,6 @@ PERSON_PREFIX_NAME_PARTICLES = {
     "ibn",
     "mac",
     "mc",
-}
-MONTH_NAMES = {
-    "january": 1,
-    "february": 2,
-    "march": 3,
-    "april": 4,
-    "may": 5,
-    "june": 6,
-    "july": 7,
-    "august": 8,
-    "september": 9,
-    "october": 10,
-    "november": 11,
-    "december": 12,
-}
-MONTH_LABELS = {
-    1: "January",
-    2: "February",
-    3: "March",
-    4: "April",
-    5: "May",
-    6: "June",
-    7: "July",
-    8: "August",
-    9: "September",
-    10: "October",
-    11: "November",
-    12: "December",
 }
 PLACE_SEED_WHITELIST = {
     "abbey",
@@ -558,112 +531,6 @@ def evaluate_place_gate(question: Any, *, place_whitelist: set[str]) -> tuple[bo
             else f"Extracted category is not in the place whitelist: {category}."
         ),
     }
-
-
-def _valid_year(year: int) -> bool:
-    return 1 <= year <= 9999
-
-
-def _valid_month(month: int) -> bool:
-    return 1 <= month <= 12
-
-
-def _valid_day(year: int, month: int, day: int) -> bool:
-    if day < 1:
-        return False
-    days_by_month = {
-        1: 31,
-        2: 29 if (year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)) else 28,
-        3: 31,
-        4: 30,
-        5: 31,
-        6: 30,
-        7: 31,
-        8: 31,
-        9: 30,
-        10: 31,
-        11: 30,
-        12: 31,
-    }
-    return day <= days_by_month.get(month, 0)
-
-
-def _format_year(year: int, era: str = "") -> str:
-    suffix = f" {era.upper()}" if era else ""
-    return f"{year}{suffix}"
-
-
-def _format_full_date(year: int, month: int, day: int, era: str = "") -> str:
-    return f"{MONTH_LABELS[month]} {day}, {_format_year(year, era)}"
-
-
-def _format_month_year(year: int, month: int, era: str = "") -> str:
-    return f"{MONTH_LABELS[month]} {_format_year(year, era)}"
-
-
-def normalize_gate_date_answer(answer: Any) -> str | None:
-    """Return the accepted normalized date answer, or None for mismatch."""
-    text = str(answer or "").strip()
-    if not text:
-        return None
-    text = re.sub(r"\s+", " ", text)
-    year_only = re.fullmatch(r"(?i)(\d{1,4})(?:\s*(bc|bce|ad|ce))?", text)
-    if year_only:
-        year = int(year_only.group(1))
-        era = year_only.group(2) or ""
-        return _format_year(year, era) if _valid_year(year) else None
-    month_names = "|".join(MONTH_NAMES)
-    month_day_year = re.fullmatch(rf"(?i)({month_names})\s+(\d{{1,2}}),?\s+(\d{{1,4}})(?:\s*(bc|bce|ad|ce))?", text)
-    if month_day_year:
-        month = MONTH_NAMES[month_day_year.group(1).lower()]
-        day = int(month_day_year.group(2))
-        year = int(month_day_year.group(3))
-        era = month_day_year.group(4) or ""
-        return _format_full_date(year, month, day, era) if _valid_year(year) and _valid_day(year, month, day) else None
-    day_month_year = re.fullmatch(rf"(?i)(\d{{1,2}})\s+({month_names})\s+(\d{{1,4}})(?:\s*(bc|bce|ad|ce))?", text)
-    if day_month_year:
-        day = int(day_month_year.group(1))
-        month = MONTH_NAMES[day_month_year.group(2).lower()]
-        year = int(day_month_year.group(3))
-        era = day_month_year.group(4) or ""
-        return _format_full_date(year, month, day, era) if _valid_year(year) and _valid_day(year, month, day) else None
-    month_year = re.fullmatch(rf"(?i)({month_names}),?\s+(\d{{1,4}})(?:\s*(bc|bce|ad|ce))?", text)
-    if month_year:
-        month = MONTH_NAMES[month_year.group(1).lower()]
-        year = int(month_year.group(2))
-        era = month_year.group(3) or ""
-        return _format_month_year(year, month, era) if _valid_year(year) else None
-    iso_day = re.fullmatch(r"(\d{1,4})[-/](\d{1,2})[-/](\d{1,2})", text)
-    if iso_day:
-        year = int(iso_day.group(1))
-        month = int(iso_day.group(2))
-        day = int(iso_day.group(3))
-        return (
-            _format_full_date(year, month, day)
-            if _valid_year(year) and _valid_month(month) and _valid_day(year, month, day)
-            else None
-        )
-    us_day = re.fullmatch(r"(\d{1,2})/(\d{1,2})/(\d{1,4})", text)
-    if us_day:
-        month = int(us_day.group(1))
-        day = int(us_day.group(2))
-        year = int(us_day.group(3))
-        return (
-            _format_full_date(year, month, day)
-            if _valid_year(year) and _valid_month(month) and _valid_day(year, month, day)
-            else None
-        )
-    year_month = re.fullmatch(r"(\d{1,4})[-/](\d{1,2})", text)
-    if year_month:
-        year = int(year_month.group(1))
-        month = int(year_month.group(2))
-        return _format_month_year(year, month) if _valid_year(year) and _valid_month(month) else None
-    month_year_numeric = re.fullmatch(r"(\d{1,2})[-/](\d{1,4})", text)
-    if month_year_numeric:
-        month = int(month_year_numeric.group(1))
-        year = int(month_year_numeric.group(2))
-        return _format_month_year(year, month) if _valid_year(year) and _valid_month(month) else None
-    return None
 
 
 def evaluate_date_gate(answer: Any) -> tuple[bool, dict[str, Any]]:

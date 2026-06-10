@@ -8,6 +8,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .date_reference import format_date_answer, format_date_year, parse_date_answer
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .models import CandidateFact
 from .subject_resources import canonical_subject_resource
@@ -352,34 +353,20 @@ def _normalize_name(text: str) -> str:
 
 def _normalize_date_value(text: str) -> str:
     """Return an ISO-like normalized date fallback for literal date answers."""
-    month_map = {
-        "january": "01",
-        "february": "02",
-        "march": "03",
-        "april": "04",
-        "may": "05",
-        "june": "06",
-        "july": "07",
-        "august": "08",
-        "september": "09",
-        "october": "10",
-        "november": "11",
-        "december": "12",
-    }
-    normalized = " ".join(text.split()).replace(",", "")
-    parts = normalized.split()
-    if len(parts) == 3 and parts[1].lower() in month_map:
-        day = parts[0].zfill(2)
-        month = month_map[parts[1].lower()]
-        year = parts[2]
-        return f"{year}-{month}-{day}"
-    if len(parts) == 1 and parts[0].isdigit():
-        return f"{parts[0]}-01-01"
+    parts = parse_date_answer(text)
+    if parts is not None:
+        signed_year = f"-{parts.year}" if parts.era in {"BC", "BCE"} else str(parts.year)
+        return f"{signed_year}-{parts.month or 1:02d}-{parts.day or 1:02d}"
     return "1900-01-01"
 
 
 def _render_date_answer(text: str, *, relation_text: str) -> str:
     """Return a human-readable answer string for one date literal."""
+    date_parts = parse_date_answer(text)
+    if date_parts is not None:
+        if relation_text == "inception":
+            return format_date_year(date_parts)
+        return format_date_answer(date_parts)
     normalized = " ".join(text.split()).replace(",", "")
     parts = normalized.split()
     if relation_text == "inception" and parts:

@@ -30,7 +30,7 @@ def read_jsonl(path: Path) -> list[dict[str, Any]]:
     if not path.exists():
         return []
     records: list[dict[str, Any]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
+    for line in path.read_text(encoding="utf-8-sig").splitlines():
         if line.strip():
             records.append(json.loads(line))
     return records
@@ -40,7 +40,7 @@ def read_json(path: Path) -> dict[str, Any] | None:
     """Read a JSON file if it exists."""
     if not path.exists():
         return None
-    return json.loads(path.read_text(encoding="utf-8"))
+    return json.loads(path.read_text(encoding="utf-8-sig"))
 
 
 def load_review_bundle_proven_map(path: Path) -> dict[str, dict[str, str]]:
