@@ -55,6 +55,7 @@ POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS = (
     ("list", re.compile(r"\blist\b", flags=re.IGNORECASE)),
     ("listed", re.compile(r"\blisted\b", flags=re.IGNORECASE)),
     ("example", re.compile(r"\bexample\b", flags=re.IGNORECASE)),
+    ("infobox", re.compile(r"\binfobox(?:es)?\b", flags=re.IGNORECASE)),
     ("in_the_table", re.compile(r"\bin\s+the\s+table\b", flags=re.IGNORECASE)),
     ("table", re.compile(r"\btable\b", flags=re.IGNORECASE)),
 )
@@ -70,6 +71,7 @@ POST_REWRITE_TIME_INVARIANCE_FORBIDDEN_PATTERNS = (
 ROUTE3_POPULAR_EXACT_ANSWERS = (
     "United States",
     "China",
+    "People's Republic of China",
     "United Kingdom",
     "Russia",
     "Germany",

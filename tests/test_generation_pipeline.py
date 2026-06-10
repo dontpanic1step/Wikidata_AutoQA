@@ -480,6 +480,42 @@ class GenerationPipelineTests(unittest.TestCase):
             "post_rewrite_self_containment_forbidden_phrase:table",
         )
 
+    def test_process_generated_candidates_rejects_infobox_marker_rewrite_before_search(self) -> None:
+        candidate = make_route3_candidate(answer="Harbor Guild", answer_type="Other")
+
+        class InfoboxRewriteClient:
+            def rewrite_question(self, payload: dict) -> dict:
+                return {
+                    "rewritten_question": "Which infobox names the organization for Harbor Lights?",
+                    "search_queries": ["infobox organization"],
+                    "discard_reason": None,
+                }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = process_generated_candidates(
+                [candidate],
+                settings=Settings(
+                    target_time="2020",
+                    pilot_total=1,
+                    output_path=Path(tmpdir) / "accepted.jsonl",
+                    rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                    rewrite_enabled=True,
+                ),
+                search_client=ErrorSearchClient(),
+                rewrite_client=InfoboxRewriteClient(),
+            )
+
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+        self.assertEqual(
+            result.rejected[0]["rejection_rule"],
+            "post_rewrite_self_containment_forbidden_phrase:infobox",
+        )
+        self.assertEqual(
+            result.rejected[0]["source_metadata"]["post_rewrite_self_containment_failure_reason"],
+            "post_rewrite_self_containment_forbidden_phrase:infobox",
+        )
+
     def test_process_generated_candidates_rejects_answer_scope_ambiguous_rewrite_before_search(self) -> None:
         class ScopeRewriteClient:
             def __init__(self, rewritten_question: str) -> None:
@@ -719,7 +755,14 @@ class GenerationPipelineTests(unittest.TestCase):
         )
 
     def test_route3_rejects_popular_continent_ocean_and_city_answers(self) -> None:
-        for answer in ("Asia", "Pacific Ocean", "New York", "New York City", "Los Angeles"):
+        for answer in (
+            "People's Republic of China",
+            "Asia",
+            "Pacific Ocean",
+            "New York",
+            "New York City",
+            "Los Angeles",
+        ):
             with self.subTest(answer=answer):
                 candidate = make_route3_candidate(
                     answer=answer,
@@ -750,6 +793,7 @@ class GenerationPipelineTests(unittest.TestCase):
             "Antarctica",
             "Asia",
             "Australia",
+            "People's Republic of China",
             "Europe",
             "North America",
             "Oceania",

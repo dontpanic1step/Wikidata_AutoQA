@@ -133,6 +133,46 @@ class RuleBasedQAGateTests(unittest.TestCase):
             self.assertEqual(details["marker_words"], expected_markers)
             self.assertEqual(details["name_particle_words"], expected_particles)
 
+    def test_person_gate_counts_expanded_name_particles_as_name_tokens(self) -> None:
+        examples = [
+            ("Zahid Al-Sheikh", {"zahid", "al", "sheikh"}, {"sheikh"}, ["zahid"], ["al"]),
+            ("Osama bin Laden", {"bin"}, set(), [], ["bin"]),
+            ("Fatima bint Muhammad", {"bint"}, set(), [], ["bint"]),
+            ("Abd al-Rahman", {"abd", "al"}, set(), [], ["abd", "al"]),
+            ("Abu Bakr", {"abu"}, set(), [], ["abu"]),
+            ("Ibn Sina", {"ibn"}, set(), [], ["ibn"]),
+            ("Dafydd ap Gwilym", {"ap"}, set(), [], ["ap"]),
+            ("Af Thomas", {"af"}, set(), [], ["af"]),
+            ("John Mc Cain", {"mc"}, set(), [], ["mc"]),
+            ("Mac Cain", {"mac"}, set(), [], ["mac"]),
+            ("El Greco", {"el"}, set(), [], ["el"]),
+        ]
+
+        for answer, common_words, common_names, expected_markers, expected_particles in examples:
+            matched, details = evaluate_person_gate(
+                _record(answer=answer),
+                common_words=common_words,
+                common_names=common_names,
+                threshold=0.5,
+            )
+
+            self.assertTrue(matched, answer)
+            self.assertEqual(details["marker_words"], expected_markers)
+            self.assertEqual(details["name_particle_words"], expected_particles)
+
+    def test_person_gate_only_counts_expanded_particles_in_name_positions(self) -> None:
+        for answer in ("Brown Al", "Al"):
+            matched, details = evaluate_person_gate(
+                _record(answer=answer),
+                common_words={"al"},
+                common_names=set(),
+                threshold=0.5,
+            )
+
+            self.assertFalse(matched, answer)
+            self.assertEqual(details["marker_words"], ["al"])
+            self.assertEqual(details["name_particle_words"], [])
+
     def test_person_gate_only_counts_exact_middle_name_particles(self) -> None:
         matched, details = evaluate_person_gate(
             _record(answer="De Brown"),
@@ -193,6 +233,18 @@ class RuleBasedQAGateTests(unittest.TestCase):
         self.assertTrue(matched)
         self.assertEqual(details["marker_words"], ["eduard"])
         self.assertEqual(details["name_particle_words"], ["von"])
+
+    def test_pipeline_person_gate_uses_same_expanded_name_particle_rule(self) -> None:
+        matched, details = evaluate_pipeline_person_gate(
+            "Zahid Al-Sheikh",
+            common_words={"zahid", "al", "sheikh"},
+            common_names={"sheikh"},
+            threshold=0.5,
+        )
+
+        self.assertTrue(matched)
+        self.assertEqual(details["marker_words"], ["zahid"])
+        self.assertEqual(details["name_particle_words"], ["al"])
 
     def test_extract_place_category_examples(self) -> None:
         self.assertEqual(
@@ -375,20 +427,30 @@ class RuleBasedQAGateTests(unittest.TestCase):
 
     def test_date_gate_accepts_standard_formats(self) -> None:
         self.assertEqual(normalize_gate_date_answer("May 25, 2026"), "May 25, 2026")
+        self.assertEqual(normalize_gate_date_answer("July 17, 924"), "July 17, 924")
+        self.assertEqual(normalize_gate_date_answer("July 17, 0924"), "July 17, 924")
         self.assertEqual(normalize_gate_date_answer("May 2026"), "May 2026")
+        self.assertEqual(normalize_gate_date_answer("May 924"), "May 924")
         self.assertEqual(normalize_gate_date_answer("May, 2026"), "May 2026")
         self.assertEqual(normalize_gate_date_answer("2026"), "2026")
+        self.assertEqual(normalize_gate_date_answer("0924"), "924")
+        self.assertEqual(normalize_gate_date_answer("200 BC"), "200 BC")
+        self.assertEqual(normalize_gate_date_answer("200 bce"), "200 BCE")
 
     def test_date_gate_normalizes_numeric_formats(self) -> None:
         self.assertEqual(normalize_gate_date_answer("1940-03"), "March 1940")
+        self.assertEqual(normalize_gate_date_answer("924-07"), "July 924")
         self.assertEqual(normalize_gate_date_answer("04-1940"), "April 1940")
         self.assertEqual(normalize_gate_date_answer("2026-05-25"), "May 25, 2026")
+        self.assertEqual(normalize_gate_date_answer("924-07-17"), "July 17, 924")
         self.assertEqual(normalize_gate_date_answer("5/25/2026"), "May 25, 2026")
+        self.assertEqual(normalize_gate_date_answer("7/17/924"), "July 17, 924")
 
     def test_date_gate_rejects_ranges_and_vague_periods(self) -> None:
         self.assertIsNone(normalize_gate_date_answer("2020-2021"))
         self.assertIsNone(normalize_gate_date_answer("late Middle ages"))
         self.assertIsNone(normalize_gate_date_answer("2014-15"))
+        self.assertIsNone(normalize_gate_date_answer("0 BC"))
 
     def test_date_gate_updates_answer_when_normalized(self) -> None:
         output, matched = evaluate_record(
