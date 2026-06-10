@@ -8,6 +8,7 @@ from typing import Iterable
 
 from .constants import MONTH_NAMES, TEMPORAL_PHRASES
 from .entity_normalization import normalize_name
+from .geographic_leakage import question_leaks_geographic_answer_context
 from .models import CandidateFact, DomainTemplate
 from .reasoning import is_multi_hop_reasoning_style, normalize_reasoning_style
 
@@ -216,6 +217,8 @@ def question_leaks_answer(question: str, answer_labels: list[str]) -> bool:
         normalized_answer = normalize_name(answer_label)
         if normalized_answer and normalized_answer in normalized_question:
             return True
+    if question_leaks_geographic_answer_context(question, answer_labels):
+        return True
     return False
 
 

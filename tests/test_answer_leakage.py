@@ -54,6 +54,40 @@ class AnswerLeakageTests(unittest.TestCase):
         question = "Who directed the film Stitch Head?"
         self.assertFalse(question_leaks_answer(question, ["...", ""]))
 
+    def test_rejects_country_demonym_answer_leakage(self) -> None:
+        self.assertTrue(
+            question_leaks_answer(
+                "Which writer from Norway wrote the novel?",
+                ["Norwegian"],
+            )
+        )
+        self.assertTrue(
+            question_leaks_answer(
+                "Which Norwegian writer wrote the novel?",
+                ["Norway"],
+            )
+        )
+
+    def test_rejects_country_city_answer_leakage(self) -> None:
+        self.assertTrue(
+            question_leaks_answer(
+                "Which country is New York in?",
+                ["United States"],
+            )
+        )
+        self.assertTrue(
+            question_leaks_answer(
+                "Which city in China hosted the exhibition?",
+                ["Shanghai"],
+            )
+        )
+        self.assertTrue(
+            question_leaks_answer(
+                "Which city in the US hosted the exhibition?",
+                ["New York"],
+            )
+        )
+
     def test_rejects_country_question_when_subject_title_mentions_subdivision(self) -> None:
         candidate = self.make_country_candidate()
         self.assertTrue(question_leaks_location_answer_context(candidate.canonical_question, candidate))

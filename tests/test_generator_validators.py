@@ -213,6 +213,19 @@ class GeneratorValidatorTests(unittest.TestCase):
         )
         self.assertEqual(leaked_reason, "answer_leakage")
 
+    def test_question_surface_rejects_geographic_context_answer_leakage(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "United States"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Place"
+        candidate.answer_entity.name = "United States"
+        reason = validate_question_surface(
+            "Which country is New York associated with in Example Film?",
+            candidate,
+            cutoff_year=2025,
+        )
+        self.assertEqual(reason, "answer_leakage")
+
     def test_search_verifier_rejects_answer_in_title(self) -> None:
         candidate = make_generated_candidate()
         client = FakeSearchClient(

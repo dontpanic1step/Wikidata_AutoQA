@@ -176,7 +176,7 @@ Shared surface validation must reject:
 
 Lost subject anchors are recorded as non-blocking `surface_validation_warnings` because they produced too many false positives in Route 3 pilot review.
 
-For numeric answers, answer-leakage validation must compare extracted normalized number values from the question and reference answer rather than raw substring containment. This prevents false positives such as answer `6` being treated as leaked by the year `2016`.
+For numeric answers, answer-leakage validation must compare extracted normalized number values from the question and reference answer rather than raw substring containment. This prevents false positives such as answer `6` being treated as leaked by the year `2016`. For geographic answers, shared answer-leakage validation treats country name/adjective/demonym pairs and country/major-city pairs as bidirectional leakage cues.
 
 Route 3 validation is intentionally limited:
 
