@@ -549,6 +549,7 @@ class WikipediaInfoboxTableGenerator:
     answer_type_mode: str = DEFAULT_ROUTE3_ANSWER_TYPE_MODE
     page_archive_dir: Path | None = DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR
     page_archive_paths_by_url: dict[str, Path] | None = None
+    read_only_page_archive_paths: tuple[Path, ...] = ()
     pageview_prefilter_enabled: bool = DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED
     pageview_window_months: int = DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS
     max_monthly_average_pageviews: float = DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS
@@ -573,6 +574,11 @@ class WikipediaInfoboxTableGenerator:
         )
         self.infobox_max_removed_row_rate = max(0.0, min(1.0, float(self.infobox_max_removed_row_rate)))
         self.infobox_min_remaining_rows = max(0, int(self.infobox_min_remaining_rows))
+        self.read_only_page_archive_paths = tuple(
+            Path(path)
+            for path in self.read_only_page_archive_paths or ()
+            if str(path).strip()
+        )
         if (
             self.page_archive_dir == DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR
             and not isinstance(self.wikipedia_client, WikipediaClient)
@@ -655,18 +661,26 @@ class WikipediaInfoboxTableGenerator:
         tables = extract_wikipedia_tables(html, page_title=title)
         prose_text = extract_non_table_prose(html)
         timings["table_parse_seconds"] = _elapsed(parse_start)
-        archive_metadata = _update_route3_page_archive(
-            archive_path,
-            archive_payload,
-            source_url=url,
-            title=title,
-            canonical_url=canonical_url,
-            parse_payload=parse_payload,
-            html=html,
-            prose_text=prose_text,
-            tables=tables,
-            archive_fetch_status=archive_fetch_status,
-        )
+        archive_read_only = self._page_archive_path_is_read_only(archive_path)
+        if archive_read_only:
+            archive_metadata = _read_only_route3_page_archive_metadata(
+                archive_path,
+                archive_payload,
+                archive_fetch_status=archive_fetch_status,
+            )
+        else:
+            archive_metadata = _update_route3_page_archive(
+                archive_path,
+                archive_payload,
+                source_url=url,
+                title=title,
+                canonical_url=canonical_url,
+                parse_payload=parse_payload,
+                html=html,
+                prose_text=prose_text,
+                tables=tables,
+                archive_fetch_status=archive_fetch_status,
+            )
         return WikipediaPageTables(
             source_url=url,
             title=title,
@@ -756,6 +770,16 @@ class WikipediaInfoboxTableGenerator:
             if explicit_path is not None:
                 return Path(explicit_path)
         return _route3_page_archive_path(self.page_archive_dir, url)
+
+    def _page_archive_path_is_read_only(self, path: Path | None) -> bool:
+        """Return whether this archive path must not be modified."""
+        path_key = _route3_archive_path_key(path)
+        if not path_key:
+            return False
+        return any(
+            path_key == _route3_archive_path_key(read_only_path)
+            for read_only_path in self.read_only_page_archive_paths
+        )
 
     def _candidate_from_page(
         self,
@@ -2222,6 +2246,42 @@ def _load_route3_page_archive(path: Path | None) -> tuple[dict[str, Any], bool]:
     return payload if isinstance(payload, dict) else {}, True
 
 
+def _route3_archive_path_key(path: Path | None) -> str:
+    """Return a stable comparison key for an archive path."""
+    if path is None:
+        return ""
+    try:
+        return str(Path(path).resolve(strict=False)).casefold()
+    except OSError:
+        return str(Path(path)).casefold()
+
+
+def _read_only_route3_page_archive_metadata(
+    path: Path | None,
+    archive_payload: dict[str, Any],
+    *,
+    archive_fetch_status: dict[str, Any],
+) -> dict[str, Any]:
+    """Return archive audit metadata without writing a reused archive."""
+    payload = dict(archive_payload) if isinstance(archive_payload, dict) else {}
+    archive_sha256 = ""
+    if path is not None and path.exists():
+        try:
+            archive_sha256 = _sha256_text(path.read_text(encoding="utf-8").rstrip("\n"))
+        except OSError:
+            archive_sha256 = ""
+    archive_info = {
+        "archive_path": str(path) if path is not None else "",
+        "archive_enabled": path is not None,
+        "archive_sha256": archive_sha256,
+        "updated_at": str(payload.get("updated_at", "") or ""),
+        "page_id": _positive_route3_page_id(payload.get("page_id")),
+        "archive_read_only": True,
+    }
+    archive_info.update(archive_fetch_status)
+    return archive_info
+
+
 def _update_route3_page_archive(
     path: Path | None,
     archive_payload: dict[str, Any],
@@ -2274,6 +2334,17 @@ def _merge_route3_page_archive(page: WikipediaPageTables, updates: dict[str, Any
     archive = page.route3_page_archive if isinstance(page.route3_page_archive, dict) else {}
     path_text = str(archive.get("archive_path") or "").strip()
     if not path_text:
+        return
+    if bool(archive.get("archive_read_only")):
+        merged = dict(archive)
+        pageview_prefilter = updates.get("pageview_prefilter", {})
+        if isinstance(pageview_prefilter, dict):
+            merged["pageview_decision"] = str(pageview_prefilter.get("decision", "") or "")
+            merged["pageview_status"] = str(pageview_prefilter.get("status", "") or "")
+            pageview_payload = pageview_prefilter.get("pageview", {})
+            if isinstance(pageview_payload, dict):
+                merged["pageview_fetch_status"] = str(pageview_payload.get("fetch_status", "") or "")
+        page.route3_page_archive = merged
         return
     path = Path(path_text)
     payload, _ = _load_route3_page_archive(path)

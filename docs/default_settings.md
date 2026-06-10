@@ -182,7 +182,7 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | Rerun pool | enabled | Recovered in-progress IDs and transient generation failures are retried before fresh IDs. |
 | `--stream-reuse-cached-page-count` | `0` | Number of already parsed Route 3 page archives to process before fresh streaming discovery. `0` disables cache reuse. |
 | `--stream-reuse-cached-page-used-id-file` | `[]` | Optional helper-generated used-ID JSON/JSONL/plain files for cache reuse. Page-only and triadic entries are both treated as strict numeric page-level exclusions. |
-| Cached page reuse source | `--route3-page-archive-dir` | Reusable archives must have a positive numeric `page_id` and cached `parse_payload` or `parsed_html`, then continue through the shared pageview/table scoring/generation/filtering path. |
+| Cached page reuse source | `--route3-page-archive-dir` | Reusable archives must have a positive numeric `page_id` and cached `parse_payload` or `parsed_html`, then continue through the shared pageview/table scoring/generation/filtering path as read-only archive inputs. |
 | Domain/subdomain policy | optional | Streaming does not reject only because no planned domain/subdomain exists. |
 
 ## Route 3 Model And Filters

@@ -9,6 +9,7 @@ import random
 import tempfile
 import unittest
 from pathlib import Path
+from threading import Lock, Semaphore
 from types import SimpleNamespace
 from urllib.error import URLError
 from unittest.mock import patch
@@ -48,6 +49,7 @@ if str(SCRIPTS) not in sys.path:
 
 from run_wikipedia_infobox_pipeline import (  # noqa: E402
     EndpointResumeState,
+    StreamingConcurrencyContext,
     _accepted_output_records,
     _apply_big_batch_mode,
     _candidate_from_record,
@@ -59,6 +61,7 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _load_stream_excluded_page_ids,
     _load_url_entries,
     _load_urls,
+    _process_one_stream_page_id,
     _remaining_after_endpoint,
     _record_reasoning_type,
     _rejected_output_records,
@@ -957,7 +960,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(candidate.source_metadata["route3_page_archive"]["page_id"], 987654)
         self.assertEqual(archive_payload["page_id"], 987654)
 
-    def test_route3_page_archive_backfills_missing_pageview_without_refetching_parse(self) -> None:
+    def test_read_only_cached_page_archive_fetches_missing_pageview_without_writing_archive(self) -> None:
         class BackfillWikipediaClient(FakeWikipediaClient):
             def __init__(self) -> None:
                 self.parse_calls = 0
@@ -985,6 +988,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             )
             first = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
             archive_path = Path(first.source_metadata["route3_page_archive"]["archive_path"])
+            archive_before = archive_path.read_text(encoding="utf-8")
 
             second_client = BackfillWikipediaClient()
             second_generator = WikipediaInfoboxTableGenerator(
@@ -995,16 +999,132 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 table_filter_modes=(),
                 page_archive_dir=Path(tmpdir),
                 pageview_prefilter_enabled=True,
+                read_only_page_archive_paths=(archive_path,),
             )
             second = second_generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
             archive_exists = archive_path.exists()
+            archive_after = archive_path.read_text(encoding="utf-8")
 
         self.assertTrue(archive_exists)
+        self.assertEqual(archive_after, archive_before)
         self.assertEqual(second_client.parse_calls, 0)
         self.assertEqual(second_client.pageview_calls, 1)
         self.assertEqual(second.source_metadata["pageview_prefilter"]["monthly_average"], 20.0)
+        self.assertTrue(second.source_metadata["route3_page_archive"]["archive_read_only"])
         self.assertEqual(second.source_metadata["route3_page_archive"]["parse_fetch_status"], "archive_hit")
         self.assertEqual(second.source_metadata["route3_page_archive"]["pageview_fetch_status"], "fetched")
+
+    def test_stream_cached_page_archive_reuse_does_not_write_back_fetched_pageview(self) -> None:
+        class CachedArchiveWikipediaClient(FakeWikipediaClient):
+            def __init__(self) -> None:
+                self.parse_calls = 0
+                self.pageview_calls = 0
+                self.request_events = []
+
+            def fetch_parse(self, title_or_url: str) -> dict:
+                self.parse_calls += 1
+                raise AssertionError("cached archive reuse should not fetch parse payload")
+
+            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
+                self.pageview_calls += 1
+                return _pageview_payload(5001)
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            archive_path = root / "page_cached.json"
+            source_url = "https://en.wikipedia.org/w/index.php?pageid=2468"
+            archive_path.write_text(
+                json.dumps(
+                    {
+                        "source_url": source_url,
+                        "page_id": 2468,
+                        "title": "2026 FIFA World Cup",
+                        "canonical_url": "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup",
+                        "parse_payload": {
+                            "parse": {
+                                "title": "2026 FIFA World Cup",
+                                "pageid": 2468,
+                                "text": FIXTURE_HTML,
+                            }
+                        },
+                        "parsed_html": FIXTURE_HTML,
+                    },
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+            archive_before = archive_path.read_text(encoding="utf-8")
+            args = SimpleNamespace(
+                generated_search_query_count=3,
+                enable_rest_summary_fallback=False,
+                min_table_score=-999.0,
+                route3_reasoning_type=["single_fact"],
+                route3_answer_type=[],
+                route3_extra_prompt=[],
+                route3_table_filter_mode=[],
+                route3_table_source_type=["infobox", "wikitable"],
+                route3_prose_leakage_scoring=True,
+                route3_llm_choose_table=False,
+                route3_answer_type_mode="single",
+                route3_page_archive_dir=root,
+                route3_pageview_prefilter=True,
+                route3_pageview_window_months=12,
+                route3_max_monthly_average_pageviews=5000.0,
+                route3_max_underfilled_monthly_pageviews=10000.0,
+                route3_pageview_unavailable_policy="allow",
+                route3_infobox_max_removed_row_rate=0.6,
+                route3_infobox_min_remaining_rows=5,
+                stream_page_source="table-search",
+                stream_page_id_min=1,
+                stream_page_id_max=999999,
+                stream_random_seed=1,
+                run_group_id="",
+                output=root / "accepted.jsonl",
+                rejected_output=root / "rejected.jsonl",
+            )
+            state = PageIdStreamState.load(root / "state.json")
+            client = CachedArchiveWikipediaClient()
+
+            decision = _process_one_stream_page_id(
+                2468,
+                args=args,
+                settings=Settings(
+                    target_time="2026-05-16",
+                    run_date="2026-05-16",
+                    cutoff_year=2025,
+                    enabled_routes=("route3_wikipedia_infobox",),
+                    rewrite_enabled=False,
+                ),
+                state=state,
+                wikipedia_client=client,
+                search_client=FakeSearchClient(),
+                llm_client=FakeLLMClient(),
+                rewrite_client=None,
+                concurrency=StreamingConcurrencyContext(
+                    commit_lock=Lock(),
+                    wikipedia_semaphore=Semaphore(1),
+                    duckduckgo_semaphore=Semaphore(1),
+                    generation_rewrite_semaphore=Semaphore(1),
+                    second_stage_semaphore=Semaphore(1),
+                ),
+                second_stage_model_clients=None,
+                grading_grader_client=None,
+                source_url=source_url,
+                stream_page_source="cached_page_archive",
+                cached_archive_path=archive_path,
+            )
+            archive_after = archive_path.read_text(encoding="utf-8")
+
+        self.assertEqual(decision["status"], "rejected")
+        self.assertEqual(client.parse_calls, 0)
+        self.assertEqual(client.pageview_calls, 1)
+        self.assertEqual(archive_after, archive_before)
+        record = decision["rejected_records"][0]
+        metadata = record["source_metadata"]
+        self.assertTrue(metadata["route3_page_archive"]["archive_read_only"])
+        self.assertEqual(metadata["route3_page_archive"]["pageview_fetch_status"], "fetched")
+        self.assertEqual(metadata["streaming_discovery"]["page_source"], "cached_page_archive")
+        self.assertEqual(metadata["streaming_discovery"]["cached_archive_path"], str(archive_path))
 
     def test_pageview_prefilter_rejects_high_popularity_before_llm(self) -> None:
         class PopularWikipediaClient(FakeWikipediaClient):

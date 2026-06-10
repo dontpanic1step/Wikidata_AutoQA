@@ -2213,6 +2213,12 @@ def _process_one_stream_page_id(
             pageview_unavailable_policy=args.route3_pageview_unavailable_policy,
             infobox_max_removed_row_rate=args.route3_infobox_max_removed_row_rate,
             infobox_min_remaining_rows=args.route3_infobox_min_remaining_rows,
+            page_archive_paths_by_url={url: cached_archive_path} if cached_archive_path is not None else None,
+            read_only_page_archive_paths=(
+                (cached_archive_path,)
+                if page_source == "cached_page_archive" and cached_archive_path is not None
+                else ()
+            ),
         )
         generated_candidates = generator.generate(
             run_date=settings.run_date,
