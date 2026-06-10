@@ -30,6 +30,9 @@ from run_rule_based_qa_gate import (  # noqa: E402
     run_gate,
     write_grouped_by_answer_type,
 )
+from wikidata_simpleqa.rule_based_answer_type_gate import (  # noqa: E402
+    evaluate_person_gate as evaluate_pipeline_person_gate,
+)
 
 
 def _record(**overrides):
@@ -66,6 +69,130 @@ class RuleBasedQAGateTests(unittest.TestCase):
 
         self.assertTrue(matched)
         self.assertEqual(details["marker_words"], [])
+
+    def test_person_gate_accepts_epithet_names_when_prefix_has_no_markers(self) -> None:
+        common_words = {"the", "great", "unready", "elder", "red", "blue"}
+        common_names = set()
+
+        for answer in ("Alfred the Great", "Æthelred the Unready", "Pieter Bruegel the Elder"):
+            matched, details = evaluate_person_gate(
+                _record(answer=answer),
+                common_words=common_words,
+                common_names=common_names,
+                threshold=0.5,
+            )
+
+            self.assertTrue(matched, answer)
+            self.assertEqual(
+                details["allowed_name_pattern"]["pattern"],
+                "name_prefix_the_capitalized_epithet",
+            )
+
+        matched, details = evaluate_person_gate(
+            _record(answer="The Red"),
+            common_words=common_words,
+            common_names=common_names,
+            threshold=0.5,
+        )
+
+        self.assertFalse(matched)
+        self.assertNotIn("allowed_name_pattern", details)
+
+    def test_person_gate_accepts_roman_numeral_monarch_names(self) -> None:
+        matched, details = evaluate_person_gate(
+            _record(answer="Henry VII"),
+            common_words={"henry", "vii"},
+            common_names={"henry"},
+            threshold=0.5,
+        )
+
+        self.assertTrue(matched)
+        self.assertEqual(
+            details["allowed_name_pattern"]["pattern"],
+            "name_prefix_roman_numeral_suffix",
+        )
+
+    def test_person_gate_counts_middle_name_particles_as_name_tokens(self) -> None:
+        examples = [
+            ("Eduard von Möller", ["eduard"], ["von"]),
+            ("Charles De Gaulle", [], ["de"]),
+            ("Ludovico di Breme", [], ["di"]),
+            ("Anthony van Dyck", [], ["van"]),
+            ("Ludwig van der Waals", [], ["van", "der"]),
+        ]
+
+        for answer, expected_markers, expected_particles in examples:
+            matched, details = evaluate_person_gate(
+                _record(answer=answer),
+                common_words={"eduard", "von", "de", "di", "van", "der"},
+                common_names=set(),
+                threshold=0.5,
+            )
+
+            self.assertTrue(matched, answer)
+            self.assertEqual(details["marker_words"], expected_markers)
+            self.assertEqual(details["name_particle_words"], expected_particles)
+
+    def test_person_gate_only_counts_exact_middle_name_particles(self) -> None:
+        matched, details = evaluate_person_gate(
+            _record(answer="De Brown"),
+            common_words={"de"},
+            common_names=set(),
+            threshold=0.5,
+        )
+
+        self.assertFalse(matched)
+        self.assertEqual(details["marker_words"], ["de"])
+        self.assertEqual(details["name_particle_words"], [])
+
+        matched, details = evaluate_person_gate(
+            _record(answer="Dimension Brown"),
+            common_words={"dimension"},
+            common_names=set(),
+            threshold=0.5,
+        )
+
+        self.assertFalse(matched)
+        self.assertEqual(details["marker_words"], ["dimension"])
+        self.assertEqual(details["name_particle_words"], [])
+
+    def test_person_gate_counts_no_name_particles_when_more_than_two_are_present(self) -> None:
+        matched, details = evaluate_person_gate(
+            _record(answer="John van der de Meer"),
+            common_words={"van", "der", "de"},
+            common_names=set(),
+            threshold=0.5,
+        )
+
+        self.assertFalse(matched)
+        self.assertEqual(details["marker_words"], ["van", "der", "de"])
+        self.assertEqual(details["name_particle_words"], [])
+
+    def test_pipeline_person_gate_uses_same_epithet_exception(self) -> None:
+        matched, details = evaluate_pipeline_person_gate(
+            "Alfred the Great",
+            common_words={"the", "great"},
+            common_names=set(),
+            threshold=0.5,
+        )
+
+        self.assertTrue(matched)
+        self.assertEqual(
+            details["allowed_name_pattern"]["pattern"],
+            "name_prefix_the_capitalized_epithet",
+        )
+
+    def test_pipeline_person_gate_uses_same_middle_name_particle_rule(self) -> None:
+        matched, details = evaluate_pipeline_person_gate(
+            "Eduard von Möller",
+            common_words={"eduard", "von"},
+            common_names=set(),
+            threshold=0.5,
+        )
+
+        self.assertTrue(matched)
+        self.assertEqual(details["marker_words"], ["eduard"])
+        self.assertEqual(details["name_particle_words"], ["von"])
 
     def test_extract_place_category_examples(self) -> None:
         self.assertEqual(

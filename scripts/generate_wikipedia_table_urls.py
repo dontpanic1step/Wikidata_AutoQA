@@ -944,7 +944,7 @@ def score_url_candidate(
     html = str(parse_body.get("text", "")).strip()
     if not title or not html:
         return None
-    tables = extract_wikipedia_tables(html)
+    tables = extract_wikipedia_tables(html, page_title=title)
     if not tables:
         return None
     first_paragraph = ""

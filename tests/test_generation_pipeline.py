@@ -10,6 +10,7 @@ import tempfile
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.generation_pipeline import (
+    ROUTE3_POPULAR_EXACT_ANSWERS,
     _apply_number_reference_margin,
     _build_route_rewrite_payload,
     process_generated_candidates,
@@ -479,6 +480,78 @@ class GenerationPipelineTests(unittest.TestCase):
             "post_rewrite_self_containment_forbidden_phrase:table",
         )
 
+    def test_process_generated_candidates_rejects_answer_scope_ambiguous_rewrite_before_search(self) -> None:
+        class ScopeRewriteClient:
+            def __init__(self, rewritten_question: str) -> None:
+                self.rewritten_question = rewritten_question
+
+            def rewrite_question(self, payload: dict) -> dict:
+                return {
+                    "rewritten_question": self.rewritten_question,
+                    "search_queries": ["ambiguous scope query"],
+                    "discard_reason": None,
+                }
+
+        for marker, rewritten_question in (
+            ("meaning", "What is the meaning of Harbor Lights?"),
+            ("genre", "What genre is Harbor Lights?"),
+        ):
+            with self.subTest(marker=marker):
+                source_candidate = make_candidate()
+                source_candidate.source_metadata["stable_answer_override"] = True
+                candidate = GeneratedCandidate(
+                    source_type="test",
+                    generation_route="route2_wikidata_wikipedia_hybrid",
+                    question="Who directed the film Harbor Lights?",
+                    canonical_question="Who directed the film Harbor Lights?",
+                    answer="Jane Doe",
+                    answer_aliases=["J. Doe"],
+                    subject_entity=EntityReference(
+                        name="Harbor Lights",
+                        qid="Q1",
+                        wikipedia_title="Harbor_Lights",
+                        url="https://en.wikipedia.org/wiki/Harbor_Lights",
+                    ),
+                    answer_entity=EntityReference(name="Jane Doe", qid="Q2"),
+                    relation_or_claim="director",
+                    evidence=EvidenceRecord(
+                        text="Harbor Lights is a 2020 drama film directed by Jane Doe.",
+                        url="https://en.wikipedia.org/wiki/Harbor_Lights",
+                        source_title="Harbor Lights",
+                        retrieved_at="2026-05-12",
+                    ),
+                    question_family="who_directed_film",
+                    answer_type="Person",
+                    topic="Arts and Media",
+                    target_time="2020",
+                    source_template_domain="film_director",
+                    source_metadata={"stable_answer_override": True},
+                    source_candidate=source_candidate,
+                )
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    result = process_generated_candidates(
+                        [candidate],
+                        settings=Settings(
+                            target_time="2020",
+                            pilot_total=1,
+                            output_path=Path(tmpdir) / "accepted.jsonl",
+                            rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                            rewrite_enabled=True,
+                        ),
+                        search_client=ErrorSearchClient(),
+                        rewrite_client=ScopeRewriteClient(rewritten_question),
+                    )
+
+                expected_reason = f"post_rewrite_answer_scope_ambiguous_phrase:{marker}"
+                self.assertEqual(result.accepted, [])
+                self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+                self.assertEqual(result.rejected[0]["rejection_rule"], expected_reason)
+                self.assertEqual(
+                    result.rejected[0]["source_metadata"]["post_rewrite_answer_scope_ambiguity_failure_reason"],
+                    expected_reason,
+                )
+
     def test_process_generated_candidates_rejects_time_invariant_rewrite_before_search(self) -> None:
         source_candidate = make_candidate()
         source_candidate.source_metadata["stable_answer_override"] = True
@@ -644,6 +717,58 @@ class GenerationPipelineTests(unittest.TestCase):
             result.rejected[0]["source_metadata"]["post_rewrite_answer_popularity_failure_reason"],
             "answer_too_popular:United States",
         )
+
+    def test_route3_rejects_popular_continent_ocean_and_city_answers(self) -> None:
+        for answer in ("Asia", "Pacific Ocean", "New York", "New York City", "Los Angeles"):
+            with self.subTest(answer=answer):
+                candidate = make_route3_candidate(
+                    answer=answer,
+                    answer_type="Place",
+                    question="In which place was the Harbor Lights agreement signed?",
+                )
+
+                with tempfile.TemporaryDirectory() as tmpdir:
+                    result = process_generated_candidates(
+                        [candidate],
+                        settings=Settings(
+                            target_time="2020",
+                            pilot_total=1,
+                            output_path=Path(tmpdir) / "accepted.jsonl",
+                            rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                        ),
+                        search_client=ErrorSearchClient(),
+                        rewrite_client=None,
+                    )
+
+                self.assertEqual(result.accepted, [])
+                self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
+                self.assertEqual(result.rejected[0]["rejection_rule"], f"answer_too_popular:{answer}")
+
+    def test_route3_popular_answer_marker_list_includes_global_places(self) -> None:
+        expected = {
+            "Africa",
+            "Antarctica",
+            "Asia",
+            "Australia",
+            "Europe",
+            "North America",
+            "Oceania",
+            "South America",
+            "Arctic Ocean",
+            "Atlantic Ocean",
+            "Indian Ocean",
+            "Pacific Ocean",
+            "Southern Ocean",
+            "New York",
+            "New York City",
+            "London",
+            "Paris",
+            "Tokyo",
+            "Beijing",
+            "Los Angeles",
+        }
+
+        self.assertTrue(expected.issubset(set(ROUTE3_POPULAR_EXACT_ANSWERS)))
 
     def test_route3_popular_answer_guard_requires_exact_answer_match(self) -> None:
         for answer in ("United States Postal Service", "China (band)"):

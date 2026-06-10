@@ -82,7 +82,7 @@ FIXTURE_HTML = """
 <div class="mw-parser-output">
 <p>The 2026 FIFA World Cup is the 23rd FIFA World Cup. Table capacities are not listed in prose. Example event metadata names Jane Doe as a sample host.</p>
 <table class="infobox vevent">
-  <tr><th colspan="2">Example event</th></tr>
+  <tr><th colspan="2">2026 FIFA World Cup</th></tr>
   <tr><th>Edition</th><td>23rd</td></tr>
   <tr><th>Example host</th><td>Jane Doe</td></tr>
   <tr><th>Format</th><td>International tournament</td></tr>
@@ -103,6 +103,21 @@ NO_PARAGRAPH_FIXTURE_HTML = FIXTURE_HTML.replace(
     "<p>The 2026 FIFA World Cup is the 23rd FIFA World Cup. Table capacities are not listed in prose. Example event metadata names Jane Doe as a sample host.</p>",
     "",
 )
+
+EOS_TITLE_ROW_HTML = """
+<div class="mw-parser-output">
+<table class="infobox">
+  <tr><th colspan="2"><i>Eos</i></th></tr>
+  <tr><td colspan="2">Personification of the Dawn</td></tr>
+  <tr><th>Ancient Greek</th><td>Eos</td></tr>
+  <tr><th>Abode</th><td>Sky</td></tr>
+  <tr><th>Animals</th><td>Cicada, horse</td></tr>
+  <tr><th>Symbol</th><td>Saffron, cloak, roses</td></tr>
+  <tr><th>Parents</th><td>Hyperion and Theia</td></tr>
+</table>
+<p><b>Eos</b> is the Greek goddess and personification of the dawn.</p>
+</div>
+"""
 
 
 class FakeWikipediaClient:
@@ -125,6 +140,26 @@ class FakeWikipediaClient:
                 "The 2026 FIFA World Cup is scheduled to be the 23rd FIFA World Cup, "
                 "a quadrennial international men's soccer championship."
             ),
+        }
+
+
+class FakeEosWikipediaClient:
+    """Fake Wikipedia client returning an Eos-style title-row infobox."""
+
+    request_events: list[dict] = []
+
+    def fetch_parse(self, title_or_url: str) -> dict:
+        return {
+            "parse": {
+                "title": "Eos",
+                "text": EOS_TITLE_ROW_HTML,
+            }
+        }
+
+    def fetch_summary(self, title: str) -> dict:
+        return {
+            "title": title,
+            "extract": "Eos is the Greek goddess and personification of the dawn.",
         }
 
 
@@ -173,6 +208,25 @@ class FakeSingleFactLLMClient(FakeLLMClient):
           "reasoning_type": "single_fact",
           "source_table": 1,
           "derivation_summary": "Read the Edition field from the infobox.",
+          "discard_reason": null
+        }"""
+
+
+class FakeEosLLMClient(FakeLLMClient):
+    """Fake Route 3 output for an Eos infobox prompt."""
+
+    def complete_text(self, prompt: str) -> str:
+        self.prompts.append(prompt)
+        return """{
+          "question": "What is Eos's abode?",
+          "answer": "Sky",
+          "answer_type": "Other",
+          "answer_aliases": [],
+          "search_queries": [
+            "Eos abode infobox"
+          ],
+          "reasoning_type": "single_fact",
+          "derivation_summary": "Read the Abode field from the infobox.",
           "discard_reason": null
         }"""
 
@@ -1793,7 +1847,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(tables[0].table_type, "infobox")
         self.assertEqual(tables[0].row_dicts, [])
         self.assertIn("| Column 1 | Column 2 |", tables[0].markdown)
-        self.assertIn("| Example event |  |", tables[0].markdown)
+        self.assertIn("| 2026 FIFA World Cup |  |", tables[0].markdown)
         self.assertIn("| Edition | 23rd |", tables[0].markdown)
         self.assertIn("| Example host | Jane Doe |", tables[0].markdown)
         self.assertEqual(tables[1].caption, "List of tournament venues")
@@ -1802,6 +1856,48 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("| Venue | City | Capacity |", tables[1].markdown)
         self.assertIn("| AT&T Stadium | Arlington | 80,000 |", tables[1].markdown)
         self.assertFalse(tables[1].structure["legacy_row_dict_parser_enabled"])
+
+    def test_infobox_recognition_keeps_only_first_page_start_title_match(self) -> None:
+        html = """
+        <div class="mw-parser-output">
+        <table class="infobox hrecipe">
+        <caption><i>Scallion</i></caption>
+        <tr><td colspan="2">A bundle of red scallions</td></tr>
+        <tr><th>Alternative names</th><td>green onions, spring onions</td></tr>
+        </table>
+        <p><b>Scallions</b> are edible vegetables.</p>
+        <h2>Culinary</h2>
+        <p>Later culinary prose introduces a nutrition panel.</p>
+        <table class="infobox nowrap">
+        <caption>Onions, spring or scallions (includes tops and bulb), raw (Daily Value)</caption>
+        <tr><td colspan="2">Nutritional value per 100 g</td></tr>
+        <tr><th>Energy</th><td>32 kcal</td></tr>
+        <tr><th>Water</th><td>89.8 g</td></tr>
+        </table>
+        </div>
+        """
+
+        tables = extract_wikipedia_tables(html, page_title="Scallion")
+
+        self.assertEqual(len(tables), 1)
+        self.assertEqual(tables[0].table_type, "infobox")
+        self.assertEqual(tables[0].caption, "Scallion")
+        self.assertNotIn("Nutritional value", tables[0].markdown)
+        recognition = tables[0].structure["infobox_recognition"]
+        self.assertTrue(recognition["at_page_start"])
+        self.assertEqual(recognition["title_source"], "caption")
+
+    def test_infobox_title_row_matching_page_title_is_promoted_to_caption(self) -> None:
+        tables = extract_wikipedia_tables(EOS_TITLE_ROW_HTML, page_title="Eos")
+
+        self.assertEqual(len(tables), 1)
+        table = tables[0]
+        self.assertEqual(table.caption, "Eos")
+        self.assertEqual(table.rows[0][0], "Personification of the Dawn")
+        self.assertNotIn("| Eos |  |", table.markdown)
+        recognition = table.structure["infobox_recognition"]
+        self.assertTrue(recognition["title_matches_page_title"])
+        self.assertEqual(recognition["title_source"], "first_row")
 
     def test_table_rows_do_not_duplicate_headers(self) -> None:
         html = """
@@ -2634,6 +2730,30 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertNotIn("do not copy anchor text mechanically", prompt)
         self.assertNotIn("Treat curated list pages", prompt)
 
+    def test_infobox_promoted_caption_flows_into_route3_metadata_and_prompt(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Eos"],
+            wikipedia_client=FakeEosWikipediaClient(),
+            llm_client=FakeEosLLMClient(),
+            record_limit=1,
+            table_filter_modes=(),
+            min_table_score=-999.0,
+            table_source_types=("infobox",),
+        )
+
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        selected_table = candidate.source_metadata["selected_source_table"]
+        prompt = generator.llm_client.prompts[0]
+        table_content = prompt.partition("### table content")[2]
+
+        self.assertEqual(selected_table["caption"], "Eos")
+        self.assertNotIn("| Eos |  |", selected_table["markdown"])
+        self.assertNotIn("| Eos |  |", table_content)
+        self.assertEqual(
+            selected_table["structure"]["infobox_recognition"]["title_source"],
+            "first_row",
+        )
+
     def test_route3_can_restrict_generation_to_wikitable_source_tables(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
             urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
@@ -2799,7 +2919,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <div class="mw-parser-output">
                         <p>Infobox only example is a settled historical profile.</p>
                         <table class="infobox">
-                        <tr><th colspan="2">Profile</th></tr>
+                        <tr><th colspan="2">Infobox only example</th></tr>
                         <tr><th>Field</th><td>Archive</td></tr>
                         <tr><th>Known for</th><td>Stable record</td></tr>
                         </table>
@@ -3177,7 +3297,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <div class="mw-parser-output">
                         <p>Sparse infobox image example is a settled historical profile.</p>
                         <table class="infobox">
-                        <tr><th colspan="2">Profile</th></tr>
+                        <tr><th colspan="2">Sparse infobox image example</th></tr>
                         <tr><td colspan="2"><img src="alpha.jpg" alt="Alpha"></td></tr>
                         <tr><th>Role</th><td>Stable office</td></tr>
                         <tr><th>Known for</th><td>Archive record</td></tr>
@@ -3201,7 +3321,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         filtering = selection["infobox_row_filtering"]
         self.assertEqual(filtering["removed_row_count"], 1)
         self.assertIn("no_picture_heavy_tables:image_row", filtering["removed_reasons"])
-        self.assertEqual(filtering["remaining_row_count"], 3)
+        self.assertEqual(filtering["remaining_row_count"], 2)
         self.assertTrue(filtering["remaining_rows_below_minimum"])
         self.assertIn("infobox_remaining_rows_lt_min", candidate.source_metadata["discard_reason"])
         self.assertEqual(
@@ -3299,7 +3419,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <div class="mw-parser-output">
                         <p>Dense infobox image example is a settled historical profile.</p>
                         <table class="infobox">
-                        <tr><th colspan="2">Profile</th></tr>
+                        <tr><th colspan="2">Dense infobox image example</th></tr>
                         <tr><td colspan="2"><img src="alpha.jpg" alt="Alpha"></td></tr>
                         <tr><td colspan="2"><img src="beta.jpg" alt="Beta"></td></tr>
                         <tr><th>Role</th><td>Stable office</td></tr>
@@ -3319,9 +3439,9 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
         self.assertEqual(llm_client.prompts, [])
-        self.assertEqual(
+        self.assertIn(
+            "infobox_remaining_rows_lt_min:remaining_non_header_rows=1;min=5",
             candidate.source_metadata["discard_reason"],
-            "infobox_remaining_rows_lt_min:remaining_non_header_rows=2;min=5",
         )
         filtering = candidate.source_metadata["table_selection"][0]["infobox_row_filtering"]
         self.assertEqual(filtering["removed_row_count"], 2)
@@ -3342,7 +3462,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <div class="mw-parser-output">
                         <p>Mixed quality infobox example is a settled historical profile.</p>
                         <table class="infobox">
-                        <tr><th colspan="2">Profile</th></tr>
+                        <tr><th colspan="2">Mixed quality infobox example</th></tr>
                         <tr><td colspan="2"><img src="alpha.jpg" alt="Alpha"></td></tr>
                         <tr><th>Population</th><td>Archive group</td></tr>
                         <tr><th>Status</th><td>Unknown</td></tr>
@@ -3378,7 +3498,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(
             candidate.source_metadata["selected_source_table"]["rows"],
             [
-                ["Profile", ""],
                 ["Role", "Stable office"],
                 ["Founded", "1986"],
                 ["Location", "Archive Hall"],

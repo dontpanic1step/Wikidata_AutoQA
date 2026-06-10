@@ -58,6 +58,10 @@ POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS = (
     ("in_the_table", re.compile(r"\bin\s+the\s+table\b", flags=re.IGNORECASE)),
     ("table", re.compile(r"\btable\b", flags=re.IGNORECASE)),
 )
+POST_REWRITE_ANSWER_SCOPE_AMBIGUOUS_PATTERNS = (
+    ("meaning", re.compile(r"\bmeaning\b", flags=re.IGNORECASE)),
+    ("genre", re.compile(r"\bgenre\b", flags=re.IGNORECASE)),
+)
 POST_REWRITE_TIME_INVARIANCE_FORBIDDEN_PATTERNS = (
     ("current", re.compile(r"\bcurrent(?:ly)?\b", flags=re.IGNORECASE)),
     ("latest", re.compile(r"\blatest\b", flags=re.IGNORECASE)),
@@ -71,6 +75,26 @@ ROUTE3_POPULAR_EXACT_ANSWERS = (
     "Germany",
     "France",
     "Japan",
+    "Africa",
+    "Antarctica",
+    "Asia",
+    "Australia",
+    "Europe",
+    "North America",
+    "Oceania",
+    "South America",
+    "Arctic Ocean",
+    "Atlantic Ocean",
+    "Indian Ocean",
+    "Pacific Ocean",
+    "Southern Ocean",
+    "New York",
+    "New York City",
+    "London",
+    "Paris",
+    "Tokyo",
+    "Beijing",
+    "Los Angeles",
     "English",
     "Spanish",
     "French",
@@ -300,6 +324,28 @@ def process_generated_candidates(
                     notes={
                         "failure_reason": self_containment_reason,
                         "surface_validation_failure_reason": self_containment_reason,
+                    },
+                )
+            )
+            continue
+        answer_scope_ambiguity_reason = _post_rewrite_answer_scope_ambiguity_failure(candidate)
+        if answer_scope_ambiguity_reason is not None:
+            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+            candidate.source_metadata["surface_validation_failure_reason"] = answer_scope_ambiguity_reason
+            candidate.source_metadata["post_rewrite_answer_scope_ambiguity_failure_reason"] = (
+                answer_scope_ambiguity_reason
+            )
+            candidate.validation = {
+                "rewrite_guard_passed": False,
+                "surface_validation_failure_reason": answer_scope_ambiguity_reason,
+            }
+            _record_candidate_timings(candidate, candidate_timings)
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason="rewrite_guard_rejected",
+                    notes={
+                        "failure_reason": answer_scope_ambiguity_reason,
+                        "surface_validation_failure_reason": answer_scope_ambiguity_reason,
                     },
                 )
             )
@@ -648,6 +694,17 @@ def _post_rewrite_self_containment_failure(candidate: GeneratedCandidate) -> str
     for label, pattern in POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS:
         if pattern.search(rewritten_question):
             return f"post_rewrite_self_containment_forbidden_phrase:{label}"
+    return None
+
+
+def _post_rewrite_answer_scope_ambiguity_failure(candidate: GeneratedCandidate) -> str | None:
+    """Return a post-rewrite failure reason for vague answer-scope wording."""
+    rewritten_question = str(candidate.rewritten_question or "").strip()
+    if not rewritten_question:
+        return None
+    for label, pattern in POST_REWRITE_ANSWER_SCOPE_AMBIGUOUS_PATTERNS:
+        if pattern.search(rewritten_question):
+            return f"post_rewrite_answer_scope_ambiguous_phrase:{label}"
     return None
 
 

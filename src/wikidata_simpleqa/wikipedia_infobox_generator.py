@@ -68,6 +68,7 @@ ROUTE3_PAGEVIEW_UNAVAILABLE_POLICIES = ("allow", "reject", "rerun")
 DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY = "allow"
 DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE = 0.60
 DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS = 5
+INFOBOX_PAGE_START_MAX_CHAR_OFFSET = 15000
 ROUTE3_REASONING_TYPE_PROMPT_RULES = {
     "single_fact": "ask a direct single fact lookup from the structured source; do not ask a compositional question such as min, max, count, sum, comparison, or ordinal",
     "max": "ask for the row or value with the largest value within a fixed historical table scope",
@@ -651,7 +652,7 @@ class WikipediaInfoboxTableGenerator:
         html = str(parse_body.get("text", "")).strip()
 
         parse_start = perf_counter()
-        tables = extract_wikipedia_tables(html)
+        tables = extract_wikipedia_tables(html, page_title=title)
         prose_text = extract_non_table_prose(html)
         timings["table_parse_seconds"] = _elapsed(parse_start)
         archive_metadata = _update_route3_page_archive(
@@ -1822,7 +1823,7 @@ def build_wikipedia_infobox_prompt(
 
         "### Must have a single answer.\n\n"
         "- The question must have exactly one intended, indisputable answer.\n"
-        "- The answer must be a value from the table.\n"
+        "- The answer must be a value from the table, not from the first paragraph etc.\n"
         f"{table_instruction}"
         "- Avoid questions with unclear or overly broad answer categories, such as `What equipment ...` `What genre ...`. Instead, ask about a more specific and verifiable attribute.\n"
         f"{_answer_precision_prompt_rule(prompt_answer_types)}"
@@ -2724,13 +2725,26 @@ def _extra_prompt_rule(extra_prompts: tuple[str, ...]) -> str:
     return "".join(f"- {prompt.rstrip('.')}.\n" for prompt in extra_prompts)
 
 
-def extract_wikipedia_tables(html: str) -> list[WikipediaTable]:
+def extract_wikipedia_tables(html: str, *, page_title: str = "") -> list[WikipediaTable]:
     """Extract infobox and wikitable records from MediaWiki parse HTML."""
-    parser = _WikipediaTableParser()
+    parser = _WikipediaTableParser(html)
     parser.feed(html)
+    expected_infobox_title = _expected_infobox_page_title(page_title)
+    first_infobox_like_seen = False
     tables: list[WikipediaTable] = []
     for index, frame in enumerate(parser.frames):
-        table = _build_wikipedia_table(index + 1, frame)
+        if frame.get("table_type") == "infobox":
+            if first_infobox_like_seen:
+                continue
+            first_infobox_like_seen = True
+            recognition = _infobox_recognition(frame, page_title=page_title)
+            frame["infobox_recognition"] = recognition
+            if expected_infobox_title:
+                if not recognition.get("at_page_start"):
+                    continue
+                if not recognition.get("title_matches_page_title"):
+                    continue
+        table = _build_wikipedia_table(index + 1, frame, page_title=page_title)
         if len(table.rows) > MAX_TABLE_ROWS:
             continue
         if len(table.markdown) > MAX_TABLE_MARKDOWN_CHARS:
@@ -3868,6 +3882,73 @@ class _NonTableProseParser(HTMLParser):
             self.parts.append(text)
 
 
+def _expected_infobox_page_title(page_title: str) -> str:
+    """Return the page title form that an article-level infobox title must match."""
+    title = _clean_text(str(page_title or "").replace("_", " "))
+    if not title:
+        return ""
+    previous = None
+    while previous != title:
+        previous = title
+        title = re.sub(r"\s*\([^()]*\)", "", title)
+        title = _clean_text(title)
+    return title
+
+
+def _infobox_title_key(text: str) -> str:
+    """Return the exact-match key for infobox title comparison."""
+    return unicodedata.normalize("NFKC", _clean_text(str(text or "").replace("_", " ")))
+
+
+def _infobox_first_row_title_text(raw_rows: list[list[dict[str, Any]]]) -> str:
+    """Return first-row title text when the row has one visible text value."""
+    if not raw_rows:
+        return ""
+    visible_values = [
+        _clean_text(str(cell.get("text", "") or ""))
+        for cell in raw_rows[0]
+        if _clean_text(str(cell.get("text", "") or ""))
+    ]
+    if len(visible_values) != 1:
+        return ""
+    return visible_values[0]
+
+
+def _infobox_recognition(frame: dict[str, Any], *, page_title: str) -> dict[str, Any]:
+    """Return audit metadata for article-level infobox recognition."""
+    expected_title = _expected_infobox_page_title(page_title)
+    expected_key = _infobox_title_key(expected_title)
+    caption_text = _clean_text(str(frame.get("caption", "") or ""))
+    first_row_text = _infobox_first_row_title_text(frame.get("rows", []))
+    caption_matches = bool(expected_key and _infobox_title_key(caption_text) == expected_key)
+    first_row_matches = bool(expected_key and _infobox_title_key(first_row_text) == expected_key)
+    start_offset = _metadata_int(frame.get("start_offset"))
+    at_page_start = start_offset >= 0 and start_offset <= INFOBOX_PAGE_START_MAX_CHAR_OFFSET
+    title_source = ""
+    matched_title_text = ""
+    if caption_matches:
+        title_source = "caption"
+        matched_title_text = caption_text
+    elif first_row_matches:
+        title_source = "first_row"
+        matched_title_text = first_row_text
+    return {
+        "expected_page_title": expected_title,
+        "caption_text": caption_text,
+        "first_row_text": first_row_text,
+        "caption_matches_page_title": caption_matches,
+        "first_row_matches_page_title": first_row_matches,
+        "title_matches_page_title": bool(caption_matches or first_row_matches),
+        "title_source": title_source,
+        "matched_title_text": matched_title_text,
+        "start_offset": start_offset,
+        "start_line": _metadata_int(frame.get("start_line")),
+        "start_column": _metadata_int(frame.get("start_column")),
+        "page_start_max_char_offset": INFOBOX_PAGE_START_MAX_CHAR_OFFSET,
+        "at_page_start": at_page_start,
+    }
+
+
 def _positive_cell_span(value: Any, *, default: int = 1) -> int:
     """Return a positive HTML table cell span."""
     try:
@@ -3880,8 +3961,9 @@ def _positive_cell_span(value: Any, *, default: int = 1) -> int:
 class _WikipediaTableParser(HTMLParser):
     """Small HTML parser for Wikipedia infoboxes and wikitables."""
 
-    def __init__(self) -> None:
+    def __init__(self, html: str = "") -> None:
         super().__init__(convert_charrefs=True)
+        self._line_start_offsets = _line_start_offsets(html)
         self.frames: list[dict[str, Any]] = []
         self.current_heading = ""
         self._last_paragraph = ""
@@ -3922,10 +4004,14 @@ class _WikipediaTableParser(HTMLParser):
             table_type = _table_type(class_text)
             if not table_type:
                 return
+            start_line, start_column = self.getpos()
             self._active_table = {
                 "table_type": table_type,
                 "class_text": class_text,
                 "style": attr_map.get("style", ""),
+                "start_offset": self._char_offset(start_line, start_column),
+                "start_line": start_line,
+                "start_column": start_column,
                 "section_heading": self.current_heading,
                 "caption": "",
                 "nearby_intro": self._last_paragraph,
@@ -4036,6 +4122,21 @@ class _WikipediaTableParser(HTMLParser):
             self._active_cell["text_parts"].append(data)
         elif self._active_caption is not None:
             self._active_caption.append(data)
+
+    def _char_offset(self, line: int, column: int) -> int:
+        """Return the absolute character offset for a parser line/column pair."""
+        line_index = max(0, int(line) - 1)
+        if line_index >= len(self._line_start_offsets):
+            return -1
+        return self._line_start_offsets[line_index] + max(0, int(column))
+
+
+def _line_start_offsets(text: str) -> list[int]:
+    """Return absolute offsets for every line start in a string."""
+    offsets = [0]
+    for match in re.finditer(r"\n", text):
+        offsets.append(match.end())
+    return offsets
 
 
 def _expand_table_grid(raw_rows: list[list[dict[str, Any]]]) -> tuple[list[list[str]], list[list[bool]]]:
@@ -4495,11 +4596,20 @@ def _table_structure_stats(
     }
 
 
-def _build_wikipedia_table(table_index: int, frame: dict[str, Any]) -> WikipediaTable:
+def _build_wikipedia_table(table_index: int, frame: dict[str, Any], *, page_title: str = "") -> WikipediaTable:
     """Convert one parser frame into a table model."""
-    raw_rows = frame.get("rows", [])
-    grid, header_grid = _expand_table_grid(raw_rows)
     table_type = str(frame.get("table_type", "")).strip()
+    raw_rows = list(frame.get("rows", []))
+    recognition = (
+        dict(frame.get("infobox_recognition", {}))
+        if isinstance(frame.get("infobox_recognition"), dict)
+        else _infobox_recognition(frame, page_title=page_title)
+    )
+    caption = str(frame.get("caption", "")).strip()
+    if table_type == "infobox" and recognition.get("title_source") == "first_row":
+        caption = str(recognition.get("matched_title_text", "") or recognition.get("first_row_text", "")).strip()
+        raw_rows = raw_rows[1:]
+    grid, header_grid = _expand_table_grid(raw_rows)
     full_width_heading_rows = _full_width_heading_rows(raw_rows, width=len(grid[0]) if grid else 0)
     header_rows = _header_row_count(grid, header_grid)
     headers = _combined_markdown_headers(grid, header_rows)
@@ -4512,14 +4622,16 @@ def _build_wikipedia_table(table_index: int, frame: dict[str, Any]) -> Wikipedia
         structure["full_width_heading_rows"] = full_width_heading_rows[:20]
     normalized_parts = [
         str(frame.get("section_heading", "")).strip(),
-        str(frame.get("caption", "")).strip(),
+        caption,
         markdown,
     ]
+    if table_type == "infobox":
+        structure["infobox_recognition"] = recognition
     return WikipediaTable(
         table_index=table_index,
         table_type=table_type,
         section_heading=str(frame.get("section_heading", "")).strip(),
-        caption=str(frame.get("caption", "")).strip(),
+        caption=caption,
         nearby_intro=str(frame.get("nearby_intro", "")).strip(),
         headers=headers,
         rows=rows,

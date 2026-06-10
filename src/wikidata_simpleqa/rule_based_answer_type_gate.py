@@ -16,7 +16,11 @@ DEFAULT_LEXICON_DIR = Path("cache") / "rule_based_qa_gate"
 GATED_ANSWER_TYPES = {"Date", "Person", "Place"}
 BOOL_KEY = "rule_answer_type_match"
 PERSON_COMMON_WORD_THRESHOLD = 0.5
-PERSON_TOKEN_RE = re.compile(r"[A-Za-z][A-Za-z'.-]*")
+PERSON_TOKEN_RE = re.compile(r"[^\W\d_][^\W\d_'.-]*")
+PERSON_TITLE_SUFFIX_RE = re.compile(r"^(?P<prefix>.+?)\s+the\s+(?P<title>[^\W\d_][^\W\d_'.-]*)$")
+PERSON_ROMAN_NUMERAL_SUFFIX_RE = re.compile(r"^(?P<prefix>.+?)\s+(?P<roman>[MDCLXVI]+)$")
+ROMAN_NUMERAL_RE = re.compile(r"(?=[MDCLXVI]+\Z)M{0,4}(CM|CD|D?C{0,3})(XC|XL|L?X{0,3})(IX|IV|V?I{0,3})")
+PERSON_MEDIAL_NAME_PARTICLES = {"de", "der", "di", "van", "von"}
 MONTH_NAMES = {
     "january": 1,
     "february": 2,
@@ -309,6 +313,73 @@ def answer_words(answer: Any) -> list[str]:
     return [token for token in tokens if len(token) > 1]
 
 
+def _person_name_particle_words(tokens: list[str]) -> list[str]:
+    return [tokens[index] for index in sorted(_person_medial_name_particle_indexes(tokens))]
+
+
+def _person_medial_name_particle_indexes(tokens: list[str]) -> set[int]:
+    indexes = {
+        index
+        for index, token in enumerate(tokens)
+        if 0 < index < len(tokens) - 1 and token in PERSON_MEDIAL_NAME_PARTICLES
+    }
+    return indexes if 1 <= len(indexes) <= 2 else set()
+
+
+def _person_marker_words(tokens: list[str], *, common_words: set[str], common_names: set[str]) -> list[str]:
+    name_particle_indexes = _person_medial_name_particle_indexes(tokens)
+    return [
+        token
+        for index, token in enumerate(tokens)
+        if index not in name_particle_indexes
+        and token in common_words
+        and token not in common_names
+    ]
+
+
+def _valid_roman_numeral(text: str) -> bool:
+    return bool(ROMAN_NUMERAL_RE.fullmatch(text))
+
+
+def _capitalized_word(text: str) -> bool:
+    stripped = text.strip("'.-")
+    return bool(stripped) and stripped[0].isupper()
+
+
+def _person_allowed_name_pattern(
+    answer: Any,
+    *,
+    common_words: set[str],
+    common_names: set[str],
+) -> dict[str, Any] | None:
+    text = re.sub(r"\s+", " ", str(answer or "").strip())
+    title_match = PERSON_TITLE_SUFFIX_RE.fullmatch(text)
+    if title_match and _capitalized_word(title_match.group("title")):
+        prefix_tokens = answer_words(title_match.group("prefix"))
+        prefix_markers = _person_marker_words(prefix_tokens, common_words=common_words, common_names=common_names)
+        if prefix_tokens and not prefix_markers:
+            return {
+                "pattern": "name_prefix_the_capitalized_epithet",
+                "prefix_words": prefix_tokens,
+                "prefix_marker_words": prefix_markers,
+                "ignored_suffix_words": ["the", title_match.group("title").lower()],
+            }
+
+    roman_match = PERSON_ROMAN_NUMERAL_SUFFIX_RE.fullmatch(text)
+    if roman_match and _valid_roman_numeral(roman_match.group("roman")):
+        prefix_tokens = answer_words(roman_match.group("prefix"))
+        prefix_markers = _person_marker_words(prefix_tokens, common_words=common_words, common_names=common_names)
+        if prefix_tokens and not prefix_markers:
+            return {
+                "pattern": "name_prefix_roman_numeral_suffix",
+                "prefix_words": prefix_tokens,
+                "prefix_marker_words": prefix_markers,
+                "ignored_suffix_words": [roman_match.group("roman").lower()],
+            }
+
+    return None
+
+
 def evaluate_person_gate(
     answer: Any,
     *,
@@ -318,13 +389,31 @@ def evaluate_person_gate(
 ) -> tuple[bool, dict[str, Any]]:
     """Return whether a Person answer looks name-like under the script gate."""
     tokens = [token for token in answer_words(answer) if token]
-    markers = [token for token in tokens if token in common_words and token not in common_names]
+    name_particles = _person_name_particle_words(tokens)
+    markers = _person_marker_words(tokens, common_words=common_words, common_names=common_names)
     ratio = (len(markers) / len(tokens)) if tokens else 0.0
+    allowed_name_pattern = _person_allowed_name_pattern(
+        answer,
+        common_words=common_words,
+        common_names=common_names,
+    )
+    if allowed_name_pattern is not None:
+        return True, {
+            "rule": "person_common_words_minus_common_names",
+            "answer_words": tokens,
+            "marker_words": markers,
+            "name_particle_words": name_particles,
+            "marker_ratio": round(ratio, 4),
+            "threshold": threshold,
+            "allowed_name_pattern": allowed_name_pattern,
+            "reason": "Person answer matches a conservative monarch or epithet name pattern.",
+        }
     matched = ratio < threshold
     return matched, {
         "rule": "person_common_words_minus_common_names",
         "answer_words": tokens,
         "marker_words": markers,
+        "name_particle_words": name_particles,
         "marker_ratio": round(ratio, 4),
         "threshold": threshold,
         "reason": (
