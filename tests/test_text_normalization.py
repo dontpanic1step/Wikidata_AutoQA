@@ -17,10 +17,10 @@ from wikidata_simpleqa.text_normalization import (
 class TextNormalizationTests(unittest.TestCase):
     """Check the three-layer text normalization boundary helpers."""
 
-    def test_display_cleanup_removes_bracketed_notes_and_html_spacing(self) -> None:
+    def test_display_cleanup_removes_reference_markers_and_preserves_text_brackets(self) -> None:
         self.assertEqual(
             display_cleanup("Alpha&nbsp; [1]\nBeta\t[a] [note 1] [semantic note]"),
-            "Alpha Beta",
+            "Alpha Beta [semantic note]",
         )
 
     def test_source_display_cleanup_preserves_non_reference_bracketed_notes(self) -> None:

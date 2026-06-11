@@ -3782,7 +3782,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             ],
         )
 
-    def test_infobox_row_filters_run_before_final_bracket_cleanup_for_llm_evidence(self) -> None:
+    def test_infobox_row_filters_preserve_plain_brackets_before_llm_generation(self) -> None:
         class BracketedInfoboxWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:
                 return {
@@ -3836,17 +3836,17 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(len(llm_client.prompts), 1)
         prompt = llm_client.prompts[0]
         self.assertIn("Stable office", prompt)
-        self.assertNotIn("[archival note]", prompt)
+        self.assertIn("[archival note]", prompt)
         self.assertNotIn("citation needed", prompt.lower())
         filtering = candidate.source_metadata["table_selection"][0]["infobox_row_filtering"]
         self.assertIn("no_incomplete_tables:citation needed", filtering["removed_reasons"])
         selected_table = candidate.source_metadata["selected_source_table"]
-        self.assertIn(["Role", "Stable office"], selected_table["rows"])
+        self.assertIn(["Role", "Stable office [archival note]"], selected_table["rows"])
         self.assertNotIn("Status", str(selected_table["rows"]))
-        self.assertNotIn("[archival note]", selected_table["markdown"])
+        self.assertIn("[archival note]", selected_table["markdown"])
         self.assertNotIn("citation needed", selected_table["markdown"].lower())
         self.assertIn("Stable office", candidate.evidence.text)
-        self.assertNotIn("[archival note]", candidate.evidence.text)
+        self.assertIn("[archival note]", candidate.evidence.text)
 
     def test_no_incomplete_tables_mode_rejects_precision_and_citation_markers_before_llm_generation(self) -> None:
         class ApproximateWikipediaClient(FakeWikipediaClient):
@@ -4294,6 +4294,14 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         )
         self.assertEqual(answer, "AT&T Stadium (Dallas Stadium)")
         self.assertEqual(aliases, ["AT&T Stadium", "Dallas Stadium", "#1"])
+
+    def test_generated_answer_normalization_preserves_plain_square_brackets(self) -> None:
+        answer, aliases = _normalize_generated_answer(
+            "Alpha [semantic note] [1]",
+            ["Alpha [semantic note]", "Alpha"],
+        )
+        self.assertEqual(answer, "Alpha [semantic note]")
+        self.assertEqual(aliases, ["Alpha"])
 
     def test_route3_layer1_cell_cleanup_preserves_display_text_and_escapes_markdown_pipe(self) -> None:
         self.assertEqual(_clean_cell_text("Alpha [citation needed]"), "Alpha [citation needed]")

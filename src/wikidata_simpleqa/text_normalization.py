@@ -8,7 +8,6 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Iterable
 
-_BRACKETED_TEXT_PATTERN = re.compile(r"\[[^\]]*\]")
 _WIKIPEDIA_REFERENCE_PATTERN = re.compile(
     r"\[\s*(?:\d+|[a-z]|note\s*\d+|notes?\s*\d+|nb\s*\d+|n\s*\d+)\s*\]",
     flags=re.IGNORECASE,
@@ -44,10 +43,12 @@ def source_display_cleanup(value: object) -> str:
 
 
 def display_cleanup(value: object) -> str:
-    """Return user-facing text with source-display noise and bracketed notes removed."""
-    text = source_display_cleanup(value)
-    text = _BRACKETED_TEXT_PATTERN.sub(" ", text)
-    return _WHITESPACE_PATTERN.sub(" ", text).strip()
+    """Compatibility wrapper for retired display-only cleanup.
+
+    New code should call source_display_cleanup directly. This wrapper no
+    longer applies extra bracket stripping beyond source-display cleanup.
+    """
+    return source_display_cleanup(value)
 
 
 def display_key(value: object) -> str:

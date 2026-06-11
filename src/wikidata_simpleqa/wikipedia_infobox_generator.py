@@ -5404,7 +5404,7 @@ def _answer_display_text(answer: Any) -> str:
 def _strip_footnote_markers(value: str) -> str:
     """Remove common Wikipedia footnote symbols from a cell value."""
     cleaned = value.replace("‡", " ").replace("†", " ").replace("鈥?", " ")
-    return display_cleanup(cleaned)
+    return source_display_cleanup(cleaned)
 
 
 def _data_rows(table: WikipediaTable) -> list[list[str]]:
