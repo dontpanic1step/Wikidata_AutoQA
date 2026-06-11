@@ -3236,12 +3236,13 @@ def _write_stream_walkthrough(
                 lines.append(f"### {group_label}")
                 lines.append("")
             if group_accepted:
-                lines.append("| Page ID | Question | Answer | Source |")
-                lines.append("| ---: | --- | --- | --- |")
+                lines.append("| Page ID | Answer type | Question | Answer | Source |")
+                lines.append("| ---: | --- | --- | --- | --- |")
                 for record in group_accepted:
                     lines.append(
-                        "| {page_id} | {question} | {answer} | {url} |".format(
+                        "| {page_id} | `{answer_type}` | {question} | {answer} | {url} |".format(
                             page_id=_record_page_id(record),
+                            answer_type=_escape_table_text(_record_answer_type(record)),
                             question=_escape_table_text(str(record.get("question", ""))),
                             answer=_escape_table_text(str(record.get("answer", ""))),
                             url=_escape_table_text(str(record.get("source_metadata", {}).get("canonical_url") or record.get("source_metadata", {}).get("stream_source_url") or "")),

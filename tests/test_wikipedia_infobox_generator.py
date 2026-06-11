@@ -627,6 +627,8 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("#### Total Displayed Run Phase Timings", text)
         self.assertIn("### Existing Endpoint Records", text)
         self.assertIn("### Incremental Records", text)
+        self.assertIn("| Page ID | Answer type | Question | Answer | Source |", text)
+        self.assertIn("| 111 | `Person` | Who directed the existing film? | Jane Doe | https://en.wikipedia.org/w/index.php?curid=111 |", text)
         self.assertIn("Who directed the existing film?", text)
         self.assertIn("Who directed the incremental film?", text)
         self.assertIn("rewrite_guard_rejected:answer_leakage", text)
