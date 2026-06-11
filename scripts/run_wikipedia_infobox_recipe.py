@@ -215,12 +215,31 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--proxy", default="socks5://127.0.0.1:7897")
     parser.add_argument("--small-model-provider", default="openrouter")
-    parser.add_argument("--small-model", default="openai/gpt-4.1-mini")
+    parser.add_argument("--generation-model", dest="generation_model", default="openai/gpt-4.1-mini")
+    parser.add_argument(
+        "--small-model",
+        dest="generation_model",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--small-model-api-key-env", default="OPENROUTER_API_KEY")
     parser.add_argument("--small-model-base-url", default="https://openrouter.ai/api/v1")
     parser.add_argument("--small-model-max-tokens", type=int, default=1200)
-    parser.add_argument("--enable-rewrite", action="store_true")
-    parser.add_argument("--rewrite-model", default="openai/gpt-4.1-mini")
+    parser.add_argument("--enable-kelm-rewrite", dest="enable_kelm_rewrite", action="store_true")
+    parser.add_argument(
+        "--enable-rewrite",
+        dest="enable_kelm_rewrite",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument("--kelm-rewrite-model", dest="kelm_rewrite_model", default="openai/gpt-4.1-mini")
+    parser.add_argument(
+        "--rewrite-model",
+        dest="kelm_rewrite_model",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--enable-second-stage-grading", action="store_true")
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.1)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
@@ -1003,8 +1022,8 @@ def _segment_command(
         str(args.proxy),
         "--small-model-provider",
         str(args.small_model_provider),
-        "--small-model",
-        str(args.small_model),
+        "--generation-model",
+        str(args.generation_model),
         "--small-model-api-key-env",
         str(args.small_model_api_key_env),
         "--small-model-base-url",
@@ -1108,8 +1127,8 @@ def _segment_command(
         command.extend(["--route3-table-source-type", source_type])
     for mode in args.disable_route3_table_filter_mode:
         command.extend(["--disable-route3-table-filter-mode", str(mode)])
-    if args.enable_rewrite:
-        command.extend(["--enable-rewrite", "--rewrite-model", str(args.rewrite_model)])
+    if args.enable_kelm_rewrite:
+        command.extend(["--enable-kelm-rewrite", "--kelm-rewrite-model", str(args.kelm_rewrite_model)])
     if args.enable_second_stage_grading:
         command.extend(
             [
@@ -1343,8 +1362,11 @@ def _recipe_summary(
         "walkthrough_output": str(walkthrough_output),
         "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
         "enabled_routes": ["route3_wikipedia_infobox"],
-        "small_model": args.small_model,
-        "rewrite_enabled": bool(args.enable_rewrite),
+        "generation_model": args.generation_model,
+        "small_model": args.generation_model,
+        "kelm_rewrite_enabled": bool(args.enable_kelm_rewrite),
+        "kelm_rewrite_model": args.kelm_rewrite_model if args.enable_kelm_rewrite else "",
+        "rewrite_enabled": bool(args.enable_kelm_rewrite),
         "second_stage_grading_enabled": bool(args.enable_second_stage_grading),
         "duckduckgo_top_k": args.duckduckgo_top_k,
         "duckduckgo_parallel_queries": args.duckduckgo_parallel_queries,

@@ -50,7 +50,7 @@ def _recipe_args(**overrides):
         "timeout_seconds": 30.0,
         "proxy": "none",
         "small_model_provider": "openrouter",
-        "small_model": "openai/gpt-4.1-mini",
+        "generation_model": "openai/gpt-4.1-mini",
         "small_model_api_key_env": "OPENROUTER_API_KEY",
         "small_model_base_url": "https://openrouter.ai/api/v1",
         "small_model_max_tokens": 1200,
@@ -99,8 +99,8 @@ def _recipe_args(**overrides):
         "route3_infobox_max_removed_row_rate": 0.60,
         "route3_infobox_min_remaining_rows": 5,
         "disable_route3_table_filter_mode": [],
-        "enable_rewrite": True,
-        "rewrite_model": "openai/gpt-4.1-mini",
+        "enable_kelm_rewrite": True,
+        "kelm_rewrite_model": "openai/gpt-4.1-mini",
         "enable_second_stage_grading": True,
         "second_stage_grading_accuracy_threshold": 0.1,
         "disable_auto_rerun_once": False,
@@ -182,6 +182,12 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             _command_value(second_command, "--stream-exclude-page-id-file"),
             str(segment_dir / "recipe_page_id_exclusions.json"),
         )
+        self.assertEqual(_command_value(first_command, "--generation-model"), "openai/gpt-4.1-mini")
+        self.assertNotIn("--small-model", first_command)
+        self.assertIn("--enable-kelm-rewrite", first_command)
+        self.assertEqual(_command_value(first_command, "--kelm-rewrite-model"), "openai/gpt-4.1-mini")
+        self.assertNotIn("--enable-rewrite", first_command)
+        self.assertNotIn("--rewrite-model", first_command)
 
     def test_recipe_parses_alltypes_segment_and_commands_all5_mode(self) -> None:
         args = _recipe_args(

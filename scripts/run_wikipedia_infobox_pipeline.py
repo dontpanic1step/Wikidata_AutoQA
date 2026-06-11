@@ -663,7 +663,14 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
     parser.add_argument("--small-model-provider", type=str, default="openrouter")
-    parser.add_argument("--small-model", type=str, default="openai/gpt-4.1-mini")
+    parser.add_argument("--generation-model", dest="generation_model", type=str, default="openai/gpt-4.1-mini")
+    parser.add_argument(
+        "--small-model",
+        dest="generation_model",
+        type=str,
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--small-model-api-key-env", type=str, default="OPENROUTER_API_KEY")
     parser.add_argument("--small-model-base-url", type=str, default="https://openrouter.ai/api/v1")
     parser.add_argument("--small-model-max-tokens", type=int, default=1200)
@@ -672,8 +679,22 @@ def parse_args() -> argparse.Namespace:
         action="store_true",
         help="Fetch REST page summaries only when action=parse HTML has no first paragraph. Off by default.",
     )
-    parser.add_argument("--enable-rewrite", action="store_true")
-    parser.add_argument("--rewrite-model", type=str, default="openai/gpt-4.1-mini")
+    parser.add_argument("--enable-kelm-rewrite", dest="enable_kelm_rewrite", action="store_true")
+    parser.add_argument(
+        "--enable-rewrite",
+        dest="enable_kelm_rewrite",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument("--kelm-rewrite-model", dest="kelm_rewrite_model", type=str, default="openai/gpt-4.1-mini")
+    parser.add_argument(
+        "--rewrite-model",
+        dest="kelm_rewrite_model",
+        type=str,
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--enable-second-stage-grading", action="store_true")
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.1)
     parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.3)
@@ -784,17 +805,17 @@ def main() -> int:
     proxy = _optional_proxy(args.proxy)
     small_llm = LLMConfig(
         provider=args.small_model_provider,
-        model=args.small_model,
+        model=args.generation_model,
         api_key_env=args.small_model_api_key_env,
         base_url=args.small_model_base_url,
         proxy=proxy,
         max_tokens=args.small_model_max_tokens,
     )
     rewrite_llm = None
-    if args.enable_rewrite:
+    if args.enable_kelm_rewrite:
         rewrite_llm = LLMConfig(
             provider=args.small_model_provider,
-            model=args.rewrite_model,
+            model=args.kelm_rewrite_model,
             api_key_env=args.small_model_api_key_env,
             base_url=args.small_model_base_url,
             proxy=proxy,
@@ -817,7 +838,7 @@ def main() -> int:
         proxy=proxy,
         output_path=args.output,
         rejected_output_path=args.rejected_output,
-        rewrite_enabled=args.enable_rewrite,
+        rewrite_enabled=args.enable_kelm_rewrite,
         rewrite_llm=rewrite_llm,
         **duckduckgo_settings_kwargs(args),
     )
@@ -936,7 +957,10 @@ def main() -> int:
         "summary_output": str(args.summary_output),
         "enabled_routes": list(settings.enabled_routes),
         "rest_summary_fallback_enabled": args.enable_rest_summary_fallback,
-        "small_model": args.small_model,
+        "generation_model": args.generation_model,
+        "small_model": args.generation_model,
+        "kelm_rewrite_enabled": settings.rewrite_enabled,
+        "kelm_rewrite_model": args.kelm_rewrite_model if settings.rewrite_enabled else "",
         "rewrite_enabled": settings.rewrite_enabled,
         "second_stage_grading_enabled": settings.second_stage_grading_enabled,
         "duckduckgo_top_k": settings.duckduckgo_top_k,
@@ -1790,7 +1814,10 @@ def _run_streaming_page_id_pipeline(
         "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
         "enabled_routes": list(settings.enabled_routes),
         "rest_summary_fallback_enabled": args.enable_rest_summary_fallback,
-        "small_model": args.small_model,
+        "generation_model": args.generation_model,
+        "small_model": args.generation_model,
+        "kelm_rewrite_enabled": settings.rewrite_enabled,
+        "kelm_rewrite_model": args.kelm_rewrite_model if settings.rewrite_enabled else "",
         "rewrite_enabled": settings.rewrite_enabled,
         "second_stage_grading_enabled": settings.second_stage_grading_enabled,
         "duckduckgo_top_k": settings.duckduckgo_top_k,

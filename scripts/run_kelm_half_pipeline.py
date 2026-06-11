@@ -43,9 +43,23 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--search-longtail-max-keyword-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-overall-hit-rate", type=float, default=0.3)
     parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
-    parser.add_argument("--enable-rewrite", action="store_true")
+    parser.add_argument("--enable-kelm-rewrite", dest="enable_kelm_rewrite", action="store_true")
+    parser.add_argument(
+        "--enable-rewrite",
+        dest="enable_kelm_rewrite",
+        action="store_true",
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--rewrite-provider", type=str, default="openrouter")
-    parser.add_argument("--rewrite-model", type=str, default="openai/gpt-4.1-mini")
+    parser.add_argument("--kelm-rewrite-model", dest="kelm_rewrite_model", type=str, default="openai/gpt-4.1-mini")
+    parser.add_argument(
+        "--rewrite-model",
+        dest="kelm_rewrite_model",
+        type=str,
+        default=argparse.SUPPRESS,
+        help=argparse.SUPPRESS,
+    )
     parser.add_argument("--rewrite-api-key-env", type=str, default="OPENROUTER_API_KEY")
     parser.add_argument("--rewrite-base-url", type=str, default="https://openrouter.ai/api/v1")
     parser.add_argument(
@@ -70,10 +84,10 @@ def main() -> int:
     """Run the small KELM half-pipeline and persist outputs."""
     args = parse_args()
     rewrite_llm = None
-    if args.enable_rewrite:
+    if args.enable_kelm_rewrite:
         rewrite_llm = LLMConfig(
             provider=args.rewrite_provider,
-            model=args.rewrite_model,
+            model=args.kelm_rewrite_model,
             api_key_env=args.rewrite_api_key_env,
             base_url=args.rewrite_base_url,
             proxy=args.proxy,
@@ -90,7 +104,7 @@ def main() -> int:
         proxy=args.proxy,
         output_path=args.output,
         rejected_output_path=args.rejected_output,
-        rewrite_enabled=args.enable_rewrite,
+        rewrite_enabled=args.enable_kelm_rewrite,
         rewrite_llm=rewrite_llm,
         **duckduckgo_settings_kwargs(args),
     )
@@ -122,7 +136,9 @@ def main() -> int:
         "input_path": str(args.input),
         "output_path": str(args.output),
         "rejected_output_path": str(args.rejected_output),
-        "rewrite_enabled": bool(args.enable_rewrite),
+        "kelm_rewrite_enabled": bool(args.enable_kelm_rewrite),
+        "kelm_rewrite_model": args.kelm_rewrite_model if args.enable_kelm_rewrite else "",
+        "rewrite_enabled": bool(args.enable_kelm_rewrite),
         **duckduckgo_summary_fields(settings),
         "telemetry": result.telemetry,
     }

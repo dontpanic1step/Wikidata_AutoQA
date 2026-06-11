@@ -2,7 +2,7 @@
 
 This file is the defaults ledger for the current branch. When a code default changes, update this file in the same change.
 
-Last updated: 2026-06-08.
+Last updated: 2026-06-11.
 
 ## Route 1 Multi-Hop Join Runner
 
@@ -189,13 +189,13 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 
 | Setting | Default | Notes |
 | --- | --- | --- |
-| Small-model provider | `openrouter` | `--small-model-provider`. |
-| Small model | `openai/gpt-4.1-mini` | `--small-model`. |
-| Small-model API key env | `OPENROUTER_API_KEY` | `--small-model-api-key-env`. |
-| Small-model base URL | `https://openrouter.ai/api/v1` | `--small-model-base-url`. |
-| Small-model max tokens | `1200` | `--small-model-max-tokens`. |
-| Rewrite enabled | `False` | Enable with `--enable-rewrite`. |
-| Rewrite model | `openai/gpt-4.1-mini` | Used only when rewrite is enabled. |
+| Generation-model provider | `openrouter` | `--small-model-provider`; provider for the Route 3 table/infobox generation call. |
+| Generation model | `openai/gpt-4.1-mini` | `--generation-model`; legacy `--small-model` is accepted as a hidden compatibility alias. |
+| Generation-model API key env | `OPENROUTER_API_KEY` | `--small-model-api-key-env`. |
+| Generation-model base URL | `https://openrouter.ai/api/v1` | `--small-model-base-url`. |
+| Generation-model max tokens | `1200` | `--small-model-max-tokens`. |
+| KELM rewrite enabled | `False` | Enable the optional post-generation KELM-style rewrite pass with `--enable-kelm-rewrite`. |
+| KELM rewrite model | `openai/gpt-4.1-mini` | `--kelm-rewrite-model`; used only when KELM rewrite is enabled. |
 | Second-stage grading enabled | `False` | Enable with `--enable-second-stage-grading`. |
 | Second-stage grading accuracy threshold | `0.1` | Route 3 runner override. Shared `Settings` default is `0.5`. |
 | Second-stage answer model execution | parallel | Panel answer models are run concurrently when second-stage grading is enabled. |
