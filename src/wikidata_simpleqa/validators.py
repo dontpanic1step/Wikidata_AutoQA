@@ -12,6 +12,7 @@ from .entity_normalization import normalize_name
 from .geographic_leakage import question_leaks_geographic_answer_context
 from .models import CandidateFact, DomainTemplate
 from .reasoning import is_multi_hop_reasoning_style, normalize_reasoning_style
+from .text_normalization import text_contains_any
 
 YEAR_PATTERN = re.compile(r"\b(17|18|19|20|21)\d{2}\b")
 DATE_PATTERN = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
@@ -217,11 +218,8 @@ def find_exact_name_competitors(
 
 def question_leaks_answer(question: str, answer_labels: list[str]) -> bool:
     """Return whether the answer is visibly present in the question."""
-    normalized_question = normalize_name(question)
-    for answer_label in answer_labels:
-        normalized_answer = normalize_name(answer_label)
-        if normalized_answer and normalized_answer in normalized_question:
-            return True
+    if text_contains_any(question, answer_labels):
+        return True
     if question_leaks_geographic_answer_context(question, answer_labels):
         return True
     return False
@@ -243,10 +241,8 @@ def question_leaks_location_answer_context(question: str, candidate: CandidateFa
     normalized_question = normalize_name(question)
     context_labels = candidate.source_metadata.get("subject_location_labels", [])
     context_labels += candidate.source_metadata.get("answer_subdivision_labels", [])
-    for label in context_labels:
-        normalized_label = normalize_name(str(label))
-        if normalized_label and normalized_label in normalized_question:
-            return True
+    if text_contains_any(question, context_labels):
+        return True
     question_tokens = set(_tokenize_normalized_text(normalized_question))
     for token in _salient_location_tokens(context_labels):
         if token in question_tokens:

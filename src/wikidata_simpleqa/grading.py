@@ -10,21 +10,9 @@ from typing import Any
 
 from .cheap_model_qa import make_cheap_model_qa_client, parse_json_object
 from .config import LLMConfig
-from .entity_normalization import normalize_name
-from .number_reference import prediction_within_number_margin, reference_answer_for_grading
+from .number_reference import reference_answer_for_grading
 
 VALID_GRADES = {"CORRECT", "INCORRECT", "NOT_ATTEMPTED"}
-NOT_ATTEMPTED_MARKERS = {
-    "",
-    "i don't know",
-    "i don t know",
-    "i do not know",
-    "unknown",
-    "not sure",
-    "not attempted",
-    "n/a",
-    "no answer",
-}
 
 
 @dataclass(slots=True)
@@ -52,59 +40,23 @@ def grade_prediction(
 ) -> dict[str, Any]:
     """Grade one model answer as CORRECT, INCORRECT, or NOT_ATTEMPTED."""
     grading_start = perf_counter()
-    if grader_client is not None:
-        reference_answer = reference_answer_for_grading(gold_answer, source_metadata or {})
-        prompt = _build_grader_prompt(
-            question=question,
-            reference_answer=reference_answer,
-            predicted_answer=predicted_answer,
-            gold_aliases=gold_aliases or [],
-            answer_type=answer_type,
-            source_metadata=source_metadata or {},
-        )
-        parsed = parse_json_object(grader_client.complete_text(prompt))
-        grade = _normalize_grade(str(parsed.get("grade", "")).strip())
-        return {
-            "grade": grade,
-            "reason": str(parsed.get("reason", "")).strip(),
-            "method": "llm_grader",
-            "grading_duration_seconds": _elapsed(grading_start),
-        }
-
-    normalized_prediction = normalize_name(predicted_answer)
-    if normalized_prediction in NOT_ATTEMPTED_MARKERS:
-        return {
-            "grade": "NOT_ATTEMPTED",
-            "reason": "empty_or_abstained_prediction",
-            "method": "deterministic_alias_match",
-            "grading_duration_seconds": _elapsed(grading_start),
-        }
-    if prediction_within_number_margin(predicted_answer, source_metadata or {}):
-        return {
-            "grade": "CORRECT",
-            "reason": "prediction_within_number_reference_margin",
-            "method": "deterministic_number_margin",
-            "grading_duration_seconds": _elapsed(grading_start),
-        }
-    if _prediction_matches_list_answer(predicted_answer, source_metadata or {}):
-        return {
-            "grade": "CORRECT",
-            "reason": "prediction_contains_complete_gold_answer_list",
-            "method": "deterministic_list_match",
-            "grading_duration_seconds": _elapsed(grading_start),
-        }
-    accepted_answers = _accepted_answers(gold_answer, gold_aliases or [])
-    if normalized_prediction in accepted_answers:
-        return {
-            "grade": "CORRECT",
-            "reason": "prediction_matches_gold_or_alias",
-            "method": "deterministic_alias_match",
-            "grading_duration_seconds": _elapsed(grading_start),
-        }
+    if grader_client is None:
+        raise ValueError("grader_client is required for SimpleQA-style grading.")
+    reference_answer = reference_answer_for_grading(gold_answer, source_metadata or {})
+    prompt = _build_grader_prompt(
+        question=question,
+        reference_answer=reference_answer,
+        predicted_answer=predicted_answer,
+        gold_aliases=gold_aliases or [],
+        answer_type=answer_type,
+        source_metadata=source_metadata or {},
+    )
+    parsed = parse_json_object(grader_client.complete_text(prompt))
+    grade = _normalize_grade(str(parsed.get("grade", "")).strip())
     return {
-        "grade": "INCORRECT",
-        "reason": "prediction_does_not_match_gold_or_alias",
-        "method": "deterministic_alias_match",
+        "grade": grade,
+        "reason": str(parsed.get("reason", "")).strip(),
+        "method": "llm_grader",
         "grading_duration_seconds": _elapsed(grading_start),
     }
 
@@ -123,18 +75,7 @@ def grade_predictions_batch(
     if not predictions:
         return []
     if grader_client is None:
-        return [
-            grade_prediction(
-                question=question,
-                gold_answer=gold_answer,
-                predicted_answer=str(row.get("predicted_answer", "")),
-                gold_aliases=gold_aliases,
-                answer_type=answer_type,
-                source_metadata=source_metadata,
-                grader_client=None,
-            )
-            for row in predictions
-        ]
+        raise ValueError("grader_client is required for SimpleQA-style batch grading.")
 
     grading_start = perf_counter()
     reference_answer = reference_answer_for_grading(gold_answer, source_metadata or {})
@@ -291,29 +232,6 @@ def summarize_panel_runs(panel_runs: list[dict[str, Any]]) -> dict[str, Any]:
         "run_count": len(panel_runs),
         "per_model": per_model,
     }
-
-
-def _accepted_answers(gold_answer: str, aliases: list[str]) -> set[str]:
-    """Return normalized accepted answer strings."""
-    return {
-        normalized
-        for normalized in [normalize_name(gold_answer), *(normalize_name(alias) for alias in aliases)]
-        if normalized
-    }
-
-
-def _prediction_matches_list_answer(predicted_answer: str, source_metadata: dict[str, Any]) -> bool:
-    """Return whether a prediction includes every required item for a list answer."""
-    answer_items = source_metadata.get("answer_items", [])
-    if not isinstance(answer_items, list) or not answer_items:
-        return False
-    normalized_prediction = normalize_name(predicted_answer)
-    if not normalized_prediction:
-        return False
-    return all(
-        normalize_name(str(item)) and normalize_name(str(item)) in normalized_prediction
-        for item in answer_items
-    )
 
 
 def _elapsed(start: float) -> float:

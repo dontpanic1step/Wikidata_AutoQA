@@ -69,6 +69,20 @@ class FakePanelModelClient:
         return self.response
 
 
+class FakePanelGraderClient:
+    """Grader stub that returns one configured response per call."""
+
+    def __init__(self, responses: list[str]) -> None:
+        self.responses = list(responses)
+        self.prompts: list[str] = []
+
+    def complete_text(self, prompt: str) -> str:
+        self.prompts.append(prompt)
+        if not self.responses:
+            raise AssertionError("No fake grader response configured.")
+        return self.responses.pop(0)
+
+
 class FakeRewriteClient:
     """Simple rewrite stub that returns one rewritten question."""
 
@@ -1709,6 +1723,12 @@ class GenerationPipelineTests(unittest.TestCase):
                     ModelPanelMember("openai/gpt-5.4-mini", FakePanelModelClient("Jane Doe")),
                     ModelPanelMember("google/gemini-3-flash-preview", FakePanelModelClient("John Smith")),
                 ],
+                grading_grader_client=FakePanelGraderClient(
+                    [
+                        '{"grades": [{"index": 0, "grade": "CORRECT", "reason": "same"}]}',
+                        '{"grades": [{"index": 0, "grade": "INCORRECT", "reason": "wrong"}]}',
+                    ]
+                ),
                 rewrite_client=None,
             )
         self.assertEqual(len(result.accepted), 1)
@@ -1784,6 +1804,12 @@ class GenerationPipelineTests(unittest.TestCase):
                     ModelPanelMember("openai/gpt-5.4-mini", FakePanelModelClient("Jane Doe")),
                     ModelPanelMember("google/gemini-3-flash-preview", FakePanelModelClient("J. Doe")),
                 ],
+                grading_grader_client=FakePanelGraderClient(
+                    [
+                        '{"grades": [{"index": 0, "grade": "CORRECT", "reason": "same"}]}',
+                        '{"grades": [{"index": 0, "grade": "CORRECT", "reason": "alias"}]}',
+                    ]
+                ),
                 rewrite_client=None,
             )
         self.assertEqual(result.accepted, [])

@@ -9,7 +9,6 @@ import unicodedata
 from dataclasses import dataclass, field
 from datetime import date, datetime, timezone
 from functools import lru_cache
-from html import unescape
 from html.parser import HTMLParser
 from pathlib import Path
 from time import perf_counter
@@ -17,11 +16,17 @@ from typing import Any, Iterable
 
 from .cheap_model_qa import parse_json_object
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
-from .entity_normalization import normalize_name
 from .date_reference import normalize_date_answer, normalize_gate_date_answer
 from .llm_rewrite import NO_SOCIAL_SCIENCE_RESEARCH_PROMPT
 from .number_reference import parse_number_token
 from .route3_quality_rules import external_links_table_filter_reason
+from .text_normalization import (
+    build_text_matcher,
+    display_cleanup,
+    display_key,
+    source_display_cleanup,
+    text_contains_match,
+)
 from .wikipedia_client import (
     WikipediaClient,
     build_parse_api_url,
@@ -267,6 +272,7 @@ INCOMPLETE_TABLE_MARKERS = (
     "approximate",
     "approximately",
     "citation needed",
+    "clarification needed",
     "citing needed",
 )
 NUMBER_DOMINANCE_UNIT_MARKERS = (
@@ -919,12 +925,17 @@ class WikipediaInfoboxTableGenerator:
             and not str(row.get("table_filter_rejection_reason", "")).strip()
         ]
         llm_table_limit = 3 if self.llm_choose_table else 1
-        selected_tables = [
-            row["table"]
+        selected_table_rows = [
+            row
             for row in safe_table_selection
             if isinstance(row.get("table"), WikipediaTable)
         ][:llm_table_limit]
-        selected_table_selection = safe_table_selection[:llm_table_limit]
+        selected_tables = [_finalize_table_for_llm(row["table"]) for row in selected_table_rows]
+        selected_table_selection = []
+        for row, table in zip(selected_table_rows, selected_tables):
+            copied = dict(row)
+            copied["table"] = table
+            selected_table_selection.append(copied)
         if not selected_tables:
             live_scope_rows = [
                 row
@@ -1043,6 +1054,13 @@ class WikipediaInfoboxTableGenerator:
                 answer_type_mode=self.answer_type_mode,
             )
         self._extract_first_paragraph_context(page, timings=timings)
+        llm_first_paragraph = display_cleanup(page.first_paragraph)
+        llm_subject_anchors = _subject_anchor_context(
+            page.title,
+            llm_first_paragraph,
+            selected_tables,
+            cutoff_year,
+        )
         prompt_builder = (
             build_route3_infobox_prompt
             if selected_tables and selected_tables[0].table_type == "infobox"
@@ -1051,13 +1069,8 @@ class WikipediaInfoboxTableGenerator:
         prompt = prompt_builder(
             title=page.title,
             canonical_url=page.canonical_url,
-            first_paragraph=page.first_paragraph,
-            subject_anchors=_subject_anchor_context(
-                page.title,
-                page.first_paragraph,
-                selected_tables,
-                cutoff_year,
-            ),
+            first_paragraph=llm_first_paragraph,
+            subject_anchors=llm_subject_anchors,
             tables=selected_tables,
             table_selection=selected_table_selection,
             cutoff_year=cutoff_year,
@@ -1293,7 +1306,7 @@ class WikipediaInfoboxTableGenerator:
             answer=answer,
             answer_items=answer_items,
         )
-        evidence_text = source_table.normalized_text if source_table is not None else page.first_paragraph
+        evidence_text = source_table.normalized_text if source_table is not None else llm_first_paragraph
         return GeneratedCandidate(
             source_type=self.source_type,
             generation_route=self.route_name,
@@ -1335,12 +1348,7 @@ class WikipediaInfoboxTableGenerator:
                 answer_type=answer_type,
                 reasoning_type=reasoning_type,
                 tie_completion_warning=tie_problem,
-                subject_anchors=_subject_anchor_context(
-                    page.title,
-                    page.first_paragraph,
-                    selected_tables,
-                    cutoff_year,
-                ),
+                subject_anchors=llm_subject_anchors,
                 min_table_score=self.min_table_score,
                 allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
@@ -1426,7 +1434,7 @@ class WikipediaInfoboxTableGenerator:
                     table_selection=table_selection,
                     subject_anchors=_subject_anchor_context(
                         page.title,
-                        page.first_paragraph,
+                        display_cleanup(page.first_paragraph),
                         selected_tables,
                         cutoff_year,
                     ),
@@ -1663,7 +1671,7 @@ class WikipediaInfoboxTableGenerator:
             answer=answer,
             answer_items=answer_items,
         )
-        evidence_text = source_table.normalized_text if source_table is not None else page.first_paragraph
+        evidence_text = source_table.normalized_text if source_table is not None else display_cleanup(page.first_paragraph)
         return GeneratedCandidate(
             source_type=self.source_type,
             generation_route=self.route_name,
@@ -2848,7 +2856,7 @@ def rank_wikipedia_tables(
     answer_type_hints: Iterable[str] | str | None = None,
 ) -> list[dict[str, Any]]:
     """Rank tables by structured composition value and low prose leakage."""
-    normalized_prose = normalize_name(f"{first_paragraph} {prose_text}")
+    prose = source_display_cleanup(f"{first_paragraph} {prose_text}")
     normalized_answer_type_hints = _single_answer_type_hint(answer_type_hints)
     ranked: list[dict[str, Any]] = []
     for table in tables:
@@ -2883,7 +2891,7 @@ def rank_wikipedia_tables(
             if _is_zero_numeric_value_cell(cell)
         )
         zero_numeric_rate = zero_numeric_count / numeric_cell_count if numeric_cell_count else 0.0
-        leaked_values, checked_values = _prose_leakage_counts(table, normalized_prose)
+        leaked_values, checked_values = _prose_leakage_counts(table, prose)
         leakage_rate = leaked_values / checked_values if checked_values else 0.0
         score = 0.0
         reasons: list[str] = []
@@ -3857,7 +3865,7 @@ def _dedupe_preserving_order(values: Iterable[str]) -> list[str]:
 
 def _table_text_markers(table: WikipediaTable, markers: Iterable[str]) -> list[str]:
     """Return markers present in normalized table text."""
-    checked_text = normalize_name(
+    checked_text = source_display_cleanup(
         " ".join(
             [
                 table.section_heading,
@@ -3868,7 +3876,11 @@ def _table_text_markers(table: WikipediaTable, markers: Iterable[str]) -> list[s
             ]
         )
     )
-    return [marker for marker in markers if marker in checked_text]
+    return [
+        marker
+        for marker in markers
+        if text_contains_match(checked_text, build_text_matcher(marker), cleanup=source_display_cleanup)
+    ]
 
 
 def _selection_score(row: dict[str, Any]) -> float:
@@ -4299,7 +4311,7 @@ def _combined_markdown_headers(grid: list[list[str]], header_row_count: int) -> 
         seen: set[str] = set()
         for row in _header_rows_for_combination(grid[:header_row_count]):
             value = row[column].strip()
-            normalized = normalize_name(value)
+            normalized = display_key(value)
             if value and normalized not in seen:
                 parts.append(value)
                 seen.add(normalized)
@@ -4334,21 +4346,34 @@ def _header_rows_for_combination(header_rows: list[list[str]]) -> list[list[str]
 def _markdown_cell(value: str) -> str:
     """Escape a table cell for GitHub-flavored Markdown."""
     cleaned = _clean_text(str(value).replace("\r", " ").replace("\n", " "))
+    cleaned = display_cleanup(cleaned)
     return cleaned.replace("|", "\\|")
 
 
-def _grid_to_markdown(headers: list[str], data_rows: list[list[str]]) -> str:
+def _source_markdown_cell(value: str) -> str:
+    """Escape a pre-gate table cell for GitHub-flavored Markdown."""
+    cleaned = _clean_text(str(value).replace("\r", " ").replace("\n", " "))
+    return cleaned.replace("|", "\\|")
+
+
+def _grid_to_markdown(
+    headers: list[str],
+    data_rows: list[list[str]],
+    *,
+    final_cleanup: bool = False,
+) -> str:
     """Render a rectangular grid as a GitHub-flavored Markdown table."""
     if not headers:
         return ""
     width = len(headers)
+    cell_renderer = _markdown_cell if final_cleanup else _source_markdown_cell
     lines = [
-        "| " + " | ".join(_markdown_cell(header) for header in headers) + " |",
+        "| " + " | ".join(cell_renderer(header) for header in headers) + " |",
         "| " + " | ".join("---" for _ in range(width)) + " |",
     ]
     for row in data_rows:
         padded = [*row[:width], *([""] * max(0, width - len(row)))]
-        lines.append("| " + " | ".join(_markdown_cell(cell) for cell in padded[:width]) + " |")
+        lines.append("| " + " | ".join(cell_renderer(cell) for cell in padded[:width]) + " |")
     return "\n".join(lines)
 
 
@@ -4713,6 +4738,34 @@ def _build_wikipedia_table(table_index: int, frame: dict[str, Any], *, page_titl
     )
 
 
+def _finalize_table_for_llm(table: WikipediaTable) -> WikipediaTable:
+    """Return an LLM/evidence-facing copy after row filters have run."""
+    headers = [display_cleanup(header) for header in table.headers]
+    rows = [[display_cleanup(cell) for cell in row] for row in table.rows]
+    section_heading = display_cleanup(table.section_heading)
+    caption = display_cleanup(table.caption)
+    nearby_intro = display_cleanup(table.nearby_intro)
+    row_dicts = [
+        {display_cleanup(key): display_cleanup(value) for key, value in row.items()}
+        for row in table.row_dicts
+    ]
+    markdown = _grid_to_markdown(headers, rows, final_cleanup=True)
+    normalized_parts = [section_heading, caption, markdown]
+    return WikipediaTable(
+        table_index=table.table_index,
+        table_type=table.table_type,
+        section_heading=section_heading,
+        caption=caption,
+        nearby_intro=nearby_intro,
+        headers=headers,
+        rows=rows,
+        row_dicts=row_dicts,
+        normalized_text="\n".join(part for part in normalized_parts if part),
+        markdown=markdown,
+        structure=dict(table.structure),
+    )
+
+
 def _route3_archive_record_metadata(
     page_archive: dict[str, Any],
     pageview_prefilter: dict[str, Any],
@@ -5040,15 +5093,15 @@ def _sanitize_answer_blind_queries(
     max_queries: int | None = None,
 ) -> list[str]:
     """Return model queries after dropping answer-containing strings."""
-    blocked = {
-        normalize_name(answer),
-        *{normalize_name(item) for item in answer_items or [] if normalize_name(item)},
-        *{normalize_name(alias) for alias in answer_aliases if normalize_name(alias)},
-    }
+    blocked = [
+        matcher
+        for raw_value in [answer, *(answer_items or []), *answer_aliases]
+        if (matcher := build_text_matcher(raw_value)) is not None
+    ]
     queries = [
         query
         for query in _string_list(value)
-        if not any(blocked_value and blocked_value in normalize_name(query) for blocked_value in blocked)
+        if not any(text_contains_match(query, matcher) for matcher in blocked)
     ]
     if max_queries is None:
         return queries
@@ -5206,7 +5259,7 @@ def _extra_prompt_violation(
     """Return a deterministic rejection reason for known stricter extra prompt rules."""
     if NO_SOCIAL_SCIENCE_RESEARCH_PROMPT not in extra_prompts:
         return ""
-    checked_text = normalize_name(question)
+    checked_text = display_key(question)
     blocked_markers = (
         "census",
         "survey",
@@ -5238,10 +5291,10 @@ def _tie_completion_problem(
     if len(expected_items) <= 1:
         return ""
     provided_items = answer_items or [answer]
-    provided = {normalize_name(item) for item in provided_items if normalize_name(item)}
-    expected = {normalize_name(item) for item in expected_items if normalize_name(item)}
+    provided = {display_key(item) for item in provided_items if display_key(item)}
+    expected = {display_key(item) for item in expected_items if display_key(item)}
     if expected and not expected.issubset(provided):
-        missing = [item for item in expected_items if normalize_name(item) not in provided]
+        missing = [item for item in expected_items if display_key(item) not in provided]
         return "incomplete_tie_answer; missing tied answers: " + "; ".join(missing)
     return ""
 
@@ -5278,7 +5331,7 @@ def _simple_grouped_extreme_items(table: WikipediaTable, reasoning_type: str) ->
 def _normalize_answer_type(value: Any, answer: str, question: str) -> str:
     """Return a supported answer type with conservative fallback inference."""
     normalized = _normalize_answer_type_value(value)
-    normalized_question = normalize_name(question)
+    normalized_question = display_key(question)
     looks_like_temporal_answer = _looks_like_temporal_answer(answer)
     if looks_like_temporal_answer and any(
         token in normalized_question
@@ -5329,7 +5382,7 @@ def _dedupe_aliases(canonical: str, values: list[str]) -> list[str]:
 
 def _alias_dedupe_key(value: str) -> str:
     """Normalize aliases for exact duplicate removal without dropping parenthetical meaning."""
-    return re.sub(r"\s+", " ", str(value or "").casefold()).strip()
+    return display_key(value)
 
 
 def _answer_items(answer: Any) -> list[str]:
@@ -5350,8 +5403,7 @@ def _answer_display_text(answer: Any) -> str:
 def _strip_footnote_markers(value: str) -> str:
     """Remove common Wikipedia footnote symbols from a cell value."""
     cleaned = value.replace("‡", " ").replace("†", " ").replace("鈥?", " ")
-    cleaned = re.sub(r"\[\s*\d+\s*\]", " ", cleaned)
-    return _clean_text(cleaned)
+    return display_cleanup(cleaned)
 
 
 def _data_rows(table: WikipediaTable) -> list[list[str]]:
@@ -5361,17 +5413,17 @@ def _data_rows(table: WikipediaTable) -> list[list[str]]:
     return table.rows
 
 
-def _prose_leakage_counts(table: WikipediaTable, normalized_prose: str) -> tuple[int, int]:
+def _prose_leakage_counts(table: WikipediaTable, prose: str) -> tuple[int, int]:
     """Count table row values that are visible in non-table article prose."""
     checked = 0
     leaked = 0
     for row in _data_rows(table):
         for cell in row:
-            normalized = normalize_name(cell)
-            if not _is_checkable_cell(normalized):
+            cleaned = source_display_cleanup(cell)
+            if not _is_checkable_cell(cleaned):
                 continue
             checked += 1
-            if normalized in normalized_prose:
+            if text_contains_match(prose, build_text_matcher(cleaned), cleanup=source_display_cleanup):
                 leaked += 1
     return leaked, checked
 
@@ -5438,7 +5490,7 @@ def _subject_anchor_options(title: str, first_paragraph: str, cutoff_year: int) 
     deduped: list[str] = []
     for option in options:
         cleaned = option.strip()
-        key = normalize_name(cleaned)
+        key = display_key(cleaned)
         if not cleaned or not key or key in seen:
             continue
         seen.add(key)
@@ -5520,12 +5572,12 @@ def _text_has_cutoff_year(text: str, cutoff_year: int) -> bool:
 
 def _clean_text(text: str) -> str:
     """Normalize table text."""
-    return " ".join(unescape(text).replace("\xa0", " ").split())
+    return source_display_cleanup(text)
 
 
 def _clean_cell_text(text: str) -> str:
-    """Normalize table cell text and remove numeric citation markers."""
-    return re.sub(r"\s*\[\s*\d+\s*\]", "", _clean_text(text)).strip()
+    """Normalize table cell text and remove Wikipedia reference markers."""
+    return source_display_cleanup(text)
 
 
 def _elapsed(start: float) -> float:

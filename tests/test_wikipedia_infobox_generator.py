@@ -35,9 +35,13 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     extract_wikipedia_tables,
     rank_wikipedia_tables,
     _annotate_table_filter_modes,
+    _clean_cell_text,
+    _combined_markdown_headers,
+    _markdown_cell,
     _normalize_answer_type,
     _normalize_generated_answer,
     _rejected_placeholder,
+    _sanitize_answer_blind_queries,
     _subject_anchor_context,
     _tie_completion_problem,
     normalize_route3_table_source_types,
@@ -2133,8 +2137,8 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
 
         table = extract_wikipedia_tables(html)[0]
 
-        self.assertIn("| Name | Note [a] |", table.markdown)
-        self.assertIn("| Alpha | Kept note [a] |", table.markdown)
+        self.assertIn("| Name | Note |", table.markdown)
+        self.assertIn("| Alpha | Kept note |", table.markdown)
         self.assertNotIn("[ 23 ]", table.markdown)
 
     def test_table_extraction_suppresses_mw_parser_output_style_noise(self) -> None:
@@ -3626,6 +3630,72 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             ],
         )
 
+    def test_infobox_row_filters_run_before_final_bracket_cleanup_for_llm_evidence(self) -> None:
+        class BracketedInfoboxWikipediaClient(FakeWikipediaClient):
+            def fetch_parse(self, title_or_url: str) -> dict:
+                return {
+                    "parse": {
+                        "title": "Bracketed infobox example",
+                        "text": """
+                        <div class="mw-parser-output">
+                        <p>Bracketed infobox example is a settled historical profile.</p>
+                        <table class="infobox">
+                        <tr><th colspan="2">Bracketed infobox example</th></tr>
+                        <tr><th>Role</th><td>Stable office [archival note]</td></tr>
+                        <tr><th>Status</th><td>[ citation needed ]</td></tr>
+                        <tr><th>Founded</th><td>1986</td></tr>
+                        <tr><th>Location</th><td>Archive Hall</td></tr>
+                        <tr><th>Method</th><td>Curated register</td></tr>
+                        <tr><th>Series</th><td>Reference file</td></tr>
+                        <tr><th>Opened</th><td>1994</td></tr>
+                        <tr><th>Material</th><td>Stone</td></tr>
+                        </table>
+                        </div>
+                        """,
+                    }
+                }
+
+        class StableOfficeLLMClient(FakeLLMClient):
+            def complete_text(self, prompt: str) -> str:
+                self.prompts.append(prompt)
+                return """{
+                  "question": "What role is listed for the bracketed infobox example?",
+                  "answer": "Stable office",
+                  "answer_type": "Other",
+                  "answer_aliases": [],
+                  "search_queries": ["bracketed infobox example role"],
+                  "reasoning_type": "single_fact",
+                  "source_table": 1,
+                  "derivation_summary": "Read the Role field from the infobox.",
+                  "discard_reason": null
+                }"""
+
+        llm_client = StableOfficeLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Bracketed_infobox_example"],
+            wikipedia_client=BracketedInfoboxWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_source_types=("infobox",),
+            allowed_reasoning_types=("single_fact",),
+        )
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+
+        self.assertEqual(len(llm_client.prompts), 1)
+        prompt = llm_client.prompts[0]
+        self.assertIn("Stable office", prompt)
+        self.assertNotIn("[archival note]", prompt)
+        self.assertNotIn("citation needed", prompt.lower())
+        filtering = candidate.source_metadata["table_selection"][0]["infobox_row_filtering"]
+        self.assertIn("no_incomplete_tables:citation needed", filtering["removed_reasons"])
+        selected_table = candidate.source_metadata["selected_source_table"]
+        self.assertIn(["Role", "Stable office"], selected_table["rows"])
+        self.assertNotIn("Status", str(selected_table["rows"]))
+        self.assertNotIn("[archival note]", selected_table["markdown"])
+        self.assertNotIn("citation needed", selected_table["markdown"].lower())
+        self.assertIn("Stable office", candidate.evidence.text)
+        self.assertNotIn("[archival note]", candidate.evidence.text)
+
     def test_no_incomplete_tables_mode_rejects_precision_and_citation_markers_before_llm_generation(self) -> None:
         class ApproximateWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:
@@ -3641,6 +3711,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                         <tr><td>Beta</td><td>Approximately recorded</td></tr>
                         <tr><td>Gamma</td><td>[ citation needed ]</td></tr>
                         <tr><td>Delta</td><td>Citing needed</td></tr>
+                        <tr><td>Epsilon</td><td>Clarification needed</td></tr>
                         </table>
                         </div>
                         """,
@@ -3658,12 +3729,12 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("wikipedia_infobox_table_filter_rejected", candidate.notes)
         self.assertEqual(llm_client.prompts, [])
         self.assertIn(
-            "no_incomplete_tables:approx.,approximate,approximately,citation needed,citing needed",
+            "no_incomplete_tables:approx.,approximate,approximately,citation needed,clarification needed,citing needed",
             candidate.source_metadata["discard_reason"],
         )
         self.assertEqual(
             candidate.source_metadata["table_selection"][0]["incomplete_table_markers"],
-            ["approx.", "approximate", "approximately", "citation needed", "citing needed"],
+            ["approx.", "approximate", "approximately", "citation needed", "clarification needed", "citing needed"],
         )
 
     def test_not_number_dominant_mode_rejects_comma_grouped_numbers_before_llm_generation(self) -> None:
@@ -4071,6 +4142,26 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         )
         self.assertEqual(answer, "AT&T Stadium (Dallas Stadium)")
         self.assertEqual(aliases, ["AT&T Stadium", "Dallas Stadium", "#1"])
+
+    def test_route3_layer1_cell_cleanup_preserves_display_text_and_escapes_markdown_pipe(self) -> None:
+        self.assertEqual(_clean_cell_text("Alpha [citation needed]"), "Alpha [citation needed]")
+        self.assertEqual(_clean_cell_text("Amélie [note 1] &nbsp; O'Connor | 北京"), "Amélie O'Connor | 北京")
+        self.assertEqual(_markdown_cell("Amélie | 北京 [1]"), "Amélie \\| 北京")
+
+    def test_combined_markdown_headers_use_display_key_for_exact_dedupe(self) -> None:
+        headers = _combined_markdown_headers(
+            [["Mercury (planet)", "St John’s"], ["Mercury", "St John's"]],
+            header_row_count=2,
+        )
+        self.assertEqual(headers, ["Mercury (planet) / Mercury", "St John’s / St John's"])
+
+    def test_route3_answer_blind_query_sanitizer_uses_layer2_boundaries(self) -> None:
+        queries = _sanitize_answer_blind_queries(
+            ["museum archive history", "archive in the US", "American archive"],
+            answer="US",
+            answer_aliases=[],
+        )
+        self.assertEqual(queries, ["museum archive history", "American archive"])
 
     def test_explicit_other_answer_type_preserves_numeric_code_list(self) -> None:
         self.assertEqual(

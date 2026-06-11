@@ -6,6 +6,7 @@ import re
 from typing import Iterable, NamedTuple
 
 from .entity_normalization import normalize_name
+from .text_normalization import text_contains_any
 
 
 class CountryLeakageGroup(NamedTuple):
@@ -390,8 +391,7 @@ COUNTRY_LEAKAGE_GROUPS = (
 
 def question_leaks_geographic_answer_context(question: str, answer_labels: Iterable[str]) -> bool:
     """Return whether country adjectives/demonyms or major cities leak a geographic answer."""
-    normalized_question = normalize_name(question)
-    if not normalized_question:
+    if not question.strip():
         return False
     answer_terms = _answer_terms(answer_labels)
     if not answer_terms:
@@ -402,13 +402,13 @@ def question_leaks_geographic_answer_context(question: str, answer_labels: Itera
         answer_is_city = bool(answer_terms.intersection(group.city_terms))
         question_country_terms = _question_country_terms(group, question)
         if answer_is_country and (
-            _contains_any_phrase(normalized_question, group.demonym_terms)
-            or _contains_any_phrase(normalized_question, group.city_terms)
+            _contains_any_phrase(question, group.demonym_terms)
+            or _contains_any_phrase(question, group.city_terms)
         ):
             return True
-        if answer_is_demonym and _contains_any_phrase(normalized_question, question_country_terms):
+        if answer_is_demonym and _contains_any_phrase(question, question_country_terms):
             return True
-        if answer_is_city and _contains_any_phrase(normalized_question, question_country_terms):
+        if answer_is_city and _contains_any_phrase(question, question_country_terms):
             return True
     return False
 
@@ -434,7 +434,6 @@ def _question_country_terms(group: CountryLeakageGroup, question: str) -> frozen
     return terms
 
 
-def _contains_any_phrase(normalized_text: str, phrases: Iterable[str]) -> bool:
-    """Return whether normalized text contains any phrase as a token-bounded phrase."""
-    padded_text = f" {normalized_text} "
-    return any(f" {phrase} " in padded_text for phrase in phrases if phrase)
+def _contains_any_phrase(text: str, phrases: Iterable[str]) -> bool:
+    """Return whether text contains any phrase as a token-bounded phrase."""
+    return text_contains_any(text, phrases)

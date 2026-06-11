@@ -54,6 +54,10 @@ class AnswerLeakageTests(unittest.TestCase):
         question = "Who directed the film Stitch Head?"
         self.assertFalse(question_leaks_answer(question, ["...", ""]))
 
+    def test_short_ascii_answer_requires_token_boundary(self) -> None:
+        self.assertFalse(question_leaks_answer("Which archive is in the museum?", ["US"]))
+        self.assertTrue(question_leaks_answer("Which archive is in the US?", ["US"]))
+
     def test_rejects_country_demonym_answer_leakage(self) -> None:
         self.assertTrue(
             question_leaks_answer(

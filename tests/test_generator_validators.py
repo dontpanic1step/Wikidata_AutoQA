@@ -8,6 +8,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generator_validators import (
     build_removed_prefilter_stub,
+    evidence_supports_answer,
     run_fact_level_longtail_prefilter,
     run_search_based_longtail_verifier,
     validate_question_surface,
@@ -226,6 +227,135 @@ class GeneratorValidatorTests(unittest.TestCase):
         )
         self.assertEqual(reason, "answer_leakage")
 
+    def test_route3_evidence_matches_text_inside_selected_table_cell(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.generation_route = "route3_wikipedia_infobox"
+        candidate.source_type = "wikipedia_tables"
+        candidate.answer = "Archive Hall"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Place"
+        candidate.subject_entity.url = "https://en.wikipedia.org/wiki/Example"
+        candidate.evidence.text = ""
+        candidate.source_metadata = {
+            "selected_source_table": {
+                "headers": ["Venue", "Notes"],
+                "rows": [["Ceremony", "The event was held at Archive Hall in 1998."]],
+                "markdown": "| Venue | Notes |\n| --- | --- |\n| Ceremony | The event was held at Archive Hall in 1998. |",
+            }
+        }
+        self.assertTrue(evidence_supports_answer(candidate))
+        self.assertTrue(candidate.source_metadata["answer_in_evidence_match"]["matched"])
+        self.assertIn("selected_source_table.rows", candidate.source_metadata["answer_in_evidence_match"]["source"])
+
+    def test_route3_evidence_matches_explicit_alias_without_inventing_aliases(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.generation_route = "route3_wikipedia_infobox"
+        candidate.source_type = "wikipedia_tables"
+        candidate.answer = "University of British Columbia"
+        candidate.answer_aliases = ["UBC"]
+        candidate.answer_type = "Other"
+        candidate.subject_entity.url = "https://en.wikipedia.org/wiki/Example"
+        candidate.evidence.text = ""
+        candidate.source_metadata = {
+            "selected_source_table": {
+                "headers": ["Institution"],
+                "rows": [["The record lists UBC as the institution."]],
+            }
+        }
+        self.assertTrue(evidence_supports_answer(candidate))
+
+    def test_route3_list_answer_items_can_match_anywhere_in_selected_table(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.generation_route = "route3_wikipedia_infobox"
+        candidate.source_type = "wikipedia_tables"
+        candidate.answer = "Alpha; Beta"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Other"
+        candidate.subject_entity.url = "https://en.wikipedia.org/wiki/Example"
+        candidate.evidence.text = ""
+        candidate.source_metadata = {
+            "answer_items": ["Alpha", "Beta"],
+            "selected_source_table": {
+                "headers": ["Name"],
+                "rows": [["Alpha appears in this row."], ["A different row mentions Beta."]],
+            },
+        }
+        self.assertTrue(evidence_supports_answer(candidate))
+
+    def test_route3_count_how_many_small_integer_passes_without_literal_number(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.generation_route = "route3_wikipedia_infobox"
+        candidate.source_type = "wikipedia_tables"
+        candidate.question = "How many films in Example Series won the award?"
+        candidate.answer = "2"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Number"
+        candidate.subject_entity.url = "https://en.wikipedia.org/wiki/Example"
+        candidate.evidence.text = ""
+        candidate.source_metadata = {
+            "reasoning_type": "count",
+            "selected_source_table": {
+                "headers": ["Film", "Award"],
+                "rows": [["Alpha", "Won"], ["Beta", "Won"]],
+            },
+        }
+        self.assertTrue(evidence_supports_answer(candidate))
+        self.assertEqual(
+            candidate.source_metadata["answer_in_evidence_match"]["source"],
+            "count_reasoning_how_many_small_integer",
+        )
+
+    def test_route3_number_evidence_matches_comma_number(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.generation_route = "route3_wikipedia_infobox"
+        candidate.source_type = "wikipedia_tables"
+        candidate.answer = "1500"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Number"
+        candidate.subject_entity.url = "https://en.wikipedia.org/wiki/Example"
+        candidate.evidence.text = ""
+        candidate.source_metadata = {
+            "selected_source_table": {
+                "headers": ["Attendance"],
+                "rows": [["The attendance was 1,500 people."]],
+            }
+        }
+        self.assertTrue(evidence_supports_answer(candidate))
+
+    def test_route3_date_evidence_matches_date_variant(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.generation_route = "route3_wikipedia_infobox"
+        candidate.source_type = "wikipedia_tables"
+        candidate.answer = "May 21, 2026"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Date"
+        candidate.subject_entity.url = "https://en.wikipedia.org/wiki/Example"
+        candidate.evidence.text = ""
+        candidate.source_metadata = {
+            "selected_source_table": {
+                "headers": ["Date"],
+                "rows": [["The ceremony took place on 21 May 2026."]],
+            }
+        }
+        self.assertTrue(evidence_supports_answer(candidate))
+
+    def test_route3_date_evidence_does_not_match_unrelated_number(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.generation_route = "route3_wikipedia_infobox"
+        candidate.source_type = "wikipedia_tables"
+        candidate.answer = "May 21, 2026"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Date"
+        candidate.subject_entity.url = "https://en.wikipedia.org/wiki/Example"
+        candidate.evidence.text = ""
+        candidate.source_metadata = {
+            "selected_source_table": {
+                "headers": ["Notes"],
+                "rows": [["The unrelated count was 21."]],
+            }
+        }
+        self.assertFalse(evidence_supports_answer(candidate))
+
     def test_search_verifier_rejects_answer_in_title(self) -> None:
         candidate = make_generated_candidate()
         client = FakeSearchClient(
@@ -273,6 +403,34 @@ class GeneratorValidatorTests(unittest.TestCase):
         )
         self.assertTrue(passed)
         self.assertEqual(features["triggered_rule"], "")
+
+    def test_search_verifier_does_not_match_short_alias_inside_words(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "US"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Other"
+        client = FakeSearchClient(
+            {
+                "Who directed Example Film?": [],
+                "Example Film director": [
+                    {
+                        "title": "Example museum archive",
+                        "snippet": "The museum record is unrelated.",
+                        "url": "https://example.test/museum",
+                    }
+                ],
+            }
+        )
+        passed, features = run_search_based_longtail_verifier(
+            candidate,
+            search_client=client,
+            top_k=5,
+            max_full_question_hit_rate=0.0,
+            max_keyword_hit_rate=0.1,
+            max_overall_hit_rate=0.1,
+        )
+        self.assertTrue(passed)
+        self.assertFalse(features["queries"][1]["results"][0]["answer_hit"])
 
     def test_search_verifier_records_fallback_query_hits(self) -> None:
         candidate = make_generated_candidate()
@@ -360,10 +518,10 @@ class GeneratorValidatorTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(features["category_hit_rates"]["keyword_queries"]["answer_hit_rate"], 0.3)
 
-    def test_search_verifier_matches_country_aliases_in_snippets(self) -> None:
+    def test_search_verifier_matches_explicit_country_aliases_in_snippets(self) -> None:
         candidate = make_generated_candidate()
         candidate.answer = "United States of America"
-        candidate.answer_aliases = []
+        candidate.answer_aliases = ["USA"]
         candidate.answer_type = "Place"
         client = FakeSearchClient(
             {
@@ -416,6 +574,62 @@ class GeneratorValidatorTests(unittest.TestCase):
         self.assertFalse(passed)
         self.assertEqual(features["triggered_rule"], "keyword_queries:hit_rate_exceeded")
         self.assertEqual(features["queries"][1]["snippet_hits"], 1)
+
+    def test_search_verifier_does_not_match_date_answer_by_number_only(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "May 21, 2026"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Date"
+        client = FakeSearchClient(
+            {
+                "Who directed Example Film?": [],
+                "Example Film director": [
+                    {
+                        "title": "Archived record",
+                        "snippet": "The unrelated count was 21.",
+                        "url": "https://example.test/date-number",
+                    }
+                ],
+            }
+        )
+        passed, features = run_search_based_longtail_verifier(
+            candidate,
+            search_client=client,
+            top_k=5,
+            max_full_question_hit_rate=0.0,
+            max_keyword_hit_rate=0.1,
+            max_overall_hit_rate=0.1,
+        )
+        self.assertTrue(passed)
+        self.assertEqual(features["queries"][1]["snippet_hits"], 0)
+
+    def test_search_verifier_does_not_match_text_answer_by_number_only(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer = "Melnick 35"
+        candidate.answer_aliases = []
+        candidate.answer_type = "Other"
+        client = FakeSearchClient(
+            {
+                "Who directed Example Film?": [],
+                "Example Film director": [
+                    {
+                        "title": "Archived record",
+                        "snippet": "The unrelated count was 35.",
+                        "url": "https://example.test/text-number",
+                    }
+                ],
+            }
+        )
+        passed, features = run_search_based_longtail_verifier(
+            candidate,
+            search_client=client,
+            top_k=5,
+            max_full_question_hit_rate=0.0,
+            max_keyword_hit_rate=0.1,
+            max_overall_hit_rate=0.1,
+        )
+        self.assertTrue(passed)
+        self.assertEqual(features["queries"][1]["snippet_hits"], 0)
 
     def test_search_verifier_matches_short_year_date_variants_in_snippets(self) -> None:
         candidate = make_generated_candidate()

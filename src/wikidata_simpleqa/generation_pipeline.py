@@ -9,6 +9,7 @@ from typing import Any
 
 from .cheap_model_qa import make_cheap_model_qa_client
 from .entity_normalization import normalize_name
+from .text_normalization import build_text_matcher, display_key, text_contains_match
 
 from .config import LLMConfig, Settings
 from .domain_templates import get_all_templates, get_stage1_templates
@@ -794,24 +795,18 @@ def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, set
         candidate.answer_aliases = _merge_answer_aliases(candidate.answer_aliases, llm_answer_aliases)
     raw_search_queries = rewritten.get("search_queries", [])
     if isinstance(raw_search_queries, list):
-        blocked_strings = {
-            normalize_name(candidate.answer),
-            *{
-                normalize_name(alias)
-                for alias in candidate.answer_aliases
-                if normalize_name(alias)
-            },
-        }
-        normalized_final_question = normalize_name(candidate.rewritten_question or "")
+        blocked_matchers = [
+            matcher
+            for raw_value in [candidate.answer, *candidate.answer_aliases]
+            if (matcher := build_text_matcher(raw_value)) is not None
+        ]
+        normalized_final_question = display_key(candidate.rewritten_question or "")
         candidate.search_queries = [
             str(query).strip()
             for query in raw_search_queries
             if str(query).strip()
-            and normalize_name(str(query)) != normalized_final_question
-            and not any(
-                blocked and blocked in normalize_name(str(query))
-                for blocked in blocked_strings
-            )
+            and display_key(str(query)) != normalized_final_question
+            and not any(text_contains_match(str(query), matcher) for matcher in blocked_matchers)
         ]
 
 
@@ -819,12 +814,12 @@ def _sanitize_rewrite_answer_aliases(raw_aliases, *, canonical_answer: str) -> l
     """Normalize aliases returned by the rewrite model for snippet matching."""
     if not isinstance(raw_aliases, list):
         return []
-    canonical_normalized = normalize_name(canonical_answer)
+    canonical_normalized = display_key(canonical_answer)
     aliases: list[str] = []
     seen: set[str] = set()
     for value in raw_aliases:
         alias = str(value).strip()
-        normalized_alias = normalize_name(alias)
+        normalized_alias = display_key(alias)
         if not alias or not normalized_alias or normalized_alias == canonical_normalized:
             continue
         if normalized_alias in seen:
@@ -840,7 +835,7 @@ def _merge_answer_aliases(existing_aliases: list[str], new_aliases: list[str]) -
     seen: set[str] = set()
     for value in [*existing_aliases, *new_aliases]:
         alias = str(value).strip()
-        normalized_alias = normalize_name(alias)
+        normalized_alias = display_key(alias)
         if not alias or not normalized_alias or normalized_alias in seen:
             continue
         seen.add(normalized_alias)

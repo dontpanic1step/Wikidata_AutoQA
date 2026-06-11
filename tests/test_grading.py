@@ -28,41 +28,33 @@ class FakeClient:
 
 
 class GradingTests(unittest.TestCase):
-    """Check deterministic and model-grader paths."""
+    """Check SimpleQA-style model-grader paths."""
 
-    def test_deterministic_grader_accepts_alias(self) -> None:
-        result = grade_prediction(
-            question="Who directed Example Film?",
-            gold_answer="Jane Doe",
-            predicted_answer="J. Doe",
-            gold_aliases=["J. Doe"],
-        )
-        self.assertEqual(result["grade"], "CORRECT")
+    def test_grade_prediction_requires_grader_client(self) -> None:
+        with self.assertRaisesRegex(ValueError, "grader_client is required"):
+            grade_prediction(
+                question="Who directed Example Film?",
+                gold_answer="Jane Doe",
+                predicted_answer="J. Doe",
+                gold_aliases=["J. Doe"],
+            )
 
-    def test_deterministic_grader_detects_not_attempted(self) -> None:
-        result = grade_prediction(
-            question="Who directed Example Film?",
-            gold_answer="Jane Doe",
-            predicted_answer="I don't know",
-        )
-        self.assertEqual(result["grade"], "NOT_ATTEMPTED")
+    def test_grade_prediction_does_not_use_deterministic_not_attempted_fallback(self) -> None:
+        with self.assertRaisesRegex(ValueError, "grader_client is required"):
+            grade_prediction(
+                question="Who directed Example Film?",
+                gold_answer="Jane Doe",
+                predicted_answer="I don't know",
+            )
 
-    def test_deterministic_grader_requires_complete_list_answer(self) -> None:
-        complete = grade_prediction(
-            question="Which items tied?",
-            gold_answer="Alpha; Beta",
-            predicted_answer="Alpha and Beta",
-            source_metadata={"answer_items": ["Alpha", "Beta"]},
-        )
-        partial = grade_prediction(
-            question="Which items tied?",
-            gold_answer="Alpha; Beta",
-            predicted_answer="Alpha",
-            source_metadata={"answer_items": ["Alpha", "Beta"]},
-        )
-        self.assertEqual(complete["grade"], "CORRECT")
-        self.assertEqual(complete["method"], "deterministic_list_match")
-        self.assertEqual(partial["grade"], "INCORRECT")
+    def test_grade_prediction_does_not_use_deterministic_list_fallback(self) -> None:
+        with self.assertRaisesRegex(ValueError, "grader_client is required"):
+            grade_prediction(
+                question="Which items tied?",
+                gold_answer="Alpha; Beta",
+                predicted_answer="Alpha and Beta",
+                source_metadata={"answer_items": ["Alpha", "Beta"]},
+            )
 
     def test_llm_grader_parses_json_grade(self) -> None:
         result = grade_prediction(
@@ -74,27 +66,18 @@ class GradingTests(unittest.TestCase):
         self.assertEqual(result["grade"], "INCORRECT")
         self.assertEqual(result["method"], "llm_grader")
 
-    def test_deterministic_grader_accepts_number_margin(self) -> None:
+    def test_number_margin_requires_llm_grader(self) -> None:
         metadata = {
             "number_reference_margin": build_number_reference_margin("100", "Number"),
         }
-        inside = grade_prediction(
-            question="How many points did Example Film score?",
-            gold_answer="100",
-            predicted_answer="101",
-            answer_type="Number",
-            source_metadata=metadata,
-        )
-        outside = grade_prediction(
-            question="How many points did Example Film score?",
-            gold_answer="100",
-            predicted_answer="103",
-            answer_type="Number",
-            source_metadata=metadata,
-        )
-        self.assertEqual(inside["grade"], "CORRECT")
-        self.assertEqual(inside["method"], "deterministic_number_margin")
-        self.assertEqual(outside["grade"], "INCORRECT")
+        with self.assertRaisesRegex(ValueError, "grader_client is required"):
+            grade_prediction(
+                question="How many points did Example Film score?",
+                gold_answer="100",
+                predicted_answer="101",
+                answer_type="Number",
+                source_metadata=metadata,
+            )
 
     def test_llm_grader_prompt_uses_reference_margin_without_alias_injection(self) -> None:
         metadata = {
@@ -129,6 +112,12 @@ class GradingTests(unittest.TestCase):
         self.assertIn("If the reference answer is a list", grader.prompts[0])
 
     def test_evaluate_model_panel_records_accuracy(self) -> None:
+        grader = FakeClient(
+            '{"grades": ['
+            '{"index": 0, "grade": "CORRECT", "reason": "same"},'
+            '{"index": 1, "grade": "INCORRECT", "reason": "wrong"}'
+            "]}"
+        )
         result = evaluate_model_panel(
             question="Who directed Example Film?",
             gold_answer="Jane Doe",
@@ -139,6 +128,7 @@ class GradingTests(unittest.TestCase):
                 ModelPanelMember("correct-model", FakeClient("Jane Doe")),
                 ModelPanelMember("wrong-model", FakeClient("John Smith")),
             ],
+            grader_client=grader,
         )
         self.assertEqual(result["correct_count"], 1)
         self.assertAlmostEqual(result["accuracy"], 0.5)
@@ -182,6 +172,12 @@ class GradingTests(unittest.TestCase):
                 return self.response
 
         barrier = threading.Barrier(2)
+        grader = FakeClient(
+            '{"grades": ['
+            '{"index": 0, "grade": "CORRECT", "reason": "same"},'
+            '{"index": 1, "grade": "INCORRECT", "reason": "wrong"}'
+            "]}"
+        )
         result = evaluate_model_panel(
             question="Who directed Example Film?",
             gold_answer="Jane Doe",
@@ -192,6 +188,7 @@ class GradingTests(unittest.TestCase):
                 ModelPanelMember("correct-model", BarrierClient("Jane Doe", barrier)),
                 ModelPanelMember("wrong-model", BarrierClient("John Smith", barrier)),
             ],
+            grader_client=grader,
             parallel_answers=True,
         )
 

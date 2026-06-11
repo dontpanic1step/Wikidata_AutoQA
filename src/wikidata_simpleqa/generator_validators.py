@@ -13,6 +13,14 @@ from .date_reference import date_answer_variant_strings
 from .entity_normalization import normalize_name
 from .generation_models import GeneratedCandidate
 from .number_reference import extract_number_mentions, format_decimal, get_number_reference_margin, number_margin_hits, parse_number_token
+from .text_normalization import (
+    TextMatcher,
+    build_text_matcher,
+    display_cleanup,
+    display_key,
+    text_contains_any,
+    text_contains_match,
+)
 from .validators import (
     YEAR_PATTERN,
     candidate_is_time_invariant,
@@ -88,11 +96,6 @@ NUMBER_WORDS = {
         if 1 <= number <= 20
     },
 }
-COUNTRY_ALIAS_GROUPS = [
-    {"united states", "united states of america", "usa", "us", "u s", "u s a", "america"},
-    {"united kingdom", "uk", "u k", "great britain", "britain"},
-    {"united arab emirates", "uae", "u a e"},
-]
 class SearchLongtailVerifierError(RuntimeError):
     """Raised when search long-tail verification fails with audit features."""
 
@@ -222,23 +225,121 @@ def _validate_wikipedia_infobox_candidate(
 
 def evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
     """Return whether evidence text contains the answer or one alias."""
-    normalized_evidence = normalize_name(candidate.evidence.text)
-    if not normalized_evidence:
-        return False
-    if _text_contains_answer(candidate.evidence.text, _build_answer_matchers(candidate)):
+    if candidate.generation_route == "route3_wikipedia_infobox":
+        return _route3_evidence_supports_answer(candidate)
+    return bool(display_cleanup(candidate.evidence.text)) and _text_contains_answer(
+        candidate.evidence.text,
+        _build_answer_matchers(candidate),
+    )
+
+
+def _route3_evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
+    """Return whether Route 3 selected table evidence supports the answer."""
+    if _route3_count_answer_is_supported(candidate):
+        _record_answer_evidence_match(
+            candidate,
+            matched=True,
+            source="count_reasoning_how_many_small_integer",
+        )
         return True
+    texts = _route3_selected_table_texts(candidate)
+    if not texts:
+        texts = [("evidence.text", candidate.evidence.text)]
     answer_items = candidate.source_metadata.get("answer_items", [])
     if isinstance(answer_items, list) and answer_items:
-        return all(
-            normalize_name(str(item)) and normalize_name(str(item)) in normalized_evidence
-            for item in answer_items
-        )
-    if normalize_name(candidate.answer) in normalized_evidence:
-        return True
-    return any(
-        normalize_name(alias) and normalize_name(alias) in normalized_evidence
-        for alias in candidate.answer_aliases
+        item_sources: list[dict[str, str]] = []
+        for item in answer_items:
+            item_text = str(item).strip()
+            if not item_text:
+                continue
+            source = _first_answer_hit_source(item_text, [], candidate.answer_type, texts, candidate.source_metadata)
+            if not source:
+                _record_answer_evidence_match(candidate, matched=False, source="selected_source_table")
+                return False
+            item_sources.append({"item": item_text, "source": source})
+        matched = bool(item_sources)
+        candidate.source_metadata["answer_in_evidence_match"] = {
+            "matched": matched,
+            "source": "selected_source_table",
+            "item_sources": item_sources,
+        }
+        return matched
+    source = _first_answer_hit_source(
+        candidate.answer,
+        candidate.answer_aliases,
+        candidate.answer_type,
+        texts,
+        candidate.source_metadata,
     )
+    _record_answer_evidence_match(candidate, matched=bool(source), source=source or "selected_source_table")
+    return bool(source)
+
+
+def _route3_count_answer_is_supported(candidate: GeneratedCandidate) -> bool:
+    """Return whether a small how-many count answer is self-supported by reasoning type."""
+    reasoning_type = str(candidate.source_metadata.get("reasoning_type") or "").strip()
+    if reasoning_type != "count" or not re.search(r"\bhow\s+many\b", candidate.final_question, flags=re.IGNORECASE):
+        return False
+    value = parse_number_token(candidate.answer)
+    if value is None or value != value.to_integral_value():
+        return False
+    return 0 <= int(value) <= 10
+
+
+def _route3_selected_table_texts(candidate: GeneratedCandidate) -> list[tuple[str, str]]:
+    """Return Route 3 selected-table text locations in matching order."""
+    selected = candidate.source_metadata.get("selected_source_table", {})
+    if not isinstance(selected, dict) or not selected:
+        return []
+    texts: list[tuple[str, str]] = []
+    headers = selected.get("headers", [])
+    if isinstance(headers, list):
+        for index, header in enumerate(headers):
+            texts.append((f"selected_source_table.headers[{index}]", str(header)))
+    rows = selected.get("rows", [])
+    if isinstance(rows, list):
+        for row_index, row in enumerate(rows):
+            if not isinstance(row, list):
+                continue
+            row_parts = [str(cell) for cell in row]
+            texts.append((f"selected_source_table.rows[{row_index}]", " ".join(row_parts)))
+            for column_index, cell in enumerate(row):
+                texts.append((f"selected_source_table.rows[{row_index}][{column_index}]", str(cell)))
+    for key in ("markdown", "normalized_text"):
+        value = selected.get(key, "")
+        if str(value).strip():
+            texts.append((f"selected_source_table.{key}", str(value)))
+    if candidate.evidence.text.strip():
+        texts.append(("evidence.text", candidate.evidence.text))
+    return texts
+
+
+def _first_answer_hit_source(
+    answer: str,
+    answer_aliases: list[str],
+    answer_type: str,
+    texts: list[tuple[str, str]],
+    source_metadata: dict[str, Any],
+) -> str:
+    """Return the first text source containing one answer matcher."""
+    matcher = _build_single_answer_matcher(
+        answer,
+        answer_aliases,
+        answer_type=answer_type,
+        source_metadata=source_metadata,
+    )
+    for source, text in texts:
+        if _text_contains_single_answer(text, matcher):
+            return source
+    return ""
+
+
+def _record_answer_evidence_match(candidate: GeneratedCandidate, *, matched: bool, source: str) -> None:
+    """Attach a compact Route 3 evidence-support audit row."""
+    candidate.source_metadata["answer_in_evidence_match"] = {
+        "matched": bool(matched),
+        "source": source,
+    }
 
 
 def validate_question_surface(
@@ -320,18 +421,14 @@ def _uses_generic_table_source_wording(question: str) -> bool:
 
 def _question_has_subject_anchor(question: str, candidate: GeneratedCandidate) -> bool:
     """Return whether one question keeps the route's required subject anchor."""
-    subject_name = normalize_name(candidate.subject_entity.name)
-    normalized_question = normalize_name(question)
+    subject_name = display_cleanup(candidate.subject_entity.name)
     if not subject_name:
         return True
-    if subject_name in normalized_question:
+    if text_contains_any(question, [subject_name]):
         return True
     aliases = candidate.source_metadata.get("subject_anchor_aliases", [])
     if isinstance(aliases, list):
-        return any(
-            normalize_name(str(alias)) and normalize_name(str(alias)) in normalized_question
-            for alias in aliases
-        )
+        return text_contains_any(question, aliases)
     return False
 
 
@@ -381,7 +478,7 @@ def run_search_based_longtail_verifier(
         "triggered_rule": "",
     }
     answer_matchers = _build_answer_matchers(candidate)
-    normalized_question = normalize_name(candidate.final_question)
+    normalized_question = display_key(candidate.final_question)
 
     max_workers = max(1, int(max_parallel_queries or 1))
     next_query_index = 0
@@ -542,7 +639,7 @@ def _run_one_longtail_query(
     answer_hit_results = 0
     serialized_results: list[dict[str, Any]] = []
     for result in results:
-        normalized_title = normalize_name(result.title)
+        normalized_title = display_key(result.title)
         title_number_margin_hits = _answer_number_margin_hits(result.title, answer_matchers)
         snippet_number_margin_hits = _answer_number_margin_hits(result.snippet, answer_matchers)
         title_hit = bool(title_number_margin_hits) or _text_contains_answer(result.title, answer_matchers)
@@ -756,18 +853,6 @@ def _compute_category_hit_rates(query_rows: list[dict[str, Any]]) -> dict[str, d
     return summary
 
 
-def _build_accepted_answer_set(candidate: GeneratedCandidate) -> set[str]:
-    """Return normalized accepted answer strings."""
-    return {
-        normalize_name(candidate.answer),
-        *{
-            normalize_name(alias)
-            for alias in candidate.answer_aliases
-            if normalize_name(alias)
-        },
-    }
-
-
 def _build_answer_matchers(candidate: GeneratedCandidate) -> dict[str, Any]:
     """Build normalized answer variants and regexes for search matching."""
     answer_items = candidate.source_metadata.get("answer_items", [])
@@ -804,12 +889,16 @@ def _build_single_answer_matcher(
 ) -> dict[str, Any]:
     """Build normalized variants and regexes for one answer string."""
     raw_answers = [answer, *answer_aliases]
-    normalized_variants = {
-        normalize_name(value)
-        for value in raw_answers
-        if normalize_name(value)
-    }
+    text_matchers: list[TextMatcher] = []
+    normalized_variants: set[str] = set()
     regexes: list[re.Pattern[str]] = []
+    number_values: set[str] = set()
+    if answer_type == "Number":
+        number_values = {
+            format_decimal(value)
+            for raw_value in raw_answers
+            if (value := parse_number_token(str(raw_value))) is not None
+        }
     integer_value = _parse_integer_answer(answer)
     if answer_type == "Number" and integer_value is not None:
         normalized_variants.update(_number_variants(integer_value))
@@ -821,11 +910,17 @@ def _build_single_answer_matcher(
                     "normalized_variants": {variant for variant in normalized_variants if variant},
                     "regexes": regexes,
                     "number_reference_margin": margin,
+                    "number_values": number_values,
+                    "answer_type": answer_type,
                 }
+    elif answer_type == "Date":
+        for value in raw_answers:
+            text_matchers.extend(_date_matchers(value))
     else:
         for value in raw_answers:
-            normalized_variants.update(_country_alias_variants(value))
-            normalized_variants.update(_date_variants(value))
+            matcher = build_text_matcher(value)
+            if matcher is not None:
+                text_matchers.append(matcher)
         if answer_type == "Number":
             margin = get_number_reference_margin(source_metadata)
             if margin is not None:
@@ -833,10 +928,15 @@ def _build_single_answer_matcher(
                     "normalized_variants": {variant for variant in normalized_variants if variant},
                     "regexes": regexes,
                     "number_reference_margin": margin,
+                    "number_values": number_values,
+                    "answer_type": answer_type,
                 }
     return {
         "normalized_variants": {variant for variant in normalized_variants if variant},
         "regexes": regexes,
+        "text_matchers": text_matchers,
+        "number_values": number_values,
+        "answer_type": answer_type,
     }
 
 
@@ -851,10 +951,18 @@ def _text_contains_answer(text: str, answer_matchers: dict[str, Any]) -> bool:
 def _text_contains_single_answer(text: str, answer_matchers: dict[str, Any]) -> bool:
     """Return whether one title or snippet contains one answer variant."""
     lowered = text.lower()
+    number_values = answer_matchers.get("number_values", set())
+    if answer_matchers.get("answer_type") == "Number" and isinstance(number_values, set) and number_values:
+        text_numbers = {format_decimal(value) for value in extract_number_mentions(text)}
+        if number_values.intersection(text_numbers):
+            return True
     for pattern in answer_matchers.get("regexes", []):
         if pattern.search(lowered):
             return True
-    normalized_text = normalize_name(text)
+    for matcher in answer_matchers.get("text_matchers", []):
+        if text_contains_match(text, matcher):
+            return True
+    normalized_text = display_key(text)
     return any(
         variant and variant in normalized_text
         for variant in answer_matchers.get("normalized_variants", set())
@@ -869,26 +977,14 @@ def _answer_number_margin_hits(text: str, answer_matchers: dict[str, Any]) -> li
     return number_margin_hits(text, {"number_reference_margin": margin})
 
 
-def _country_alias_variants(value: str) -> set[str]:
-    """Return conservative country alias variants for search matching."""
-    normalized = normalize_name(value)
-    variants = {normalized} if normalized else set()
-    for alias_group in COUNTRY_ALIAS_GROUPS:
-        if normalized in alias_group:
-            variants.update(alias_group)
-    return variants
-
-
-def _date_variants(value: str) -> set[str]:
-    """Return normalized date variants for search matching."""
-    normalized = normalize_name(value)
-    variants = {normalized} if normalized else set()
-    variants.update(
-        normalize_name(variant)
-        for variant in date_answer_variant_strings(value)
-        if normalize_name(variant)
-    )
-    return variants
+def _date_matchers(value: str) -> list[TextMatcher]:
+    """Return typed date variant matchers."""
+    raw_variants = {str(value), *date_answer_variant_strings(value)}
+    return [
+        matcher
+        for variant in raw_variants
+        if (matcher := build_text_matcher(variant)) is not None
+    ]
 
 
 def _parse_integer_answer(value: str) -> int | None:
