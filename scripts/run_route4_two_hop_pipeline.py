@@ -93,7 +93,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--final-target", type=int, default=300)
     parser.add_argument("--template-keys", nargs="*", default=[])
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
-    parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", type=str, default="none")
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--duckduckgo-parallel-queries", type=int, default=3)
     add_duckduckgo_transport_args(parser)

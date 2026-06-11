@@ -115,7 +115,7 @@ These defaults come from `scripts/run_wikipedia_infobox_pipeline.py`.
 | `--run-date` | `None` | Falls back to `Settings(...).run_date`. |
 | `--cutoff-year` | `2025` | Avoid generated question text depending on this year or later. |
 | `--timeout-seconds` | `30.0` | Used by Wikipedia, search, and LLM clients. |
-| `--proxy` | `socks5://127.0.0.1:7897` | Use `--proxy none` to disable. |
+| `--proxy` | `none` | No proxy by default; pass a proxy URL to enable one. |
 | `--duckduckgo-prefer-ddgs` | `True` | `--no-duckduckgo-prefer-ddgs` disables the `ddgs` primary path for diagnosis. |
 | `--duckduckgo-ddgs-backend` | `auto` | Passed to `DDGS.text(..., backend=...)`. |
 | `--duckduckgo-ddgs-max-attempts` | `2` | Bounded `ddgs` attempts before legacy fallback. |
@@ -282,7 +282,7 @@ These defaults come from `src/wikidata_simpleqa/config.py` and are used by broad
 | `reject_cumulative_statistics` | `True` |
 | `reject_unreleased_works` | `True` |
 | `user_agent` | `wikidata-simpleqa-generator/0.1` |
-| `proxy` | `socks5://127.0.0.1:7897` |
+| `proxy` | `None` |
 | `timeout_seconds` | `30.0` |
 | `wikidata_max_entity_ids_per_request` | `50` |
 | `wikidata_log_checkpoints` | `False` |

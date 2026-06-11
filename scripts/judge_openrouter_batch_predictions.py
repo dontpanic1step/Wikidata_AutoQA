@@ -174,7 +174,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--glob", default="*.jsonl", help="Input glob when input_path is a directory.")
     parser.add_argument("--judge-model", default=DEFAULT_JUDGE_MODEL)
     parser.add_argument("--api-key-env", default="OPENROUTER_API_KEY")
-    parser.add_argument("--proxy", default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", default="none")
     parser.add_argument("--concurrency", type=int, default=10)
     parser.add_argument("--timeout-seconds", type=float, default=60.0)
     parser.add_argument("--max-retries", type=int, default=4)

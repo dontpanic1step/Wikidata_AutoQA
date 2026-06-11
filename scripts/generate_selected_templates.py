@@ -32,7 +32,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--duckduckgo-top-k", type=int, default=10)
     add_duckduckgo_transport_args(parser)
-    parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", type=str, default="none")
     parser.add_argument("--disable-route1-light-fallback", action="store_true")
     parser.add_argument(
         "--route1-subject-seed-window-granularity",

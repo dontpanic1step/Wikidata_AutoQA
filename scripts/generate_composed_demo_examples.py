@@ -51,7 +51,7 @@ def _finalize(candidate, template):
 def main() -> int:
     client = WikidataClient(
         user_agent="wikidata-simpleqa-generator/0.1",
-        proxy="socks5://127.0.0.1:7897",
+        proxy=None,
         timeout_seconds=60,
     )
 

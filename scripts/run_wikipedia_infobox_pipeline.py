@@ -670,7 +670,7 @@ def parse_args() -> argparse.Namespace:
         default=120.0,
         help="Quiet period after which successful Wikipedia requests reset the shared HTTP 429 backoff.",
     )
-    parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", type=str, default="none")
     parser.add_argument("--small-model-provider", type=str, default="openrouter")
     parser.add_argument("--generation-model", dest="generation_model", type=str, default="openai/gpt-4.1-mini")
     parser.add_argument(

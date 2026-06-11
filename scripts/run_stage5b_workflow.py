@@ -49,7 +49,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--template-keys", "--domains", dest="template_keys", nargs="*", default=[])
     parser.add_argument("--pilot-total", type=int, default=1)
     parser.add_argument("--harvest-limit", type=int, default=3)
-    parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", type=str, default="none")
     parser.add_argument(
         "--no-proxy",
         action="store_true",

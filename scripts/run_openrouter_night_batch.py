@@ -143,7 +143,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--run-root", type=Path, default=ROOT / "outputs" / RUN_ID)
     parser.add_argument("--log-path", type=Path, default=ROOT / "outputs" / RUN_ID / "night_batch.log")
     parser.add_argument("--seed", type=int, default=42)
-    parser.add_argument("--proxy", default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", default="none")
     parser.add_argument("--prepare-only", action="store_true")
     return parser.parse_args()
 

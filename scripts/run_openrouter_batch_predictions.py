@@ -153,7 +153,7 @@ def parse_args() -> argparse.Namespace:
         help="Comma-separated OpenRouter model ids.",
     )
     parser.add_argument("--api-key-env", default="OPENROUTER_API_KEY")
-    parser.add_argument("--proxy", default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", default="none")
     parser.add_argument("--concurrency", type=int, default=20)
     parser.add_argument("--rounds", type=int, default=5)
     parser.add_argument("--timeout-seconds", type=float, default=240.0)

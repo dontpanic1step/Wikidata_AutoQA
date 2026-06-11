@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 
 from test_support import ROOT  # noqa: F401
-from wikidata_simpleqa.config import Settings
+from wikidata_simpleqa.config import LLMConfig, Settings
 
 
 class ConfigTests(unittest.TestCase):
@@ -85,6 +85,20 @@ class ConfigTests(unittest.TestCase):
         self.assertEqual(settings.search_longtail_max_full_question_hit_rate, 0.3)
         self.assertEqual(settings.search_longtail_max_keyword_hit_rate, 0.3)
         self.assertEqual(settings.search_longtail_max_overall_hit_rate, 0.3)
+
+    def test_default_proxy_is_none(self) -> None:
+        self.assertIsNone(Settings(target_time="2026").proxy)
+
+    def test_none_proxy_values_normalize_to_none(self) -> None:
+        settings = Settings(target_time="2026", proxy="none")
+        llm_config = LLMConfig(
+            provider="openrouter",
+            model="openai/gpt-4.1-mini",
+            api_key_env="OPENROUTER_API_KEY",
+            proxy="none",
+        )
+        self.assertIsNone(settings.proxy)
+        self.assertIsNone(llm_config.proxy)
 
 
 if __name__ == "__main__":

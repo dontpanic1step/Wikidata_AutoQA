@@ -146,7 +146,7 @@ def parse_args() -> argparse.Namespace:
         help="Score the selected subdomains, then keep only the best one per broad domain.",
     )
     parser.add_argument("--timeout-seconds", type=float, default=20.0)
-    parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", type=str, default="none")
     parser.add_argument("--min-table-score", type=float, default=0.0)
     parser.add_argument("--dump-url", type=str, default=DEFAULT_TITLE_DUMP_URL)
     parser.add_argument("--dump-title-path", type=Path, default=ROOT / "cache" / "wikipedia_dumps" / "enwiki-latest-all-titles-in-ns0.gz")

@@ -8,6 +8,16 @@ from pathlib import Path
 import re
 
 
+def normalize_proxy(value: str | None) -> str | None:
+    """Normalize user-facing proxy values to the internal optional proxy form."""
+    if value is None:
+        return None
+    stripped = value.strip()
+    if not stripped or stripped.lower() in {"none", "direct", "off", "false"}:
+        return None
+    return stripped
+
+
 def _default_second_stage_grading_models() -> tuple["LLMConfig", ...]:
     """Return the default small-model panel for post-filter grading."""
     return (
@@ -53,6 +63,9 @@ class LLMConfig:
     proxy: str | None = None
     temperature: float = 0.0
     max_tokens: int = 256
+
+    def __post_init__(self) -> None:
+        self.proxy = normalize_proxy(self.proxy)
 
 
 @dataclass(slots=True)
@@ -102,7 +115,7 @@ class Settings:
     reject_cumulative_statistics: bool = True
     reject_unreleased_works: bool = True
     user_agent: str = "wikidata-simpleqa-generator/0.1"
-    proxy: str | None = "socks5://127.0.0.1:7897"
+    proxy: str | None = None
     timeout_seconds: float = 30.0
     wikidata_max_entity_ids_per_request: int = 50
     wikidata_log_checkpoints: bool = False
@@ -119,6 +132,7 @@ class Settings:
     rewrite_llm: LLMConfig | None = None
 
     def __post_init__(self) -> None:
+        self.proxy = normalize_proxy(self.proxy)
         if self.date_upper_bound is None:
             self.date_upper_bound = self.run_date
         self.target_time = self.target_time.strip()

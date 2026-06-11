@@ -32,7 +32,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     add_duckduckgo_transport_args(parser)
-    parser.add_argument("--proxy", type=str, default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", type=str, default="none")
     parser.add_argument("--disable-route1-light-fallback", action="store_true")
     parser.add_argument("--enable-rewrite", action="store_true")
     parser.add_argument("--rewrite-provider", type=str, default="openrouter")

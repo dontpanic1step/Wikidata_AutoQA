@@ -241,7 +241,7 @@ General settings currently default to:
 - default second-stage answer models: `openai/gpt-4.1-mini`, `google/gemini-3-flash-preview`
 - default grader: `openai/gpt-4.1-mini`
 - OpenRouter key environment variable: `OPENROUTER_API_KEY`
-- default proxy: `socks5://127.0.0.1:7897`
+- default proxy: `none` (direct/no proxy)
 - default cache directory: `cache/wikidata`
 
 The Wikipedia infobox/table runner currently defaults to:

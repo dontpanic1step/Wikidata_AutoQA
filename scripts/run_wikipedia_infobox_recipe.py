@@ -214,7 +214,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--target-time", default="2024")
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
-    parser.add_argument("--proxy", default="socks5://127.0.0.1:7897")
+    parser.add_argument("--proxy", default="none")
     parser.add_argument("--small-model-provider", default="openrouter")
     parser.add_argument("--generation-model", dest="generation_model", default="openai/gpt-4.1-mini")
     parser.add_argument(
