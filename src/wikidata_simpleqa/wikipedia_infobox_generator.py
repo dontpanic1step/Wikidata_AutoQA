@@ -1886,7 +1886,7 @@ def build_wikipedia_infobox_prompt(
         
         "### Must be answerable.\n\n"
         f"- If the page title contains a cutoff-year marker in {cutoff_year} or later, use one of safe_subject_aliases when you need to name the subject; do not use the cutoff-year title text.\n"
-        "- The question must be self-contained. It should be answerable without seeing the list or the table. Do not ask `What is ... in the list(table)?`.\n"
+        "- The question must be self-contained. It should be answerable without seeing the list or the table. Do not ask `What is ... in the list(table)?` or use phrases like `according to the table` `listed as`.\n"
         # "- Do not cite the list unless the source is a well-known named chart or list, such as a Billboard chart, UNESCO list or a sports tournament chart. Phrases to avoid: `according to the table`, `according to the [source] table`, or `in the List of ...`. \n"
         # "- Ask about the facts in the table. Do not ask questions about the table itself, such as `What year does the estimate refer to`.\n"
         # "- Rendered markdown preserves table layout: a non-empty cell followed by blank cells may represent an HTML colspan cell. Treat it as one spanned cell, not as repeated field values.\n"

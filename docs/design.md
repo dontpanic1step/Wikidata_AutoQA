@@ -9,6 +9,8 @@ It restores the intended `5-13` work after the incident on `5-13-after-incident`
 - keep shared LLM rewriting
 - keep shared long-tail filtering
 
+Terminology note: in this document, `rewrite` can mean either the general LLM wording step that turns route-specific source material into SimpleQA-style question text, or the optional shared post-generation rewrite stage controlled by the runner flag `--enable-rewrite`. The `--enable-rewrite` flag refers to the shared rewrite pass for routes that already have a candidate question to revise, especially the KELM-style path that rewrites an existing question; it is off by default. For Route 3, references to LLM rewriting in the main generation path mean the small model reading the selected table plus page context and producing a table-grounded question; they do not mean that the `--enable-rewrite` flag is on by default.
+
 The main strategic change is that **Route 1 returns to template-led generation inside the shared multi-generator pipeline**.
 
 The validated restoration walkthrough is recorded in `docs/walkthroughs/product_manufacturer_walkthrough_5_13_restored.md`.
