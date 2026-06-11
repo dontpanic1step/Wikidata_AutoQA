@@ -1857,7 +1857,7 @@ def build_wikipedia_infobox_prompt(
         "- The question must have exactly one intended, indisputable answer.\n"
         "- The answer must be a value from the table, not from the first paragraph etc.\n"
         f"{table_instruction}"
-        "- Avoid questions with unclear or overly broad answer categories, such as `What equipment ...` `What genre ...`. Instead, ask about a more specific and verifiable attribute.\n"
+        "- Avoid questions with unclear or overly broad answer categories, such as `What equipment ...` `What genre ...` `What type of ...`. Instead, ask about a more specific and verifiable attribute.\n"
         f"{_answer_precision_prompt_rule(prompt_answer_types)}"
         "- If a table cell has a parenthetical alias, put the plain entity name in answer and the parenthetical text in answer_aliases.\n"
 

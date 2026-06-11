@@ -545,6 +545,7 @@ class GenerationPipelineTests(unittest.TestCase):
         for marker, rewritten_question in (
             ("meaning", "What is the meaning of Harbor Lights?"),
             ("genre", "What genre is Harbor Lights?"),
+            ("type", "What type of film is Harbor Lights?"),
         ):
             with self.subTest(marker=marker):
                 source_candidate = make_candidate()

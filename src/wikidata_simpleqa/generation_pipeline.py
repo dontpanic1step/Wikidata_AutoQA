@@ -63,6 +63,7 @@ POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS = (
 POST_REWRITE_ANSWER_SCOPE_AMBIGUOUS_PATTERNS = (
     ("meaning", re.compile(r"\bmeaning\b", flags=re.IGNORECASE)),
     ("genre", re.compile(r"\bgenre\b", flags=re.IGNORECASE)),
+    ("type", re.compile(r"\btype\b", flags=re.IGNORECASE)),
 )
 POST_REWRITE_TIME_INVARIANCE_FORBIDDEN_PATTERNS = (
     ("current", re.compile(r"\bcurrent(?:ly)?\b", flags=re.IGNORECASE)),
