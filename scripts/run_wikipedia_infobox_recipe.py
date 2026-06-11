@@ -58,6 +58,7 @@ from run_wikipedia_infobox_pipeline import (
     _ensure_page_id_list_entry_metadata,
     _load_endpoint_jsonl,
     _phase_timing_stats,
+    _llm_generation_table_yield_summary,
     _safe_artifact_id,
     _survival_by_layer,
     _write_stream_walkthrough,
@@ -1406,8 +1407,10 @@ def _recipe_summary(
         "wikipedia_429_backoff_seconds": args.wikipedia_429_backoff_seconds,
         "wikipedia_429_max_backoff_seconds": args.wikipedia_429_max_backoff_seconds,
         "wikipedia_429_recovery_seconds": args.wikipedia_429_recovery_seconds,
+        **_llm_generation_table_yield_summary(accepted_records, rejected_records),
         "survival_by_layer": _survival_by_layer(
             attempted_count=attempted,
+            accepted_records=accepted_records,
             rejected_records=rejected_records,
             rerun_records=[],
         ),

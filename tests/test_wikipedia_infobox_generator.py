@@ -61,10 +61,13 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _compact_rejected_record,
     _filter_endpoint_url_entries,
     _failure_reason_counts,
+    _aggregate_phase_timings,
+    _llm_generation_table_yield_summary,
     _load_endpoint_jsonl,
     _load_stream_excluded_page_ids,
     _load_url_entries,
     _load_urls,
+    _phase_timing_stats,
     _process_one_stream_page_id,
     _remaining_after_endpoint,
     _record_reasoning_type,
@@ -1689,10 +1692,157 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             }
         ]
 
-        rows = {row["stage"]: row for row in _survival_by_layer(attempted_count=1, rejected_records=records, rerun_records=[])}
+        rows = {
+            row["stage"]: row
+            for row in _survival_by_layer(
+                attempted_count=1,
+                accepted_records=[],
+                rejected_records=records,
+                rerun_records=[],
+            )
+        }
 
-        self.assertEqual(rows["route_generation"]["failed"], 1)
+        self.assertEqual(rows["route_generation_pre_llm"]["failed"], 1)
         self.assertEqual(rows["shared_validation"]["failed"], 0)
+
+    def test_survival_stats_follow_current_route3_flow_units(self) -> None:
+        table_row = {
+            "table_index": 4,
+            "table_type": "wikitable",
+            "caption": "Example table",
+            "section_heading": "Examples",
+            "score": 1.0,
+            "below_min_table_score": False,
+            "table_filter_rejection_reason": "",
+            "live_scope_rejection_reason": "",
+        }
+
+        def record(page_id: int, rejection_reason: str = "") -> dict:
+            payload = {
+                "answer_type": "Person",
+                "source_metadata": {
+                    "page_id": page_id,
+                    "phase_timings_seconds": {
+                        "llm_question_generation_seconds": 1.0,
+                        "total_generation_seconds": 2.0,
+                        "total_processing_seconds": 3.0,
+                    },
+                    "table_selection": [table_row],
+                    "selected_source_table": table_row,
+                },
+            }
+            if rejection_reason:
+                payload["rejection_reason"] = rejection_reason
+            return payload
+
+        accepted = [record(101)]
+        rejected = [
+            {
+                "rejection_reason": "wikipedia_infobox_no_tables",
+                "source_metadata": {
+                    "page_id": 102,
+                    "phase_timings_seconds": {"total_generation_seconds": 0.2},
+                },
+            },
+            record(101, "wikipedia_infobox_llm_discarded"),
+            record(101, "rewrite_guard_rejected"),
+            record(101, "shared_validation_failed"),
+            record(101, "search_longtail_verifier_rejected"),
+            record(101, "second_stage_grading_accuracy_threshold_exceeded"),
+        ]
+
+        rows = {
+            row["stage"]: row
+            for row in _survival_by_layer(
+                attempted_count=2,
+                accepted_records=accepted,
+                rejected_records=rejected,
+                rerun_records=[],
+            )
+        }
+
+        self.assertEqual(rows["route_generation_pre_llm"]["unit"], "page IDs")
+        self.assertEqual(rows["route_generation_pre_llm"]["entered"], 2)
+        self.assertEqual(rows["route_generation_pre_llm"]["failed"], 1)
+        self.assertEqual(rows["route_generation_pre_llm"]["survived"], 1)
+        self.assertEqual(rows["llm_generation_input_tables"]["unit"], "tables")
+        self.assertEqual(rows["llm_generation_input_tables"]["entered"], 1)
+        self.assertEqual(rows["route_generation"]["unit"], "QA candidates/slots")
+        self.assertEqual(rows["route_generation"]["entered"], 6)
+        self.assertEqual(rows["route_generation"]["failed"], 1)
+        self.assertEqual(rows["rewrite_surface"]["entered"], 5)
+        self.assertEqual(rows["shared_validation"]["entered"], 4)
+        self.assertEqual(rows["search_longtail"]["entered"], 3)
+        self.assertEqual(rows["second_stage_grading"]["entered"], 2)
+
+    def test_phase_timing_stats_deduplicate_shared_all5_generation_work(self) -> None:
+        table_row = {
+            "table_index": 1,
+            "table_type": "wikitable",
+            "caption": "Example table",
+            "section_heading": "Examples",
+            "score": 1.0,
+            "below_min_table_score": False,
+            "table_filter_rejection_reason": "",
+            "live_scope_rejection_reason": "",
+        }
+        first_slot = {
+            "answer_type": "Person",
+            "source_metadata": {
+                "page_id": 201,
+                "phase_timings_seconds": {
+                    "table_parse_seconds": 1.0,
+                    "llm_question_generation_seconds": 2.0,
+                    "total_generation_seconds": 5.0,
+                    "total_processing_seconds": 3.0,
+                },
+                "table_selection": [table_row],
+                "selected_source_table": table_row,
+            },
+        }
+        second_slot = {
+            "answer_type": "Place",
+            "rejection_reason": "search_longtail_verifier_rejected",
+            "source_metadata": {
+                "page_id": 201,
+                "phase_timings_seconds": {
+                    "table_parse_seconds": 1.0,
+                    "llm_question_generation_seconds": 2.0,
+                    "total_generation_seconds": 5.0,
+                    "duckduckgo_search_seconds": 1.5,
+                    "total_processing_seconds": 4.0,
+                },
+                "table_selection": [table_row],
+                "selected_source_table": table_row,
+            },
+        }
+        pre_llm_rejection = {
+            "rejection_reason": "wikipedia_infobox_no_tables",
+            "source_metadata": {
+                "page_id": 202,
+                "phase_timings_seconds": {
+                    "table_parse_seconds": 0.5,
+                    "total_generation_seconds": 1.0,
+                },
+            },
+        }
+
+        stats = _phase_timing_stats([first_slot, second_slot, pre_llm_rejection])
+        aggregate = _aggregate_phase_timings([first_slot], [second_slot, pre_llm_rejection])
+        yield_summary = _llm_generation_table_yield_summary([first_slot], [second_slot, pre_llm_rejection])
+
+        self.assertEqual(stats["table_parse_seconds"]["count"], 2)
+        self.assertEqual(stats["table_parse_seconds"]["total"], 1.5)
+        self.assertEqual(stats["llm_question_generation_seconds"]["count"], 1)
+        self.assertEqual(stats["llm_question_generation_seconds"]["total"], 2.0)
+        self.assertEqual(stats["total_generation_seconds"]["count"], 2)
+        self.assertEqual(stats["total_generation_seconds"]["total"], 6.0)
+        self.assertEqual(stats["total_processing_seconds"]["count"], 2)
+        self.assertEqual(stats["total_processing_seconds"]["total"], 7.0)
+        self.assertEqual(aggregate["total_generation_seconds"], 6.0)
+        self.assertEqual(yield_summary["llm_generation_input_tables"], 1)
+        self.assertEqual(yield_summary["llm_generation_accepted_qas"], 1)
+        self.assertEqual(yield_summary["llm_generation_table_yield"], 1.0)
 
     def test_all5_page_level_prerewrite_rejection_writes_page_only_used_entry(self) -> None:
         records = [
