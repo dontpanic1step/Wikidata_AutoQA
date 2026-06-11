@@ -1065,7 +1065,8 @@ def _run_low_integer_snippet_judge(
             "reason": "snippet_judge_unavailable",
         }
     prompt = _build_number_snippet_judge_prompt(candidate.final_question, candidate.answer, snippets)
-    response = parse_json_object(snippet_judge_client.complete_text(prompt))
+    judge_audit = _complete_text_with_audit(snippet_judge_client, prompt)
+    response = parse_json_object(_audit_text(judge_audit))
     found_in_every_snippet = bool(response.get("found_in_every_snippet", False))
     reason = str(response.get("reason", "")).strip()
     return {
@@ -1075,7 +1076,31 @@ def _run_low_integer_snippet_judge(
         "snippet_count": len(snippets),
         "found_in_every_snippet": found_in_every_snippet,
         "reason": reason,
+        "judge_audit": judge_audit,
     }
+
+
+def _complete_text_with_audit(client: Any, prompt: str) -> dict[str, Any]:
+    """Return text-completion audit metadata, accepting legacy text-only clients."""
+    if hasattr(client, "complete_text_with_audit"):
+        audit = client.complete_text_with_audit(prompt)
+        if isinstance(audit, dict):
+            return audit
+    response = client.complete_text(prompt)
+    return {
+        "text": str(response).strip(),
+        "response_body": response,
+        "response": response,
+    }
+
+
+def _audit_text(audit: dict[str, Any]) -> str:
+    """Return assistant text from one text-completion audit payload."""
+    if "text" in audit:
+        return str(audit.get("text", ""))
+    if "raw_text" in audit:
+        return str(audit.get("raw_text", ""))
+    return str(audit.get("response", ""))
 
 
 def _build_number_snippet_judge_prompt(question: str, answer: str, snippets: list[str]) -> str:

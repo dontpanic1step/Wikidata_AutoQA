@@ -18,7 +18,7 @@ from wikidata_simpleqa.generation_pipeline import (
 )
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generator_validators import run_search_based_longtail_verifier
-from wikidata_simpleqa.grading import ModelPanelMember
+from wikidata_simpleqa.grading import ModelPanelMember, evaluate_model_panel
 from wikidata_simpleqa.models import AmbiguityResolution, CandidateFact, DomainTemplate
 
 
@@ -68,6 +68,13 @@ class FakePanelModelClient:
     def complete_text(self, prompt: str) -> str:
         return self.response
 
+    def complete_text_with_audit(self, prompt: str) -> dict:
+        return {
+            "text": self.response,
+            "request_payload": {"prompt": prompt},
+            "response_body": {"fake_answer_response": self.response},
+        }
+
 
 class FakePanelGraderClient:
     """Grader stub that returns one configured response per call."""
@@ -81,6 +88,14 @@ class FakePanelGraderClient:
         if not self.responses:
             raise AssertionError("No fake grader response configured.")
         return self.responses.pop(0)
+
+    def complete_text_with_audit(self, prompt: str) -> dict:
+        text = self.complete_text(prompt)
+        return {
+            "text": text,
+            "request_payload": {"prompt": prompt},
+            "response_body": {"fake_grader_response": text},
+        }
 
 
 class FakeRewriteClient:
@@ -1738,6 +1753,15 @@ class GenerationPipelineTests(unittest.TestCase):
         self.assertAlmostEqual(features["accuracy"], 0.5)
         self.assertEqual(features["models"][0]["grade"], "CORRECT")
         self.assertEqual(features["models"][1]["grade"], "INCORRECT")
+        self.assertEqual(
+            features["models"][0]["answer_audit"]["response_body"]["fake_answer_response"],
+            "Jane Doe",
+        )
+        self.assertIn("grader_audit", features["models"][0])
+        self.assertEqual(
+            features["models"][0]["grader_audit"]["response_body"]["fake_grader_response"],
+            '{"grades": [{"index": 0, "grade": "CORRECT", "reason": "same"}]}',
+        )
         self.assertAlmostEqual(
             result.telemetry["process_generated_candidates"]["second_stage_grading_summary"]["per_model"]["openai/gpt-5.4-mini"]["accuracy"],
             1.0,
@@ -1817,6 +1841,25 @@ class GenerationPipelineTests(unittest.TestCase):
         self.assertEqual(
             result.rejected[0]["rejection_reason"],
             "second_stage_grading_accuracy_threshold_exceeded",
+        )
+
+    def test_per_row_panel_grading_records_grader_audit(self) -> None:
+        features = evaluate_model_panel(
+            question="Who directed the film Example Film?",
+            gold_answer="Jane Doe",
+            gold_aliases=[],
+            answer_type="Person",
+            source_metadata={},
+            model_panel=[ModelPanelMember("openai/gpt-5.4-mini", FakePanelModelClient("Jane Doe"))],
+            grader_client=FakePanelGraderClient(['{"grade": "CORRECT", "reason": "same"}']),
+            parallel_answers=False,
+            batch_grader=False,
+        )
+
+        self.assertEqual(features["models"][0]["grade"], "CORRECT")
+        self.assertEqual(
+            features["models"][0]["grader_audit"]["response_body"]["fake_grader_response"],
+            '{"grade": "CORRECT", "reason": "same"}',
         )
 
     def test_number_snippet_judge_trigger_range_is_minus_ten_to_thirty(self) -> None:

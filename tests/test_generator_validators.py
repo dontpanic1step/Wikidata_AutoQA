@@ -38,6 +38,14 @@ class FakeCheapModelClient:
         self.prompts.append(prompt)
         return self.response
 
+    def complete_text_with_audit(self, prompt: str) -> dict:
+        text = self.complete_text(prompt)
+        return {
+            "text": text,
+            "request_payload": {"prompt": prompt},
+            "response_body": {"fake_snippet_judge_response": text},
+        }
+
 
 def make_generated_candidate() -> GeneratedCandidate:
     """Build a minimal shared candidate for validator tests."""
@@ -932,6 +940,10 @@ class GeneratorValidatorTests(unittest.TestCase):
             "number_snippet_judge:found_in_every_snippet",
         )
         self.assertEqual(features["number_snippet_judge"]["answer_integer"], -10)
+        self.assertEqual(
+            features["number_snippet_judge"]["judge_audit"]["response_body"]["fake_snippet_judge_response"],
+            '{"found_in_every_snippet": true, "reason": "All snippets explicitly mention minus ten."}',
+        )
         self.assertIn("minus ten", snippet_judge.prompts[0])
 
     def test_search_verifier_does_not_run_snippet_judge_for_decimal_number(self) -> None:

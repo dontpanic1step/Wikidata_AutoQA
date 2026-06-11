@@ -2571,7 +2571,8 @@ def _complete_text_with_audit(llm_client: Any, prompt: str) -> dict[str, Any]:
     return {
         "text": str(text).strip(),
         "request_payload": {},
-        "response_body": {},
+        "response_body": text,
+        "response": text,
     }
 
 

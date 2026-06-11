@@ -51,12 +51,14 @@ def grade_prediction(
         answer_type=answer_type,
         source_metadata=source_metadata or {},
     )
-    parsed = parse_json_object(grader_client.complete_text(prompt))
+    grader_audit = _complete_text_with_audit(grader_client, prompt)
+    parsed = parse_json_object(_audit_text(grader_audit))
     grade = _normalize_grade(str(parsed.get("grade", "")).strip())
     return {
         "grade": grade,
         "reason": str(parsed.get("reason", "")).strip(),
         "method": "llm_grader",
+        "grader_audit": grader_audit,
         "grading_duration_seconds": _elapsed(grading_start),
     }
 
@@ -87,7 +89,8 @@ def grade_predictions_batch(
         answer_type=answer_type,
         source_metadata=source_metadata or {},
     )
-    parsed = parse_json_object(grader_client.complete_text(prompt))
+    grader_audit = _complete_text_with_audit(grader_client, prompt)
+    parsed = parse_json_object(_audit_text(grader_audit))
     raw_grades = parsed.get("grades", [])
     if not isinstance(raw_grades, list):
         raise ValueError("Batch grader response must contain a grades list.")
@@ -111,6 +114,7 @@ def grade_predictions_batch(
                 "grade": _normalize_grade(str(raw_row.get("grade", "")).strip()),
                 "reason": str(raw_row.get("reason", "")).strip(),
                 "method": "llm_grader_batch",
+                "grader_audit": grader_audit,
                 "grading_duration_seconds": duration,
             }
         )
@@ -242,10 +246,12 @@ def _elapsed(start: float) -> float:
 def _answer_panel_member(question: str, member: ModelPanelMember) -> dict[str, Any]:
     """Run one second-stage answer model."""
     answer_start = perf_counter()
-    predicted_answer = str(member.client.complete_text(question)).strip()
+    answer_audit = _complete_text_with_audit(member.client, question)
+    predicted_answer = _audit_text(answer_audit).strip()
     return {
         "model": member.name,
         "predicted_answer": predicted_answer,
+        "answer_audit": answer_audit,
         "answer_duration_seconds": _elapsed(answer_start),
     }
 
@@ -325,6 +331,29 @@ def _panel_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
         "correct_count": correct_count,
         "attempted_count": attempted_count,
     }
+
+
+def _complete_text_with_audit(client: Any, prompt: str) -> dict[str, Any]:
+    """Return text-completion audit metadata, accepting legacy text-only clients."""
+    if hasattr(client, "complete_text_with_audit"):
+        audit = client.complete_text_with_audit(prompt)
+        if isinstance(audit, dict):
+            return audit
+    response = client.complete_text(prompt)
+    return {
+        "text": str(response).strip(),
+        "response_body": response,
+        "response": response,
+    }
+
+
+def _audit_text(audit: dict[str, Any]) -> str:
+    """Return assistant text from one text-completion audit payload."""
+    if "text" in audit:
+        return str(audit.get("text", ""))
+    if "raw_text" in audit:
+        return str(audit.get("raw_text", ""))
+    return str(audit.get("response", ""))
 
 
 def _normalize_grade(raw_grade: str) -> str:
