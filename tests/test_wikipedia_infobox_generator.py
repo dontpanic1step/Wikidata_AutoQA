@@ -222,6 +222,30 @@ class FakeSingleFactLLMClient(FakeLLMClient):
         }"""
 
 
+class FakeInvalidJsonAuditLLMClient(FakeLLMClient):
+    """Fake Route 3 model output with audit metadata but no parseable JSON."""
+
+    def complete_text_with_audit(self, prompt: str) -> dict:
+        self.prompts.append(prompt)
+        raw_text = "This is not JSON."
+        response_body = {
+            "id": "bad-json-response",
+            "choices": [
+                {
+                    "index": 0,
+                    "message": {"role": "assistant", "content": raw_text},
+                    "finish_reason": "length",
+                    "native_finish_reason": "max_tokens",
+                }
+            ],
+        }
+        return {
+            "text": raw_text,
+            "request_payload": {"messages": [{"role": "user", "content": prompt}]},
+            "response_body": response_body,
+        }
+
+
 class FakeEosLLMClient(FakeLLMClient):
     """Fake Route 3 output for an Eos infobox prompt."""
 
@@ -2909,6 +2933,37 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertNotIn("preferred_subject_anchor exactly", generator.llm_client.prompts[0])
         self.assertNotIn("local, bounded facts", generator.llm_client.prompts[0])
         self.assertEqual(len(candidate.search_queries), 2)
+
+    def test_generation_parse_failure_placeholder_keeps_llm_audit_and_counts_llm_generation(self) -> None:
+        llm_client = FakeInvalidJsonAuditLLMClient()
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=llm_client,
+            record_limit=1,
+            table_filter_modes=(),
+            min_table_score=-999.0,
+        )
+
+        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
+        metadata = candidate.source_metadata
+        record = candidate.to_rejected_record(reason=candidate.notes[0])
+        yield_summary = _llm_generation_table_yield_summary([], [record])
+
+        self.assertIn("wikipedia_infobox_llm_parse_failed", candidate.notes)
+        self.assertEqual(metadata["llm_prompt"], llm_client.prompts[0])
+        self.assertIn("### subject_anchors", metadata["llm_prompt"])
+        self.assertEqual(metadata["llm_audit"]["response_body"]["id"], "bad-json-response")
+        self.assertEqual(metadata["llm_audit"]["raw_text"], "This is not JSON.")
+        self.assertEqual(metadata["llm_audit"]["finish_reason"], "length")
+        self.assertEqual(metadata["llm_audit"]["native_finish_reason"], "max_tokens")
+        self.assertEqual(metadata["llm_audit"]["parse_error"]["error_type"], "ValueError")
+        self.assertEqual(metadata["llm_response"]["raw_text"], "This is not JSON.")
+        self.assertEqual(metadata["llm_response"]["finish_reason"], "length")
+        self.assertIn("llm_question_generation_seconds", metadata["phase_timings_seconds"])
+        self.assertEqual(yield_summary["llm_generation_input_pages"], 1)
+        self.assertEqual(yield_summary["llm_generation_input_tables"], 1)
+        self.assertEqual(yield_summary["llm_generation_accepted_qas"], 0)
 
     def test_subject_anchor_aliases_use_fixed_2025_cutoff_but_prompt_context_uses_run_cutoff(self) -> None:
         generator = WikipediaInfoboxTableGenerator(

@@ -1083,7 +1083,47 @@ class WikipediaInfoboxTableGenerator:
         )
         llm_start = perf_counter()
         llm_audit = _complete_text_with_audit(self.llm_client, prompt)
-        response = parse_json_object(str(llm_audit.get("text", "")))
+        try:
+            response = parse_json_object(str(llm_audit.get("text", "")))
+        except (TypeError, ValueError) as exc:
+            timings["llm_question_generation_seconds"] = _elapsed(llm_start)
+            llm_audit = _ensure_llm_audit_response_fields(llm_audit)
+            llm_audit["parse_error"] = {
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            }
+            raw_text = str(llm_audit.get("raw_text", ""))
+            finish_reason = str(llm_audit.get("finish_reason", ""))
+            return _rejected_placeholder(
+                url=page.source_url,
+                reason="wikipedia_infobox_llm_parse_failed",
+                run_date=run_date,
+                timings=timings,
+                title=page.title,
+                canonical_url=page.canonical_url,
+                content_domain=page.content_domain,
+                first_paragraph=page.first_paragraph,
+                error_message=str(exc),
+                discard_reason=f"parse_json_object_failed:{type(exc).__name__}",
+                tables=page.tables,
+                llm_response={
+                    "discard_reason": f"parse_json_object_failed:{type(exc).__name__}",
+                    "raw_text": raw_text,
+                    "finish_reason": finish_reason,
+                },
+                llm_prompt=prompt,
+                llm_audit=llm_audit,
+                table_selection=table_selection,
+                min_table_score=self.min_table_score,
+                allowed_reasoning_types=self.allowed_reasoning_types,
+                allowed_answer_types=self.allowed_answer_types,
+                extra_prompts=self.extra_prompts,
+                table_filter_modes=self.table_filter_modes,
+                table_source_types=self.table_source_types,
+                page_archive=page.route3_page_archive,
+                pageview_prefilter=page.pageview_prefilter,
+                answer_type_mode=self.answer_type_mode,
+            )
         llm_audit["parsed_response"] = response
         timings["llm_question_generation_seconds"] = _elapsed(llm_start)
         if self.answer_type_mode == "all5":
@@ -2566,14 +2606,78 @@ def _complete_text_with_audit(llm_client: Any, prompt: str) -> dict[str, Any]:
     if hasattr(llm_client, "complete_text_with_audit"):
         audit = llm_client.complete_text_with_audit(prompt)
         if isinstance(audit, dict):
-            return audit
+            return _ensure_llm_audit_response_fields(audit)
     text = llm_client.complete_text(prompt)
-    return {
+    return _ensure_llm_audit_response_fields({
         "text": str(text).strip(),
         "request_payload": {},
         "response_body": text,
         "response": text,
-    }
+    })
+
+
+def _ensure_llm_audit_response_fields(audit: dict[str, Any]) -> dict[str, Any]:
+    """Return LLM audit metadata with raw text and finish-reason fields."""
+    safe_audit = dict(audit or {})
+    response_body = safe_audit.get("response_body")
+    raw_text = safe_audit.get("raw_text")
+    if raw_text is None:
+        raw_text = _response_body_choice_text(response_body)
+    if raw_text is None:
+        raw_text = safe_audit.get("text", "")
+    raw_text = str(raw_text or "")
+    safe_audit["raw_text"] = raw_text
+    if not str(safe_audit.get("text", "") or "").strip():
+        safe_audit["text"] = raw_text.strip()
+    finish_reason = str(safe_audit.get("finish_reason") or "").strip()
+    if not finish_reason:
+        finish_reason = _response_body_finish_reason(response_body)
+    safe_audit["finish_reason"] = finish_reason
+    native_finish_reason = str(safe_audit.get("native_finish_reason") or "").strip()
+    if not native_finish_reason:
+        native_finish_reason = _response_body_native_finish_reason(response_body)
+    safe_audit["native_finish_reason"] = native_finish_reason
+    return safe_audit
+
+
+def _response_body_choice_text(response_body: object) -> str | None:
+    """Return assistant text from an OpenRouter-style response body if present."""
+    choice = _response_body_first_choice(response_body)
+    if not isinstance(choice, dict):
+        return None
+    message = choice.get("message", {})
+    if not isinstance(message, dict):
+        return None
+    if "content" not in message:
+        return None
+    return str(message.get("content") or "")
+
+
+def _response_body_finish_reason(response_body: object) -> str:
+    """Return finish_reason from an OpenRouter-style response body if present."""
+    choice = _response_body_first_choice(response_body)
+    if not isinstance(choice, dict):
+        return ""
+    return str(choice.get("finish_reason") or "")
+
+
+def _response_body_native_finish_reason(response_body: object) -> str:
+    """Return native_finish_reason from an OpenRouter-style response body if present."""
+    choice = _response_body_first_choice(response_body)
+    if not isinstance(choice, dict):
+        return ""
+    return str(choice.get("native_finish_reason") or "")
+
+
+def _response_body_first_choice(response_body: object) -> dict[str, Any] | None:
+    """Return the first OpenRouter choice payload when response_body has one."""
+    if not isinstance(response_body, dict):
+        return None
+    choices = response_body.get("choices", [])
+    if not isinstance(choices, list) or not choices:
+        return None
+    choice = choices[0]
+    return choice if isinstance(choice, dict) else None
 
 
 def _utc_timestamp() -> str:

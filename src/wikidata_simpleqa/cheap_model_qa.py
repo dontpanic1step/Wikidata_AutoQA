@@ -14,7 +14,7 @@ from urllib.request import Request, urlopen
 from .config import LLMConfig
 from .network import clear_proxy, install_proxy
 
-SYSTEM_PROMPT = "Answer the user's question directly and concisely."
+SYSTEM_PROMPT = "" #"Answer the user's question directly and concisely."
 OPENROUTER_REFERER = "https://example.com/wikidata-simpleqa"
 OPENROUTER_TITLE = "Wikidata SimpleQA Generator"
 OPENROUTER_USER_AGENT = "wikidata-simpleqa-generator/0.1"
@@ -64,11 +64,15 @@ class OpenRouterCheapModelQAClient:
             ],
         }
         body = self._request_with_retry(request_payload, use_proxy=bool(self.proxy))
-        text = str(body["choices"][0]["message"]["content"]).strip()
+        choice = body["choices"][0]
+        text = str(choice["message"]["content"])
         return {
-            "text": text,
+            "text": text.strip(),
             "request_payload": _sanitize_openrouter_request_payload(request_payload),
             "response_body": body,
+            "raw_text": text,
+            "finish_reason": str(choice.get("finish_reason") or ""),
+            "native_finish_reason": str(choice.get("native_finish_reason") or ""),
         }
 
     def _request_with_retry(self, request_payload: dict[str, Any], *, use_proxy: bool) -> dict[str, Any]:

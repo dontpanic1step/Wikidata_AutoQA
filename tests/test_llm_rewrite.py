@@ -265,6 +265,8 @@ class LLMRewriteTests(unittest.TestCase):
 
         self.assertEqual(audit["text"], "{\"ok\": true}")
         self.assertEqual(audit["response_body"], response_body)
+        self.assertEqual(audit["raw_text"], response_body["choices"][0]["message"]["content"])
+        self.assertEqual(audit["finish_reason"], "stop")
         self.assertNotIn("Authorization", audit["request_payload"])
         self.assertEqual(audit["request_payload"]["messages"][-1]["content"], "Generate one question.")
 
