@@ -13,6 +13,7 @@ from wikidata_simpleqa.generation_pipeline import (
     ROUTE3_POPULAR_EXACT_ANSWERS,
     _apply_number_reference_margin,
     _build_route_rewrite_payload,
+    _post_rewrite_answer_scope_ambiguity_failure,
     process_generated_candidates,
     run_generation_pipeline,
 )
@@ -545,6 +546,24 @@ class GenerationPipelineTests(unittest.TestCase):
             "post_rewrite_self_containment_forbidden_phrase:infobox",
         )
 
+    def test_post_rewrite_answer_scope_ambiguity_uses_case_insensitive_word_boundaries(self) -> None:
+        candidate = make_route3_candidate(answer="Jane Doe")
+        cases = (
+            ("AVERAGE score?", "post_rewrite_answer_scope_ambiguous_phrase:average"),
+            ("What percentage voted yes?", "post_rewrite_answer_scope_ambiguous_phrase:percentage"),
+            ("How is Harbor Lights classified?", "post_rewrite_answer_scope_ambiguous_phrase:classified"),
+            (
+                "WHAT   CATEGORY does Harbor Lights belong to?",
+                "post_rewrite_answer_scope_ambiguous_phrase:what_category",
+            ),
+            ("Who averaged the Harbor Lights reviews?", None),
+            ("Who built the unclassified Harbor Lights archive?", None),
+        )
+        for rewritten_question, expected_reason in cases:
+            with self.subTest(rewritten_question=rewritten_question):
+                candidate.rewritten_question = rewritten_question
+                self.assertEqual(_post_rewrite_answer_scope_ambiguity_failure(candidate), expected_reason)
+
     def test_process_generated_candidates_rejects_answer_scope_ambiguous_rewrite_before_search(self) -> None:
         class ScopeRewriteClient:
             def __init__(self, rewritten_question: str) -> None:
@@ -561,6 +580,10 @@ class GenerationPipelineTests(unittest.TestCase):
             ("meaning", "What is the meaning of Harbor Lights?"),
             ("genre", "What genre is Harbor Lights?"),
             ("type", "What type of film is Harbor Lights?"),
+            ("average", "What is the average rating of Harbor Lights?"),
+            ("percentage", "What percentage of reviews praised Harbor Lights?"),
+            ("classified", "How is Harbor Lights classified?"),
+            ("what_category", "What category is Harbor Lights in?"),
         ):
             with self.subTest(marker=marker):
                 source_candidate = make_candidate()

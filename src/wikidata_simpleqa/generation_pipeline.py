@@ -64,6 +64,10 @@ POST_REWRITE_ANSWER_SCOPE_AMBIGUOUS_PATTERNS = (
     ("meaning", re.compile(r"\bmeaning\b", flags=re.IGNORECASE)),
     ("genre", re.compile(r"\bgenre\b", flags=re.IGNORECASE)),
     ("type", re.compile(r"\btype\b", flags=re.IGNORECASE)),
+    ("average", re.compile(r"\baverage\b", flags=re.IGNORECASE)),
+    ("percentage", re.compile(r"\bpercentage\b", flags=re.IGNORECASE)),
+    ("classified", re.compile(r"\bclassified\b", flags=re.IGNORECASE)),
+    ("what_category", re.compile(r"\bwhat\s+category\b", flags=re.IGNORECASE)),
 )
 POST_REWRITE_TIME_INVARIANCE_FORBIDDEN_PATTERNS = (
     ("current", re.compile(r"\bcurrent(?:ly)?\b", flags=re.IGNORECASE)),
