@@ -556,8 +556,26 @@ class GenerationPipelineTests(unittest.TestCase):
                 "WHAT   CATEGORY does Harbor Lights belong to?",
                 "post_rewrite_answer_scope_ambiguous_phrase:what_category",
             ),
+            (
+                "What other name was Harbor Lights released under?",
+                "post_rewrite_answer_scope_ambiguous_phrase:other_name",
+            ),
+            (
+                "What translation of Harbor Lights won the prize?",
+                "post_rewrite_answer_scope_ambiguous_phrase:translation",
+            ),
+            (
+                "What transliteration is used for Harbor Lights?",
+                "post_rewrite_answer_scope_ambiguous_phrase:transliteration",
+            ),
+            (
+                "What is another name for Harbor Lights?",
+                "post_rewrite_answer_scope_ambiguous_phrase:another_name",
+            ),
             ("Who averaged the Harbor Lights reviews?", None),
             ("Who built the unclassified Harbor Lights archive?", None),
+            ("Which translationist reviewed Harbor Lights?", None),
+            ("Who used another naming scheme for Harbor Lights?", None),
         )
         for rewritten_question, expected_reason in cases:
             with self.subTest(rewritten_question=rewritten_question):
@@ -584,6 +602,10 @@ class GenerationPipelineTests(unittest.TestCase):
             ("percentage", "What percentage of reviews praised Harbor Lights?"),
             ("classified", "How is Harbor Lights classified?"),
             ("what_category", "What category is Harbor Lights in?"),
+            ("other_name", "What other name was Harbor Lights released under?"),
+            ("translation", "What translation of Harbor Lights won the prize?"),
+            ("transliteration", "What transliteration is used for Harbor Lights?"),
+            ("another_name", "What is another name for Harbor Lights?"),
         ):
             with self.subTest(marker=marker):
                 source_candidate = make_candidate()

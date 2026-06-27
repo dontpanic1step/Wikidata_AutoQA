@@ -68,6 +68,10 @@ POST_REWRITE_ANSWER_SCOPE_AMBIGUOUS_PATTERNS = (
     ("percentage", re.compile(r"\bpercentage\b", flags=re.IGNORECASE)),
     ("classified", re.compile(r"\bclassified\b", flags=re.IGNORECASE)),
     ("what_category", re.compile(r"\bwhat\s+category\b", flags=re.IGNORECASE)),
+    ("other_name", re.compile(r"\bother\s+name\b", flags=re.IGNORECASE)),
+    ("translation", re.compile(r"\btranslation\b", flags=re.IGNORECASE)),
+    ("transliteration", re.compile(r"\btransliteration\b", flags=re.IGNORECASE)),
+    ("another_name", re.compile(r"\banother\s+name\b", flags=re.IGNORECASE)),
 )
 POST_REWRITE_TIME_INVARIANCE_FORBIDDEN_PATTERNS = (
     ("current", re.compile(r"\bcurrent(?:ly)?\b", flags=re.IGNORECASE)),
