@@ -255,6 +255,42 @@ For sparse pilot slices, dump-backed discovery may evaluate more than one subdom
 
 Page-id streaming discovery temporarily does not require broad domains or subdomains. Domain/subdomain requirements and reports must be treated as optional in this mode so otherwise valid QAs are not rejected only because a page did not arrive from a planned domain bucket. Streaming runs keep a persistent page-id state file with used IDs, in-progress IDs, accepted IDs, rejected IDs, table-search offsets, and a rerun pool. Recipe runs use a separate stream-state file and rerun pool per answer-type segment so transient failures from one segment do not consume the runtime budget of another segment. Fresh IDs are added to the used cache before processing so they are not sampled twice. IDs left in progress by a crash are moved to the rerun pool at the next startup, and caught per-page pipeline exceptions also move the page ID to the rerun pool instead of marking it accepted or rejected. When `--stream-random-seed` is omitted, streaming derives a deterministic seed from the run and segment identity rather than reusing a fixed global default; explicit seeds remain available for exact reproduction. Recipe append/top-up runs keep using the same shared page-ID exclusion file, but initialize it as a superset of prior segment summaries and stream-state used IDs so later segments and later invocations do not rediscover already attempted pages.
 
+Route 3 streaming page budgets are split into two independent controls. `--stream-reuse-cached-page-count` controls cached page archive reuse and accepts a non-negative integer or `all`; `all` means reuse eligible cached pages until the page target is met or the reusable cache is exhausted. `--stream-fresh-cached-page-count` controls fresh page discovery/fetch/cache work and accepts a non-negative integer or `fill`; `fill` means request fresh pages after cached reuse until the page target is met. These automatic values are the defaults. Standalone streaming runs should provide a page target explicitly when using `all` or `fill`; recipe runs pass a per-segment target internally from the recipe item count. Recipe item counts are target counts across reused plus fresh pages, not fresh-only counts. For example, `40 Person, 40 Place` with a reuse budget of `30` and fresh budget of `60` processes up to 40 Person pages first, using up to 30 cached pages and then fresh pages to fill the Person target, then uses the remaining fresh budget for Place. The actual processed page count is bounded by the recipe target and by the available reused plus fresh page budgets. These budget controls must not change the existing page-ID state contract: cached reuse reservations, fresh reservations, endpoint sync, rerun seeds, and accepted/rejected/rerun commits continue to write or exclude IDs through the existing used-ID and page-ID-list mechanisms.
+
+Standard direct Route 3 streaming invocation:
+
+```bash
+python scripts/run_wikipedia_infobox_pipeline.py \
+  --stream-random-page-ids \
+  --stream-page-processing-target 10 \
+  --route3-reasoning-type single_fact \
+  --route3-answer-type-mode all5 \
+  --route3-table-source-type infobox \
+  --stream-reuse-cached-page-count all \
+  --stream-fresh-cached-page-count fill \
+  --enable-second-stage-grading \
+  --generation-model google/gemini-3.5-flash \
+  --small-model-max-tokens 4096 \
+  --run-group-id route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12 \
+  --run-segment-id alltypes_10
+```
+
+Standard Route 3 recipe invocation:
+
+```bash
+python scripts/run_wikipedia_infobox_recipe.py \
+  --answer-type-count AllTypes=10 \
+  --route3-reasoning-type single_fact \
+  --route3-answer-type-mode all5 \
+  --route3-table-source-type infobox \
+  --stream-reuse-cached-page-count all \
+  --stream-fresh-cached-page-count fill \
+  --enable-second-stage-grading \
+  --generation-model google/gemini-3.5-flash \
+  --small-model-max-tokens 4096 \
+  --run-id route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12
+```
+
 Streaming runs should write accepted and rejected JSONL records incrementally after each page decision. A scale-oriented batch target is roughly 2,000 sampled page IDs, about 1,000 accepted candidate QAs before final cleanup, then similarity-based deduplication and domain rebalancing down to roughly 300 final review candidates. Because streaming mode is domain-optional, domain rebalancing is best-effort: it uses any available `domain` or source metadata buckets, and otherwise falls back to a single Wikipedia semi-structured bucket.
 
 Scale runs should process page IDs through a page-level worker pool with separate service semaphores for Wikipedia, DuckDuckGo, generation/rewrite OpenRouter calls, and second-stage OpenRouter calls. Accepted/rejected JSONL appends and stream-state updates are one locked commit unit per page so a crash does not split a decision from its page-ID state. Second-stage grading should run panel answer models in parallel, grade the executed predictions in one batched grader call when a grader is configured, and skip remaining panel models when the first answer is already correct enough to reject under the current accuracy threshold.

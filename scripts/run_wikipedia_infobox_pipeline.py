@@ -375,7 +375,7 @@ def parse_args() -> argparse.Namespace:
         "--stream-accepted-target",
         type=int,
         default=0,
-        help="Optional accepted-record target; 0 means process --record-limit page IDs.",
+        help="Optional accepted-record target; 0 means process the configured streaming page budget.",
     )
     parser.add_argument(
         "--stream-rerun-pool-only",
@@ -397,11 +397,10 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--stream-reuse-cached-page-count",
-        type=int,
-        default=0,
+        default="all",
         help=(
-            "Process up to this many already parsed Route 3 page archives from --route3-page-archive-dir "
-            "before discovering fresh streaming page IDs. 0 disables cache reuse."
+            "Process this many already parsed Route 3 page archives from --route3-page-archive-dir, "
+            "or 'all' to reuse cached pages until the stream target is met or reusable cache is exhausted."
         ),
     )
     parser.add_argument(
@@ -413,6 +412,20 @@ def parse_args() -> argparse.Namespace:
             "Helper-generated used-ID JSON/JSONL/plain file for cached page reuse. "
             "Page-only and triadic entries are treated as strict numeric page-level exclusions."
         ),
+    )
+    parser.add_argument(
+        "--stream-fresh-cached-page-count",
+        default="fill",
+        help=(
+            "Discover, fetch, and cache this many fresh streaming pages after cached-page reuse, "
+            "or 'fill' to request fresh pages until the stream target is met."
+        ),
+    )
+    parser.add_argument(
+        "--stream-page-processing-target",
+        type=int,
+        default=0,
+        help=argparse.SUPPRESS,
     )
     parser.add_argument(
         "--stream-prefer-rerun-pool",
@@ -773,8 +786,15 @@ def main() -> int:
         raise ValueError("--wikipedia-429-recovery-seconds must be non-negative.")
     if args.stream_random_page_ids and args.stream_rerun_pool_limit < 0:
         raise ValueError("--stream-rerun-pool-limit must be non-negative.")
-    if args.stream_random_page_ids and args.stream_reuse_cached_page_count < 0:
-        raise ValueError("--stream-reuse-cached-page-count must be non-negative.")
+    if args.stream_random_page_ids:
+        args.stream_reuse_cached_page_count = _normalize_stream_reuse_cached_page_count(
+            args.stream_reuse_cached_page_count
+        )
+        args.stream_fresh_cached_page_count = _normalize_stream_fresh_cached_page_count(
+            args.stream_fresh_cached_page_count
+        )
+        if args.stream_page_processing_target < 0:
+            raise ValueError("--stream-page-processing-target must be non-negative.")
     if args.stream_free_seeded_rerun_pool_on_completion and not args.stream_prefer_rerun_pool:
         raise ValueError("--stream-free-seeded-rerun-pool-on-completion requires --stream-prefer-rerun-pool.")
     if args.reset_stream_state and not args.stream_random_page_ids:
@@ -1189,10 +1209,60 @@ def _write_json_atomic(path: Path, payload: dict) -> None:
     temp_path.replace(path)
 
 
-def _remaining_after_endpoint(record_limit: int, final_decision_count: int) -> int:
+def _remaining_after_endpoint(record_limit: int | str, final_decision_count: int) -> int:
     """Return how many additional final decisions are needed for a resumed endpoint."""
     return max(0, int(record_limit) - max(0, int(final_decision_count)))
 
+
+
+STREAM_REUSE_ALL_VALUES = {"all", "exhaust", "exhaustive"}
+STREAM_FRESH_FILL_VALUES = {"fill", "until-target", "until_target", "all"}
+
+
+def _normalize_stream_reuse_cached_page_count(value: object) -> int | str:
+    """Return a non-negative cached-reuse count or the automatic all-cached sentinel."""
+    return _normalize_stream_budget_value(
+        value,
+        flag="--stream-reuse-cached-page-count",
+        auto_values=STREAM_REUSE_ALL_VALUES,
+        canonical_auto="all",
+    )
+
+
+def _normalize_stream_fresh_cached_page_count(value: object) -> int | str:
+    """Return a non-negative fresh-page count or the automatic fill-to-target sentinel."""
+    return _normalize_stream_budget_value(
+        value,
+        flag="--stream-fresh-cached-page-count",
+        auto_values=STREAM_FRESH_FILL_VALUES,
+        canonical_auto="fill",
+    )
+
+
+def _normalize_stream_budget_value(
+    value: object,
+    *,
+    flag: str,
+    auto_values: set[str],
+    canonical_auto: str,
+) -> int | str:
+    text = str(value if value is not None else "").strip().lower()
+    if not text:
+        raise ValueError(f"{flag} must be a non-negative integer or {canonical_auto!r}.")
+    if text in auto_values:
+        return canonical_auto
+    try:
+        count = int(text)
+    except ValueError as exc:
+        raise ValueError(f"{flag} must be a non-negative integer or {canonical_auto!r}.") from exc
+    if count < 0:
+        raise ValueError(f"{flag} must be non-negative.")
+    return count
+
+
+def _stream_budget_numeric_count(value: int | str) -> int:
+    """Return the hard numeric part of a stream budget; automatic sentinels contribute no standalone target."""
+    return value if isinstance(value, int) else 0
 
 def _filter_endpoint_url_entries(
     entries: list[UrlEntry],
@@ -1561,23 +1631,42 @@ def _run_streaming_page_id_pipeline(
     accepted_target = max(0, int(args.stream_accepted_target or 0))
     if args.start_from_endpoint and accepted_target:
         accepted_target = max(0, accepted_target - endpoint_resume.accepted_count)
+    reuse_budget = args.stream_reuse_cached_page_count
+    fresh_budget = args.stream_fresh_cached_page_count
+    explicit_processing_target = max(0, int(getattr(args, "stream_page_processing_target", 0) or 0))
+    requested_main_page_count = explicit_processing_target or (
+        _stream_budget_numeric_count(reuse_budget) + _stream_budget_numeric_count(fresh_budget)
+    )
     if args.stream_rerun_pool_only:
         ids_remaining = _stream_rerun_pool_run_limit(state, args)
+        page_processing_target_remaining_at_start = ids_remaining
     else:
-        ids_remaining = max(0, int(args.record_limit))
-    if args.start_from_endpoint and not args.stream_rerun_pool_only:
-        ids_remaining = _remaining_after_endpoint(args.record_limit, endpoint_resume.final_decision_count)
-    initial_ids_remaining = ids_remaining
+        page_processing_target_remaining_at_start = requested_main_page_count
+        if args.start_from_endpoint:
+            page_processing_target_remaining_at_start = _remaining_after_endpoint(
+                requested_main_page_count,
+                endpoint_resume.final_decision_count,
+            )
+        ids_remaining = 0
     page_workers = 1 if accepted_target else max(1, int(args.stream_page_workers))
     auto_rerun_pool_ids_at_start: list[int] = []
     auto_rerun_processed_ids: list[int] = []
     cached_page_reuse_entries: list[CachedPageArchiveEntry] = []
     cached_page_reuse_summary = _stream_cached_page_reuse_disabled_summary(args)
-
-    if args.stream_reuse_cached_page_count > 0:
+    if reuse_budget == "all":
+        reuse_requested = page_processing_target_remaining_at_start
+    else:
+        reuse_requested = _stream_budget_numeric_count(reuse_budget)
+    cached_reuse_request = (
+        min(reuse_requested, page_processing_target_remaining_at_start)
+        if page_processing_target_remaining_at_start > 0
+        else 0
+    )
+    if cached_reuse_request > 0 and not args.stream_rerun_pool_only and page_processing_target_remaining_at_start > 0:
         cached_page_reuse_entries, cached_page_reuse_summary = _reserve_stream_cached_page_archives(
             state=state,
             args=args,
+            requested_count=cached_reuse_request,
         )
         if cached_page_reuse_entries:
             processed_ids.extend(entry.page_id for entry in cached_page_reuse_entries)
@@ -1621,6 +1710,16 @@ def _run_streaming_page_id_pipeline(
                                 )
                         break
 
+    if not args.stream_rerun_pool_only:
+        fresh_budget_after_reuse = max(0, page_processing_target_remaining_at_start - len(cached_page_reuse_entries))
+        if fresh_budget == "fill":
+            fresh_requested = fresh_budget_after_reuse
+        else:
+            fresh_requested = min(_stream_budget_numeric_count(fresh_budget), fresh_budget_after_reuse)
+        ids_remaining = fresh_requested
+    else:
+        fresh_requested = 0
+    initial_ids_remaining = ids_remaining
     while ids_remaining > 0:
         if accepted_target and len(accepted_records) >= accepted_target:
             break
@@ -1729,6 +1828,16 @@ def _run_streaming_page_id_pipeline(
                     if decision.get("status") == "rerun":
                         rerun_records.append(decision)
 
+    cached_reuse_page_ids = [entry.page_id for entry in cached_page_reuse_entries]
+    auto_rerun_processed_id_set = set(auto_rerun_processed_ids)
+    cached_reuse_page_id_set = set(cached_reuse_page_ids)
+    fresh_processed_page_ids = [
+        page_id
+        for page_id in processed_ids
+        if not args.stream_rerun_pool_only
+        and page_id not in cached_reuse_page_id_set
+        and page_id not in auto_rerun_processed_id_set
+    ]
     all_decision_records = [*accepted_records, *rejected_records]
     summary = {
         **_run_artifact_summary(args),
@@ -1752,11 +1861,19 @@ def _run_streaming_page_id_pipeline(
         "stream_rerun_pool_only": bool(args.stream_rerun_pool_only),
         "stream_rerun_pool_limit": args.stream_rerun_pool_limit,
         "stream_rerun_pool_seed_files": [str(path) for path in args.stream_rerun_pool_seed_file],
-        "stream_reuse_cached_page_count": args.stream_reuse_cached_page_count,
+        "stream_reuse_cached_page_count": reuse_requested,
+        "stream_reuse_cached_page_count_raw": str(reuse_budget),
+        "stream_fresh_cached_page_count": fresh_requested,
+        "stream_fresh_cached_page_count_raw": str(fresh_budget),        "stream_requested_main_page_count": requested_main_page_count,
+        "stream_page_processing_target": explicit_processing_target,
+        "stream_page_processing_target_remaining_at_start": page_processing_target_remaining_at_start,
+        "stream_fresh_page_count_remaining_at_start": initial_ids_remaining if not args.stream_rerun_pool_only else 0,
         "stream_reuse_cached_page_used_id_files": [str(path) for path in args.stream_reuse_cached_page_used_id_file],
         "stream_cached_page_reuse": cached_page_reuse_summary,
-        "stream_reused_cached_page_ids": [entry.page_id for entry in cached_page_reuse_entries],
+        "stream_reused_cached_page_ids": cached_reuse_page_ids,
         "stream_reused_cached_page_count": len(cached_page_reuse_entries),
+        "stream_fresh_processed_page_ids": fresh_processed_page_ids,
+        "stream_fresh_processed_page_count": len(fresh_processed_page_ids),
         "stream_prefer_rerun_pool": bool(args.stream_prefer_rerun_pool),
         "seeded_rerun_pool_ids": seeded_rerun_pool_ids,
         "seeded_rerun_pool_ids_freed_on_completion": seeded_rerun_pool_ids_freed_on_completion,
@@ -1781,8 +1898,13 @@ def _run_streaming_page_id_pipeline(
         },
         "random_seed": args.stream_random_seed,
         "random_seed_was_explicit": bool(getattr(args, "stream_random_seed_was_explicit", False)),
-        "record_limit": args.record_limit,
-        "record_limit_remaining_at_start": initial_ids_remaining,
+        "record_limit": requested_main_page_count,
+        "record_limit_remaining_at_start": page_processing_target_remaining_at_start,
+        "record_limit_deprecated_alias": True,
+        "compatibility_aliases": {
+            "record_limit": "stream_requested_main_page_count",
+            "record_limit_remaining_at_start": "stream_page_processing_target_remaining_at_start",
+        },
         "stream_batch_size": args.stream_batch_size,
         "stream_discovery_max_retries": args.stream_discovery_max_retries,
         "stream_discovery_retry_backoff_seconds": args.stream_discovery_retry_backoff_seconds,
@@ -1951,7 +2073,10 @@ def _stream_cached_page_reuse_disabled_summary(args: argparse.Namespace) -> dict
     """Return the summary payload used when cached page reuse is disabled."""
     return {
         "enabled": False,
-        "requested_count": max(0, int(getattr(args, "stream_reuse_cached_page_count", 0) or 0)),
+        "requested_count": _stream_budget_numeric_count(
+            _normalize_stream_reuse_cached_page_count(getattr(args, "stream_reuse_cached_page_count", 0) or 0)
+        ),
+        "requested_count_raw": str(getattr(args, "stream_reuse_cached_page_count", 0) or 0),
         "archive_dir": str(getattr(args, "route3_page_archive_dir", "") or ""),
         "used_id_files": [str(path) for path in getattr(args, "stream_reuse_cached_page_used_id_file", [])],
         "strict_numeric_page_id_matching": True,
@@ -1964,9 +2089,15 @@ def _reserve_stream_cached_page_archives(
     *,
     state: PageIdStreamState,
     args: argparse.Namespace,
+    requested_count: int | None = None,
 ) -> tuple[list[CachedPageArchiveEntry], dict[str, object]]:
     """Reserve reusable cached parsed pages by strict numeric page ID."""
-    requested_count = max(0, int(getattr(args, "stream_reuse_cached_page_count", 0) or 0))
+    if requested_count is None:
+        requested_count = _stream_budget_numeric_count(
+            _normalize_stream_reuse_cached_page_count(getattr(args, "stream_reuse_cached_page_count", 0) or 0)
+        )
+    else:
+        requested_count = max(0, int(requested_count))
     archive_dir = Path(getattr(args, "route3_page_archive_dir", ROOT / DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR))
     used_id_files = list(getattr(args, "stream_reuse_cached_page_used_id_file", []) or [])
     used_ids = _load_stream_reuse_cached_page_used_ids(used_id_files)
@@ -3459,15 +3590,15 @@ def _write_stream_walkthrough(
     if isinstance(recipe_segments, list) and recipe_segments:
         lines.append("### Recipe Segments")
         lines.append("")
-        lines.append("| Configured answer_type | Record limit | Attempted page IDs | Accepted | Rejected | Rerun |")
+        lines.append("| Configured answer_type | Target | Attempted page IDs | Accepted | Rejected | Rerun |")
         lines.append("| --- | ---: | ---: | ---: | ---: | ---: |")
         for segment in recipe_segments:
             if not isinstance(segment, dict):
                 continue
             lines.append(
-                "| {answer_type} | {record_limit} | {attempted} | {accepted} | {rejected} | {rerun} |".format(
+                "| {answer_type} | {target} | {attempted} | {accepted} | {rejected} | {rerun} |".format(
                     answer_type=_escape_table_text(str(segment.get("answer_type", ""))),
-                    record_limit=int(segment.get("record_limit", 0) or 0),
+                    target=int(segment.get("target_count", segment.get("record_limit", 0)) or 0),
                     attempted=int(segment.get("attempted_page_ids", 0) or 0),
                     accepted=int(segment.get("accepted", 0) or 0),
                     rejected=int(segment.get("rejected", 0) or 0),

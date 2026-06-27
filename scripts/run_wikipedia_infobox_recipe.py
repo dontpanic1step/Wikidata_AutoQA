@@ -59,7 +59,10 @@ from run_wikipedia_infobox_pipeline import (
     _load_endpoint_jsonl,
     _phase_timing_stats,
     _llm_generation_table_yield_summary,
+    _normalize_stream_fresh_cached_page_count,
+    _normalize_stream_reuse_cached_page_count,
     _safe_artifact_id,
+    _stream_budget_numeric_count,
     _survival_by_layer,
     _write_stream_walkthrough,
 )
@@ -270,9 +273,13 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--stream-discovery-retry-max-sleep-seconds", type=float, default=60.0)
     parser.add_argument(
         "--stream-reuse-cached-page-count",
-        type=int,
-        default=0,
-        help="Per-segment count of already parsed Route 3 page archives to process before fresh discovery.",
+        default="all",
+        help="Recipe-level cached-page budget: a non-negative integer or 'all' to reuse cache until segment targets are met.",
+    )
+    parser.add_argument(
+        "--stream-fresh-cached-page-count",
+        default="fill",
+        help="Recipe-level fresh-page budget: a non-negative integer or 'fill' to fetch fresh pages until segment targets are met.",
     )
     parser.add_argument(
         "--stream-reuse-cached-page-used-id-file",
@@ -349,9 +356,12 @@ def main() -> int:
     )
     args.route3_infobox_max_removed_row_rate = max(0.0, min(1.0, float(args.route3_infobox_max_removed_row_rate)))
     args.route3_infobox_min_remaining_rows = max(0, int(args.route3_infobox_min_remaining_rows))
-    if args.stream_reuse_cached_page_count < 0:
-        raise ValueError("--stream-reuse-cached-page-count must be non-negative.")
-
+    args.stream_reuse_cached_page_count = _normalize_stream_reuse_cached_page_count(
+        args.stream_reuse_cached_page_count
+    )
+    args.stream_fresh_cached_page_count = _normalize_stream_fresh_cached_page_count(
+        args.stream_fresh_cached_page_count
+    )
     run_id = _recipe_run_id(args, recipe_items, reasoning_types)
     segment_dir = args.segment_dir or ROOT / "outputs" / "recipe_segments" / run_id
     output = args.output or ROOT / "outputs" / f"{run_id}_accepted.jsonl"
@@ -364,10 +374,20 @@ def main() -> int:
 
     segment_dir.mkdir(parents=True, exist_ok=True)
     segment_summaries: list[dict] = []
+    remaining_reuse_cached_page_count = args.stream_reuse_cached_page_count
+    remaining_fresh_cached_page_count = args.stream_fresh_cached_page_count
     stream_excluded_page_entries: set[PageIdListEntry] = (
         _existing_recipe_page_id_entries(segment_dir, stream_exclusion_file) if append_label else set()
     )
     for index, item in enumerate(recipe_items):
+        segment_reuse_cached_page_count = _recipe_segment_budget(
+            remaining_reuse_cached_page_count,
+            item.record_limit,
+        )
+        segment_fresh_cached_page_count = _recipe_segment_budget(
+            remaining_fresh_cached_page_count,
+            item.record_limit,
+        )
         _write_stream_exclusion_file(stream_exclusion_file, stream_excluded_page_entries)
         base_segment_id = _base_segment_id_for_run(
             segment_dir=segment_dir,
@@ -414,26 +434,54 @@ def main() -> int:
             append_label=append_label,
             rerun_pool_seed_file=rerun_pool_seed_file,
             base_segment_id=base_segment_id,
+            stream_reuse_cached_page_count=segment_reuse_cached_page_count,
+            stream_fresh_cached_page_count=segment_fresh_cached_page_count,
         )
         if _segment_complete(paths):
             summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
-            summary["recipe_answer_type"] = item.answer_type
-            summary["recipe_record_limit"] = item.record_limit
+            _attach_recipe_segment_budget_summary(
+                summary,
+                item=item,
+                stream_reuse_cached_page_count=segment_reuse_cached_page_count,
+                stream_fresh_cached_page_count=segment_fresh_cached_page_count,
+            )
             summary["segment_accepted_output"] = str(paths["accepted"])
             summary["segment_rejected_output"] = str(paths["rejected"])
             segment_summaries.append(summary)
             stream_excluded_page_entries.update(_summary_page_id_entries(summary))
+            remaining_reuse_cached_page_count = _decrement_recipe_budget(
+                remaining_reuse_cached_page_count,
+                int(summary.get("stream_reused_cached_page_count", 0) or 0),
+            )
+            remaining_fresh_cached_page_count = _decrement_recipe_budget(
+                remaining_fresh_cached_page_count,
+                int(summary.get("stream_fresh_processed_page_count", 0) or 0),
+            )
             continue
         if args.dry_run:
             print(" ".join(command))
+            remaining_reuse_cached_page_count = _decrement_recipe_budget(
+                remaining_reuse_cached_page_count,
+                _stream_budget_numeric_count(segment_reuse_cached_page_count),
+            )
+            remaining_fresh_cached_page_count = _decrement_recipe_budget(
+                remaining_fresh_cached_page_count,
+                _stream_budget_numeric_count(segment_fresh_cached_page_count),
+            )
             continue
         subprocess.run(command, cwd=ROOT, check=True)
         summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+        _attach_recipe_segment_budget_summary(
+            summary,
+            item=item,
+            stream_reuse_cached_page_count=segment_reuse_cached_page_count,
+            stream_fresh_cached_page_count=segment_fresh_cached_page_count,
+        )
         if not _segment_reached_record_limit(summary):
             raise RuntimeError(
                 "Recipe segment stopped before using its requested page budget: "
                 f"{summary.get('run_segment_id', paths['summary'].stem)} "
-                f"used={_segment_used_count(summary)} record_limit={summary.get('record_limit', 0)}"
+                f"used={_segment_used_count(summary)} expected_page_count={summary.get('recipe_segment_expected_page_count', 0)}"
             )
         if rerun_pool_seed_source_states:
             _clear_rerun_pool_ids_from_states(
@@ -441,13 +489,18 @@ def main() -> int:
                 page_ids=_positive_ints(summary.get("seeded_rerun_pool_ids", rerun_pool_seed_ids)),
                 reason=f"transferred_to_append_segment:{segment_id}",
             )
-        summary["recipe_answer_type"] = item.answer_type
-        summary["recipe_record_limit"] = item.record_limit
         summary["segment_accepted_output"] = str(paths["accepted"])
         summary["segment_rejected_output"] = str(paths["rejected"])
         segment_summaries.append(summary)
         stream_excluded_page_entries.update(_summary_page_id_entries(summary))
-
+        remaining_reuse_cached_page_count = _decrement_recipe_budget(
+            remaining_reuse_cached_page_count,
+            int(summary.get("stream_reused_cached_page_count", 0) or 0),
+        )
+        remaining_fresh_cached_page_count = _decrement_recipe_budget(
+            remaining_fresh_cached_page_count,
+            int(summary.get("stream_fresh_processed_page_count", 0) or 0),
+        )
     if args.dry_run:
         return 0
 
@@ -499,6 +552,41 @@ def main() -> int:
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0
 
+
+
+def _recipe_segment_budget(budget: int | str, target_count: int) -> int | str:
+    """Return the segment-local budget for one recipe item."""
+    if isinstance(budget, str):
+        return budget
+    return min(max(0, int(budget)), max(0, int(target_count)))
+
+
+def _decrement_recipe_budget(budget: int | str, used_count: int) -> int | str:
+    """Subtract actual or planned segment use from a recipe-level numeric budget."""
+    if isinstance(budget, str):
+        return budget
+    return max(0, int(budget) - max(0, int(used_count)))
+
+
+def _attach_recipe_segment_budget_summary(
+    summary: dict,
+    *,
+    item: RecipeItem,
+    stream_reuse_cached_page_count: int | str,
+    stream_fresh_cached_page_count: int | str,
+) -> None:
+    """Attach recipe target and segment budget metadata to one segment summary."""
+    target_count = int(item.record_limit)
+    actual_reused = int(summary.get("stream_reused_cached_page_count", 0) or 0)
+    resolved_fresh_budget = int(summary.get("stream_fresh_cached_page_count", 0) or 0)
+    expected_page_count = min(target_count, actual_reused + resolved_fresh_budget)
+    summary["recipe_answer_type"] = item.answer_type
+    summary["recipe_target_count"] = target_count
+    summary["recipe_record_limit"] = target_count
+    summary["recipe_record_limit_deprecated_alias"] = True
+    summary["recipe_segment_reuse_cached_page_count"] = stream_reuse_cached_page_count
+    summary["recipe_segment_fresh_cached_page_count"] = stream_fresh_cached_page_count
+    summary["recipe_segment_expected_page_count"] = expected_page_count
 
 def _parse_recipe(args: argparse.Namespace) -> tuple[list[RecipeItem], list[str]]:
     """Parse recipe text and explicit answer-type options."""
@@ -973,6 +1061,8 @@ def _segment_command(
     append_label: str = "",
     rerun_pool_seed_file: Path | None = None,
     base_segment_id: str | None = None,
+    stream_reuse_cached_page_count: int | str | None = None,
+    stream_fresh_cached_page_count: int | str | None = None,
 ) -> tuple[list[str], dict[str, Path]]:
     """Build the pipeline subprocess command for one recipe segment."""
     normalized_table_source_types = list(
@@ -993,11 +1083,21 @@ def _segment_command(
     segment_answer_type_mode = (
         "all5" if item.answer_type == ALL_TYPES_RECIPE_ANSWER_TYPE else args.route3_answer_type_mode
     )
+    effective_reuse_cached_page_count = (
+        getattr(args, "stream_reuse_cached_page_count", "all")
+        if stream_reuse_cached_page_count is None
+        else stream_reuse_cached_page_count
+    )
+    effective_fresh_cached_page_count = (
+        getattr(args, "stream_fresh_cached_page_count", "fill")
+        if stream_fresh_cached_page_count is None
+        else stream_fresh_cached_page_count
+    )
     command = [
         sys.executable,
         str(ROOT / "scripts" / "run_wikipedia_infobox_pipeline.py"),
         "--stream-random-page-ids",
-        "--record-limit",
+        "--stream-page-processing-target",
         str(item.record_limit),
         "--route3-answer-type-mode",
         segment_answer_type_mode,
@@ -1066,7 +1166,9 @@ def _segment_command(
         "--stream-discovery-retry-max-sleep-seconds",
         str(args.stream_discovery_retry_max_sleep_seconds),
         "--stream-reuse-cached-page-count",
-        str(args.stream_reuse_cached_page_count),
+        str(effective_reuse_cached_page_count),
+        "--stream-fresh-cached-page-count",
+        str(effective_fresh_cached_page_count),
         "--wikipedia-429-backoff-seconds",
         str(args.wikipedia_429_backoff_seconds),
         "--wikipedia-429-max-backoff-seconds",
@@ -1110,7 +1212,7 @@ def _segment_command(
         command.extend(["--duckduckgo-disable-fallback", str(fallback)])
     command.append("--duckduckgo-prefer-ddgs" if args.duckduckgo_prefer_ddgs else "--no-duckduckgo-prefer-ddgs")
     command.append("--duckduckgo-cooldown" if args.duckduckgo_cooldown else "--no-duckduckgo-cooldown")
-    if args.stream_reuse_cached_page_count > 0:
+    if effective_reuse_cached_page_count == "all" or _stream_budget_numeric_count(effective_reuse_cached_page_count) > 0:
         command.extend(["--stream-reuse-cached-page-used-id-file", str(stream_exclusion_file)])
     for path in args.stream_reuse_cached_page_used_id_file:
         command.extend(["--stream-reuse-cached-page-used-id-file", str(path)])
@@ -1178,9 +1280,15 @@ def _segment_complete(paths: dict[str, Path]) -> bool:
 
 
 def _segment_reached_record_limit(summary: dict) -> bool:
-    """Return whether one segment used its requested page budget."""
-    record_limit = int(summary.get("recipe_record_limit", summary.get("record_limit", 0)) or 0)
-    return record_limit < 1 or _segment_used_count(summary) >= record_limit
+    """Return whether one segment used its expected page budget."""
+    page_target = int(
+        summary.get(
+            "recipe_segment_expected_page_count",
+            summary.get("recipe_target_count", summary.get("recipe_record_limit", summary.get("record_limit", 0))),
+        )
+        or 0
+    )
+    return page_target < 1 or _segment_used_count(summary) >= page_target
 
 
 def _segment_used_count(summary: dict) -> int:
@@ -1294,13 +1402,17 @@ def _recipe_summary(
         "run_segment_id": "recipe_combined",
         "recipe_id": run_id,
         "recipe_items": [
-            {"answer_type": item.answer_type, "record_limit": item.record_limit}
+            {"answer_type": item.answer_type, "target_count": item.record_limit, "record_limit": item.record_limit}
             for item in recipe_items
         ],
         "recipe_segments": [
             {
                 "answer_type": summary.get("recipe_answer_type", ""),
+                "target_count": summary.get("recipe_target_count", summary.get("recipe_record_limit", 0)),
                 "record_limit": summary.get("recipe_record_limit", 0),
+                "expected_page_count": summary.get("recipe_segment_expected_page_count", 0),
+                "stream_reuse_cached_page_count": summary.get("recipe_segment_reuse_cached_page_count", ""),
+                "stream_fresh_cached_page_count": summary.get("recipe_segment_fresh_cached_page_count", ""),
                 "attempted_page_ids": summary.get("attempted_page_ids", 0),
                 "accepted": summary.get("accepted", 0),
                 "rejected": summary.get("rejected", 0),
@@ -1344,7 +1456,9 @@ def _recipe_summary(
         "rerun_pool_ids_after_run_by_segment": rerun_pool_by_segment,
         "rerun_pool_failure_reasons_after_run": rerun_reasons,
         "rerun_pool_failure_reasons_after_run_by_segment": rerun_reasons_by_segment,
+        "recipe_target_count": sum(item.record_limit for item in recipe_items),
         "record_limit": sum(item.record_limit for item in recipe_items),
+        "record_limit_deprecated_alias": True,
         "attempted_page_ids": attempted,
         "attempted_page_ids_unique": len({_coerce_int(page_id) for page_id in page_ids if _coerce_int(page_id)}),
         "page_ids": page_ids,

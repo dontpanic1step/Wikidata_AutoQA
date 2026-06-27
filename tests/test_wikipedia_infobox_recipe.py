@@ -27,6 +27,8 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _matching_segment_rerun_pool_seed,
     _parse_recipe,
     _recipe_summary,
+    _recipe_segment_budget,
+    _decrement_recipe_budget,
     _segment_complete,
     _segment_used_count,
     _segment_stream_search_initial_offset,
@@ -75,7 +77,8 @@ def _recipe_args(**overrides):
         "stream_discovery_max_retries": 5,
         "stream_discovery_retry_backoff_seconds": 10.0,
         "stream_discovery_retry_max_sleep_seconds": 60.0,
-        "stream_reuse_cached_page_count": 0,
+        "stream_reuse_cached_page_count": "all",
+        "stream_fresh_cached_page_count": "fill",
         "stream_reuse_cached_page_used_id_file": [],
         "wikipedia_429_backoff_seconds": 30.0,
         "wikipedia_429_max_backoff_seconds": 300.0,
@@ -550,7 +553,8 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(seed_ids, [201, 202])
         self.assertTrue(str(paths["accepted"]).endswith("02_place_2000_topup_1_accepted.jsonl"))
         self.assertTrue(str(paths["stream_state"]).endswith("02_place_2000_topup_1_state.json"))
-        self.assertEqual(_command_value(command, "--record-limit"), "2")
+        self.assertNotIn("--record-limit", command)
+        self.assertEqual(_command_value(command, "--stream-page-processing-target"), "2")
         self.assertEqual(_command_value(command, "--stream-rerun-pool-seed-file"), str(seed_file))
         self.assertIn("--stream-prefer-rerun-pool", command)
 
@@ -711,6 +715,24 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             {"page_id": 123, "answer_type": "Person", "table_type": "infobox"},
         )
 
+    def test_recipe_numeric_reuse_and_fresh_budgets_allocate_left_to_right(self) -> None:
+        recipe_items = [
+            RecipeItem(answer_type="Person", record_limit=40),
+            RecipeItem(answer_type="Place", record_limit=40),
+        ]
+        remaining_reuse: int | str = 30
+        remaining_fresh: int | str = 60
+
+        first_reuse = _recipe_segment_budget(remaining_reuse, recipe_items[0].record_limit)
+        first_fresh = _recipe_segment_budget(remaining_fresh, recipe_items[0].record_limit)
+        remaining_reuse = _decrement_recipe_budget(remaining_reuse, 30)
+        remaining_fresh = _decrement_recipe_budget(remaining_fresh, 10)
+        second_reuse = _recipe_segment_budget(remaining_reuse, recipe_items[1].record_limit)
+        second_fresh = _recipe_segment_budget(remaining_fresh, recipe_items[1].record_limit)
+
+        self.assertEqual((first_reuse, first_fresh), (30, 40))
+        self.assertEqual((second_reuse, second_fresh), (0, 40))
+        self.assertEqual(remaining_fresh, 50)
     def test_recipe_segments_use_disjoint_table_search_offsets(self) -> None:
         recipe_items = [
             RecipeItem(answer_type="Person", record_limit=40),

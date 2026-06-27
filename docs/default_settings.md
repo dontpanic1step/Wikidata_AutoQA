@@ -110,7 +110,7 @@ These defaults come from `scripts/run_wikipedia_infobox_pipeline.py`.
 | `--candidate-input` | `[]` | Required only for `--start-stage validation`. |
 | `--start-stage` | `generate` | Other value: `validation`. |
 | `--start-from-endpoint` | `False` | When enabled, existing accepted/rejected endpoint JSONL files are loaded as a checkpoint. Streaming mode syncs page-ID state and processes only the remaining requested total; URL mode skips completed URLs and appends new records instead of overwriting. |
-| `--record-limit` | `10` | Number of URLs/page IDs/candidates to process. |
+| `--record-limit` | `10` | Compatibility-only limit for non-streaming URL-list or validation mode. Streaming mode uses `--stream-reuse-cached-page-count`, `--stream-fresh-cached-page-count`, and an internal/recipe page target instead. |
 | `--target-time` | `2024` | Passed into shared settings. |
 | `--run-date` | `None` | Falls back to `Settings(...).run_date`. |
 | `--cutoff-year` | `2025` | Avoid generated question text depending on this year or later. |
@@ -173,14 +173,15 @@ These defaults apply when `--stream-random-page-ids` is enabled.
 | `--duckduckgo-concurrency-limit` | `4` | Max concurrent DuckDuckGo searches across streaming workers and per-candidate search query parallelism. |
 | `--openrouter-generation-rewrite-concurrency-limit` | `10` | Max concurrent OpenRouter calls used for Route 3 QA generation and shared rewrite. Can be raised, for example to `20`, when the account/network tolerates it. |
 | `--second-stage-concurrency-limit` | `10` | Max concurrent OpenRouter calls used by second-stage answer models and grader calls. Can be raised, for example to `20`, for larger runs. |
-| `--stream-accepted-target` | `0` | `0` means process `--record-limit` IDs rather than stopping at an accepted count. |
+| `--stream-accepted-target` | `0` | `0` means process the configured streaming page budget rather than stopping at an accepted count. |
 | `--run-group-id` | empty | When set, summaries update a run-group manifest so resumed segments can be found together without mixing with other runs. |
 | Recipe append/top-up mode | disabled | `scripts/run_wikipedia_infobox_recipe.py --append-to-existing-run` creates suffixed segment artifacts, appends combined outputs, and seeds the shared recipe page-ID exclusion file from prior summaries/states. Use `--append-run-label` for a stable suffix. |
 | `--run-segment-id` | summary filename stem | Unique invocation label inside a run group. |
 | `--run-artifact-manifest` | `outputs/run_manifests/<run-group-id>.json` | Manifest path used when `--run-group-id` is set. |
 | `--run-artifact-include-summary` | `[]` | Existing segment summaries to backfill into the manifest. Can be repeated. |
 | Rerun pool | enabled | Recovered in-progress IDs and transient generation failures are retried before fresh IDs. |
-| `--stream-reuse-cached-page-count` | `0` | Number of already parsed Route 3 page archives to process before fresh streaming discovery. `0` disables cache reuse. |
+| `--stream-reuse-cached-page-count` | `all` | Cached-page reuse budget. Use a non-negative integer, or `all` to reuse eligible cached pages until the page target is met or reusable cache is exhausted. |
+| `--stream-fresh-cached-page-count` | `fill` | Fresh page discovery/fetch/cache budget. Use a non-negative integer, or `fill` to request fresh pages after cached reuse until the page target is met. |
 | `--stream-reuse-cached-page-used-id-file` | `[]` | Optional helper-generated used-ID JSON/JSONL/plain files for cache reuse. Page-only and triadic entries are both treated as strict numeric page-level exclusions. |
 | Cached page reuse source | `--route3-page-archive-dir` | Reusable archives must have a positive numeric `page_id` and cached `parse_payload` or `parsed_html`, then continue through the shared pageview/table scoring/generation/filtering path as read-only archive inputs. |
 | Domain/subdomain policy | optional | Streaming does not reject only because no planned domain/subdomain exists. |
