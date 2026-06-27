@@ -3569,18 +3569,10 @@ def _write_stream_walkthrough(
                 lines.append(f"### {group_label}")
                 lines.append("")
             if group_accepted:
-                lines.append("| Page ID | Answer type | Question | Answer | Source |")
-                lines.append("| ---: | --- | --- | --- | --- |")
+                lines.append("| Page ID | Table type | Answer type | Question | Answer | Source |")
+                lines.append("| ---: | --- | --- | --- | --- | --- |")
                 for record in group_accepted:
-                    lines.append(
-                        "| {page_id} | `{answer_type}` | {question} | {answer} | {url} |".format(
-                            page_id=_record_page_id(record),
-                            answer_type=_escape_table_text(_record_answer_type(record)),
-                            question=_escape_table_text(str(record.get("question", ""))),
-                            answer=_escape_table_text(str(record.get("answer", ""))),
-                            url=_escape_table_text(str(record.get("source_metadata", {}).get("canonical_url") or record.get("source_metadata", {}).get("stream_source_url") or "")),
-                        )
-                    )
+                    lines.append(_walkthrough_candidate_row(record))
             else:
                 lines.append("No accepted candidates in this scope.")
             lines.append("")
@@ -3600,39 +3592,65 @@ def _write_stream_walkthrough(
                 lines.append(f"### {group_label}")
                 lines.append("")
             if group_rejected:
-                lines.append("| Page ID | Stage | Exact reason | Page/question |")
-                lines.append("| ---: | --- | --- | --- |")
+                lines.append("| Page ID | Table type | Answer type | Question | Answer | Source | Exact reason |")
+                lines.append("| ---: | --- | --- | --- | --- | --- | --- |")
                 for record in group_rejected:
-                    lines.append(
-                        "| {page_id} | `{stage}` | `{reason}` | {question} |".format(
-                            page_id=_record_page_id(record),
-                            stage=_rejection_stage(record),
-                            reason=_escape_table_text(_exact_failure_reason(record)),
-                            question=_escape_table_text(str(record.get("question", ""))),
-                        )
-                    )
+                    lines.append(_walkthrough_candidate_row(record, exact_reason=_exact_failure_reason(record)))
             else:
                 lines.append("No rejected decisions in this scope.")
             lines.append("")
         if rerun_records:
             lines.append("### Rerun Records")
             lines.append("")
-            lines.append("| Page ID | Stage | Exact reason | Page/question |")
-            lines.append("| ---: | --- | --- | --- |")
+            lines.append("| Page ID | Table type | Answer type | Question | Answer | Source | Exact reason |")
+            lines.append("| ---: | --- | --- | --- | --- | --- | --- |")
             for record in rerun_records:
-                lines.append(
-                    "| {page_id} | `{stage}` | `{reason}` | {url} |".format(
-                        page_id=record.get("page_id", ""),
-                        stage=_rerun_stage(record),
-                        reason=_escape_table_text(str(record.get("reason", ""))),
-                        url=_escape_table_text(str(record.get("url", ""))),
-                    )
-                )
+                lines.append(_walkthrough_candidate_row(record, exact_reason=str(record.get("reason", ""))))
     else:
         lines.append("No rejected or rerun decisions in this run.")
     lines.append("")
     path.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
+
+def _walkthrough_candidate_row(record: dict, *, exact_reason: str | None = None) -> str:
+    """Render one accepted/rejected/rerun candidate row for the stream walkthrough."""
+    cells = [
+        str(_record_page_id(record) or record.get("page_id", "")),
+        f"`{_escape_table_text(_walkthrough_record_table_type(record))}`",
+        f"`{_escape_table_text(_record_answer_type(record))}`",
+        _escape_table_text(str(record.get("question", ""))),
+        _escape_table_text(str(record.get("answer", ""))),
+        _escape_table_text(_walkthrough_record_source_url(record)),
+    ]
+    if exact_reason is not None:
+        cells.append(f"`{_escape_table_text(str(exact_reason))}`")
+    return "| " + " | ".join(cells) + " |"
+
+
+def _walkthrough_record_table_type(record: dict) -> str:
+    """Return the table type displayed in walkthrough candidate tables."""
+    table_type = _record_table_type(record)
+    if table_type:
+        return table_type
+    return str(record.get("table_type", "") or "unknown").strip() or "unknown"
+
+
+def _walkthrough_record_source_url(record: dict) -> str:
+    """Return the best source URL displayed for a walkthrough candidate row."""
+    metadata = record.get("source_metadata", {})
+    if not isinstance(metadata, dict):
+        metadata = {}
+    for source in (metadata, record):
+        if not isinstance(source, dict):
+            continue
+        for key in ("canonical_url", "stream_source_url", "source_url", "url"):
+            value = str(source.get(key) or "").strip()
+            if value:
+                return value
+    evidence = record.get("evidence", {})
+    if isinstance(evidence, dict):
+        return str(evidence.get("url") or "").strip()
+    return ""
 
 def _append_in_run_rerun_outcomes_section(
     lines: list[str],
@@ -4133,32 +4151,37 @@ def _append_second_stage_filtering_responses_section(
         "`openai/gpt-4.1-mini` and `google/gemini-3-flash-preview`."
     )
     lines.append("")
-    if any(group_accepted or group_rejected for _, group_accepted, group_rejected in record_groups):
-        for group_label, group_accepted, group_rejected in record_groups:
-            records = [*group_accepted, *group_rejected]
-            if len(record_groups) > 1:
-                lines.append(f"### {group_label}")
-                lines.append("")
-            if records:
-                lines.append("| Page ID | Question | Reference answer | openai/gpt-4.1-mini | google/gemini-3-flash-preview |")
-                lines.append("| ---: | --- | --- | --- | --- |")
-                for record in records:
-                    features = _second_stage_panel_features(record)
-                    lines.append(
-                        "| {page_id} | {question} | {reference_answer} | {openai} | {gemini} |".format(
-                            page_id=_record_page_id(record),
-                            question=_escape_table_text(str(record.get("question", ""))),
-                            reference_answer=_escape_table_text(_second_stage_reference_answer(record, features)),
-                            openai=_escape_table_text(_second_stage_model_cell(features, "openai/gpt-4.1-mini")),
-                            gemini=_escape_table_text(_second_stage_model_cell(features, "google/gemini-3-flash-preview")),
-                        )
+    displayed_any = False
+    for group_label, group_accepted, group_rejected in record_groups:
+        records = [
+            record
+            for record in [*group_accepted, *group_rejected]
+            if _has_second_stage_model_responses(_second_stage_panel_features(record))
+        ]
+        if len(record_groups) > 1:
+            lines.append(f"### {group_label}")
+            lines.append("")
+        if records:
+            displayed_any = True
+            lines.append("| Page ID | Question | Reference answer | openai/gpt-4.1-mini | google/gemini-3-flash-preview |")
+            lines.append("| ---: | --- | --- | --- | --- |")
+            for record in records:
+                features = _second_stage_panel_features(record)
+                lines.append(
+                    "| {page_id} | {question} | {reference_answer} | {openai} | {gemini} |".format(
+                        page_id=_record_page_id(record),
+                        question=_escape_table_text(str(record.get("question", ""))),
+                        reference_answer=_escape_table_text(_second_stage_reference_answer(record, features)),
+                        openai=_escape_table_text(_second_stage_model_cell(features, "openai/gpt-4.1-mini")),
+                        gemini=_escape_table_text(_second_stage_model_cell(features, "google/gemini-3-flash-preview")),
                     )
-                lines.append("")
-            else:
-                lines.append("No final candidate records in this scope.")
-                lines.append("")
-    else:
-        lines.append("No final candidate records were produced in this run.")
+                )
+            lines.append("")
+        elif len(record_groups) > 1:
+            lines.append("No second-stage model responses in this scope.")
+            lines.append("")
+    if not displayed_any:
+        lines.append("No second-stage model responses were produced in this run.")
     if rerun_records:
         lines.append("")
         lines.append("Rerun-pool entries have no second-stage filtering response unless they reached the panel before the transient failure.")
@@ -4202,9 +4225,9 @@ def _second_stage_model_cell(features: dict, model_name: str) -> str:
 
 
 def _has_second_stage_model_responses(features: dict) -> bool:
-    """Return whether panel features include concrete model answer rows."""
+    """Return whether panel features include at least one model answer row."""
     models = features.get("models")
-    return isinstance(models, list) and any(isinstance(row, dict) and row.get("predicted_answer") is not None for row in models)
+    return isinstance(models, list) and any(isinstance(row, dict) and row.get("model") for row in models)
 
 
 def _record_page_id(record: dict) -> int | str:

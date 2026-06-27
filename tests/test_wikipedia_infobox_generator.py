@@ -483,6 +483,17 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "page_id": 123,
                 "small_model_qa_response": {"question": "Generated source question"},
                 "small_model_rewrite_response": {"rewritten_question": "Who directed the film Example Film?"},
+                "selected_source_table": {"table_type": "infobox"},
+            },
+        }
+        ungraded_rejected_record = {
+            "question": "Which ungraded QA should stay out of the panel table?",
+            "answer": "No Panel",
+            "answer_type": "Other",
+            "rejection_reason": "search_longtail_verifier_rejected",
+            "source_metadata": {
+                "page_id": 124,
+                "selected_source_table": {"table_type": "wikitable"},
             },
         }
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -504,15 +515,19 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     "second_stage_concurrency_limit": 10,
                 },
                 accepted_records=[accepted_record],
-                rejected_records=[],
+                rejected_records=[ungraded_rejected_record],
                 rerun_records=[],
             )
             text = path.read_text(encoding="utf-8")
 
         self.assertIn("## Second-Stage Filtering Responses", text)
+        self.assertIn("| Page ID | Table type | Answer type | Question | Answer | Source |", text)
+        self.assertIn("| 123 | `infobox` | `unknown` | Who directed the film Example Film? | Jane Doe |  |", text)
         self.assertIn("| Page ID | Question | Reference answer | openai/gpt-4.1-mini | google/gemini-3-flash-preview |", text)
         self.assertIn("CORRECT; predicted_answer: Jane Doe", text)
         self.assertIn("INCORRECT; predicted_answer: John Smith", text)
+        second_stage_text = text.split("## Second-Stage Filtering Responses", 1)[1].split("## Rejected And Rerun Decisions", 1)[0]
+        self.assertNotIn("Which ungraded QA should stay out of the panel table?", second_stage_text)
         self.assertIn("Stream page workers: 4", text)
         self.assertIn("Second-stage concurrency limit: 10", text)
         self.assertNotIn("## Route 3 Generation Responses", text)
@@ -529,6 +544,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "answer_type": "Person",
                 "reasoning_type": "single_fact",
                 "stream_source_url": "https://en.wikipedia.org/w/index.php?curid=111",
+                "selected_source_table": {"table_type": "infobox"},
                 "phase_timings_seconds": {
                     "total_generation_seconds": 1.0,
                     "total_processing_seconds": 2.0,
@@ -547,6 +563,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "page_id": 112,
                 "answer_type": "Other",
                 "reasoning_type": "max",
+                "selected_source_table": {"table_type": "wikitable"},
                 "phase_timings_seconds": {
                     "total_generation_seconds": 3.0,
                     "total_processing_seconds": 4.0,
@@ -564,6 +581,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "answer_type": "Person",
                 "reasoning_type": "single_fact",
                 "stream_source_url": "https://en.wikipedia.org/w/index.php?curid=211",
+                "selected_source_table": {"table_type": "wikitable"},
                 "phase_timings_seconds": {
                     "total_generation_seconds": 5.0,
                     "total_processing_seconds": 6.0,
@@ -584,6 +602,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "page_id": 212,
                 "answer_type": "Person",
                 "reasoning_type": "single_fact",
+                "selected_source_table": {"table_type": "infobox"},
                 "phase_timings_seconds": {
                     "total_generation_seconds": 7.0,
                     "total_processing_seconds": 8.0,
@@ -654,12 +673,12 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("#### Total Displayed Run Phase Timings", text)
         self.assertIn("### Existing Endpoint Records", text)
         self.assertIn("### Incremental Records", text)
-        self.assertIn("| Page ID | Answer type | Question | Answer | Source |", text)
-        self.assertIn("| 111 | `Person` | Who directed the existing film? | Jane Doe | https://en.wikipedia.org/w/index.php?curid=111 |", text)
-        self.assertIn("Who directed the existing film?", text)
-        self.assertIn("Who directed the incremental film?", text)
-        self.assertIn("rewrite_guard_rejected:answer_leakage", text)
-        self.assertIn("search_longtail_verifier_rejected:full_question:hit_rate_exceeded", text)
+        self.assertIn("| Page ID | Table type | Answer type | Question | Answer | Source |", text)
+        self.assertIn("| 111 | `infobox` | `Person` | Who directed the existing film? | Jane Doe | https://en.wikipedia.org/w/index.php?curid=111 |", text)
+        self.assertIn("| 211 | `wikitable` | `Person` | Who directed the incremental film? | Alex Roe | https://en.wikipedia.org/w/index.php?curid=211 |", text)
+        self.assertIn("| Page ID | Table type | Answer type | Question | Answer | Source | Exact reason |", text)
+        self.assertIn("| 112 | `wikitable` | `Other` | What leaked answer appears in the old question? | Leak |  | `rewrite_guard_rejected:answer_leakage` |", text)
+        self.assertIn("| 212 | `infobox` | `Person` | Who directed the rejected incremental film? | Sam Poe |  | `search_longtail_verifier_rejected:full_question:hit_rate_exceeded` |", text)
 
     def test_generator_uses_parse_paragraph_without_summary_fetch(self) -> None:
         class NoSummaryWikipediaClient(FakeWikipediaClient):
@@ -4344,7 +4363,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
 
     def test_generated_answer_normalization_preserves_parenthetical_answer_and_rank_alias(self) -> None:
         answer, aliases = _normalize_generated_answer(
-            "AT&T Stadium ‡ (Dallas Stadium)",
+            "AT&T Stadium 鈥?(Dallas Stadium)",
             ["AT&T Stadium", "Dallas Stadium", "#1"],
         )
         self.assertEqual(answer, "AT&T Stadium (Dallas Stadium)")
@@ -4360,15 +4379,15 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
 
     def test_route3_layer1_cell_cleanup_preserves_display_text_and_escapes_markdown_pipe(self) -> None:
         self.assertEqual(_clean_cell_text("Alpha [citation needed]"), "Alpha [citation needed]")
-        self.assertEqual(_clean_cell_text("Amélie [note 1] &nbsp; O'Connor | 北京"), "Amélie O'Connor | 北京")
-        self.assertEqual(_markdown_cell("Amélie | 北京 [1]"), "Amélie \\| 北京")
+        self.assertEqual(_clean_cell_text("Am茅lie [note 1] &nbsp; O'Connor | 鍖椾含"), "Am茅lie O'Connor | 鍖椾含")
+        self.assertEqual(_markdown_cell("Am茅lie | 鍖椾含 [1]"), "Am茅lie \\| 鍖椾含")
 
     def test_combined_markdown_headers_use_display_key_for_exact_dedupe(self) -> None:
         headers = _combined_markdown_headers(
-            [["Mercury (planet)", "St John’s"], ["Mercury", "St John's"]],
+            [["Mercury (planet)", "St John鈥檚"], ["Mercury", "St John's"]],
             header_row_count=2,
         )
-        self.assertEqual(headers, ["Mercury (planet) / Mercury", "St John’s / St John's"])
+        self.assertEqual(headers, ["Mercury (planet) / Mercury", "St John鈥檚 / St John's"])
 
     def test_route3_answer_blind_query_sanitizer_uses_layer2_boundaries(self) -> None:
         queries = _sanitize_answer_blind_queries(

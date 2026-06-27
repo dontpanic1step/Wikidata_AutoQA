@@ -27,7 +27,7 @@ def _default_second_stage_grading_models() -> tuple["LLMConfig", ...]:
             api_key_env="OPENROUTER_API_KEY",
             base_url="https://openrouter.ai/api/v1",
             temperature=0.0,
-            max_tokens=128,
+            max_tokens=256,
         ),
         LLMConfig(
             provider="openrouter",
@@ -35,7 +35,7 @@ def _default_second_stage_grading_models() -> tuple["LLMConfig", ...]:
             api_key_env="OPENROUTER_API_KEY",
             base_url="https://openrouter.ai/api/v1",
             temperature=0.0,
-            max_tokens=128,
+            max_tokens=256,
         ),
     )
 

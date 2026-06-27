@@ -78,17 +78,21 @@ class FakePanelModelClient:
 
 
 class FakePanelGraderClient:
-    """Grader stub that returns one configured response per call."""
+    """Grader stub that returns configured or prompt-aware responses."""
 
-    def __init__(self, responses: list[str]) -> None:
-        self.responses = list(responses)
+    def __init__(self, responses: list[str] | None = None) -> None:
+        self.responses = list(responses or [])
         self.prompts: list[str] = []
 
     def complete_text(self, prompt: str) -> str:
         self.prompts.append(prompt)
-        if not self.responses:
-            raise AssertionError("No fake grader response configured.")
-        return self.responses.pop(0)
+        if self.responses:
+            return self.responses.pop(0)
+        if "Predicted answer: Jane Doe" in prompt or "Predicted answer: J. Doe" in prompt:
+            return "A"
+        if "Predicted answer: John Smith" in prompt:
+            return "B"
+        return "C"
 
     def complete_text_with_audit(self, prompt: str) -> dict:
         text = self.complete_text(prompt)
@@ -1784,12 +1788,7 @@ class GenerationPipelineTests(unittest.TestCase):
                     ModelPanelMember("openai/gpt-5.4-mini", FakePanelModelClient("Jane Doe")),
                     ModelPanelMember("google/gemini-3-flash-preview", FakePanelModelClient("John Smith")),
                 ],
-                grading_grader_client=FakePanelGraderClient(
-                    [
-                        '{"grades": [{"index": 0, "grade": "CORRECT", "reason": "same"}]}',
-                        '{"grades": [{"index": 0, "grade": "INCORRECT", "reason": "wrong"}]}',
-                    ]
-                ),
+                grading_grader_client=FakePanelGraderClient(),
                 rewrite_client=None,
             )
         self.assertEqual(len(result.accepted), 1)
@@ -1805,8 +1804,9 @@ class GenerationPipelineTests(unittest.TestCase):
         self.assertIn("grader_audit", features["models"][0])
         self.assertEqual(
             features["models"][0]["grader_audit"]["response_body"]["fake_grader_response"],
-            '{"grades": [{"index": 0, "grade": "CORRECT", "reason": "same"}]}',
+            "A",
         )
+        self.assertEqual(features["models"][0]["raw_judge_response"], "A")
         self.assertAlmostEqual(
             result.telemetry["process_generated_candidates"]["second_stage_grading_summary"]["per_model"]["openai/gpt-5.4-mini"]["accuracy"],
             1.0,
@@ -1874,12 +1874,7 @@ class GenerationPipelineTests(unittest.TestCase):
                     ModelPanelMember("openai/gpt-5.4-mini", FakePanelModelClient("Jane Doe")),
                     ModelPanelMember("google/gemini-3-flash-preview", FakePanelModelClient("J. Doe")),
                 ],
-                grading_grader_client=FakePanelGraderClient(
-                    [
-                        '{"grades": [{"index": 0, "grade": "CORRECT", "reason": "same"}]}',
-                        '{"grades": [{"index": 0, "grade": "CORRECT", "reason": "alias"}]}',
-                    ]
-                ),
+                grading_grader_client=FakePanelGraderClient(),
                 rewrite_client=None,
             )
         self.assertEqual(result.accepted, [])
@@ -1896,7 +1891,7 @@ class GenerationPipelineTests(unittest.TestCase):
             answer_type="Person",
             source_metadata={},
             model_panel=[ModelPanelMember("openai/gpt-5.4-mini", FakePanelModelClient("Jane Doe"))],
-            grader_client=FakePanelGraderClient(['{"grade": "CORRECT", "reason": "same"}']),
+            grader_client=FakePanelGraderClient(["A"]),
             parallel_answers=False,
             batch_grader=False,
         )
@@ -1904,8 +1899,9 @@ class GenerationPipelineTests(unittest.TestCase):
         self.assertEqual(features["models"][0]["grade"], "CORRECT")
         self.assertEqual(
             features["models"][0]["grader_audit"]["response_body"]["fake_grader_response"],
-            '{"grade": "CORRECT", "reason": "same"}',
+            "A",
         )
+        self.assertEqual(features["models"][0]["raw_judge_response"], "A")
 
     def test_number_snippet_judge_trigger_range_is_minus_ten_to_thirty(self) -> None:
         from wikidata_simpleqa.generation_pipeline import _needs_number_snippet_judge

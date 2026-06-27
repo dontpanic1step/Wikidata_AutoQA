@@ -211,3 +211,25 @@ llm_discard_reason清单揭示，是不是有一个slot有LLM拒绝，整个url�
 1、支持跳过proxy直接direct fallback。
 2、按照本次试跑的记录更加尊重反爬，增加时间间隔。
 复用：支持传入指定数字id（文本/txt/helper生成的一段式或三段式格式），在cached中寻找匹配的页面然后复用。
+
+2026/6/24新修改：
+把average, percentage, what category也作为marker去掉 （完成）
+
+常用代码：（比较复杂，建议修改）
+source ~/.openrouter_env
+export PYTHONPATH=src
+
+/home/chenyue/.venvs/wikidata-framework/bin/python scripts/run_wikipedia_infobox_recipe.py \
+  --answer-type-count AllTypes=10 \
+  --route3-reasoning-type single_fact \
+  --route3-answer-type-mode all5 \
+  --route3-table-source-type infobox \
+  --stream-reuse-cached-page-count 10 \
+  --enable-second-stage-grading \
+  --generation-model google/gemini-3.5-flash \
+  --small-model-max-tokens 4096 \
+  --run-id route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12
+
+目前的问题：小模型那里token似乎不够用，有截断？判断比例，考虑是否延长；gemini-3.5-flash生成质量明显优于gpt-5-mini，但4096token某些情况下似乎不够用。我觉得这样也行，别无限制燃烧。
+gpt-4.1-mini什么时候会有20000级别的input？我猜是judge答案是否正确，需要检查传了什么上下文。
+other name, translation, transliteration, another name也作为marker去掉

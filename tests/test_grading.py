@@ -4,12 +4,14 @@ from __future__ import annotations
 
 import threading
 import unittest
+from unittest.mock import patch
 
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.grading import (
     ModelPanelMember,
     evaluate_model_panel,
     grade_prediction,
+    parse_choice_letter,
     summarize_panel_runs,
 )
 from wikidata_simpleqa.number_reference import build_number_reference_margin
@@ -25,6 +27,42 @@ class FakeClient:
     def complete_text(self, prompt: str) -> str:
         self.prompts.append(prompt)
         return self.response
+
+
+class FakeSequenceClient:
+    """Text-completion client that returns one configured response per call."""
+
+    def __init__(self, responses: list[str]) -> None:
+        self.responses = list(responses)
+        self.prompts: list[str] = []
+
+    def complete_text(self, prompt: str) -> str:
+        self.prompts.append(prompt)
+        if not self.responses:
+            raise AssertionError("No fake response configured.")
+        return self.responses.pop(0)
+
+
+class PromptAwareGraderClient:
+    """Grader client that returns grades based on the predicted answer in the prompt."""
+
+    def __init__(self) -> None:
+        self.prompts: list[str] = []
+
+    def complete_text(self, prompt: str) -> str:
+        self.prompts.append(prompt)
+        if "Predicted answer: Jane Doe" in prompt:
+            return "A"
+        if "Predicted answer: John Smith" in prompt:
+            return "B"
+        return "C"
+
+
+class FailingClient:
+    """Client that simulates persistent grader transport failure."""
+
+    def complete_text(self, prompt: str) -> str:
+        raise RuntimeError("temporary network failure")
 
 
 class GradingTests(unittest.TestCase):
@@ -56,15 +94,49 @@ class GradingTests(unittest.TestCase):
                 source_metadata={"answer_items": ["Alpha", "Beta"]},
             )
 
-    def test_llm_grader_parses_json_grade(self) -> None:
+    def test_choice_letter_parser_maps_verified_choices(self) -> None:
+        self.assertEqual(parse_choice_letter("A"), "A")
+        self.assertEqual(parse_choice_letter("B."), "B")
+        self.assertEqual(parse_choice_letter("`C`"), "C")
+
+    def test_unparseable_choice_defaults_to_not_attempted(self) -> None:
         result = grade_prediction(
             question="Who directed Example Film?",
             gold_answer="Jane Doe",
             predicted_answer="Jane",
-            grader_client=FakeClient('{"grade":"INCORRECT","reason":"too vague"}'),
+            grader_client=FakeClient("unparseable"),
+        )
+        self.assertEqual(result["grade"], "NOT_ATTEMPTED")
+        self.assertEqual(result["grader_choice_letter"], "C")
+        self.assertEqual(result["grader_parse_status"], "unparseable")
+        self.assertEqual(result["raw_judge_response"], "unparseable")
+
+    def test_llm_grader_parses_verified_choice_grade(self) -> None:
+        result = grade_prediction(
+            question="Who directed Example Film?",
+            gold_answer="Jane Doe",
+            predicted_answer="Jane",
+            grader_client=FakeClient("B"),
         )
         self.assertEqual(result["grade"], "INCORRECT")
-        self.assertEqual(result["method"], "llm_grader")
+        self.assertEqual(result["method"], "simpleqa_verified_grader")
+        self.assertEqual(result["reason"], "")
+
+    def test_grader_network_error_defaults_to_not_attempted_with_audit(self) -> None:
+        with patch("wikidata_simpleqa.grading.sleep"), patch(
+            "wikidata_simpleqa.grading._grader_retry_sleep_seconds", return_value=0.0
+        ):
+            result = grade_prediction(
+                question="Who directed Example Film?",
+                gold_answer="Jane Doe",
+                predicted_answer="Jane",
+                grader_client=FailingClient(),
+            )
+        self.assertEqual(result["grade"], "NOT_ATTEMPTED")
+        self.assertEqual(result["grader_parse_status"], "error")
+        self.assertEqual(result["raw_judge_response"], "")
+        self.assertEqual(result["grader_error_type"], "RuntimeError")
+        self.assertIn("temporary network failure", result["grader_error_message"])
 
     def test_number_margin_requires_llm_grader(self) -> None:
         metadata = {
@@ -83,7 +155,7 @@ class GradingTests(unittest.TestCase):
         metadata = {
             "number_reference_margin": build_number_reference_margin("100", "Number"),
         }
-        grader = FakeClient('{"grade":"CORRECT","reason":"within range"}')
+        grader = FakeClient("A")
         result = grade_prediction(
             question="How many points did Example Film score?",
             gold_answer="100",
@@ -94,13 +166,13 @@ class GradingTests(unittest.TestCase):
             grader_client=grader,
         )
         self.assertEqual(result["grade"], "CORRECT")
-        self.assertIn("Reference answer: 100 (acceptable range:", grader.prompts[0])
-        self.assertIn("Gold aliases: ['one hundred']", grader.prompts[0])
-        self.assertNotIn("Gold answer:", grader.prompts[0])
-        self.assertNotIn("one hundred are also acceptable", grader.prompts[0])
+        self.assertIn("Gold target: 100 (acceptable range:", grader.prompts[0])
+        self.assertIn("also acceptable: one hundred", grader.prompts[0])
+        self.assertNotIn("Reference answer:", grader.prompts[0])
+        self.assertNotIn("Metadata:", grader.prompts[0])
 
     def test_llm_grader_prompt_explains_list_answers(self) -> None:
-        grader = FakeClient('{"grade":"INCORRECT","reason":"partial list"}')
+        grader = FakeClient("B")
         result = grade_prediction(
             question="Which items tied?",
             gold_answer="Alpha; Beta",
@@ -109,15 +181,26 @@ class GradingTests(unittest.TestCase):
             grader_client=grader,
         )
         self.assertEqual(result["grade"], "INCORRECT")
-        self.assertIn("If the reference answer is a list", grader.prompts[0])
+        self.assertIn("The following are examples of NOT_ATTEMPTED predicted answers.", grader.prompts[0])
+
+    def test_llm_grader_prompt_excludes_source_metadata(self) -> None:
+        huge_metadata = {
+            "selected_source_table": {"markdown": "x" * 10000},
+            "llm_response": {"reasoning": "private reasoning"},
+        }
+        grader = FakeClient("A")
+        grade_prediction(
+            question="Who directed Example Film?",
+            gold_answer="Jane Doe",
+            predicted_answer="Jane Doe",
+            source_metadata=huge_metadata,
+            grader_client=grader,
+        )
+        self.assertNotIn("Metadata:", grader.prompts[0])
+        self.assertNotIn("selected_source_table", grader.prompts[0])
+        self.assertNotIn("private reasoning", grader.prompts[0])
 
     def test_evaluate_model_panel_records_accuracy(self) -> None:
-        grader = FakeClient(
-            '{"grades": ['
-            '{"index": 0, "grade": "CORRECT", "reason": "same"},'
-            '{"index": 1, "grade": "INCORRECT", "reason": "wrong"}'
-            "]}"
-        )
         result = evaluate_model_panel(
             question="Who directed Example Film?",
             gold_answer="Jane Doe",
@@ -128,18 +211,13 @@ class GradingTests(unittest.TestCase):
                 ModelPanelMember("correct-model", FakeClient("Jane Doe")),
                 ModelPanelMember("wrong-model", FakeClient("John Smith")),
             ],
-            grader_client=grader,
+            grader_client=PromptAwareGraderClient(),
         )
         self.assertEqual(result["correct_count"], 1)
         self.assertAlmostEqual(result["accuracy"], 0.5)
 
-    def test_evaluate_model_panel_uses_one_batch_grader_call(self) -> None:
-        grader = FakeClient(
-            '{"grades": ['
-            '{"index": 0, "grade": "CORRECT", "reason": "same"},'
-            '{"index": 1, "grade": "INCORRECT", "reason": "wrong"}'
-            "]}"
-        )
+    def test_evaluate_model_panel_batch_compat_grades_each_prediction(self) -> None:
+        grader = PromptAwareGraderClient()
         result = evaluate_model_panel(
             question="Who directed Example Film?",
             gold_answer="Jane Doe",
@@ -154,9 +232,11 @@ class GradingTests(unittest.TestCase):
             batch_grader=True,
         )
 
-        self.assertEqual(len(grader.prompts), 1)
-        self.assertEqual(result["models"][0]["method"], "llm_grader_batch")
-        self.assertEqual(result["models"][1]["method"], "llm_grader_batch")
+        self.assertEqual(len(grader.prompts), 2)
+        self.assertEqual(result["models"][0]["method"], "simpleqa_verified_grader_batch_compat")
+        self.assertEqual(result["models"][1]["method"], "simpleqa_verified_grader_batch_compat")
+        self.assertEqual(result["models"][0]["raw_judge_response"], "A")
+        self.assertEqual(result["models"][1]["raw_judge_response"], "B")
         self.assertAlmostEqual(result["accuracy"], 0.5)
 
     def test_evaluate_model_panel_answers_in_parallel(self) -> None:
@@ -172,12 +252,7 @@ class GradingTests(unittest.TestCase):
                 return self.response
 
         barrier = threading.Barrier(2)
-        grader = FakeClient(
-            '{"grades": ['
-            '{"index": 0, "grade": "CORRECT", "reason": "same"},'
-            '{"index": 1, "grade": "INCORRECT", "reason": "wrong"}'
-            "]}"
-        )
+        grader = PromptAwareGraderClient()
         result = evaluate_model_panel(
             question="Who directed Example Film?",
             gold_answer="Jane Doe",
@@ -198,7 +273,7 @@ class GradingTests(unittest.TestCase):
     def test_evaluate_model_panel_early_stops_when_first_model_exceeds_threshold(self) -> None:
         first_model = FakeClient("Jane Doe")
         second_model = FakeClient("John Smith")
-        grader = FakeClient('{"grades": [{"index": 0, "grade": "CORRECT", "reason": "same"}]}')
+        grader = FakeClient("A")
 
         result = evaluate_model_panel(
             question="Who directed Example Film?",

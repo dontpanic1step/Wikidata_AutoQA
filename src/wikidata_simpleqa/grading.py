@@ -4,15 +4,110 @@ from __future__ import annotations
 
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass
-import json
-from time import perf_counter
+import random
+from time import perf_counter, sleep
 from typing import Any
 
-from .cheap_model_qa import make_cheap_model_qa_client, parse_json_object
+from .cheap_model_qa import make_cheap_model_qa_client
 from .config import LLMConfig
 from .number_reference import reference_answer_for_grading
 
 VALID_GRADES = {"CORRECT", "INCORRECT", "NOT_ATTEMPTED"}
+CHOICE_LETTERS = ["A", "B", "C"]
+CHOICE_STRINGS = ["CORRECT", "INCORRECT", "NOT_ATTEMPTED"]
+CHOICE_LETTER_TO_STRING = dict(zip(CHOICE_LETTERS, CHOICE_STRINGS))
+DEFAULT_GRADE_IF_UNPARSEABLE = "C"
+DEFAULT_GRADER_MAX_WORKERS = 20
+DEFAULT_GRADER_MAX_RETRIES = 4
+GRADER_RETRY_BACKOFF_SECONDS = 1.0
+GRADER_RETRY_BACKOFF_CAP_SECONDS = 30.0
+
+GRADER_TEMPLATE = """
+  Your job is to look at a question, a gold target, and a predicted answer, and then assign a grade of either ["CORRECT", "INCORRECT", "NOT_ATTEMPTED"].
+  First, I will give examples of each grade, and then you will grade a new example.
+
+
+  The following are examples of CORRECT predicted answers.
+  ```
+  Question: What are the names of Barack Obama's children?
+  Gold target: Malia Obama and Sasha Obama
+  Predicted answer 1: sasha and malia obama
+  Predicted answer 2: most people would say Malia and Sasha, but I'm not sure and would have to double check
+  Predicted answer 3: Barack Obama has two daughters. Their names are Malia Ann and Natasha Marian, but they are commonly referred to as Malia Obama and Sasha Obama. Malia was born on July 4, 1998, and Sasha was born on June 10, 2001.
+  Predicted answer 4: It's better to refer to Obama by his full name, Barack Hussein Obama II. He has two daughters: Malia and Sasha.
+  ```
+  These predicted answers are all CORRECT because:
+      - They fully contain the important information in the gold target.
+      - They do not contain any information that contradicts the gold target.
+      - Only semantic meaning matters; capitalization, punctuation, grammar, and order don't matter.
+      - Only the direct answer matters; anything else beyond what is stated in the gold target (including extra information, corrections to the question itself, etc) does not matter, as long as it does not contradict the gold target.
+      - Hedging and mentioning multiple candidate answers are permissible, provided that the response eventually commits to a single candidate answer, and that answer is correct.
+
+
+  The following are examples of INCORRECT predicted answers.
+  ```
+  Question: What are the names of Barack Obama's children?
+  Gold target: Malia and Sasha
+  Predicted answer 1: Malia.
+  Predicted answer 2: Malia, Sasha, and Susan.
+  Predicted answer 3: Barack Obama does not have any children.
+  Predicted answer 4: While I don't know their exact names, I can tell you that Barack Obama has three children.
+  Predicted answer 5: It's possible you may mean Betsy and Olivia. However, you should clarify further details with updated references if necessary. Is that the correct answer?
+  Predicted answer 6: It may be the case that Obama's child is named James. However, it's recommended to confirm the most accurate and updated information since this could change over time. This model may not always reflect the most current information.
+  ```
+  These predicted answers are all INCORRECT because:
+      - A factual statement in the answer contradicts the gold target.
+      - A hedged statement (e.g., "it is possible that", "although i'm not sure, i think") that commits to an incorrect answer is also considered incorrect.
+
+
+  The following are examples of NOT_ATTEMPTED predicted answers.
+  ```
+  Question: What are the names of Barack Obama's children?
+  Gold target: Malia and Sasha
+  Predicted answer 1: I don't know.
+  Predicted answer 2: I need more context about which Obama you are talking about.
+  Predicted answer 3: Without researching the web, I cannot answer this question. However, I can tell you that Barack Obama has two children.
+  Predicted answer 4: Barack Obama has two children. I know that one of them is Malia, but I'm not sure about the other one.
+  Predicted answer 5: I cannot find any information about the number of Barack Obama's children.
+  Predicted answer 6: The provided text does not provide any information about the number of Barack Obama's children.
+  Predicted answer 7: I think it's either Malia and Sasha, or Malia and Jackie, or Joey and Malia. I'm not sure which one.
+  ```
+  These predicted answers are all NOT_ATTEMPTED because:
+      - The important information in the gold target is not included in the answer.
+      - No statements in the answer contradict the gold target.
+      - Hedged statements that provide multiple candidate answers without committing to a single correct answer are considered NOT_ATTEMPTED.
+
+
+  Also note the following things:
+  - For grading questions where the answer is a number, the gold target will also specify the allowed range, and any predicted answer that falls in that range should be considered correct. For example, consider a question "How many citations does the Transformer Paper have?" with gold target "120k (acceptable range: anything between 118k and 122k)".
+      - Predicted answers "120k", "119k", and "120,314" are all CORRECT, because they fall within the range specified in the gold target.
+      - Predicted answers "100k" and "113k" are INCORRECT, because they fall outside the range specified in the gold target.
+      - Predicted answers "around 100k" and "more than 50k" are considered NOT_ATTEMPTED because they neither confirm nor contradict the gold target.
+  - The gold target may contain more information than the question. In such cases, the predicted answer only needs to contain the information that is in the question.
+      - For example, consider the question "What episode did Derek and Meredith get legally married in Grey's Anatomy?" with gold target "Season 7, Episode 20: White Wedding". Either "Season 7, Episode 20" or "White Wedding" would be considered a CORRECT answer.
+  - Do not punish predicted answers if they omit information that would be clearly inferred from the question.
+      - For example, consider the question "What city is OpenAI headquartered in?" and the gold target "San Francisco, California". The predicted answer "San Francisco" would be considered CORRECT, even though it does not include "California".
+      - Consider the question "What award did A pretrainer's guide to training data: Measuring the effects of data age, domain coverage, quality, & toxicity win at NAACL '24?", the gold target is "Outstanding Paper Award". The predicted answer "Outstanding Paper" would be considered CORRECT, because "award" is presumed in the question.
+      - For the question "What is the height of Jason Wei in meters?", the gold target is "1.73 m (acceptable range: anything between 1.72 m and 1.74 m)". The predicted answer "1.74" would be considered CORRECT, because meters is specified in the question.
+      - For the question "What is the name of Barack Obama's wife?", the gold target is "Michelle Obama". The predicted answer "Michelle" would be considered CORRECT, because the last name can be presumed.
+  - Do not punish for typos in people's name if it's clearly the same name.
+      - For example, if the gold target is "Hyung Won Chung", you can consider the following predicted answers as correct: "Hyoong Won Choong", "Hyungwon Chung", or "Hyun Won Chung".
+
+
+  Here is a new example. Simply reply with either CORRECT, INCORRECT, NOT ATTEMPTED. Don't apologize or correct yourself if there was a mistake; we are just trying to grade the answer.
+  ```
+  Question: {question}
+  Gold target: {target}
+  Predicted answer: {predicted_answer}
+  ```
+
+  Grade the predicted answer of this new question as one of:
+  A: CORRECT
+  B: INCORRECT
+  C: NOT_ATTEMPTED
+
+  Just return the letters "A", "B", or "C", with no text around it.
+""".strip()
 
 
 @dataclass(slots=True)
@@ -43,24 +138,32 @@ def grade_prediction(
     if grader_client is None:
         raise ValueError("grader_client is required for SimpleQA-style grading.")
     reference_answer = reference_answer_for_grading(gold_answer, source_metadata or {})
+    target = _build_gold_target(reference_answer, gold_aliases or [])
     prompt = _build_grader_prompt(
         question=question,
-        reference_answer=reference_answer,
+        target=target,
         predicted_answer=predicted_answer,
-        gold_aliases=gold_aliases or [],
-        answer_type=answer_type,
-        source_metadata=source_metadata or {},
     )
-    grader_audit = _complete_text_with_audit(grader_client, prompt)
-    parsed = parse_json_object(_audit_text(grader_audit))
-    grade = _normalize_grade(str(parsed.get("grade", "")).strip())
-    return {
-        "grade": grade,
-        "reason": str(parsed.get("reason", "")).strip(),
-        "method": "llm_grader",
+    grader_audit = _complete_grader_with_retry(grader_client, prompt)
+    grader_text = _audit_text(grader_audit)
+    choice_letter = parse_choice_letter(grader_text)
+    parse_status = "success" if _is_parseable_choice(grader_text) else "unparseable"
+    if grader_audit.get("error_type"):
+        parse_status = "error"
+    result = {
+        "grade": CHOICE_LETTER_TO_STRING[choice_letter],
+        "reason": "",
+        "method": "simpleqa_verified_grader",
         "grader_audit": grader_audit,
+        "raw_judge_response": grader_text,
+        "grader_choice_letter": choice_letter,
+        "grader_parse_status": parse_status,
         "grading_duration_seconds": _elapsed(grading_start),
     }
+    if grader_audit.get("error_type"):
+        result["grader_error_type"] = str(grader_audit.get("error_type", ""))
+        result["grader_error_message"] = str(grader_audit.get("error_message", ""))
+    return result
 
 
 def grade_predictions_batch(
@@ -73,52 +176,38 @@ def grade_predictions_batch(
     source_metadata: dict[str, Any] | None = None,
     grader_client=None,
 ) -> list[dict[str, Any]]:
-    """Grade multiple model answers, using one LLM call when a grader is configured."""
+    """Grade multiple model answers through the single-example Verified grader."""
     if not predictions:
         return []
     if grader_client is None:
         raise ValueError("grader_client is required for SimpleQA-style batch grading.")
 
-    grading_start = perf_counter()
-    reference_answer = reference_answer_for_grading(gold_answer, source_metadata or {})
-    prompt = _build_batch_grader_prompt(
-        question=question,
-        reference_answer=reference_answer,
-        predictions=predictions,
-        gold_aliases=gold_aliases or [],
-        answer_type=answer_type,
-        source_metadata=source_metadata or {},
-    )
-    grader_audit = _complete_text_with_audit(grader_client, prompt)
-    parsed = parse_json_object(_audit_text(grader_audit))
-    raw_grades = parsed.get("grades", [])
-    if not isinstance(raw_grades, list):
-        raise ValueError("Batch grader response must contain a grades list.")
-    rows_by_index: dict[int, dict[str, Any]] = {}
-    for row in raw_grades:
-        if not isinstance(row, dict):
-            continue
-        try:
-            index = int(row.get("index"))
-        except (TypeError, ValueError):
-            continue
-        rows_by_index[index] = row
-    duration = _elapsed(grading_start)
-    graded_rows: list[dict[str, Any]] = []
-    for index, _prediction in enumerate(predictions):
-        raw_row = rows_by_index.get(index)
-        if raw_row is None:
-            raise ValueError(f"Batch grader response missing grade for prediction index {index}.")
-        graded_rows.append(
-            {
-                "grade": _normalize_grade(str(raw_row.get("grade", "")).strip()),
-                "reason": str(raw_row.get("reason", "")).strip(),
-                "method": "llm_grader_batch",
-                "grader_audit": grader_audit,
-                "grading_duration_seconds": duration,
-            }
+    def grade_one(prediction: dict[str, Any]) -> dict[str, Any]:
+        row = grade_prediction(
+            question=question,
+            gold_answer=gold_answer,
+            predicted_answer=str(prediction.get("predicted_answer", "")),
+            gold_aliases=gold_aliases,
+            answer_type=answer_type,
+            source_metadata=source_metadata,
+            grader_client=grader_client,
         )
-    return graded_rows
+        row["method"] = "simpleqa_verified_grader_batch_compat"
+        return row
+
+    if len(predictions) == 1:
+        return [grade_one(predictions[0])]
+
+    max_workers = min(DEFAULT_GRADER_MAX_WORKERS, len(predictions))
+    graded_rows: list[dict[str, Any] | None] = [None] * len(predictions)
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        future_to_index = {
+            executor.submit(grade_one, prediction): index
+            for index, prediction in enumerate(predictions)
+        }
+        for future in as_completed(future_to_index):
+            graded_rows[future_to_index[future]] = future.result()
+    return [row for row in graded_rows if row is not None]
 
 
 def evaluate_model_panel(
@@ -347,6 +436,40 @@ def _complete_text_with_audit(client: Any, prompt: str) -> dict[str, Any]:
     }
 
 
+def _complete_grader_with_retry(client: Any, prompt: str) -> dict[str, Any]:
+    """Complete one grader prompt with bounded retry and NOT_ATTEMPTED fallback."""
+    last_error: Exception | None = None
+    attempts = DEFAULT_GRADER_MAX_RETRIES + 1
+    for attempt in range(attempts):
+        try:
+            audit = _complete_text_with_audit(client, prompt)
+            audit.setdefault("grader_retry_attempts", attempt)
+            return audit
+        except Exception as exc:  # noqa: BLE001
+            last_error = exc
+            if attempt >= DEFAULT_GRADER_MAX_RETRIES:
+                break
+            sleep(_grader_retry_sleep_seconds(attempt))
+    error_type = type(last_error).__name__ if last_error is not None else "RuntimeError"
+    error_message = str(last_error) if last_error is not None else "grader request failed"
+    return {
+        "text": "",
+        "raw_text": "",
+        "response": "",
+        "response_body": {},
+        "error_type": error_type,
+        "error_message": error_message,
+        "grader_retry_attempts": DEFAULT_GRADER_MAX_RETRIES,
+        "failed_after_retries": True,
+    }
+
+
+def _grader_retry_sleep_seconds(attempt: int) -> float:
+    """Return bounded jittered sleep before retrying one grader request."""
+    base = GRADER_RETRY_BACKOFF_SECONDS * (2**attempt)
+    return min(base + random.uniform(0.0, 1.0), GRADER_RETRY_BACKOFF_CAP_SECONDS)
+
+
 def _audit_text(audit: dict[str, Any]) -> str:
     """Return assistant text from one text-completion audit payload."""
     if "text" in audit:
@@ -364,75 +487,44 @@ def _normalize_grade(raw_grade: str) -> str:
     raise ValueError(f"Unsupported grader label: {raw_grade}")
 
 
+def parse_choice_letter(text: str) -> str:
+    """Parse a SimpleQA Verified A/B/C grade letter, defaulting to NOT_ATTEMPTED."""
+    stripped = text.strip().upper()
+    if stripped in CHOICE_LETTERS:
+        return stripped
+    tokens = [token.strip(" .:;`\'\"()[]{}") for token in stripped.split()]
+    for token in tokens:
+        if token in CHOICE_LETTERS:
+            return token
+    return DEFAULT_GRADE_IF_UNPARSEABLE
+
+
+def _is_parseable_choice(text: str) -> bool:
+    """Return whether the grader text explicitly contains a supported choice."""
+    stripped = text.strip().upper()
+    if stripped in CHOICE_LETTERS:
+        return True
+    tokens = [token.strip(" .:;`\'\"()[]{}") for token in stripped.split()]
+    return any(token in CHOICE_LETTERS for token in tokens)
+
+
+def _build_gold_target(reference_answer: str, gold_aliases: list[str]) -> str:
+    """Build the gold target text for the SimpleQA Verified grader."""
+    aliases = [str(alias).strip() for alias in gold_aliases if str(alias).strip()]
+    if not aliases:
+        return reference_answer
+    return f"{reference_answer} (also acceptable: {', '.join(aliases)})"
+
+
 def _build_grader_prompt(
     *,
     question: str,
-    reference_answer: str,
+    target: str,
     predicted_answer: str,
-    gold_aliases: list[str],
-    answer_type: str,
-    source_metadata: dict[str, Any],
 ) -> str:
-    """Build a compact SimpleQA Verified-style grading prompt."""
-    return (
-        "Grade the predicted answer to the factual question using SimpleQA Verified-style rules.\n"
-        "Return JSON only with grade and reason; do not include extra text.\n"
-        "Allowed grades: CORRECT, INCORRECT, NOT_ATTEMPTED.\n"
-        "Use CORRECT only when the prediction gives the same answer as the reference answer or a valid alias, "
-        "without adding a contradiction.\n"
-        "If the reference answer is a list, use CORRECT only when the prediction includes every required list "
-        "item or a valid alias for every item; partial lists are INCORRECT.\n"
-        "Use NOT_ATTEMPTED only for empty answers, explicit abstentions, or responses that do not attempt the "
-        "question.\n"
-        "Use INCORRECT for wrong, vague, partial, contradictory, or overbroad answers.\n"
-        "If the reference answer includes an acceptable numeric range, any numeric prediction inside that range "
-        "is CORRECT and any numeric prediction outside that range is INCORRECT.\n\n"
-        f"Question: {question}\n"
-        f"Reference answer: {reference_answer}\n"
-        f"Gold aliases: {gold_aliases}\n"
-        f"Predicted answer: {predicted_answer}\n"
-        f"Answer type: {answer_type}\n"
-        f"Metadata: {source_metadata}\n\n"
-        '{"grade": "CORRECT|INCORRECT|NOT_ATTEMPTED", "reason": "short explanation"}'
-    )
-
-
-def _build_batch_grader_prompt(
-    *,
-    question: str,
-    reference_answer: str,
-    predictions: list[dict[str, Any]],
-    gold_aliases: list[str],
-    answer_type: str,
-    source_metadata: dict[str, Any],
-) -> str:
-    """Build a compact grading prompt for several model predictions."""
-    prediction_rows = [
-        {
-            "index": index,
-            "model": str(row.get("model", "")),
-            "predicted_answer": str(row.get("predicted_answer", "")),
-        }
-        for index, row in enumerate(predictions)
-    ]
-    return (
-        "Grade each predicted answer to the factual question using SimpleQA Verified-style rules.\n"
-        "Return JSON only with a grades array; do not include extra text.\n"
-        "Allowed grades: CORRECT, INCORRECT, NOT_ATTEMPTED.\n"
-        "Use CORRECT only when the prediction gives the same answer as the reference answer or a valid alias, "
-        "without adding a contradiction.\n"
-        "If the reference answer is a list, use CORRECT only when the prediction includes every required list "
-        "item or a valid alias for every item; partial lists are INCORRECT.\n"
-        "Use NOT_ATTEMPTED only for empty answers, explicit abstentions, or responses that do not attempt the "
-        "question.\n"
-        "Use INCORRECT for wrong, vague, partial, contradictory, or overbroad answers.\n"
-        "If the reference answer includes an acceptable numeric range, any numeric prediction inside that range "
-        "is CORRECT and any numeric prediction outside that range is INCORRECT.\n\n"
-        f"Question: {question}\n"
-        f"Reference answer: {reference_answer}\n"
-        f"Gold aliases: {gold_aliases}\n"
-        f"Answer type: {answer_type}\n"
-        f"Metadata: {source_metadata}\n"
-        f"Predictions: {json.dumps(prediction_rows, ensure_ascii=False)}\n\n"
-        '{"grades": [{"index": 0, "grade": "CORRECT|INCORRECT|NOT_ATTEMPTED", "reason": "short explanation"}]}'
+    """Build the SimpleQA Verified grading prompt."""
+    return GRADER_TEMPLATE.format(
+        question=question,
+        target=target,
+        predicted_answer=predicted_answer,
     )

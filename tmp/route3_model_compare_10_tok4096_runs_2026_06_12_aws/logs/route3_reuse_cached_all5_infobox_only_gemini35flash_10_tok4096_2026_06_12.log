@@ -1,0 +1,2809 @@
+{
+  "run_group_id": "route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12",
+  "run_segment_id": "01_alltypes_10",
+  "run_artifact_manifest": "/home/chenyue/Wikidata_Framework_aws/outputs/run_manifests/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12.json",
+  "start_stage": "generate",
+  "start_from_endpoint": false,
+  "endpoint_resume": {
+    "enabled": false,
+    "accepted_records_loaded": 0,
+    "rejected_records_loaded": 0,
+    "final_decisions_loaded": 0,
+    "skipped_malformed_lines": 0,
+    "skipped_line_details": [],
+    "accepted_ids_synced": 0,
+    "rejected_ids_synced": 0
+  },
+  "streaming_mode": "page_id_stream",
+  "stream_page_source": "table-search",
+  "stream_search_queries": [
+    "insource:\"wikitable\""
+  ],
+  "stream_broad_table_search_enabled": false,
+  "stream_search_offsets": {
+    "insource:\"wikitable\"": 50
+  },
+  "stream_excluded_page_ids": 0,
+  "stream_exclude_page_id_files": [
+    "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/recipe_page_id_exclusions.json"
+  ],
+  "run_date": "2026-06-12",
+  "stream_state": "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/01_alltypes_10_state.json",
+  "stream_state_stats": {
+    "used": 20,
+    "in_progress": 0,
+    "accepted": 1,
+    "rejected": 19,
+    "rerun_pool": 0,
+    "table_search_queries": 1
+  },
+  "stream_state_reset": true,
+  "stream_rerun_pool_only": false,
+  "stream_rerun_pool_limit": 0,
+  "stream_rerun_pool_seed_files": [],
+  "stream_reuse_cached_page_count": 10,
+  "stream_reuse_cached_page_used_id_files": [
+    "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/recipe_page_id_exclusions.json"
+  ],
+  "stream_cached_page_reuse": {
+    "enabled": true,
+    "requested_count": 10,
+    "archive_dir": "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages",
+    "used_id_files": [
+      "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/recipe_page_id_exclusions.json"
+    ],
+    "strict_numeric_page_id_matching": true,
+    "cached_archive_file_count": 337,
+    "cached_archive_valid_page_count": 314,
+    "cached_archive_duplicate_page_count": 0,
+    "cached_archive_skipped_count": 23,
+    "cached_archive_errors": [],
+    "used_id_excluded_page_count": 0,
+    "state_already_used_page_count": 0,
+    "reusable_cached_page_count": 314,
+    "selected_count": 10,
+    "selected_page_ids": [
+      37284,
+      59733,
+      257453,
+      9119,
+      231031,
+      230182,
+      1300,
+      43697026,
+      248694,
+      255999
+    ],
+    "selected_archive_paths": [
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_00dc15fe84be8dc8487b6a165cf3516a4a00910a18552ac35b9af760736bce2d.json",
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_052a20e7fcf61920b777c86cd4ebd66c299e9ab7748b0fde37ed767c054ec470.json",
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_052e85dcd917f1738b52f19621428970eea0c2dc9fd9bf9a15b13b17b076e096.json",
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_05a701060b0d7db24bd74ce33a8a2025117b5cbfd94c9c965143171ce7d2c77f.json",
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_06824d3acc47df28f6b7dbde4cb31645d39790dfd018911a847fb02a40fd4d91.json",
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_090c22fff25e2107f494361df6de1e3d45382d5050f821dcf049937caa817e9f.json",
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_09d82d731ee143e0c093eb518e025e348ad21d515e34bcb643e09c37d31b9800.json",
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_0ad0f7a4abe274b46a88fd7d2482b4423a03d04ff65fe725d2a9800cc12bd5e6.json",
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_0b7953146084bc72f3fd505ab39a573feadb42cb6078ad13c005498d7fc9b25f.json",
+      "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages/page_0e34eae1c2c8689609777685a9736c4c3ea6262078643e3c9aa0cbd6ed52ad06.json"
+    ]
+  },
+  "stream_reused_cached_page_ids": [
+    37284,
+    59733,
+    257453,
+    9119,
+    231031,
+    230182,
+    1300,
+    43697026,
+    248694,
+    255999
+  ],
+  "stream_reused_cached_page_count": 10,
+  "stream_prefer_rerun_pool": false,
+  "seeded_rerun_pool_ids": [],
+  "seeded_rerun_pool_ids_freed_on_completion": [],
+  "stream_auto_rerun_once": true,
+  "auto_rerun_pool_ids_at_start": [],
+  "auto_rerun_processed_page_ids": [],
+  "auto_rerun_attempted_page_ids": 0,
+  "rerun_pool_ids_after_run": [],
+  "rerun_pool_failure_reasons_after_run": {},
+  "rerun_pool_error_details_after_run": {},
+  "recovered_stale_in_progress_ids": [],
+  "page_id_bounds": {
+    "min": 1,
+    "max": 80000000
+  },
+  "random_seed": 1564843544,
+  "random_seed_was_explicit": true,
+  "record_limit": 10,
+  "record_limit_remaining_at_start": 10,
+  "stream_batch_size": 10,
+  "stream_discovery_max_retries": 5,
+  "stream_discovery_retry_backoff_seconds": 10.0,
+  "stream_discovery_retry_max_sleep_seconds": 60.0,
+  "wikipedia_429_backoff_seconds": 30.0,
+  "wikipedia_429_max_backoff_seconds": 300.0,
+  "wikipedia_429_recovery_seconds": 120.0,
+  "stream_page_workers": 4,
+  "wikipedia_concurrency_limit": 4,
+  "duckduckgo_concurrency_limit": 4,
+  "openrouter_generation_rewrite_concurrency_limit": 10,
+  "second_stage_concurrency_limit": 10,
+  "stream_accepted_target": 0,
+  "stream_accepted_target_remaining_at_start": 0,
+  "attempted_page_ids": 20,
+  "attempted_page_ids_unique": 20,
+  "page_ids": [
+    37284,
+    59733,
+    257453,
+    9119,
+    231031,
+    230182,
+    1300,
+    43697026,
+    248694,
+    255999,
+    5489,
+    338344,
+    803,
+    31843,
+    17766232,
+    26989,
+    16949861,
+    1486684,
+    728776,
+    39776
+  ],
+  "page_id_list_entries": [
+    {
+      "page_id": 803,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 1300,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 5489,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 9119,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 26989,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 31843,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 39776,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 59733,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 255999,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 257453,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 338344,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 1486684,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 16949861,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    }
+  ],
+  "accepted": 1,
+  "accepted_total": 1,
+  "rejected": 47,
+  "rejected_total": 47,
+  "rerun": 0,
+  "wall_clock_seconds": 67.999,
+  "output_path": "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/01_alltypes_10_accepted.jsonl",
+  "rejected_output_path": "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/01_alltypes_10_rejected.jsonl",
+  "summary_output": "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/01_alltypes_10_summary.json",
+  "walkthrough_output": "",
+  "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "rest_summary_fallback_enabled": false,
+  "generation_model": "google/gemini-3.5-flash",
+  "small_model": "google/gemini-3.5-flash",
+  "kelm_rewrite_enabled": false,
+  "kelm_rewrite_model": "",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_top_k": 5,
+  "duckduckgo_parallel_queries": 3,
+  "duckduckgo_prefer_ddgs": true,
+  "duckduckgo_ddgs_backend": "auto",
+  "duckduckgo_ddgs_max_attempts": 2,
+  "duckduckgo_disabled_fallbacks": [],
+  "duckduckgo_cooldown_enabled": true,
+  "duckduckgo_cooldown_failure_threshold": 3,
+  "duckduckgo_cooldown_initial_seconds": 60.0,
+  "duckduckgo_cooldown_max_seconds": 300.0,
+  "generated_search_query_count": 2,
+  "min_table_score": 0.0,
+  "route3_reasoning_types": [
+    "single_fact"
+  ],
+  "route3_answer_types": [],
+  "route3_extra_prompts": [],
+  "route3_table_filter_modes": [
+    "no_external_links_tables",
+    "no_horizontal_companion_tables",
+    "no_picture_heavy_tables",
+    "no_incomplete_tables",
+    "not_number_dominant",
+    "no_social_science_research"
+  ],
+  "route3_table_source_types": [
+    "infobox"
+  ],
+  "route3_prose_leakage_scoring_enabled": true,
+  "route3_llm_choose_table": false,
+  "route3_answer_type_mode": "all5",
+  "route3_page_archive_dir": "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages",
+  "route3_pageview_prefilter_enabled": false,
+  "route3_pageview_window_months": 12,
+  "route3_max_monthly_average_pageviews": 5000.0,
+  "route3_max_underfilled_monthly_pageviews": 10000.0,
+  "route3_pageview_unavailable_policy": "allow",
+  "route3_infobox_max_removed_row_rate": 0.6,
+  "route3_infobox_min_remaining_rows": 5,
+  "compact_output": false,
+  "compact_output_ignored": false,
+  "compact_rejected_output": false,
+  "compact_rejected_output_ignored": false,
+  "llm_generation_input_tables": 7,
+  "llm_generation_input_pages": 7,
+  "llm_generation_accepted_qas": 1,
+  "llm_generation_table_yield": 0.1429,
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "unit": "page IDs",
+      "entered": 20,
+      "failed": 0,
+      "survived": 20,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "unit": "page IDs",
+      "entered": 20,
+      "failed": 0,
+      "survived": 20,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation_pre_llm",
+      "layer": "Source, pageview, and table filters before generation LLM",
+      "unit": "page IDs",
+      "entered": 20,
+      "failed": 13,
+      "survived": 7,
+      "survival_rate_from_layer_input": 0.35,
+      "cumulative_survival_rate": 0.35
+    },
+    {
+      "stage": "llm_generation_input_tables",
+      "layer": "Tables sent to generation LLM",
+      "unit": "tables",
+      "entered": 7,
+      "failed": 0,
+      "survived": 7,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Generation LLM output and route-local checks",
+      "unit": "QA candidates/slots",
+      "entered": 35,
+      "failed": 17,
+      "survived": 18,
+      "survival_rate_from_layer_input": 0.5143,
+      "cumulative_survival_rate": 0.5143
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "unit": "QA candidates/slots",
+      "entered": 18,
+      "failed": 1,
+      "survived": 17,
+      "survival_rate_from_layer_input": 0.9444,
+      "cumulative_survival_rate": 0.4857
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared deterministic route-aware validation",
+      "unit": "QA candidates/slots",
+      "entered": 17,
+      "failed": 0,
+      "survived": 17,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.4857
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "unit": "QA candidates/slots",
+      "entered": 17,
+      "failed": 14,
+      "survived": 3,
+      "survival_rate_from_layer_input": 0.1765,
+      "cumulative_survival_rate": 0.0857
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "unit": "QA candidates/slots",
+      "entered": 3,
+      "failed": 2,
+      "survived": 1,
+      "survival_rate_from_layer_input": 0.3333,
+      "cumulative_survival_rate": 0.0286
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "unit": "QA candidates/slots",
+      "entered": 1,
+      "failed": 0,
+      "survived": 1,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.0286
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "unit": "QA candidates/slots",
+      "entered": 1,
+      "failed": 0,
+      "survived": 1,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.0286
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected",
+      "count": 14
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_no_allowed_table_source_types:no_allowed_table_source_types:allowed=infobox;available=wikitable",
+      "count": 11
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_no_tables",
+      "count": 2
+    },
+    {
+      "stage": "second_stage_grading",
+      "reason": "second_stage_grading_accuracy_threshold_exceeded",
+      "count": 2
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "answer_too_popular:United States",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_answer_type_not_allowed:answer_type_not_allowed:Number; allowed=Number",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any dates, months, or years.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any information about a person.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any non-year numeric values.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any numeric values or counts.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any person's name.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any place name or geographic entity.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The only numeric count in the table is 'Appearances', which is a mutable statistic that changes over time as new contests occur.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The only people listed in the table are the Chancellor and Vice-Chancellor, which are mutable roles that can change over time.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The only place mentioned in the infobox is 'Philippines', which is already part of the subject title and too trivial to form a challenging question.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided infobox does not contain any other person's name besides the subject, and asking for the subject's own name would violate the rule against including the answer in the question.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided infobox table does not contain any dates, months, or years.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided infobox table does not contain any person's name.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided table does not contain any geographic locations or places.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided table does not contain any individual person names.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The table does not contain any geographic place or location.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The table does not contain any non-mutable numeric values.",
+      "count": 1
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 48,
+      "total": 69.1682,
+      "average": 1.441,
+      "max": 11.1441
+    },
+    "duckduckgo_search_seconds": {
+      "count": 17,
+      "total": 50.1752,
+      "average": 2.9515,
+      "max": 5.9939
+    },
+    "first_paragraph_extract_seconds": {
+      "count": 7,
+      "total": 0.7525,
+      "average": 0.1075,
+      "max": 0.3322
+    },
+    "llm_question_generation_seconds": {
+      "count": 7,
+      "total": 90.4428,
+      "average": 12.9204,
+      "max": 14.2945
+    },
+    "number_reference_margin_seconds": {
+      "count": 17,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "page_fetch_seconds": {
+      "count": 20,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "pageview_prefilter_seconds": {
+      "count": 20,
+      "total": 0.0001,
+      "average": 0.0,
+      "max": 0.0001
+    },
+    "rewrite_seconds": {
+      "count": 18,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "second_stage_grading_seconds": {
+      "count": 3,
+      "total": 18.6484,
+      "average": 6.2161,
+      "max": 7.9525
+    },
+    "table_parse_seconds": {
+      "count": 20,
+      "total": 7.1493,
+      "average": 0.3575,
+      "max": 0.804
+    },
+    "total_generation_seconds": {
+      "count": 20,
+      "total": 109.3415,
+      "average": 5.4671,
+      "max": 17.3694
+    },
+    "total_processing_seconds": {
+      "count": 48,
+      "total": 69.1682,
+      "average": 1.441,
+      "max": 11.1441
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "candidate_processing_seconds": 69.1682,
+    "duckduckgo_search_seconds": 50.1752,
+    "first_paragraph_extract_seconds": 0.7525,
+    "llm_question_generation_seconds": 90.4428,
+    "number_reference_margin_seconds": 0.0,
+    "page_fetch_seconds": 0.0,
+    "pageview_prefilter_seconds": 0.0001,
+    "rewrite_seconds": 0.0,
+    "second_stage_grading_seconds": 18.6484,
+    "table_parse_seconds": 7.1493,
+    "total_generation_seconds": 109.3415,
+    "total_processing_seconds": 69.1682
+  },
+  "telemetry": {
+    "wikipedia": [
+      {
+        "url": "https://en.wikipedia.org/w/api.php?action=query&list=search&srnamespace=0&srlimit=50&sroffset=0&srsearch=insource%3A%22wikitable%22&format=json&formatversion=2",
+        "cache_hit": true,
+        "duration_ms": 0
+      }
+    ],
+    "search": [
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+was+speedway+first+played",
+        "query": "when was speedway first played",
+        "cache_hit": false,
+        "duration_ms": 1593,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1592,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Who+served+as+the+cinematographer+for+the+2016+film+Star+Trek+Beyond%3F",
+        "query": "Who served as the cinematographer for the 2016 film Star Trek Beyond?",
+        "cache_hit": false,
+        "duration_ms": 1078,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1078,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+was+the+motorcycle+sport+of+speedway+first+played%3F",
+        "query": "In what year was the motorcycle sport of speedway first played?",
+        "cache_hit": false,
+        "duration_ms": 2378,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2377,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Star+Trek+Beyond+cinematographer",
+        "query": "Star Trek Beyond cinematographer",
+        "cache_hit": false,
+        "duration_ms": 888,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 888,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=motorcycle+speedway+first+played+year",
+        "query": "motorcycle speedway first played year",
+        "cache_hit": false,
+        "duration_ms": 2764,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2763,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=On+what+month%2C+day%2C+and+year+was+the+University+of+Western+Australia+established%3F",
+        "query": "On what month, day, and year was the University of Western Australia established?",
+        "cache_hit": false,
+        "duration_ms": 1028,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1028,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=who+was+the+cinematographer+for+Star+Trek+Beyond",
+        "query": "who was the cinematographer for Star Trek Beyond",
+        "cache_hit": false,
+        "duration_ms": 1476,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1476,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=University+of+Western+Australia+establishment+date",
+        "query": "University of Western Australia establishment date",
+        "cache_hit": false,
+        "duration_ms": 969,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 969,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=when+was+University+of+Western+Australia+founded",
+        "query": "when was University of Western Australia founded",
+        "cache_hit": false,
+        "duration_ms": 1360,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1360,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=virus+associated+with+brain+tumor+risk",
+        "query": "virus associated with brain tumor risk",
+        "cache_hit": false,
+        "duration_ms": 1266,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1266,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=brain+tumor+risk+factors+virus",
+        "query": "brain tumor risk factors virus",
+        "cache_hit": false,
+        "duration_ms": 1383,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1383,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+city+did+the+2016+film+Star+Trek+Beyond+have+its+premiere+on+July+7%2C+2016%3F",
+        "query": "In what city did the 2016 film Star Trek Beyond have its premiere on July 7, 2016?",
+        "cache_hit": false,
+        "duration_ms": 897,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 897,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+virus+is+identified+as+a+risk+factor+for+developing+a+brain+tumor%3F",
+        "query": "Which virus is identified as a risk factor for developing a brain tumor?",
+        "cache_hit": false,
+        "duration_ms": 1709,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1709,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Star+Trek+Beyond+July+7+2016+premiere",
+        "query": "Star Trek Beyond July 7 2016 premiere",
+        "cache_hit": false,
+        "duration_ms": 667,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 667,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Star+Trek+Beyond+premiere+city",
+        "query": "Star Trek Beyond premiere city",
+        "cache_hit": false,
+        "duration_ms": 1459,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1459,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Star+Trek+Beyond+runtime+minutes",
+        "query": "Star Trek Beyond runtime minutes",
+        "cache_hit": false,
+        "duration_ms": 677,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 677,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+highest+governing+body+for+the+sport+of+motorcycle+speedway%3F",
+        "query": "What is the highest governing body for the sport of motorcycle speedway?",
+        "cache_hit": false,
+        "duration_ms": 873,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 873,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Star+Trek+Beyond+running+time",
+        "query": "Star Trek Beyond running time",
+        "cache_hit": false,
+        "duration_ms": 1305,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1305,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+running+time+of+the+2016+film+Star+Trek+Beyond+in+minutes%3F",
+        "query": "What is the running time of the 2016 film Star Trek Beyond in minutes?",
+        "cache_hit": false,
+        "duration_ms": 2047,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2047,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=On+what+month%2C+day%2C+and+year+was+the+film+Star+Trek+Beyond+released+in+the+United+States%3F",
+        "query": "On what month, day, and year was the film Star Trek Beyond released in the United States?",
+        "cache_hit": false,
+        "duration_ms": 752,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 752,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Star+Trek+Beyond+United+States+release+date",
+        "query": "Star Trek Beyond United States release date",
+        "cache_hit": false,
+        "duration_ms": 1058,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1058,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=governing+body+for+speedway+motorcycle",
+        "query": "governing body for speedway motorcycle",
+        "cache_hit": false,
+        "duration_ms": 2118,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2118,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=motorcycle+speedway+highest+governing+body",
+        "query": "motorcycle speedway highest governing body",
+        "cache_hit": false,
+        "duration_ms": 3046,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 3046,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Star+Trek+Beyond+US+release+date",
+        "query": "Star Trek Beyond US release date",
+        "cache_hit": false,
+        "duration_ms": 1478,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1478,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+production+company+co-produced+the+2016+film+Star+Trek+Beyond+alongside+Paramount+Pictures%2C+Skydance%2C+Alibaba+Pictures%2C+Huahua+Media%2C+Bad+Robot%2C+and+Perfect+Storm+Entertainment%3F",
+        "query": "Which production company co-produced the 2016 film Star Trek Beyond alongside Paramount Pictures, Skydance, Alibaba Pictures, Huahua Media, Bad Robot, and Perfect Storm Entertainment?",
+        "cache_hit": false,
+        "duration_ms": 1016,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1016,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+is+the+official+motto+of+the+University+of+Western+Australia%3F",
+        "query": "What is the official motto of the University of Western Australia?",
+        "cache_hit": false,
+        "duration_ms": 645,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 645,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Star+Trek+Beyond+co-production+company",
+        "query": "Star Trek Beyond co-production company",
+        "cache_hit": false,
+        "duration_ms": 2360,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2360,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Star+Trek+Beyond+production+companies",
+        "query": "Star Trek Beyond production companies",
+        "cache_hit": false,
+        "duration_ms": 2599,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2599,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=University+of+Western+Australia+official+motto",
+        "query": "University of Western Australia official motto",
+        "cache_hit": false,
+        "duration_ms": 1412,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1412,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UWA+motto",
+        "query": "UWA motto",
+        "cache_hit": false,
+        "duration_ms": 1991,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1991,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Municipalities+of+the+Philippines+classification",
+        "query": "Municipalities of the Philippines classification",
+        "cache_hit": false,
+        "duration_ms": 1407,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1407,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Municipalities+of+the+Philippines+category",
+        "query": "Municipalities of the Philippines category",
+        "cache_hit": false,
+        "duration_ms": 1696,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1696,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+category+of+settlement+is+a+municipality+of+the+Philippines+classified+as%3F",
+        "query": "What category of settlement is a municipality of the Philippines classified as?",
+        "cache_hit": false,
+        "duration_ms": 2483,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2483,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UK+first+appearance+Eurovision+Song+Contest",
+        "query": "UK first appearance Eurovision Song Contest",
+        "cache_hit": false,
+        "duration_ms": 736,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 736,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=United+Kingdom+Eurovision+debut+year",
+        "query": "United Kingdom Eurovision debut year",
+        "cache_hit": false,
+        "duration_ms": 1914,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1914,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+year+did+the+United+Kingdom+make+its+first+appearance+in+the+Eurovision+Song+Contest%3F",
+        "query": "In what year did the United Kingdom make its first appearance in the Eurovision Song Contest?",
+        "cache_hit": false,
+        "duration_ms": 3631,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 3631,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=In+what+Swedish+city+was+Zlatan+Ibrahimovi%C4%87+born%3F",
+        "query": "In what Swedish city was Zlatan Ibrahimović born?",
+        "cache_hit": false,
+        "duration_ms": 1102,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1102,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Zlatan+Ibrahimovic+birth+city",
+        "query": "Zlatan Ibrahimovic birth city",
+        "cache_hit": false,
+        "duration_ms": 970,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 970,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Which+broadcasting+organization+is+the+participating+broadcaster+for+the+United+Kingdom+in+the+Eurovision+Song+Contest%3F",
+        "query": "Which broadcasting organization is the participating broadcaster for the United Kingdom in the Eurovision Song Contest?",
+        "cache_hit": false,
+        "duration_ms": 2517,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2517,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=United+Kingdom+Eurovision+participating+broadcaster",
+        "query": "United Kingdom Eurovision participating broadcaster",
+        "cache_hit": false,
+        "duration_ms": 3244,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 3244,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=UK+broadcaster+Eurovision+Song+Contest",
+        "query": "UK broadcaster Eurovision Song Contest",
+        "cache_hit": false,
+        "duration_ms": 3728,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 3728,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Zlatan+Ibrahimovic+born+in+which+city",
+        "query": "Zlatan Ibrahimovic born in which city",
+        "cache_hit": false,
+        "duration_ms": 3914,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 3914,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Zlatan+Ibrahimovic+LA+Galaxy+league+goals",
+        "query": "Zlatan Ibrahimovic LA Galaxy league goals",
+        "cache_hit": false,
+        "duration_ms": 768,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 768,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=How+many+domestic+league+goals+did+Zlatan+Ibrahimovi%C4%87+score+for+LA+Galaxy+during+his+senior+career%3F",
+        "query": "How many domestic league goals did Zlatan Ibrahimović score for LA Galaxy during his senior career?",
+        "cache_hit": false,
+        "duration_ms": 1154,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1154,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Zlatan+Ibrahimovic+LA+Galaxy+goals",
+        "query": "Zlatan Ibrahimovic LA Galaxy goals",
+        "cache_hit": false,
+        "duration_ms": 1722,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1722,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Zlatan+Ibrahimovic+date+of+birth",
+        "query": "Zlatan Ibrahimovic date of birth",
+        "cache_hit": false,
+        "duration_ms": 730,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 730,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=On+what+month%2C+day%2C+and+year+was+Zlatan+Ibrahimovi%C4%87+born%3F",
+        "query": "On what month, day, and year was Zlatan Ibrahimović born?",
+        "cache_hit": false,
+        "duration_ms": 2000,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2000,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Zlatan+Ibrahimovic+born+date",
+        "query": "Zlatan Ibrahimovic born date",
+        "cache_hit": false,
+        "duration_ms": 2348,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2348,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Zlatan+Ibrahimovic+position",
+        "query": "Zlatan Ibrahimovic position",
+        "cache_hit": false,
+        "duration_ms": 1420,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 1420,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=What+playing+position+did+Zlatan+Ibrahimovi%C4%87+play+during+his+professional+football+career%3F",
+        "query": "What playing position did Zlatan Ibrahimović play during his professional football career?",
+        "cache_hit": false,
+        "duration_ms": 2030,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2030,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 5
+          }
+        ]
+      },
+      {
+        "url": "https://html.duckduckgo.com/html/?q=Zlatan+Ibrahimovic+playing+position",
+        "query": "Zlatan Ibrahimovic playing position",
+        "cache_hit": false,
+        "duration_ms": 2996,
+        "used_ddgs": true,
+        "used_legacy_fallback": false,
+        "used_direct_fallback": false,
+        "used_lite_fallback": false,
+        "failed": false,
+        "backend": "ddgs",
+        "attempts": [
+          {
+            "attempt": 1,
+            "path": "ddgs",
+            "proxy_configured": false,
+            "timeout_seconds": 30.0,
+            "duration_ms": 2996,
+            "ok": true,
+            "endpoint": "ddgs",
+            "status": 200,
+            "result_count": 4
+          }
+        ]
+      }
+    ]
+  }
+}
+{
+  "run_group_id": "route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12",
+  "run_segment_id": "recipe_combined",
+  "recipe_id": "route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12",
+  "recipe_items": [
+    {
+      "answer_type": "AllTypes",
+      "record_limit": 10
+    }
+  ],
+  "recipe_segments": [
+    {
+      "answer_type": "AllTypes",
+      "record_limit": 10,
+      "attempted_page_ids": 20,
+      "accepted": 1,
+      "rejected": 47,
+      "rerun": 0,
+      "wall_clock_seconds": 67.999,
+      "random_seed": 1564843544,
+      "stream_state": "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/01_alltypes_10_state.json",
+      "summary_output": "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/01_alltypes_10_summary.json",
+      "accepted_output": "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/01_alltypes_10_accepted.jsonl",
+      "rejected_output": "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/01_alltypes_10_rejected.jsonl"
+    }
+  ],
+  "start_stage": "generate",
+  "start_from_endpoint": false,
+  "endpoint_resume": {
+    "enabled": false
+  },
+  "streaming_mode": "page_id_stream_recipe",
+  "stream_page_source": "table-search",
+  "stream_search_queries": [
+    "insource:\"wikitable\""
+  ],
+  "run_date": "2026-06-12",
+  "stream_state": "separate_segment_stream_states",
+  "stream_state_base": "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/stream_state.json",
+  "stream_states": [
+    "/home/chenyue/Wikidata_Framework_aws/outputs/recipe_segments/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12/01_alltypes_10_state.json"
+  ],
+  "stream_state_stats": {
+    "used": 20,
+    "in_progress": 0,
+    "accepted": 1,
+    "rejected": 19,
+    "rerun_pool": 0,
+    "table_search_queries": 1
+  },
+  "stream_state_reset": true,
+  "append_to_existing_run": false,
+  "append_run_label": "",
+  "stream_auto_rerun_once": true,
+  "stream_reuse_cached_page_count": 10,
+  "stream_reuse_cached_page_used_id_files": [],
+  "stream_reused_cached_page_count": 10,
+  "stream_reused_cached_page_ids": [
+    37284,
+    59733,
+    257453,
+    9119,
+    231031,
+    230182,
+    1300,
+    43697026,
+    248694,
+    255999
+  ],
+  "rerun_pool_ids_after_run": [],
+  "rerun_pool_ids_after_run_by_segment": {
+    "01_alltypes_10": []
+  },
+  "rerun_pool_failure_reasons_after_run": {},
+  "rerun_pool_failure_reasons_after_run_by_segment": {
+    "01_alltypes_10": {}
+  },
+  "record_limit": 10,
+  "attempted_page_ids": 20,
+  "attempted_page_ids_unique": 20,
+  "page_ids": [
+    37284,
+    59733,
+    257453,
+    9119,
+    231031,
+    230182,
+    1300,
+    43697026,
+    248694,
+    255999,
+    5489,
+    338344,
+    803,
+    31843,
+    17766232,
+    26989,
+    16949861,
+    1486684,
+    728776,
+    39776
+  ],
+  "page_id_list_entries": [
+    {
+      "page_id": 803,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 1300,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 5489,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 9119,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 26989,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 31843,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 37284,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 39776,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 59733,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 230182,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 231031,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 248694,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 255999,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 257453,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 338344,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 728776,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 1486684,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 16949861,
+      "answer_type": "",
+      "table_type": ""
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 17766232,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Date",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Number",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Other",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Person",
+      "table_type": "infobox"
+    },
+    {
+      "page_id": 43697026,
+      "answer_type": "Place",
+      "table_type": "infobox"
+    }
+  ],
+  "accepted": 1,
+  "accepted_total": 1,
+  "rejected": 47,
+  "rejected_total": 47,
+  "rerun": 0,
+  "wall_clock_seconds": 68.3509,
+  "recipe_segment_wall_clock_seconds": 67.999,
+  "recipe_runner_wall_clock_seconds": 68.3509,
+  "output_path": "/home/chenyue/Wikidata_Framework_aws/outputs/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12_accepted.jsonl",
+  "rejected_output_path": "/home/chenyue/Wikidata_Framework_aws/outputs/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12_rejected.jsonl",
+  "summary_output": "/home/chenyue/Wikidata_Framework_aws/outputs/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12_summary.json",
+  "walkthrough_output": "/home/chenyue/Wikidata_Framework_aws/docs/walkthroughs/route3_reuse_cached_all5_infobox_only_gemini35flash_10_tok4096_2026_06_12.md",
+  "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
+  "enabled_routes": [
+    "route3_wikipedia_infobox"
+  ],
+  "generation_model": "google/gemini-3.5-flash",
+  "small_model": "google/gemini-3.5-flash",
+  "kelm_rewrite_enabled": false,
+  "kelm_rewrite_model": "",
+  "rewrite_enabled": false,
+  "second_stage_grading_enabled": true,
+  "duckduckgo_top_k": 5,
+  "duckduckgo_parallel_queries": 3,
+  "duckduckgo_prefer_ddgs": true,
+  "duckduckgo_ddgs_backend": "auto",
+  "duckduckgo_ddgs_max_attempts": 2,
+  "duckduckgo_disabled_fallbacks": [],
+  "duckduckgo_cooldown_enabled": true,
+  "duckduckgo_cooldown_failure_threshold": 3,
+  "duckduckgo_cooldown_initial_seconds": 60.0,
+  "duckduckgo_cooldown_max_seconds": 300.0,
+  "generated_search_query_count": 2,
+  "route3_reasoning_types": [
+    "single_fact"
+  ],
+  "route3_answer_types": [
+    "AllTypes"
+  ],
+  "route3_answer_type_mode": "all5",
+  "route3_extra_prompts": [],
+  "route3_table_filter_modes": [
+    "no_external_links_tables",
+    "no_horizontal_companion_tables",
+    "no_picture_heavy_tables",
+    "no_incomplete_tables",
+    "not_number_dominant",
+    "no_social_science_research"
+  ],
+  "route3_table_source_types": [
+    "infobox"
+  ],
+  "route3_prose_leakage_scoring_enabled": true,
+  "route3_llm_choose_table": false,
+  "route3_page_archive_dir": "/home/chenyue/Wikidata_Framework_aws/cache/route3_pages",
+  "route3_pageview_prefilter_enabled": false,
+  "route3_pageview_window_months": 12,
+  "route3_max_monthly_average_pageviews": 5000.0,
+  "route3_max_underfilled_monthly_pageviews": 10000.0,
+  "route3_pageview_unavailable_policy": "allow",
+  "route3_infobox_max_removed_row_rate": 0.6,
+  "route3_infobox_min_remaining_rows": 5,
+  "compact_output": false,
+  "compact_output_ignored": false,
+  "compact_rejected_output": false,
+  "compact_rejected_output_ignored": false,
+  "big_batch_mode": false,
+  "stream_discovery_max_retries": 5,
+  "stream_discovery_retry_backoff_seconds": 10.0,
+  "stream_discovery_retry_max_sleep_seconds": 60.0,
+  "wikipedia_429_backoff_seconds": 30.0,
+  "wikipedia_429_max_backoff_seconds": 300.0,
+  "wikipedia_429_recovery_seconds": 120.0,
+  "llm_generation_input_tables": 7,
+  "llm_generation_input_pages": 7,
+  "llm_generation_accepted_qas": 1,
+  "llm_generation_table_yield": 0.1429,
+  "survival_by_layer": [
+    {
+      "stage": "page_id_reservation",
+      "layer": "Page-id reservation",
+      "unit": "page IDs",
+      "entered": 20,
+      "failed": 0,
+      "survived": 20,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "unresolved_rerun",
+      "layer": "Unresolved or returned to rerun pool",
+      "unit": "page IDs",
+      "entered": 20,
+      "failed": 0,
+      "survived": 20,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation_pre_llm",
+      "layer": "Source, pageview, and table filters before generation LLM",
+      "unit": "page IDs",
+      "entered": 20,
+      "failed": 13,
+      "survived": 7,
+      "survival_rate_from_layer_input": 0.35,
+      "cumulative_survival_rate": 0.35
+    },
+    {
+      "stage": "llm_generation_input_tables",
+      "layer": "Tables sent to generation LLM",
+      "unit": "tables",
+      "entered": 7,
+      "failed": 0,
+      "survived": 7,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 1.0
+    },
+    {
+      "stage": "route_generation",
+      "layer": "Generation LLM output and route-local checks",
+      "unit": "QA candidates/slots",
+      "entered": 35,
+      "failed": 17,
+      "survived": 18,
+      "survival_rate_from_layer_input": 0.5143,
+      "cumulative_survival_rate": 0.5143
+    },
+    {
+      "stage": "rewrite_surface",
+      "layer": "Rewrite and surface validation",
+      "unit": "QA candidates/slots",
+      "entered": 18,
+      "failed": 1,
+      "survived": 17,
+      "survival_rate_from_layer_input": 0.9444,
+      "cumulative_survival_rate": 0.4857
+    },
+    {
+      "stage": "shared_validation",
+      "layer": "Shared deterministic route-aware validation",
+      "unit": "QA candidates/slots",
+      "entered": 17,
+      "failed": 0,
+      "survived": 17,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.4857
+    },
+    {
+      "stage": "search_longtail",
+      "layer": "DuckDuckGo long-tail filtering",
+      "unit": "QA candidates/slots",
+      "entered": 17,
+      "failed": 14,
+      "survived": 3,
+      "survival_rate_from_layer_input": 0.1765,
+      "cumulative_survival_rate": 0.0857
+    },
+    {
+      "stage": "second_stage_grading",
+      "layer": "Second-stage model grading",
+      "unit": "QA candidates/slots",
+      "entered": 3,
+      "failed": 2,
+      "survived": 1,
+      "survival_rate_from_layer_input": 0.3333,
+      "cumulative_survival_rate": 0.0286
+    },
+    {
+      "stage": "deduplication",
+      "layer": "Deduplication",
+      "unit": "QA candidates/slots",
+      "entered": 1,
+      "failed": 0,
+      "survived": 1,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.0286
+    },
+    {
+      "stage": "other",
+      "layer": "Other rejection",
+      "unit": "QA candidates/slots",
+      "entered": 1,
+      "failed": 0,
+      "survived": 1,
+      "survival_rate_from_layer_input": 1.0,
+      "cumulative_survival_rate": 0.0286
+    }
+  ],
+  "failure_reason_counts": [
+    {
+      "stage": "search_longtail",
+      "reason": "search_longtail_verifier_rejected",
+      "count": 14
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_no_allowed_table_source_types:no_allowed_table_source_types:allowed=infobox;available=wikitable",
+      "count": 11
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_no_tables",
+      "count": 2
+    },
+    {
+      "stage": "second_stage_grading",
+      "reason": "second_stage_grading_accuracy_threshold_exceeded",
+      "count": 2
+    },
+    {
+      "stage": "rewrite_surface",
+      "reason": "answer_too_popular:United States",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_answer_type_not_allowed:answer_type_not_allowed:Number; allowed=Number",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any dates, months, or years.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any information about a person.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any non-year numeric values.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any numeric values or counts.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any person's name.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The infobox does not contain any place name or geographic entity.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The only numeric count in the table is 'Appearances', which is a mutable statistic that changes over time as new contests occur.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The only people listed in the table are the Chancellor and Vice-Chancellor, which are mutable roles that can change over time.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The only place mentioned in the infobox is 'Philippines', which is already part of the subject title and too trivial to form a challenging question.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided infobox does not contain any other person's name besides the subject, and asking for the subject's own name would violate the rule against including the answer in the question.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided infobox table does not contain any dates, months, or years.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided infobox table does not contain any person's name.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided table does not contain any geographic locations or places.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The provided table does not contain any individual person names.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The table does not contain any geographic place or location.",
+      "count": 1
+    },
+    {
+      "stage": "route_generation",
+      "reason": "wikipedia_infobox_llm_discarded:The table does not contain any non-mutable numeric values.",
+      "count": 1
+    }
+  ],
+  "phase_timing_stats_seconds": {
+    "candidate_processing_seconds": {
+      "count": 48,
+      "total": 69.1682,
+      "average": 1.441,
+      "max": 11.1441
+    },
+    "duckduckgo_search_seconds": {
+      "count": 17,
+      "total": 50.1752,
+      "average": 2.9515,
+      "max": 5.9939
+    },
+    "first_paragraph_extract_seconds": {
+      "count": 7,
+      "total": 0.7525,
+      "average": 0.1075,
+      "max": 0.3322
+    },
+    "llm_question_generation_seconds": {
+      "count": 7,
+      "total": 90.4428,
+      "average": 12.9204,
+      "max": 14.2945
+    },
+    "number_reference_margin_seconds": {
+      "count": 17,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "page_fetch_seconds": {
+      "count": 20,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "pageview_prefilter_seconds": {
+      "count": 20,
+      "total": 0.0001,
+      "average": 0.0,
+      "max": 0.0001
+    },
+    "rewrite_seconds": {
+      "count": 18,
+      "total": 0.0,
+      "average": 0.0,
+      "max": 0.0
+    },
+    "second_stage_grading_seconds": {
+      "count": 3,
+      "total": 18.6484,
+      "average": 6.2161,
+      "max": 7.9525
+    },
+    "table_parse_seconds": {
+      "count": 20,
+      "total": 7.1493,
+      "average": 0.3575,
+      "max": 0.804
+    },
+    "total_generation_seconds": {
+      "count": 20,
+      "total": 109.3415,
+      "average": 5.4671,
+      "max": 17.3694
+    },
+    "total_processing_seconds": {
+      "count": 48,
+      "total": 69.1682,
+      "average": 1.441,
+      "max": 11.1441
+    }
+  },
+  "aggregate_phase_timings_seconds": {
+    "candidate_processing_seconds": 69.1682,
+    "duckduckgo_search_seconds": 50.1752,
+    "first_paragraph_extract_seconds": 0.7525,
+    "llm_question_generation_seconds": 90.4428,
+    "number_reference_margin_seconds": 0.0,
+    "page_fetch_seconds": 0.0,
+    "pageview_prefilter_seconds": 0.0001,
+    "rewrite_seconds": 0.0,
+    "second_stage_grading_seconds": 18.6484,
+    "table_parse_seconds": 7.1493,
+    "total_generation_seconds": 109.3415,
+    "total_processing_seconds": 69.1682
+  },
+  "accepted_by_recipe_answer_type": {
+    "AllTypes": 1
+  },
+  "rejected_by_recipe_answer_type": {
+    "AllTypes": 46,
+    "": 1
+  }
+}
