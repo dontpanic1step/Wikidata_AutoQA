@@ -30,26 +30,6 @@ The following controls are compatibility surfaces scheduled for removal from the
 
 Removing a control keeps the milestone-specified formal behavior fixed. It does not authorize a replacement switch, fallback, or heuristic.
 
-## Removed rule-based compatibility fields
-
-These names are not formal Route 3 outputs and are removed in the scheduled cleanup milestone:
-
-- `preferred_table_context`
-- `no_oversized_tables`
-- `person_common_words_minus_common_names`
-- `question_unambiguous`
-- `stable_answer`
-- `rewrite_guard_passed`
-- `high_sitelink_count`
-- `high_claim_count`
-- `relation_family_not_allowed`
-- `short_subject_label`
-- `wikipedia_infobox_incomplete_tie_answer`
-- `question_targets_mutable_fact`
-- `_uses_generic_table_source_wording`
-
-Do not add substitute gates. Effective surface/temporal guards, selected-table provenance, answer-in-evidence validation, DuckDuckGo filtering, and second-stage grading remain formal.
-
 ## Protected tools are not legacy
 
 `scripts/run_openrouter_batch_predictions.py` and `scripts/judge_openrouter_batch_predictions.py` are retained independent SimpleQA Verified-style evaluation tools. They must not be deleted or grouped with historical generation/finalization code. Generation, manual review, and finalization do not call them.

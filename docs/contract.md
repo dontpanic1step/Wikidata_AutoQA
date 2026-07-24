@@ -264,12 +264,11 @@ For numeric answers, answer-leakage validation must compare extracted normalized
 
 Route 3 validation is intentionally limited:
 
-- `stable_answer` is treated as true by route policy.
 - `answer_in_evidence` must pass by finding the answer or alias in stored evidence text.
-- `question_unambiguous` requires a subject URL.
-- shared rewrite/surface guards and shared route-aware validation apply before DuckDuckGo long-tail filtering and optional second-stage grading.
-- metadata names the provenance-only policy without adding placeholder validation failures.
-- the incomplete tied-answer detector is retained for review but is non-blocking; Route 3 records it under `source_metadata.route_guard_warnings.wikipedia_infobox_incomplete_tie_answer`.
+- selected-table provenance is stored for audit.
+- effective surface and temporal checks apply before Route 3 answer validation.
+- the integrated answer-type gate applies only Date and Place rules; Person has no local rule-based rejection heuristic.
+- DuckDuckGo long-tail filtering and second-stage grading follow answer validation.
 - default table filter modes drop matching wikitables before the Route 3 generation prompt; infoboxes first remove image rows, then remove individual key-value rows that fail incomplete-data, number-dominance, or social-science checks, and selected/rejected metadata records active modes plus removed-row audit details.
 
 Route 1 multi-hop join validation is intentionally stricter than Route 3:

@@ -38,23 +38,7 @@ The following are historical code, not formal generation methods:
 
 Historical modules may remain in the repository or in Route 3's import closure until a milestone explicitly removes or isolates them. Their presence does not make them supported methods. Reconstruction work must not repair or redesign them unless a milestone requires the smallest compatibility edit needed to keep Route 3 starting.
 
-These former rule-based outputs, filters, warnings, and helpers are not part of the formal Route 3 method:
-
-- `preferred_table_context`
-- `no_oversized_tables`
-- `person_common_words_minus_common_names`
-- `question_unambiguous`
-- `stable_answer`
-- `rewrite_guard_passed`
-- `high_sitelink_count`
-- `high_claim_count`
-- `relation_family_not_allowed`
-- `short_subject_label`
-- `wikipedia_infobox_incomplete_tie_answer`
-- `question_targets_mutable_fact`
-- `_uses_generic_table_source_wording`
-
-Removing those names does not authorize weakening the effective surface/temporal checks, selected-table provenance, answer-in-evidence validation, DuckDuckGo filtering, or second-stage grading. Do not add replacement heuristics.
+Formal Route 3 validation keeps effective surface and temporal checks, selected-table provenance, answer-in-evidence validation, DuckDuckGo filtering, and second-stage grading. Person answers have no local rule-based rejection heuristic. Do not add replacement heuristics.
 
 ## Formal configuration surface
 

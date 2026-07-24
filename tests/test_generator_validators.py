@@ -5,14 +5,17 @@ from __future__ import annotations
 import unittest
 
 from test_support import ROOT  # noqa: F401
+from wikidata_simpleqa import generator_validators as generator_validator_module
+from wikidata_simpleqa import route3_quality_rules
+from wikidata_simpleqa import validators as validator_module
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generator_validators import (
-    build_removed_prefilter_stub,
     evidence_supports_answer,
-    run_fact_level_longtail_prefilter,
     run_search_based_longtail_verifier,
+    validate_generated_candidate,
     validate_question_surface,
 )
+from wikidata_simpleqa.rule_based_answer_type_gate import evaluate_candidate_answer_type_gate
 from wikidata_simpleqa.models import CandidateFact
 
 
@@ -107,37 +110,7 @@ def make_generated_candidate() -> GeneratedCandidate:
 
 
 class GeneratorValidatorTests(unittest.TestCase):
-    """Check the new prefilter and post-rewrite long-tail validators."""
-
-    def test_prefilter_rejects_obvious_head_candidate(self) -> None:
-        candidate = make_generated_candidate()
-        candidate.source_metadata["subject_sitelink_count"] = 500
-        passed, features = run_fact_level_longtail_prefilter(
-            candidate,
-            max_sitelinks=80,
-            max_claims=400,
-        )
-        self.assertFalse(passed)
-        self.assertIn("high_sitelink_count", features["triggered_rules"])
-
-    def test_prefilter_keeps_borderline_candidate(self) -> None:
-        candidate = make_generated_candidate()
-        passed, features = run_fact_level_longtail_prefilter(
-            candidate,
-            max_sitelinks=80,
-            max_claims=400,
-        )
-        self.assertTrue(passed)
-        self.assertTrue(features["prefilter_passed"])
-
-    def test_removed_prefilter_stub_records_audit_metadata(self) -> None:
-        candidate = make_generated_candidate()
-        features = build_removed_prefilter_stub(candidate)
-        self.assertFalse(features["enabled"])
-        self.assertEqual(
-            features["reason"],
-            "internal_popularity_prefilter_removed_in_5_13",
-        )
+    """Check deterministic and search-based validators."""
 
     def test_question_surface_allows_historical_year_before_cutoff(self) -> None:
         candidate = make_generated_candidate()
@@ -271,6 +244,50 @@ class GeneratorValidatorTests(unittest.TestCase):
             }
         }
         self.assertTrue(evidence_supports_answer(candidate))
+
+    def test_route3_validation_only_reports_effective_checks(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.generation_route = "route3_wikipedia_infobox"
+        candidate.source_type = "wikipedia_tables"
+        candidate.answer = "Archive Hall"
+        candidate.answer_aliases = []
+        candidate.subject_entity.url = "https://en.wikipedia.org/wiki/Example"
+        candidate.source_metadata = {
+            "selected_source_table": {
+                "headers": ["Venue"],
+                "rows": [["Archive Hall"]],
+            }
+        }
+
+        passed, validation = validate_generated_candidate(candidate, cutoff_year=2025)
+
+        self.assertTrue(passed)
+        self.assertEqual(
+            validation,
+            {
+                "answer_in_evidence": True,
+                "route_validation_policy": "answer_in_selected_table",
+            },
+        )
+        self.assertNotIn("prefilter_longtail_features", candidate.to_output_record("example-1"))
+
+    def test_person_answer_type_has_no_rule_based_heuristic(self) -> None:
+        candidate = make_generated_candidate()
+        candidate.answer_type = "Person"
+        candidate.answer = "The Red Blue"
+        candidate.answer_entity.name = candidate.answer
+
+        result = evaluate_candidate_answer_type_gate(candidate)
+
+        self.assertTrue(result.matched)
+        self.assertEqual(result.details["rule"], "no_rule_for_answer_type")
+
+    def test_removed_rule_helpers_are_absent(self) -> None:
+        self.assertFalse(hasattr(route3_quality_rules, "oversized_table_filter_reasons"))
+        self.assertFalse(hasattr(generator_validator_module, "run_fact_level_longtail_prefilter"))
+        self.assertFalse(hasattr(generator_validator_module, "build_removed_prefilter_stub"))
+        self.assertFalse(hasattr(generator_validator_module, "_uses_generic_table_source_wording"))
+        self.assertFalse(hasattr(validator_module, "question_targets_mutable_fact"))
 
     def test_route3_list_answer_items_can_match_anywhere_in_selected_table(self) -> None:
         candidate = make_generated_candidate()

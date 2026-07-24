@@ -21,7 +21,6 @@ TEMPORAL_PATTERN = re.compile(
     r"\b(" + "|".join(re.escape(phrase) for phrase in TEMPORAL_PHRASES) + r")\b",
     re.IGNORECASE,
 )
-ORDINAL_MARKER_PATTERN = re.compile(r"\b(\d+(st|nd|rd|th)|first|second|third|fourth|fifth)\b", re.IGNORECASE)
 
 MUTABLE_ROLE_PROPERTY_PIDS = {
     "P26",   # spouse
@@ -47,39 +46,6 @@ MUTABLE_OR_HIGH_RISK_PROPERTY_PIDS = MUTABLE_ROLE_PROPERTY_PIDS | HIGH_RISK_STAT
     "P1082",  # population
     "P1128",  # employees
 }
-
-CUMULATIVE_STATISTIC_HINTS = (
-    "how many",
-    "total",
-    "career",
-    "citations",
-    "followers",
-    "net worth",
-    "box office",
-    "revenue",
-    "sales",
-    "downloads",
-    "wins",
-    "losses",
-    "goals",
-    "appearances",
-    "points",
-)
-
-MUTABLE_RELATIONSHIP_HINTS = (
-    "wife",
-    "husband",
-    "spouse",
-    "partner",
-    "married to",
-    "employer",
-    "play for",
-    "plays for",
-    "current ceo",
-    "current president",
-    "current mayor",
-    "current minister",
-)
 
 LOCATION_TOKEN_STOPWORDS = {
     "administrative",
@@ -152,18 +118,6 @@ def is_settled_by_run_date(date_value: str, run_date: str) -> bool:
     candidate_date = date.fromisoformat(date_value[:10])
     pipeline_date = date.fromisoformat(run_date)
     return candidate_date <= pipeline_date
-
-
-def question_targets_mutable_fact(question: str) -> bool:
-    """Return whether the question wording asks for a mutable fact."""
-    lowered = question.lower()
-    if any(hint in lowered for hint in MUTABLE_RELATIONSHIP_HINTS):
-        if "spouse" in lowered and ORDINAL_MARKER_PATTERN.search(question):
-            return False
-        return True
-    if "goals" in lowered and "edition of" in lowered and ORDINAL_MARKER_PATTERN.search(question):
-        return False
-    return any(hint in lowered for hint in CUMULATIVE_STATISTIC_HINTS)
 
 
 def candidate_is_time_invariant(candidate: CandidateFact, run_date: str) -> bool:

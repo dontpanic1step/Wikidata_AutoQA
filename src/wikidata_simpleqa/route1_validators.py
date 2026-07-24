@@ -15,7 +15,6 @@ from .validators import (
     question_leaks_any_answer,
     question_leaks_bridge_entities,
     question_leaks_location_answer_context,
-    question_targets_mutable_fact,
     preserves_required_anchors,
     reasoning_path_is_connected,
     reasoning_path_is_temporally_safe,
@@ -129,8 +128,6 @@ def validate_route1_rewritten_question(
     shortcut_results = shortcut_check(candidate, question)
     if not shortcut_results.get("question_requires_all_hops", True):
         return "rewrite_lost_required_reasoning_clue"
-    if question_targets_mutable_fact(question):
-        return "rewrite_targets_mutable_fact"
     if violates_cutoff_year_policy(question, cutoff_year):
         return "rewrite_contains_temporal_expression"
     if not is_simple_question(question):

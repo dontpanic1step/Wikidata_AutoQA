@@ -437,12 +437,6 @@ COMPOSITION_HEADER_HINTS = {
     "year",
     "opened",
 }
-PREFERRED_TABLE_HINTS = {
-    "venue",
-    "venues",
-    "stadium",
-    "stadiums",
-}
 MUTABLE_OR_PLACEHOLDER_TABLE_HINTS = {
     "ranking of third-placed teams",
     "standings",
@@ -1340,12 +1334,6 @@ class WikipediaInfoboxTableGenerator:
                 answer_type_mode=self.answer_type_mode,
             )
         reasoning_type = _resolved_reasoning_type(response, self.allowed_reasoning_types)
-        tie_problem = _tie_completion_problem(
-            source_table=source_table,
-            reasoning_type=reasoning_type,
-            answer=answer,
-            answer_items=answer_items,
-        )
         evidence_text = source_table.normalized_text if source_table is not None else llm_first_paragraph
         return GeneratedCandidate(
             source_type=self.source_type,
@@ -1387,7 +1375,6 @@ class WikipediaInfoboxTableGenerator:
                 answer_items=answer_items,
                 answer_type=answer_type,
                 reasoning_type=reasoning_type,
-                tie_completion_warning=tie_problem,
                 subject_anchors=llm_subject_anchors,
                 min_table_score=self.min_table_score,
                 allowed_reasoning_types=self.allowed_reasoning_types,
@@ -1705,12 +1692,6 @@ class WikipediaInfoboxTableGenerator:
             answer_items=answer_items,
             max_queries=self.search_query_count,
         )
-        tie_problem = _tie_completion_problem(
-            source_table=source_table,
-            reasoning_type=reasoning_type,
-            answer=answer,
-            answer_items=answer_items,
-        )
         evidence_text = source_table.normalized_text if source_table is not None else display_cleanup(page.first_paragraph)
         return GeneratedCandidate(
             source_type=self.source_type,
@@ -1752,7 +1733,6 @@ class WikipediaInfoboxTableGenerator:
                 answer_items=answer_items,
                 answer_type=answer_type,
                 reasoning_type=reasoning_type,
-                tie_completion_warning=tie_problem,
                 subject_anchors=subject_anchors,
                 min_table_score=self.min_table_score,
                 allowed_reasoning_types=self.allowed_reasoning_types,
@@ -2982,9 +2962,6 @@ def rank_wikipedia_tables(
         table_context = " ".join(
             [table.section_heading, table.caption, table.nearby_intro, " ".join(table.headers)]
         ).lower()
-        preferred_context_hits = sorted(
-            hint for hint in PREFERRED_TABLE_HINTS if hint in table_context
-        )
         mutable_context_hits = sorted(
             hint for hint in MUTABLE_OR_PLACEHOLDER_TABLE_HINTS if hint in table_context
         )
@@ -3012,9 +2989,6 @@ def rank_wikipedia_tables(
         elif ENABLE_NUMERIC_TABLE_RANKING_POINTS:
             score -= 1.0
             reasons.append("no_comparable_headers")
-        if preferred_context_hits:
-            score += 2.5
-            reasons.append("preferred_table_context")
         if mutable_context_hits:
             score -= 3.0
             reasons.append("mutable_or_placeholder_context")
@@ -3054,7 +3028,6 @@ def rank_wikipedia_tables(
                 "data_row_count": data_row_count,
                 "numeric_cell_count": numeric_cell_count,
                 "comparable_header_hits": comparable_header_hits,
-                "preferred_context_hits": preferred_context_hits,
                 "mutable_context_hits": mutable_context_hits,
                 "live_scope_rejection_reason": live_scope_reason,
                 "zero_numeric_rate": round(zero_numeric_rate, 4),
@@ -4919,7 +4892,6 @@ def _source_metadata(
     answer_items: list[str] | None = None,
     answer_type: str = "",
     reasoning_type: str = "",
-    tie_completion_warning: str = "",
     subject_anchors: dict[str, Any] | None = None,
     min_table_score: float = 0.0,
     allowed_reasoning_types: Iterable[str] | None = DEFAULT_ROUTE3_REASONING_TYPES,
@@ -4982,9 +4954,6 @@ def _source_metadata(
         "answer_items": answer_items or [],
         "answer_is_list": bool(answer_items),
         "answer_type": answer_type,
-        "route_guard_warnings": {
-            "wikipedia_infobox_incomplete_tie_answer": tie_completion_warning,
-        } if tie_completion_warning else {},
         "reasoning_type": reasoning_type or _reasoning_type(llm_response),
         "legacy_composition_type": str(llm_response.get("composition_type", "")).strip(),
         "derivation_summary": str(llm_response.get("derivation_summary", "")).strip(),
@@ -5146,7 +5115,6 @@ def _selection_payload(row: dict[str, Any]) -> dict[str, Any]:
         "data_row_count": row.get("data_row_count"),
         "numeric_cell_count": row.get("numeric_cell_count"),
         "comparable_header_hits": row.get("comparable_header_hits", []),
-        "preferred_context_hits": row.get("preferred_context_hits", []),
         "mutable_context_hits": row.get("mutable_context_hits", []),
         "live_scope_rejection_reason": row.get("live_scope_rejection_reason", ""),
         "table_filter_modes": row.get("table_filter_modes", []),
@@ -5380,57 +5348,6 @@ def _extra_prompt_violation(
         if marker in checked_text:
             return f"no_social_science_research_prompt:{marker}"
     return ""
-
-
-def _tie_completion_problem(
-    *,
-    source_table: WikipediaTable | None,
-    reasoning_type: str,
-    answer: str,
-    answer_items: list[str],
-) -> str:
-    """Return a rejection note when a simple grouped max/min table has an incomplete tie answer."""
-    if source_table is None or reasoning_type not in {"max", "min"}:
-        return ""
-    expected_items = _simple_grouped_extreme_items(source_table, reasoning_type)
-    if len(expected_items) <= 1:
-        return ""
-    provided_items = answer_items or [answer]
-    provided = {display_key(item) for item in provided_items if display_key(item)}
-    expected = {display_key(item) for item in expected_items if display_key(item)}
-    if expected and not expected.issubset(provided):
-        missing = [item for item in expected_items if display_key(item) not in provided]
-        return "incomplete_tie_answer; missing tied answers: " + "; ".join(missing)
-    return ""
-
-
-def _simple_grouped_extreme_items(table: WikipediaTable, reasoning_type: str) -> list[str]:
-    """Infer tied max/min answer items from simple two-column grouped numeric tables."""
-    if len(table.headers) < 2:
-        return []
-    groups: dict[float, list[str]] = {}
-    current_value: float | None = None
-    saw_continuation = False
-    for row in _data_rows(table):
-        if not row:
-            continue
-        metric = parse_number_token(row[0])
-        if metric is not None and len(row) >= 2:
-            current_value = float(metric)
-            item = _strip_footnote_markers(row[1])
-            if item:
-                groups.setdefault(current_value, []).append(item)
-            continue
-        non_empty_cells = [cell for cell in row if str(cell).strip()]
-        if current_value is not None and len(non_empty_cells) == 1:
-            item = _strip_footnote_markers(non_empty_cells[0])
-            if item:
-                groups.setdefault(current_value, []).append(item)
-                saw_continuation = True
-    if not saw_continuation or not groups:
-        return []
-    target_value = max(groups) if reasoning_type == "max" else min(groups)
-    return groups.get(target_value, [])
 
 
 def _normalize_answer_type(value: Any, answer: str, question: str) -> str:

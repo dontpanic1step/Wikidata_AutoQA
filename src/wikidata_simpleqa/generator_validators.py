@@ -28,32 +28,9 @@ from .validators import (
     is_simple_question,
     question_leaks_any_answer,
     question_leaks_bridge_entities,
-    question_targets_mutable_fact,
     shortcut_check,
 )
 
-ALLOW_RELATION_FAMILY_KEYWORDS = {
-    "director",
-    "author",
-    "publisher",
-    "architect",
-    "creator",
-    "founder",
-    "developer",
-    "journal",
-    "country",
-    "date of birth",
-    "date of death",
-    "inception",
-    "educated at",
-    "narrator",
-    "taxon rank",
-    "published in",
-    "record label",
-    "performer",
-    "language of work or name",
-    "original language",
-}
 
 POSITIVE_NUMBER_WORDS = {
     0: "zero",
@@ -105,65 +82,6 @@ class SearchLongtailVerifierError(RuntimeError):
         self.original_error = original_error
 INTEGER_PATTERN = re.compile(r"^-?\d+$")
 NUMBER_IN_TEXT_PATTERN = re.compile(r"\b\d[\d,]*\b")
-GENERIC_TABLE_SOURCE_PATTERN = re.compile(
-    r"\baccording\s+to\s+(?:the|this|that|provided|source)?\s*(?:[\w\s,'&().-]{0,80}\s+)?table\b",
-    flags=re.IGNORECASE,
-)
-WELL_KNOWN_TABLE_SOURCE_TERMS = (
-    "billboard",
-    "hot 100",
-    "uk singles chart",
-    "official singles chart",
-    "official albums chart",
-    "unesco",
-    "world heritage list",
-)
-
-
-def run_fact_level_longtail_prefilter(
-    candidate: GeneratedCandidate,
-    *,
-    max_sitelinks: int,
-    max_claims: int,
-) -> tuple[bool, dict[str, Any]]:
-    """Run a cheap, high-recall long-tail prefilter on one candidate."""
-    features = {
-        "wikidata_sitelink_count": candidate.source_metadata.get("subject_sitelink_count"),
-        "wikidata_claim_count": candidate.source_metadata.get("subject_claim_count"),
-        "subject_label_token_count": len(candidate.subject_entity.name.split()),
-        "relation_family_allowed": _relation_family_allowed(candidate.relation_or_claim),
-        "prefilter_score": 0.0,
-        "prefilter_passed": True,
-        "triggered_rules": [],
-    }
-    sitelinks = features["wikidata_sitelink_count"]
-    if isinstance(sitelinks, int) and sitelinks > max_sitelinks:
-        features["prefilter_passed"] = False
-        features["triggered_rules"].append("high_sitelink_count")
-        features["prefilter_score"] -= 1.0
-    claims = features["wikidata_claim_count"]
-    if isinstance(claims, int) and claims > max_claims:
-        features["prefilter_passed"] = False
-        features["triggered_rules"].append("high_claim_count")
-        features["prefilter_score"] -= 1.0
-    if not features["relation_family_allowed"]:
-        features["prefilter_passed"] = False
-        features["triggered_rules"].append("relation_family_not_allowed")
-        features["prefilter_score"] -= 1.0
-    if features["subject_label_token_count"] <= 1:
-        features["prefilter_score"] -= 0.25
-        features["triggered_rules"].append("short_subject_label")
-    return bool(features["prefilter_passed"]), features
-
-
-def build_removed_prefilter_stub(candidate: GeneratedCandidate) -> dict[str, Any]:
-    """Return audit metadata for the removed internal-popularity prefilter."""
-    return {
-        "enabled": False,
-        "reason": "internal_popularity_prefilter_removed_in_5_13",
-        "wikidata_sitelink_count": candidate.source_metadata.get("subject_sitelink_count"),
-        "wikidata_claim_count": candidate.source_metadata.get("subject_claim_count"),
-    }
 
 
 def validate_generated_candidate(
@@ -173,7 +91,7 @@ def validate_generated_candidate(
 ) -> tuple[bool, dict[str, Any]]:
     """Run shared deterministic validation on one generated candidate."""
     if candidate.generation_route == "route3_wikipedia_infobox":
-        return _validate_wikipedia_infobox_candidate(candidate, cutoff_year=cutoff_year)
+        return _validate_wikipedia_infobox_candidate(candidate)
     validation = {
         "stable_answer": False,
         "answer_in_evidence": False,
@@ -202,25 +120,13 @@ def validate_generated_candidate(
 
 def _validate_wikipedia_infobox_candidate(
     candidate: GeneratedCandidate,
-    *,
-    cutoff_year: int,
 ) -> tuple[bool, dict[str, Any]]:
-    """Run the limited shared validation that applies to Wikipedia-only table candidates."""
+    """Validate answer support in the selected Route 3 source table."""
     validation = {
-        "stable_answer": True,
         "answer_in_evidence": evidence_supports_answer(candidate),
-        "question_unambiguous": bool(candidate.subject_entity.url),
-        "rewrite_guard_passed": validate_question_surface(
-            candidate.final_question,
-            candidate,
-            cutoff_year=cutoff_year,
-        ) is None,
-        "route_validation_policy": "provenance_only_for_wikipedia_infobox_route",
+        "route_validation_policy": "answer_in_selected_table",
     }
-    return all(
-        bool(validation[key])
-        for key in ("stable_answer", "answer_in_evidence", "question_unambiguous", "rewrite_guard_passed")
-    ), validation
+    return bool(validation["answer_in_evidence"]), validation
 
 
 def evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
@@ -409,14 +315,6 @@ def _answer_number_values(candidate: GeneratedCandidate) -> set[str]:
         if value is not None:
             values.add(format_decimal(value))
     return values
-
-
-def _uses_generic_table_source_wording(question: str) -> bool:
-    """Return whether a question leans on generic source-table wording."""
-    lowered = question.lower()
-    if not GENERIC_TABLE_SOURCE_PATTERN.search(lowered):
-        return False
-    return not any(term in lowered for term in WELL_KNOWN_TABLE_SOURCE_TERMS)
 
 
 def _question_has_subject_anchor(question: str, candidate: GeneratedCandidate) -> bool:
@@ -794,12 +692,6 @@ def _first_title_hit_rate_rule(
     if total_results > 0 and total_title_hits / total_results > overall_threshold:
         return "overall:answer_in_title"
     return None
-
-
-def _relation_family_allowed(relation_or_claim: str) -> bool:
-    """Return whether one coarse relation family is allowed by the prefilter."""
-    normalized = relation_or_claim.strip().lower()
-    return normalized in ALLOW_RELATION_FAMILY_KEYWORDS
 
 
 def _build_longtail_queries(candidate: GeneratedCandidate) -> list[tuple[str, str, str]]:

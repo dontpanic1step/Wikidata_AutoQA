@@ -16,8 +16,6 @@ from .domain_templates import get_all_templates, get_stage1_templates
 from .generation_models import GeneratedCandidate
 from .generator_validators import (
     SearchLongtailVerifierError,
-    build_removed_prefilter_stub,
-    run_fact_level_longtail_prefilter,
     run_search_based_longtail_verifier,
     validate_generated_candidate,
     validate_question_surface,
@@ -49,9 +47,6 @@ EARLY_REJECTION_REASONS = {
     "entity_grounding_failed",
 }
 SOURCE_STAGE_REJECTION_PREFIXES = ("wikipedia_infobox_", "wikipedia_pageview_")
-SOURCE_STAGE_NON_BLOCKING_NOTES = {
-    "wikipedia_infobox_incomplete_tie_answer",
-}
 POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS = (
     ("list", re.compile(r"\blist\b", flags=re.IGNORECASE)),
     ("listed", re.compile(r"\blisted\b", flags=re.IGNORECASE)),
@@ -284,8 +279,6 @@ def process_generated_candidates(
                 settings.timeout_seconds,
             )
 
-        candidate.prefilter_longtail_features = build_removed_prefilter_stub(candidate)
-
         rewrite_start = perf_counter()
         _apply_rewrite_if_enabled(candidate, rewrite_client, settings)
         candidate_timings["rewrite_seconds"] = _elapsed(rewrite_start)
@@ -306,7 +299,6 @@ def process_generated_candidates(
             candidate.source_metadata["surface_validation_failure_reason"] = answer_popularity_reason
             candidate.source_metadata["post_rewrite_answer_popularity_failure_reason"] = answer_popularity_reason
             candidate.validation = {
-                "rewrite_guard_passed": False,
                 "surface_validation_failure_reason": answer_popularity_reason,
             }
             _record_candidate_timings(candidate, candidate_timings)
@@ -326,7 +318,6 @@ def process_generated_candidates(
             candidate.source_metadata["surface_validation_failure_reason"] = self_containment_reason
             candidate.source_metadata["post_rewrite_self_containment_failure_reason"] = self_containment_reason
             candidate.validation = {
-                "rewrite_guard_passed": False,
                 "surface_validation_failure_reason": self_containment_reason,
             }
             _record_candidate_timings(candidate, candidate_timings)
@@ -348,7 +339,6 @@ def process_generated_candidates(
                 answer_scope_ambiguity_reason
             )
             candidate.validation = {
-                "rewrite_guard_passed": False,
                 "surface_validation_failure_reason": answer_scope_ambiguity_reason,
             }
             _record_candidate_timings(candidate, candidate_timings)
@@ -368,7 +358,6 @@ def process_generated_candidates(
             candidate.source_metadata["surface_validation_failure_reason"] = time_invariance_reason
             candidate.source_metadata["post_rewrite_time_invariance_failure_reason"] = time_invariance_reason
             candidate.validation = {
-                "rewrite_guard_passed": False,
                 "surface_validation_failure_reason": time_invariance_reason,
             }
             _record_candidate_timings(candidate, candidate_timings)
@@ -388,7 +377,6 @@ def process_generated_candidates(
             candidate.source_metadata["surface_validation_failure_reason"] = award_year_reason
             candidate.source_metadata["post_rewrite_award_year_precision_failure_reason"] = award_year_reason
             candidate.validation = {
-                "rewrite_guard_passed": False,
                 "surface_validation_failure_reason": award_year_reason,
             }
             _record_candidate_timings(candidate, candidate_timings)
@@ -411,7 +399,6 @@ def process_generated_candidates(
             candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
             candidate.source_metadata["surface_validation_failure_reason"] = surface_reason
             candidate.validation = {
-                "rewrite_guard_passed": False,
                 "surface_validation_failure_reason": surface_reason,
             }
             _record_candidate_timings(candidate, candidate_timings)
@@ -659,7 +646,7 @@ def _early_rejection_reason(candidate: GeneratedCandidate) -> str:
 def _is_source_stage_rejection_note(note: object) -> bool:
     """Return whether one candidate note is a blocking source-stage rejection."""
     text = str(note or "").strip()
-    if not text or text in SOURCE_STAGE_NON_BLOCKING_NOTES:
+    if not text:
         return False
     return text.startswith(SOURCE_STAGE_REJECTION_PREFIXES)
 

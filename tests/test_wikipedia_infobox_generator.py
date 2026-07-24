@@ -44,7 +44,6 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     _rejected_placeholder,
     _sanitize_answer_blind_queries,
     _subject_anchor_context,
-    _tie_completion_problem,
     normalize_route3_table_source_types,
 )
 
@@ -57,7 +56,6 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     StreamingConcurrencyContext,
     _accepted_output_records,
     _apply_big_batch_mode,
-    _candidate_from_record,
     _compact_accepted_record,
     _compact_rejected_record,
     _filter_endpoint_url_entries,
@@ -2523,6 +2521,50 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(ranked[0]["score"], ranked[1]["score"])
         self.assertNotIn("article_table", ranked[1]["reasons"])
 
+    def test_table_ranking_ignores_preferred_context_words(self) -> None:
+        preferred_context_table = WikipediaTable(
+            table_index=1,
+            table_type="wikitable",
+            section_heading="Stadium venues",
+            caption="Tournament venues",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[
+                ["Alpha", "Archive"],
+                ["Beta", "Stable"],
+            ],
+            row_dicts=[],
+            normalized_text="Name Value Alpha Archive Beta Stable",
+            structure={"row_count": 3},
+        )
+        neutral_context_table = WikipediaTable(
+            table_index=2,
+            table_type="wikitable",
+            section_heading="Records",
+            caption="Tournament records",
+            nearby_intro="",
+            headers=["Name", "Value"],
+            rows=[
+                ["Alpha", "Archive"],
+                ["Beta", "Stable"],
+            ],
+            row_dicts=[],
+            normalized_text="Name Value Alpha Archive Beta Stable",
+            structure={"row_count": 3},
+        )
+
+        ranked = rank_wikipedia_tables(
+            [neutral_context_table, preferred_context_table],
+            first_paragraph="",
+            prose_text="",
+        )
+
+        self.assertEqual(ranked[0]["score"], ranked[1]["score"])
+        self.assertEqual([row["table_index"] for row in ranked], [1, 2])
+        for row in ranked:
+            self.assertNotIn("preferred_table_context", row["reasons"])
+            self.assertNotIn("preferred_context_hits", row)
+
     def test_table_ranking_no_longer_scores_by_row_count(self) -> None:
         short_table = WikipediaTable(
             table_index=1,
@@ -4471,44 +4513,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(context["table_scopes"][0]["nearby_section_heading"], "Longest")
         self.assertEqual(context["table_scopes"][0]["table_title"], "")
 
-    def test_tie_completion_guard_rejects_incomplete_grouped_max_answer(self) -> None:
-        table = WikipediaTable(
-            table_index=1,
-            table_type="wikitable",
-            section_heading="Films with multiple nominations and awards",
-            caption="Films that received multiple nominations",
-            nearby_intro="",
-            headers=["Nominations", "Film"],
-            rows=[
-                ["Nominations", "Film"],
-                ["4", "Juno"],
-                ["The Diving Bell and the Butterfly"],
-                ["I'm Not There"],
-                ["The Savages"],
-                ["3", "A Mighty Heart"],
-            ],
-            row_dicts=[{"Nominations": "4", "Film": "Juno"}],
-            normalized_text="",
-        )
-        problem = _tie_completion_problem(
-            source_table=table,
-            reasoning_type="max",
-            answer="Juno",
-            answer_items=[],
-        )
-        self.assertIn("incomplete_tie_answer", problem)
-        self.assertIn("The Savages", problem)
-        self.assertEqual(
-            _tie_completion_problem(
-                source_table=table,
-                reasoning_type="max",
-                answer="Juno; The Diving Bell and the Butterfly; I'm Not There; The Savages",
-                answer_items=["Juno", "The Diving Bell and the Butterfly", "I'm Not There", "The Savages"],
-            ),
-            "",
-        )
-
-    def test_incomplete_tie_guard_is_a_warning_not_generation_rejection(self) -> None:
+    def test_incomplete_tie_does_not_emit_warning_metadata(self) -> None:
         class TieWikipediaClient(FakeWikipediaClient):
             request_events: list[dict] = []
 
@@ -4559,13 +4564,11 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             record_limit=1,
             allowed_reasoning_types=("max",),
         )
+
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-        self.assertNotIn("wikipedia_infobox_incomplete_tie_answer", candidate.notes)
+
         self.assertEqual(candidate.answer, "Juno")
-        self.assertIn(
-            "incomplete_tie_answer",
-            candidate.source_metadata["route_guard_warnings"]["wikipedia_infobox_incomplete_tie_answer"],
-        )
+        self.assertNotIn("route_guard_warnings", candidate.source_metadata)
 
     def test_shared_processing_accepts_wikipedia_candidate_without_source_candidate(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
@@ -4595,7 +4598,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(result.accepted[0]["answer"], "AT&T Stadium")
         self.assertEqual(
             result.accepted[0]["validation"]["route_validation_policy"],
-            "provenance_only_for_wikipedia_infobox_route",
+            "answer_in_selected_table",
         )
         self.assertIn("candidate_processing_seconds", result.accepted[0]["source_metadata"]["phase_timings_seconds"])
 
@@ -4696,158 +4699,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         }
         self.assertFalse(_should_rerun_stream_rejection(permanent))
 
-    def test_candidate_input_salvages_disabled_incomplete_tie_placeholder(self) -> None:
-        record = {
-            "question": "Example page",
-            "answer": "",
-            "source_type": "wikipedia_tables",
-            "generation_route": "route3_wikipedia_infobox",
-            "subject_entity": {
-                "name": "Example page",
-                "url": "https://en.wikipedia.org/wiki/Example_page",
-            },
-            "answer_entity": {"name": ""},
-            "relation_or_claim": "wikipedia_table_composition",
-            "evidence": {"text": "", "url": "https://en.wikipedia.org/wiki/Example_page"},
-            "notes": ["wikipedia_infobox_incomplete_tie_answer"],
-            "source_metadata": {
-                "source_url": "https://en.wikipedia.org/wiki/Example_page",
-                "canonical_url": "https://en.wikipedia.org/wiki/Example_page",
-                "page_title": "Example page",
-                "first_paragraph": "Example page is a list.",
-                "parsed_tables": [
-                    {
-                        "table_index": 1,
-                        "section_heading": "Results",
-                        "caption": "Results",
-                        "normalized_text": "Results\n4 | Alpha\n4 | Beta",
-                    }
-                ],
-                "llm_response": {
-                    "question": "Which Example page entries had the highest score?",
-                    "answer": ["Alpha", "Beta"],
-                    "answer_type": "Other",
-                    "answer_aliases": [],
-                    "search_queries": ["Example page highest score entries"],
-                    "reasoning_type": "max",
-                    "source_table": 1,
-                },
-            },
-            "rejection_reason": "wikipedia_infobox_incomplete_tie_answer",
-        }
-        candidate = _candidate_from_record(record)
-        self.assertEqual(candidate.question, "Which Example page entries had the highest score?")
-        self.assertEqual(candidate.answer, "Alpha; Beta")
-        self.assertEqual(candidate.relation_or_claim, "max")
-        self.assertEqual(candidate.question_family, "wikipedia_infobox_table_fact")
-        self.assertEqual(candidate.source_metadata["reasoning_type"], "max")
-        self.assertEqual(candidate.source_metadata["answer_items"], ["Alpha", "Beta"])
-        self.assertEqual(candidate.notes, [])
-        self.assertEqual(
-            candidate.source_metadata["route_guard_warnings"]["wikipedia_infobox_incomplete_tie_answer"],
-            "disabled_incomplete_tie_answer_guard",
-        )
-        self.assertIn("Alpha", candidate.evidence.text)
-
-    def test_candidate_input_uses_llm_source_table_for_placeholder_evidence(self) -> None:
-        record = {
-            "question": "Travis Scott production discography",
-            "answer": "",
-            "source_type": "wikipedia_tables",
-            "generation_route": "route3_wikipedia_infobox",
-            "subject_entity": {
-                "name": "Travis Scott production discography",
-                "url": "https://en.wikipedia.org/wiki/Travis_Scott_production_discography",
-            },
-            "answer_entity": {"name": ""},
-            "relation_or_claim": "wikipedia_table_composition",
-            "evidence": {
-                "text": "The following list is a discography of production by Travis Scott.",
-                "url": "https://en.wikipedia.org/wiki/Travis_Scott_production_discography",
-            },
-            "notes": ["wikipedia_infobox_incomplete_tie_answer"],
-            "source_metadata": {
-                "source_url": "https://en.wikipedia.org/wiki/Travis_Scott_production_discography",
-                "canonical_url": "https://en.wikipedia.org/wiki/Travis_Scott_production_discography",
-                "page_title": "Travis Scott production discography",
-                "first_paragraph": "The following list is a discography of production by Travis Scott.",
-                "parsed_tables": [
-                    {
-                        "table_index": 1,
-                        "section_heading": "Singles produced",
-                        "caption": "List of singles produced",
-                        "normalized_text": 'Singles produced\n"Bitch Better Have My Money" | Rihanna | 2015 | 1',
-                    }
-                ],
-                "llm_response": {
-                    "question": "Which single produced by Travis Scott had the highest peak chart position in the US?",
-                    "answer": '" Bitch Better Have My Money "',
-                    "answer_type": "Other",
-                    "answer_aliases": ["Bitch Better Have My Money"],
-                    "search_queries": ["Travis Scott singles peak US chart position"],
-                    "reasoning_type": "min",
-                    "source_table": 1,
-                },
-            },
-            "rejection_reason": "wikipedia_infobox_incomplete_tie_answer",
-        }
-        candidate = _candidate_from_record(record)
-        self.assertIn("Bitch Better Have My Money", candidate.evidence.text)
-        self.assertEqual(candidate.relation_or_claim, "min")
-        self.assertEqual(candidate.source_metadata["reasoning_type"], "min")
-        self.assertEqual(
-            candidate.source_metadata["selected_source_table"]["caption"],
-            "List of singles produced",
-        )
-        self.assertEqual(candidate.answer_type, "Other")
-
-    def test_candidate_input_rebuilds_stale_numeric_code_answer_from_llm_response(self) -> None:
-        record = {
-            "question": "In the 3-of-6 code, which original 3 data bits have the maximum number of appended bits set to 1?",
-            "answer": "0",
-            "answer_type": "Number",
-            "source_type": "wikipedia_tables",
-            "generation_route": "route3_wikipedia_infobox",
-            "subject_entity": {
-                "name": "Constant-weight code",
-                "url": "https://en.wikipedia.org/wiki/Constant-weight_code",
-            },
-            "answer_entity": {"name": "0"},
-            "relation_or_claim": "max",
-            "evidence": {
-                "text": "3-of-6 code\nOriginal 3 data bits | Appended bits\n000 | 111\n001 | 110\n010 | 110\n100 | 110",
-                "url": "https://en.wikipedia.org/wiki/Constant-weight_code",
-            },
-            "notes": [],
-            "source_metadata": {
-                "source_url": "https://en.wikipedia.org/wiki/Constant-weight_code",
-                "canonical_url": "https://en.wikipedia.org/wiki/Constant-weight_code",
-                "page_title": "Constant-weight code",
-                "answer_type": "Number",
-                "answer_items": ["000", "001", "010", "100"],
-                "parsed_tables": [
-                    {
-                        "table_index": 1,
-                        "section_heading": "m-of-n codes",
-                        "caption": "3-of-6 code",
-                        "normalized_text": "3-of-6 code\n000 | 111\n001 | 110\n010 | 110\n100 | 110",
-                    }
-                ],
-                "llm_response": {
-                    "question": "In the 3-of-6 code, which original 3 data bits have the maximum number of appended bits set to 1?",
-                    "answer": ["000", "001", "010", "100"],
-                    "answer_type": "Other",
-                    "answer_aliases": [],
-                    "search_queries": ["3-of-6 code appended bits maximum"],
-                    "reasoning_type": "max",
-                    "source_table": 1,
-                },
-            },
-        }
-        candidate = _candidate_from_record(record)
-        self.assertEqual(candidate.answer_type, "Other")
-        self.assertEqual(candidate.answer, "000; 001; 010; 100")
-        self.assertEqual(candidate.source_metadata["answer_items"], ["000", "001", "010", "100"])
 
 
 if __name__ == "__main__":

@@ -75,6 +75,18 @@ The recipe passes the selected answer type, answer-type mode, and table source t
 
 The DuckDuckGo thresholds retain their existing formal values during reconstruction.
 
+The formal candidate checks run in this order:
+
+1. table and source checks;
+2. generation, parsing, and normalization;
+3. effective surface and temporal checks;
+4. the integrated answer-type gate;
+5. answer support in the selected table;
+6. DuckDuckGo long-tail filtering;
+7. second-stage grading.
+
+The integrated answer-type gate retains Date and Place rules. Person candidates have no local rule-based rejection heuristic and still pass through source validation, DuckDuckGo filtering, and second-stage grading.
+
 ## Safe dry-run examples
 
 Inspect a 10-page Person segment without making generation calls:

@@ -6,7 +6,7 @@ import unittest
 
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.models import CandidateFact
-from wikidata_simpleqa.validators import candidate_is_time_invariant, question_targets_mutable_fact
+from wikidata_simpleqa.validators import candidate_is_time_invariant
 
 
 def make_candidate(
@@ -104,28 +104,6 @@ class TimeInvarianceTests(unittest.TestCase):
             },
         )
         self.assertTrue(candidate_is_time_invariant(candidate, "2026-05-05"))
-
-    def test_rejects_current_role_wording(self) -> None:
-        self.assertTrue(question_targets_mutable_fact("Who is the current CEO of X?"))
-
-    def test_rejects_relationship_wording(self) -> None:
-        self.assertTrue(question_targets_mutable_fact("Who is X married to?"))
-
-    def test_rejects_cumulative_statistic_wording(self) -> None:
-        self.assertTrue(question_targets_mutable_fact("How many career goals has X scored?"))
-
-    def test_allows_ordinal_spouse_wording(self) -> None:
-        self.assertFalse(question_targets_mutable_fact("Who was the first spouse of X?"))
-
-    def test_allows_completed_edition_goal_wording(self) -> None:
-        self.assertFalse(
-            question_targets_mutable_fact(
-                "How many goals did X score in the 2nd edition of Example Cup?"
-            )
-        )
-
-    def test_allows_stable_authorship_wording(self) -> None:
-        self.assertFalse(question_targets_mutable_fact("Who wrote the novel X?"))
 
 
 if __name__ == "__main__":

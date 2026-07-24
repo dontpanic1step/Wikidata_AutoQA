@@ -51,7 +51,6 @@ class GeneratedCandidate:
     target_time: str = ""
     source_template_domain: str = ""
     search_queries: list[str] = field(default_factory=list)
-    prefilter_longtail_features: dict[str, Any] = field(default_factory=dict)
     search_verification_features: dict[str, Any] = field(default_factory=dict)
     cheap_model_verification_features: dict[str, Any] = field(default_factory=dict)
     panel_grading_features: dict[str, Any] = field(default_factory=dict)
@@ -135,7 +134,6 @@ class GeneratedCandidate:
             "subject_resource_url": self.subject_entity.url,
             "subject_resource_key": self.subject_resource_key,
             "search_queries": self.search_queries,
-            "prefilter_longtail_features": self.prefilter_longtail_features,
             "search_verification_features": self.search_verification_features,
             "cheap_model_verification_features": self.cheap_model_verification_features,
             "panel_grading_features": self.panel_grading_features,
