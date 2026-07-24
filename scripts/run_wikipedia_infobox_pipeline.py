@@ -1620,6 +1620,11 @@ def _run_streaming_page_id_pipeline(
                     all_decision_records=all_decision_records,
                     answer_types=_page_id_list_answer_types(args),
                     table_types=args.route3_table_source_type,
+                    page_level_failure_ids={
+                        int(attempt["canonical_page_id"])
+                        for attempt in committed_attempts
+                        if bool(attempt.get("page_level_failure", False))
+                    },
                 )
             )
         ],
@@ -1906,6 +1911,7 @@ def _stream_page_id_list_entries(
     all_decision_records: list[dict],
     answer_types: list[str],
     table_types: list[str],
+    page_level_failure_ids: set[int] | None = None,
 ) -> set[PageIdListEntry]:
     """Return used page-ID entries represented by one streaming run."""
     actual_table_types_by_page = _actual_table_types_by_page_id(all_decision_records)
@@ -1919,7 +1925,7 @@ def _stream_page_id_list_entries(
                 table_types=sorted(actual_table_types) if actual_table_types else table_types,
             )
         )
-    page_only_ids = {
+    page_only_ids = set(page_level_failure_ids or ()) | {
         page_id
         for record in all_decision_records
         if _all5_page_level_prerewrite_rejected(record)
@@ -1946,6 +1952,19 @@ def _actual_table_types_by_page_id(records: list[dict]) -> dict[int, set[str]]:
         if table_type:
             table_types_by_page[page_id].add(table_type)
     return table_types_by_page
+
+
+def _all5_page_generation_failure(
+    candidates: list[GeneratedCandidate],
+) -> GeneratedCandidate | None:
+    """Return the unassigned diagnostic emitted by an all5 page-level failure."""
+    for candidate in candidates:
+        metadata = candidate.source_metadata
+        if str(metadata.get("answer_type_mode") or "").strip() != "all5":
+            continue
+        if not str(metadata.get("route3_slot_id") or "").strip():
+            return candidate
+    return None
 
 
 def _all5_page_level_prerewrite_rejected(record: dict) -> bool:
@@ -2112,6 +2131,34 @@ def _process_one_stream_page_id(
                 page_source=page_source,
                 cached_archive_path=cached_archive_path,
             )
+        page_failure = _all5_page_generation_failure(generated_candidates)
+        if page_failure is not None:
+            diagnostic_record = page_failure.to_output_record("")
+            rejection_reason = str(page_failure.notes[0] if page_failure.notes else "").strip()
+            diagnostic_record["rejection_reason"] = rejection_reason or "wikipedia_infobox_generation_failed"
+            reason = _exact_failure_reason(diagnostic_record)
+            error_details = _rerun_error_details_from_record(diagnostic_record)
+            discard_reason = str(page_failure.source_metadata.get("discard_reason") or "").strip()
+            if discard_reason:
+                error_details["discard_reason"] = discard_reason
+            retryable = _should_rerun_stream_rejection(diagnostic_record)
+            return _commit_stream_page_attempt(
+                page_id=page_id,
+                url=url,
+                attempt_number=attempt_number,
+                primary_page_attempt=primary_page_attempt,
+                status="rerun" if retryable else "rejected",
+                reason=reason,
+                generated_candidates=[],
+                accepted_records=[],
+                rejected_records=[],
+                error_details=error_details,
+                args=args,
+                state=state,
+                concurrency=concurrency,
+                generation_raw_audit=_generation_raw_audit(generated_candidates),
+                page_level_failure=True,
+            )
         result = process_generated_candidates(
             generated_candidates,
             settings=settings,
@@ -2218,6 +2265,8 @@ def _commit_stream_page_attempt(
     args: argparse.Namespace,
     state: PageIdStreamState,
     concurrency: StreamingConcurrencyContext,
+    generation_raw_audit: dict[str, Any] | None = None,
+    page_level_failure: bool = False,
 ) -> dict:
     """Commit one ledger record before rebuilding endpoints and updating state."""
     for candidate in generated_candidates:
@@ -2227,7 +2276,11 @@ def _commit_stream_page_attempt(
     candidate_snapshots = [candidate.to_output_record("") for candidate in generated_candidates]
     for record in candidate_snapshots:
         record["id"] = _wikipedia_stream_record_id(record)
-    generation_raw_audit = _generation_raw_audit(generated_candidates)
+    raw_audit = (
+        generation_raw_audit
+        if generation_raw_audit is not None
+        else _generation_raw_audit(generated_candidates)
+    )
     candidate_ids = [str(record["id"]) for record in candidate_snapshots]
     timings = [
         dict(record.get("source_metadata", {}).get("phase_timings_seconds", {}))
@@ -2243,7 +2296,7 @@ def _commit_stream_page_attempt(
         "primary_page_attempt": primary_page_attempt,
         "status": status,
         "reason": reason,
-        "generation_raw_audit": generation_raw_audit,
+        "generation_raw_audit": raw_audit,
         "candidates": candidate_snapshots,
         "ddg": [record.get("search_verification_features", {}) for record in candidate_snapshots],
         "second_stage": [record.get("panel_grading_features", {}) for record in candidate_snapshots],
@@ -2253,6 +2306,8 @@ def _commit_stream_page_attempt(
         "timings": timings,
         "error_details": dict(error_details),
     }
+    if page_level_failure:
+        payload["page_level_failure"] = True
     with concurrency.commit_lock:
         ledger_path = commit_page_attempt(args.page_attempt_ledger_dir, payload)
         rebuild_derived_outputs(
@@ -2287,7 +2342,7 @@ def _generation_raw_audit(candidates: list[GeneratedCandidate]) -> dict[str, Any
         archive = metadata.get("route3_page_archive", {})
         rows.append(
             {
-                "slot": metadata.get("original_candidate_slot") or metadata.get("route3_slot_id") or "single",
+                "slot": metadata.get("original_candidate_slot") or metadata.get("route3_slot_id") or "",
                 "prompt": metadata.get("llm_prompt", ""),
                 "request": audit.get("request_payload", {}) if isinstance(audit, dict) else {},
                 "response": metadata.get("llm_response", {}),

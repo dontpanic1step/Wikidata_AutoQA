@@ -18,7 +18,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
-from wikidata_simpleqa.route3_run_ledger import commit_page_attempt
+from wikidata_simpleqa.route3_run_ledger import commit_page_attempt, load_page_attempts
 from wikidata_simpleqa.page_id_lists import PageIdListEntry
 from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
 from wikidata_simpleqa.wikipedia_client import (
@@ -1185,6 +1185,102 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(metadata["generation_model"], "google/gemini-3-flash-preview")
         self.assertEqual(metadata["generation_parameters"], {"max_tokens": 4096})
         self.assertEqual(metadata["recipe_seed"], 1)
+
+    def test_all5_page_level_generation_failure_commits_zero_candidate_ledger(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            ledger_dir = root / "page_attempts"
+            args = SimpleNamespace(
+                generated_search_query_count=2,
+                route3_answer_type=[],
+                route3_table_filter_mode=[],
+                route3_table_source_type=["infobox", "wikitable"],
+                route3_prose_leakage_scoring=True,
+                route3_llm_choose_table=False,
+                route3_answer_type_mode="all5",
+                route3_page_archive_dir=root / "page_archive",
+                route3_infobox_max_removed_row_rate=0.6,
+                route3_infobox_min_remaining_rows=5,
+                stream_page_source="table-search",
+                page_attempt_ledger_dir=ledger_dir,
+                run_group_id="group",
+                run_segment_id="segment",
+                generation_model="google/gemini-3-flash-preview",
+                small_model_max_tokens=4096,
+                stream_random_seed=7,
+                output=root / "accepted.jsonl",
+                rejected_output=root / "rejected.jsonl",
+            )
+            state = PageIdStreamState.load(root / "state.json")
+            llm_client = FakeInvalidJsonAuditLLMClient()
+            concurrency = StreamingConcurrencyContext(
+                commit_lock=Lock(),
+                wikipedia_semaphore=Semaphore(1),
+                duckduckgo_semaphore=Semaphore(1),
+                generation_rewrite_semaphore=Semaphore(1),
+                second_stage_semaphore=Semaphore(1),
+            )
+
+            decision = _process_one_stream_page_id(
+                2468,
+                args=args,
+                settings=Settings(
+                    target_time="2024",
+                    run_date="2026-07-24",
+                    cutoff_year=2025,
+                    enabled_routes=("route3_wikipedia_infobox",),
+                    rewrite_enabled=False,
+                ),
+                state=state,
+                wikipedia_client=FakeWikipediaClient(),
+                search_client=FakeSearchClient(),
+                llm_client=llm_client,
+                rewrite_client=None,
+                concurrency=concurrency,
+                second_stage_model_clients=None,
+                grading_grader_client=None,
+            )
+            attempts = load_page_attempts(ledger_dir)
+            resumed = _process_one_stream_page_id(
+                2468,
+                args=args,
+                settings=Settings(target_time="2024"),
+                state=state,
+                wikipedia_client=FakeWikipediaClient(),
+                search_client=FakeSearchClient(),
+                llm_client=llm_client,
+                rewrite_client=None,
+                concurrency=concurrency,
+                second_stage_model_clients=None,
+                grading_grader_client=None,
+            )
+
+        self.assertEqual(decision["status"], "rejected")
+        self.assertIn("wikipedia_infobox_llm_parse_failed", decision["reason"])
+        self.assertEqual(len(attempts), 1)
+        attempt = attempts[0]
+        self.assertTrue(attempt["page_level_failure"])
+        self.assertEqual(attempt["candidates"], [])
+        self.assertEqual(attempt["candidate_ids"], [])
+        self.assertEqual(attempt["accepted_records"], [])
+        self.assertEqual(attempt["rejected_records"], [])
+        self.assertEqual(attempt["generation_raw_audit"]["slots"][0]["slot"], "")
+        self.assertEqual(
+            attempt["generation_raw_audit"]["slots"][0]["response"]["finish_reason"],
+            "length",
+        )
+        self.assertTrue(resumed["reused_committed_ledger"])
+        self.assertEqual(len(llm_client.prompts), 1)
+        self.assertEqual(
+            _stream_page_id_list_entries(
+                [2468],
+                all_decision_records=[],
+                answer_types=["Person", "Place", "Number", "Date", "Other"],
+                table_types=["infobox", "wikitable"],
+                page_level_failure_ids={2468},
+            ),
+            {PageIdListEntry(page_id=2468)},
+        )
 
     def test_page_archive_is_atomic_and_records_hash(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
