@@ -35,6 +35,8 @@ The current formal DuckDuckGo thresholds, second-stage parameters, table filter 
 
 The recipe retains only primary page-attempt count; answer type; single/all5 mode; infobox/wikitable/both source mode; generation model and maximum tokens; cache reuse and fresh-page budgets; run ID and seed; and bounded concurrency/network execution parameters.
 
+Use `--page-attempt-count`, `--answer-type`, and `--route3-answer-type-mode` to define one formal segment. Free-form recipe text and per-answer-type compatibility syntaxes are not accepted.
+
 Specific answer types are valid only in single mode. `AllTypes` is valid only in all5 mode. Primary page-attempt count is a page budget, not an accepted-QA target; automatic reruns do not consume extra primary-page budget.
 
 ## Fixed method internals

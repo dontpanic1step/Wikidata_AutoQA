@@ -60,6 +60,8 @@ Removing those names does not authorize weakening the effective surface/temporal
 
 The recipe may expose only the result-affecting controls named by the reconstruction milestones: primary page-attempt count; answer type and single/all5 mode; infobox/wikitable/both source mode; generation model and maximum tokens; cache reuse and fresh-page budgets; run ID and seed; and bounded concurrency/network parameters.
 
+The formal segment selectors are `--page-attempt-count`, `--answer-type`, and `--route3-answer-type-mode`. The legacy free-form recipe and per-answer-type input syntaxes are not supported.
+
 Specific answer types use single mode. `AllTypes` uses all5 mode. Primary page-attempt count measures primary pages, not accepted questions, and automatic reruns do not consume additional primary-page budget.
 
 Table filters, prose-leakage scoring, and minimum table score remain fixed at their current formal values. They are method internals, not user switches. Other legacy CLI surfaces are catalogued in `docs/compatibility_legacy_settings.md`.

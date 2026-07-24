@@ -8,6 +8,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
+from unittest.mock import patch
 
 from test_support import ROOT  # noqa: F401
 
@@ -27,6 +28,7 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _existing_recipe_page_ids,
     _matching_segment_rerun_pool_seed,
     _parse_recipe,
+    parse_args,
     _recipe_summary,
     _recipe_segment_budget,
     _decrement_recipe_budget,
@@ -47,6 +49,9 @@ def _recipe_args(**overrides):
     """Return a minimal recipe args namespace for helper tests."""
     values = {
         "stream_random_seed": None,
+        "page_attempt_count": 10,
+        "answer_type": "Person",
+        "route3_reasoning_type": [],
         "run_date": None,
         "target_time": "2024",
         "cutoff_year": 2025,
@@ -195,11 +200,9 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
     def test_recipe_parses_alltypes_segment_and_commands_all5_mode(self) -> None:
         args = _recipe_args(
-            recipe=["200 AllTypes", "single_fact"],
-            answer_type_count=[],
-            answer_types=[],
-            per_answer_type=0,
-            route3_reasoning_type=[],
+            page_attempt_count=200,
+            answer_type="AllTypes",
+            route3_answer_type_mode="all5",
         )
         items, reasoning_types = _parse_recipe(args)
 
@@ -225,6 +228,54 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertNotIn("--route3-answer-type", command)
         self.assertEqual(_command_value(command, "--route3-max-underfilled-monthly-pageviews"), "10000.0")
         self.assertTrue(str(paths["accepted"]).endswith("01_alltypes_200_accepted.jsonl"))
+
+    def test_formal_specific_answer_type_uses_single_mode_and_page_budget(self) -> None:
+        items, reasoning_types = _parse_recipe(
+            _recipe_args(
+                page_attempt_count=20,
+                answer_type="Person",
+                route3_answer_type_mode="single",
+            )
+        )
+
+        self.assertEqual(items, [RecipeItem(answer_type="Person", record_limit=20)])
+        self.assertEqual(reasoning_types, ["single_fact"])
+
+    def test_formal_answer_type_mode_combinations_are_strict(self) -> None:
+        with self.assertRaisesRegex(ValueError, "AllTypes requires"):
+            _parse_recipe(
+                _recipe_args(
+                    answer_type="AllTypes",
+                    route3_answer_type_mode="single",
+                )
+            )
+        with self.assertRaisesRegex(ValueError, "specific answer type requires"):
+            _parse_recipe(
+                _recipe_args(
+                    answer_type="Person",
+                    route3_answer_type_mode="all5",
+                )
+            )
+
+    def test_formal_page_attempt_count_must_be_positive(self) -> None:
+        with self.assertRaisesRegex(ValueError, "page-attempt-count must be positive"):
+            _parse_recipe(_recipe_args(page_attempt_count=0))
+
+    def test_legacy_recipe_input_flags_are_not_accepted(self) -> None:
+        with patch(
+            "sys.argv",
+            [
+                "run_wikipedia_infobox_recipe.py",
+                "--page-attempt-count",
+                "10",
+                "--answer-type",
+                "Person",
+                "--recipe",
+                "10 Person",
+            ],
+        ):
+            with self.assertRaises(SystemExit):
+                parse_args()
 
     def test_recipe_segment_disables_route3_llm_table_choice_by_default(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

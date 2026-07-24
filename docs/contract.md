@@ -6,6 +6,7 @@ This section summarizes the non-negotiable formal method from `AGENTS.md` and `d
 
 - Route 3 is the only formal generation route.
 - `scripts/run_wikipedia_infobox_recipe.py` is the only user-facing generation entry point.
+- A formal invocation defines one segment with `--page-attempt-count`, `--answer-type`, and `--route3-answer-type-mode`; free-form legacy recipe inputs are not accepted.
 - `scripts/run_wikipedia_infobox_pipeline.py` is an internal segment worker.
 - Route 1, Route 2, Route 4, KELM, and the old finalization workflow are historical code.
 - `scripts/run_openrouter_night_batch.py` is an unused historical orchestrator, not a formal evaluation entry point.

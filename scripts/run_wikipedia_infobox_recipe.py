@@ -91,27 +91,17 @@ def parse_args() -> argparse.Namespace:
     """Parse recipe runner arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
-        "--recipe",
-        action="append",
-        default=[],
-        help=(
-            "Recipe text such as '40 Person, 40 Place, single_fact'. "
-            "Can be repeated; comma-separated chunks are merged."
-        ),
+        "--page-attempt-count",
+        type=int,
+        required=True,
+        help="Number of primary Wikipedia pages to attempt in this segment.",
     )
     parser.add_argument(
-        "--answer-type-count",
-        action="append",
-        default=[],
-        help="Explicit answer-type target such as Person=40 or '40 Person'. Can be repeated.",
+        "--answer-type",
+        choices=[*ROUTE3_ANSWER_TYPES, ALL_TYPES_RECIPE_ANSWER_TYPE],
+        required=True,
+        help="One specific answer type for single mode, or AllTypes for all5 mode.",
     )
-    parser.add_argument(
-        "--answer-types",
-        action="append",
-        default=[],
-        help="Answer types for --per-answer-type. Repeat or pass comma-separated values.",
-    )
-    parser.add_argument("--per-answer-type", type=int, default=0)
     parser.add_argument(
         "--route3-reasoning-type",
         action="append",
@@ -336,10 +326,6 @@ def main() -> int:
     _apply_recipe_big_batch_mode(args)
     run_started = perf_counter()
     recipe_items, reasoning_types = _parse_recipe(args)
-    if not recipe_items:
-        raise ValueError("Recipe must include at least one answer-type count, e.g. '40 Person'.")
-    if not reasoning_types:
-        reasoning_types = list(DEFAULT_ROUTE3_REASONING_TYPES)
     args.route3_answer_type_mode = normalize_route3_answer_type_mode(args.route3_answer_type_mode)
     args.route3_extra_prompt = list(normalize_route3_extra_prompts(args.route3_extra_prompt))
     enabled_filter_modes = list(normalize_route3_table_filter_modes(args.route3_table_filter_mode))
@@ -589,54 +575,20 @@ def _attach_recipe_segment_budget_summary(
     summary["recipe_segment_expected_page_count"] = expected_page_count
 
 def _parse_recipe(args: argparse.Namespace) -> tuple[list[RecipeItem], list[str]]:
-    """Parse recipe text and explicit answer-type options."""
-    raw_parts: list[str] = []
-    for recipe_text in args.recipe:
-        raw_parts.extend(part.strip() for part in str(recipe_text).split(","))
-    raw_parts.extend(str(value).strip() for value in args.answer_type_count)
-    items: list[RecipeItem] = []
-    reasoning_types: list[str] = []
-    for part in raw_parts:
-        if not part:
-            continue
-        parsed_item = _parse_recipe_item(part)
-        if parsed_item is not None:
-            items.append(parsed_item)
-            continue
-        parsed_reasoning = normalize_route3_reasoning_types([part])
-        if parsed_reasoning:
-            reasoning_types.extend(value for value in parsed_reasoning if value not in reasoning_types)
-            continue
-        raise ValueError(f"Could not parse recipe part {part!r}.")
-    if args.answer_types:
-        if args.per_answer_type < 1:
-            raise ValueError("--answer-types requires --per-answer-type >= 1.")
-        for answer_type in _normalize_recipe_answer_types(args.answer_types):
-            items.append(RecipeItem(answer_type=answer_type, record_limit=args.per_answer_type))
-    for reasoning_type in normalize_route3_reasoning_types(args.route3_reasoning_type):
-        if reasoning_type not in reasoning_types:
-            reasoning_types.append(reasoning_type)
-    return items, reasoning_types
-
-
-def _parse_recipe_item(part: str) -> RecipeItem | None:
-    """Parse one answer-type count recipe token."""
-    count_first = re.fullmatch(r"(\d+)\s+([A-Za-z_ -]+)", part.strip())
-    type_first = re.fullmatch(r"([A-Za-z_ -]+)\s*[:=]\s*(\d+)", part.strip())
-    if count_first:
-        count = int(count_first.group(1))
-        answer_type_raw = count_first.group(2)
-    elif type_first:
-        count = int(type_first.group(2))
-        answer_type_raw = type_first.group(1)
-    else:
-        return None
-    answer_types = _normalize_recipe_answer_types([answer_type_raw])
-    if len(answer_types) != 1:
-        raise ValueError(f"Recipe part {part!r} must name exactly one answer_type.")
-    if count < 1:
-        raise ValueError(f"Recipe part {part!r} must use a positive count.")
-    return RecipeItem(answer_type=answer_types[0], record_limit=count)
+    """Build one formal segment and enforce answer-type/mode combinations."""
+    page_attempt_count = int(args.page_attempt_count)
+    if page_attempt_count < 1:
+        raise ValueError("--page-attempt-count must be positive.")
+    answer_type = _normalize_recipe_answer_types([args.answer_type])[0]
+    answer_type_mode = normalize_route3_answer_type_mode(args.route3_answer_type_mode)
+    if answer_type == ALL_TYPES_RECIPE_ANSWER_TYPE and answer_type_mode != "all5":
+        raise ValueError("AllTypes requires --route3-answer-type-mode all5.")
+    if answer_type != ALL_TYPES_RECIPE_ANSWER_TYPE and answer_type_mode != "single":
+        raise ValueError("A specific answer type requires --route3-answer-type-mode single.")
+    reasoning_types = list(normalize_route3_reasoning_types(args.route3_reasoning_type))
+    if not reasoning_types:
+        reasoning_types = list(DEFAULT_ROUTE3_REASONING_TYPES)
+    return [RecipeItem(answer_type=answer_type, record_limit=page_attempt_count)], reasoning_types
 
 
 def _normalize_recipe_answer_types(values: list[str]) -> list[str]:
