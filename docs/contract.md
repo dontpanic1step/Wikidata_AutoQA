@@ -1,6 +1,77 @@
-# Project Contract
+# Formal Reconstruction Contract
 
-This contract summarizes the non-negotiable project rules from `AGENTS.md`, canonical terminology from `docs/terminology.md`, and the runtime contracts visible in the current pipeline code. `AGENTS.md` remains the highest-authority instruction when documents conflict.
+This section summarizes the non-negotiable formal method from `AGENTS.md` and `docs/design.md`. `AGENTS.md` has highest authority, and `docs/reconstruction/milestones.md` defines the ordered implementation work.
+
+## Formal ownership
+
+- Route 3 is the only formal generation route.
+- `scripts/run_wikipedia_infobox_recipe.py` is the only user-facing generation entry point.
+- `scripts/run_wikipedia_infobox_pipeline.py` is an internal segment worker.
+- Route 1, Route 2, Route 4, KELM, and the old finalization workflow are historical code.
+- `scripts/run_openrouter_night_batch.py` is an unused historical orchestrator, not a formal evaluation entry point.
+- Historical modules may remain import-time dependencies, but must not be presented, maintained, or invoked as formal generation paths.
+- The old rule-based gates listed in the formal section of `docs/design.md` are excluded and must not be replaced by new heuristics.
+
+## Formal automated order
+
+```text
+table/source checks
+-> generation
+-> parse and normalize
+-> effective surface and temporal guards
+-> integrated answer-type gate
+-> answer-in-selected-table validation
+-> DuckDuckGo long-tail filtering
+-> second-stage grading
+```
+
+DDG and second-stage errors enter rerun handling. Later artifact, review, and finalization milestones consume the audit records without reordering this method.
+
+## Question and validation contract
+
+- Questions are short, natural, self-contained, fact-seeking, and have exactly one stable intended answer.
+- Historically settled temporal anchors are allowed; live-status wording and mutable current-status questions are rejected by effective guards.
+- By default, question text must not depend on events in 2025 or later unless configuration explicitly changes the cutoff.
+- Temporal questions state the requested precision. Numeric questions state the counted quantity or unit while keeping the reference answer unit-free.
+- The answer or an active alias must occur in the selected-table evidence.
+- Effective surface and temporal guards remain active when obsolete placeholder fields are removed.
+- The integrated answer-type gate remains except for the explicitly removed Person common-word/common-name heuristic.
+- Internal popularity proxies are not long-tail gates. DuckDuckGo is the hard first-stage long-tail filter; the configured SimpleQA Verified-style model panel is the second stage.
+- Do not use a standalone cheap-model exact-match QA rejection gate.
+- LLMs may generate or review candidates but do not invent source facts or prove factual uniqueness.
+
+## Audit contract
+
+Accepted, rejected, and rerun outcomes remain traceable to their source page, selected table, generation exchange, validation results, search evidence, grading evidence, and exact decision reason. Stable IDs, immutable provenance, revisions, ledgers, review sheets, and final CSV fields are introduced only in milestone order.
+
+## Protected evaluation contract
+
+The independent evaluation flow is:
+
+```text
+final CSV or evaluation input
+-> scripts/run_openrouter_batch_predictions.py
+-> model predictions
+-> scripts/judge_openrouter_batch_predictions.py
+-> SimpleQA Verified-style grading
+```
+
+These scripts are retained formal tools, but are not generation, second-stage filtering, manual review, revision, or finalization components. Do not change prediction prompt/message construction, `GRADER_TEMPLATE`, grading labels, examples, or default unparseable-output mapping during reconstruction.
+
+## Implementation contract
+
+- Follow the reconstruction milestones in order.
+- Make only the smallest milestone-scoped change.
+- Test each milestone before committing it independently.
+- Do not add unspecified fallback behavior or defensive programming.
+- Stop and report any newly discovered high-risk design flaw.
+- Preserve unrelated worktree changes and exclude them from milestone commits without explicit authorization.
+
+---
+
+# Historical Project Contract Snapshot (Non-Normative)
+
+The remainder is retained only as a record of the pre-stabilization contract and runtime assumptions. It is superseded by the formal section above.
 
 ## Goal
 

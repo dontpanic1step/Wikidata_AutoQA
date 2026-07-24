@@ -6,19 +6,23 @@ Build a conservative generator for **SimpleQA / SimpleQA Verified-style short fa
 
 The main target is the **question style and evaluation setting**: short, natural, fact-seeking questions with a single stable gold answer. The implementation method is secondary and may change if another route better reproduces SimpleQA-like examples.
 
-When project documents conflict, this file is the highest-level instruction. Update `design.md` before implementing code if the design still encodes older constraints.
+When project documents conflict, this file is the highest-level instruction. Update `docs/design.md` before implementing code if the design still encodes older constraints.
 
 Use `docs/terminology.md` for canonical project terms. In particular, use **template key** for identifiers such as `benchmark_release_date`, and **domain** for broad content areas such as `Architecture and Transportation`. Older code/artifacts may still use `domain` to mean template key; normalize that at compatibility boundaries instead of spreading the legacy wording.
 
 ## Current strategic direction
 
-- Replicate SimpleQA-style questions first; do not optimize prematurely for a particular Wikidata-only pipeline.
-- The target matters more than the method. Wikidata, Wikipedia, search APIs, and semi-structured public data are all acceptable inputs if the resulting question is auditable and stable.
-- Use Wikidata when it is convenient, but do not get blocked by WDQS. If WDQS is unreliable or too restrictive, use search APIs and direct Wikidata/Wikipedia URL construction where possible.
-- Keep the current multi-generator architecture with shared LLM rewriting and shared long-tail filtering, but allow route-specific harvesting and route-specific validation layers.
-- Route 1 is again template-led. It should use templates to construct candidate questions before shared rewriting.
+- Replicate SimpleQA-style questions through one conservative, auditable production path.
+- Route 3, the Wikipedia semi-structured table/infobox route, is the only formal generation route.
+- `scripts/run_wikipedia_infobox_recipe.py` is the only user-facing generation entry point.
+- `scripts/run_wikipedia_infobox_pipeline.py` is an internal segment worker and is not a second user-facing workflow.
+- Route 1, Route 2, KELM, and the old finalization workflow are historical code. Do not extend, repair, or present them as part of the formal method during the reconstruction milestones.
+- `scripts/run_openrouter_night_batch.py` is an unused historical evaluation orchestrator. It is not one of the protected evaluation tools and must not be used by the formal workflow.
+- The rule-based gates explicitly removed by `docs/reconstruction/milestones.md` are not part of the formal Route 3 method. Do not replace them with new heuristics.
+- Preserve `scripts/run_openrouter_batch_predictions.py` and `scripts/judge_openrouter_batch_predictions.py` as independent SimpleQA Verified-style evaluation tools. They are not generation, manual review, second-stage filtering, or finalization components.
+- Do not reorganize the protected evaluation prompts, grading labels, examples, or unparseable-output semantics while stabilizing Route 3.
 - Prefer a minimal runnable vertical slice that can produce a small manually reviewable pilot batch before scaling.
-- Treat the first pilot as candidate generation, not final verified data.
+- Treat pilot output as candidate generation, not final verified data.
 
 ## Question policy
 
@@ -62,19 +66,17 @@ Use `docs/terminology.md` for canonical project terms. In particular, use **temp
 
 ## Content directions to explore
 
-- Multi-hop questions where the final answer requires composing two or more stable facts.
 - Semi-structured public data, such as rankings, tables, lists, infoboxes, and Wikipedia right-side info cards.
-- Wikipedia and Wikidata metadata when they provide stable, auditable facts.
-- Other data sources besides Wikipedia and Wikidata, such as music websites.
+- Historically settled facts exposed by Wikipedia tables and infoboxes.
+- Other sources and multi-hop methods are future research directions, not formal generation routes in the current reconstruction.
 
 ## Factuality, uniqueness, and grading
 
 - Every accepted example must have exactly one intended gold answer.
 - Store enough metadata to audit and regenerate the example: source URLs or IDs, retrieval method, query strings, entity IDs when available, answer aliases, and rejection reasons.
 - Use deterministic checks where possible for factuality, uniqueness, ambiguity, answer leakage, and time-invariance.
-- Validators must be decoupled from the rest of the pipeline. Do not assume one validator stack applies to every route.
-- Wikidata grounding, Wikidata-based disambiguation, time-invariance checks, and deduplication for Route 1 should be treated as Wikidata-route validators that can be reused by other Wikidata-based generators.
-- Future non-Wikidata routes must define their own validators according to their source format, grounding assumptions, and failure modes.
+- Validators must remain decoupled from the rest of the pipeline. Route 3 validators should reflect Wikipedia table provenance and Route 3 failure modes rather than historical Wikidata-route assumptions.
+- Historical route validators may remain import-time dependencies until their removal is explicitly scheduled, but they are not part of the formal Route 3 method.
 - Include an automatic grader inspired by SimpleQA / SimpleQA Verified: `CORRECT`, `INCORRECT`, and `NOT_ATTEMPTED`.
 - Prefer high precision over high recall.
 

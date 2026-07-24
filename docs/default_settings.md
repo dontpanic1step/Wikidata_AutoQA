@@ -1,6 +1,63 @@
-# Default Settings
+# Formal Default Settings
 
-This file is the defaults ledger for the current branch. When a code default changes, update this file in the same change.
+This section records the formal Route 3 settings frozen for reconstruction. Code alignment and interface cleanup occur in the scheduled milestone; until then, conflicting values in the historical inventory below describe pre-stabilization code, not the formal method.
+
+Last updated: 2026-07-24.
+
+## Ownership
+
+- Formal user entry point: `scripts/run_wikipedia_infobox_recipe.py`.
+- Internal segment worker: `scripts/run_wikipedia_infobox_pipeline.py`.
+- Route 1, Route 2, Route 4, KELM, direct worker workflows, and old finalization defaults are historical and are not project defaults.
+- `scripts/run_openrouter_night_batch.py` is unused historical orchestration and has no formal defaults.
+- Compatibility-only settings are listed in `docs/compatibility_legacy_settings.md`.
+
+## Formal Route 3 defaults
+
+| Setting | Default |
+| --- | --- |
+| Generation model | `google/gemini-3-flash-preview` |
+| Generation maximum tokens | `4096` |
+| Reasoning type | `single_fact` |
+| Second-stage grading | enabled |
+| Second-stage accuracy threshold | `0.1` |
+| Second-stage answer model 1 | `openai/gpt-4.1-mini` |
+| Second-stage answer model 2 | `google/gemini-3-flash-preview` |
+| Second-stage grader | `openai/gpt-4.1-mini` |
+| Cache reuse budget | `all` |
+| Fresh-page budget | `fill` |
+| Page source | `table-search` |
+| Table-search query | `insource:"wikitable"` |
+
+The current formal DuckDuckGo thresholds, second-stage parameters, table filter modes, prose-leakage scoring values, and minimum table score remain fixed while the interface is stabilized. Their code values are preserved rather than replaced or tuned in this reconstruction.
+
+## Formal user configuration
+
+The recipe retains only primary page-attempt count; answer type; single/all5 mode; infobox/wikitable/both source mode; generation model and maximum tokens; cache reuse and fresh-page budgets; run ID and seed; and bounded concurrency/network execution parameters.
+
+Specific answer types are valid only in single mode. `AllTypes` is valid only in all5 mode. Primary page-attempt count is a page budget, not an accepted-QA target; automatic reruns do not consume extra primary-page budget.
+
+## Fixed method internals
+
+- Existing formal table filter modes remain enabled.
+- Prose-leakage scoring remains enabled at its current values.
+- Minimum table score remains at its current value.
+- DuckDuckGo precedes second-stage grading.
+- Effective surface and temporal checks remain active.
+- The Person common-word/common-name rule is not a formal answer-type gate.
+- Internal popularity proxies are not formal long-tail filters.
+
+The reconstruction must not add replacement gates or fallback behavior when removing compatibility controls.
+
+## Independent evaluation tools
+
+`scripts/run_openrouter_batch_predictions.py` and `scripts/judge_openrouter_batch_predictions.py` are retained for post-finalization SimpleQA Verified-style evaluation. Their model, prompt, and grading behavior is separate from Route 3 generation defaults and must not be used as generation, review, or finalization settings.
+
+---
+
+# Historical Pre-Stabilization Defaults (Non-Normative)
+
+The remainder is retained only to identify pre-stabilization code defaults and compatibility surfaces; it does not define the formal method.
 
 Last updated: 2026-06-11.
 

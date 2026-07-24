@@ -1,6 +1,97 @@
-# Design 5-13-restored
+# Formal Route 3 Design
 
-This document defines the current design for branch `5-13-restored`.
+This section freezes the formal design boundary for the reconstruction milestones. `AGENTS.md` remains the highest-level instruction, and `docs/reconstruction/milestones.md` defines the implementation sequence.
+
+## Formal method
+
+Route 3 is the only formal generation route.
+
+- User entry point: `scripts/run_wikipedia_infobox_recipe.py`.
+- Internal segment worker: `scripts/run_wikipedia_infobox_pipeline.py`.
+- The worker is invoked by the recipe and is not a second user-facing workflow.
+- The recipe owns resolved configuration, segment execution, and run-level artifacts.
+- Pilot output is candidate generation for audit and manual review, not final verified data.
+
+The formal automated order is:
+
+```text
+table/source checks
+-> generation
+-> parse and normalize
+-> effective surface and temporal checks
+-> integrated answer-type gate
+-> answer-in-selected-table validation
+-> DuckDuckGo long-tail filtering
+-> second-stage grading
+```
+
+DuckDuckGo and second-stage errors enter the formal rerun path. Later milestones define durable artifacts, review, and finalization without changing this order.
+
+## Formal boundaries
+
+The following are historical code, not formal generation methods:
+
+- Route 1, Route 2, and Route 4 generation;
+- KELM generation or rewriting;
+- the old finalization, standalone rule gate, final LLM judge, similarity deduplication, subject-URL deduplication, and domain round-robin workflows.
+- the unused `scripts/run_openrouter_night_batch.py` evaluation orchestrator.
+
+Historical modules may remain in the repository or in Route 3's import closure until a milestone explicitly removes or isolates them. Their presence does not make them supported methods. Reconstruction work must not repair or redesign them unless a milestone requires the smallest compatibility edit needed to keep Route 3 starting.
+
+These former rule-based outputs, filters, warnings, and helpers are not part of the formal Route 3 method:
+
+- `preferred_table_context`
+- `no_oversized_tables`
+- `person_common_words_minus_common_names`
+- `question_unambiguous`
+- `stable_answer`
+- `rewrite_guard_passed`
+- `high_sitelink_count`
+- `high_claim_count`
+- `relation_family_not_allowed`
+- `short_subject_label`
+- `wikipedia_infobox_incomplete_tie_answer`
+- `question_targets_mutable_fact`
+- `_uses_generic_table_source_wording`
+
+Removing those names does not authorize weakening the effective surface/temporal checks, selected-table provenance, answer-in-evidence validation, DuckDuckGo filtering, or second-stage grading. Do not add replacement heuristics.
+
+## Formal configuration surface
+
+The recipe may expose only the result-affecting controls named by the reconstruction milestones: primary page-attempt count; answer type and single/all5 mode; infobox/wikitable/both source mode; generation model and maximum tokens; cache reuse and fresh-page budgets; run ID and seed; and bounded concurrency/network parameters.
+
+Specific answer types use single mode. `AllTypes` uses all5 mode. Primary page-attempt count measures primary pages, not accepted questions, and automatic reruns do not consume additional primary-page budget.
+
+Table filters, prose-leakage scoring, and minimum table score remain fixed at their current formal values. They are method internals, not user switches. Other legacy CLI surfaces are catalogued in `docs/compatibility_legacy_settings.md`.
+
+## Protected evaluation tools
+
+The following scripts are retained, independent SimpleQA Verified-style evaluation tools:
+
+- `scripts/run_openrouter_batch_predictions.py`
+- `scripts/judge_openrouter_batch_predictions.py`
+
+Their flow is separate from generation:
+
+```text
+final CSV or evaluation input
+-> run_openrouter_batch_predictions.py
+-> model predictions
+-> judge_openrouter_batch_predictions.py
+-> SimpleQA Verified-style grading
+```
+
+Generation, manual review, revision, and finalization must not call these scripts. Do not change `GRADER_TEMPLATE`, prediction prompt/message construction, grading labels, prompt examples, or default handling of unparseable grader output during Route 3 reconstruction.
+
+## Reconstruction boundary
+
+This formal section freezes method ownership and exclusions only. Stable IDs and revision schema, formal CLI/default cleanup, durable resume, review artifacts, finalization, and end-to-end rehearsal are implemented in milestone order.
+
+---
+
+# Historical 5-13-restored Design Snapshot (Non-Normative)
+
+The remainder of this file preserves the former branch `5-13-restored` design only as migration context. It is superseded by the formal section above and must not be used to define current generation, review, or finalization behavior.
 
 It restores the intended `5-13` work after the incident on `5-13-after-incident`, while keeping the same high-level project goal:
 
