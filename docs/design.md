@@ -25,7 +25,7 @@ table/source checks
 -> second-stage grading
 ```
 
-DuckDuckGo and second-stage errors enter the formal rerun path. Later milestones define durable artifacts, review, and finalization without changing this order.
+Only typed DuckDuckGo or OpenRouter infrastructure failures may make a page eligible for `attempt002`. Content rejection is terminal, and an unexpected Python exception leaves the segment incomplete and propagates to the recipe. Durable execution, review, and finalization do not change the formal stage order.
 
 The automated flow preserves candidates that share a subject resource or exact question. Page-level deduplication happens only during finalization after manual review.
 
@@ -48,17 +48,52 @@ The recipe may expose only the result-affecting controls named by the reconstruc
 
 The formal segment selectors are `--page-attempt-count`, `--answer-type`, and `--route3-answer-type-mode`. The legacy free-form recipe and per-answer-type input syntaxes are not supported.
 
-Specific answer types use single mode. `AllTypes` uses all5 mode. Primary page-attempt count measures primary pages, not accepted questions, and automatic reruns do not consume additional primary-page budget.
+Specific answer types use single mode. `AllTypes` uses all5 mode. The page-attempt count is a unique allocation target, not an accepted-question target. Eligible attempt002 work does not consume another allocation.
 
 Table filters, prose-leakage scoring, and minimum table score remain fixed at their current formal values. They are method internals, not user switches. Other legacy CLI surfaces are catalogued in `docs/compatibility_legacy_settings.md`.
 
 ## Durable segment execution
 
-Formal non-dry runs require a clean Git worktree. Each segment owns a `segment_manifest.json` whose fingerprint covers the Git SHA, generation prompt hash, resolved result-affecting configuration, model parameters, answer and source modes, primary page budget, seed, cache policy, table ranking and filters, DuckDuckGo settings, and second-stage settings.
+Formal non-dry runs require a clean Git worktree. Each segment owns a `segment_manifest.json` whose fingerprint covers the Git SHA, generation prompt hash, resolved result-affecting configuration, model parameters, answer and source modes, primary page budget, seed, cache policy, table ranking and filters, DuckDuckGo settings, and second-stage settings. A complete segment with the same fingerprint is reused; an incomplete segment with the same fingerprint resumes. A different fingerprint requires a new run or an explicit compatible top-up segment. Incomplete legacy schemas are rejected rather than migrated.
 
-A matching complete segment is reused, and a matching incomplete segment resumes. A fingerprint mismatch cannot reuse the segment. Top-up work uses a new segment under the same run group and does not modify the old segment.
+The authoritative hierarchy is:
 
-Each page attempt is atomically committed to `page_attempts/p<canonical_page_id>_attemptNNN.json` before stream state or endpoint updates. The ledger contains the generation audit, all candidate slots, DuckDuckGo and second-stage evidence, decision records, candidate IDs, and timings. Committed accepted or rejected pages are not generated again. Runtime state is recovered from the ledger, and accepted JSONL, rejected JSONL, and segment summaries are ledger-derived artifacts. Page archives use the same temporary-file plus `os.replace` discipline and expose their SHA-256 hashes through provenance.
+```text
+segment manifest
+-> immutable page allocations
+-> page attempts and stage checkpoints
+-> terminal page-attempt ledger
+-> rebuildable accepted/rejected/summary artifacts
+```
+
+An allocation identifies one canonical page in one segment and consumes one primary-page budget unit. Attempt identity is derived from allocation history: `attempt001` is the primary execution and `attempt002` is the only allowed page-level rerun. A committed allocation with no attempt remains pending primary work after interruption. State files cannot allocate, release, retry, or reinterpret pages.
+
+Each attempt checkpoints `page_preparation`, `generation`, candidate/slot deterministic validation, candidate/slot DuckDuckGo queries, and candidate/slot second-stage calls. Successful stage artifacts are content-addressed and reused after interruption. All5 uses stable answer-type slot keys and commits all terminal slot outcomes atomically in one page attempt. Page archives and checkpoints use unique temporary files, flush, file `fsync` where required, and `os.replace`; archive hashes remain in provenance.
+
+Route 3 OpenRouter calls use a thin one-request transport under a durable executor. The executor persists request intent before sending and persists the raw response or explicit HTTP error immediately after return. A persisted response is reused. Intent without a persisted response is `ambiguous_external_call` and is never retried without explicit batch resolution. An unparsable persisted model response is a deterministic rejection. The transport owns no prompt, parsing, retry, proxy switching, fallback, checkpoint, circuit, or page state. These rules apply to Gemini 3 Flash generation, second-stage answer calls, and GPT-4.1-mini grading; the protected batch prediction and judge scripts do not use this executor.
+
+DuckDuckGo persists each successful logical query result and resumes only missing queries. Existing bounded DDG retry, cooldown, endpoint, and fallback order remain unchanged. Successful query results are read-only audit checkpoints; normal long-tail rejection is not an infrastructure failure.
+
+The worker has two service circuits, `openrouter` and `duckduckgo`, with a default threshold of three consecutive infrastructure failures. OpenRouter 401/402/403 opens its circuit immediately. A successful service operation resets that service's counter. An open circuit starts no new service calls or page allocations, does not consume a rerun, and leaves waiting attempts pending. The segment becomes `blocked_external_service` or `needs_resolution`; no model, endpoint, proxy, or fallback is substituted.
+
+Ambiguous OpenRouter calls are quarantined by default while healthy pages may continue if the circuit remains closed. The recipe is the only resolution entry point: batch `retry` may create `attempt002` for eligible calls and records possible duplicate billing, while `abandon` commits an `abandoned_ambiguous` terminal outcome. Attempt002 cannot create attempt003. Resolution is allowed only on same-fingerprint resume and is recorded in audit without changing the fingerprint.
+
+The fixed scheduling order is:
+
+```text
+rebuild ledger index
+-> quarantine unresolved ambiguity
+-> resume unfinished attempts
+-> fill missing primary allocations
+-> complete the primary phase
+-> run eligible attempt002 work
+-> commit terminal attempts
+-> rebuild projections
+```
+
+Initial runs create a new run group and segment. Resume continues the same allocations and attempts. Rerun means `attempt002` of the same allocation, never a generic rerun-pool mode. Top-up requires all earlier segments to be complete, creates a new compatible segment, and allocates only page IDs never allocated anywhere in the run group. Top-up does not read, transfer, clear, or modify old segment state or attempts. Rejected, exhausted, abandoned, and accepted pages remain consumed allocations.
+
+The worker scans allocation and attempt files once at startup into a segment ledger index. Commits update that index under lock. Accepted/rejected/summary outputs are rebuilt at recovery, batch boundaries, and segment completion rather than after every page. A segment is complete only when its allocation target is met, every allocation has a terminal outcome, no checkpoint or eligible retry remains, no ambiguous or circuit-blocked work remains, and projection rebuild succeeds.
 
 ## Pre-review quantity prediction
 
@@ -122,7 +157,7 @@ Generation, manual review, revision, and finalization must not call these script
 
 ## Reconstruction boundary
 
-This formal section freezes method ownership and exclusions only. Stable IDs and revision schema, formal CLI/default cleanup, durable resume, review artifacts, finalization, and end-to-end rehearsal are implemented in milestone order.
+This formal section freezes method ownership, exclusions, and the durable lifecycle contract. Stable IDs, CLI/default cleanup, allocation and checkpoint execution, review artifacts, finalization, and end-to-end rehearsal are implemented in milestone order.
 
 ---
 

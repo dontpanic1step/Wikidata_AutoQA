@@ -26,7 +26,7 @@ table/source checks
 -> second-stage grading
 ```
 
-DDG and second-stage errors enter rerun handling. Later artifact, review, and finalization milestones consume the audit records without reordering this method.
+Only typed exhausted DuckDuckGo or OpenRouter infrastructure failures may create retry eligibility. Content rejection is terminal; unexpected exceptions keep the segment incomplete and propagate. Durable execution does not reorder the formal method.
 
 ## Question and validation contract
 
@@ -48,12 +48,26 @@ Accepted, rejected, and rerun outcomes remain traceable to their source page, se
 ## Durable execution contract
 
 - Formal non-dry runs require a clean Git worktree.
-- A segment fingerprint fixes the Git SHA, prompt hash, resolved result-affecting configuration, model parameters, answer/source modes, primary page budget, seed, cache policy, table method, DuckDuckGo settings, and second-stage settings.
-- Only an identical fingerprint may resume or reuse a segment. Complete segments reuse; incomplete segments resume; top-ups use new segment IDs.
-- Atomic page-attempt ledger files are authoritative over stream state and derived endpoints.
-- Committed accepted or rejected pages must not repeat generation.
-- Accepted JSONL, rejected JSONL, and segment summaries must be rebuildable from the ledger.
-- Page archives are atomic and their SHA-256 hashes remain in provenance.
+- A segment fingerprint fixes the Git SHA, prompt hash, resolved result-affecting configuration, model parameters, answer/source modes, primary allocation target, seed, cache policy, table method, DuckDuckGo settings, and second-stage settings.
+- Only an identical fingerprint may resume or reuse a segment. Complete segments reuse; incomplete segments resume; incompatible or legacy incomplete schemas are rejected. Top-ups use new segment IDs.
+- The authority order is manifest, immutable page allocations, page attempts and stage checkpoints, terminal attempt ledgers, then rebuildable accepted/rejected/summary outputs. State is discovery telemetry only.
+- Each unique allocation consumes one primary-page unit. Attempt001 is derived as primary; attempt002 is the sole permitted rerun. Callers cannot label attempts primary or secondary, and attempt003 is invalid.
+- An allocated page with no started attempt resumes as attempt001. Interruption never creates retry eligibility. Only a typed exhausted DDG or OpenRouter infrastructure failure may make attempt002 eligible.
+- Unexpected Python exceptions preserve traceback, keep the segment incomplete, and propagate instead of becoming reruns.
+- Each attempt checkpoints page preparation, generation, per-slot deterministic validation, per-query DuckDuckGo work, and per-slot second-stage calls. Successful stage artifacts are reused by hash.
+- All5 slot work has stable keys and commits atomically in one terminal page attempt. A terminal attempt stores generation audit, all candidates, DDG and second-stage evidence, outcomes, candidate IDs, timings, and stage hashes.
+- Route 3 OpenRouter request intent is persisted before one physical send, then the raw response or explicit HTTP error is persisted immediately. Intent without response is ambiguous and cannot retry without explicit same-fingerprint batch resolution.
+- A persisted unparsable model response is a deterministic rejection. Formal OpenRouter transport has no hidden retry, proxy-to-direct switch, endpoint/model fallback, or page state.
+- DuckDuckGo checkpoints each successful logical query and resumes only missing queries. Existing bounded transport retry, cooldown, endpoint, fallback order, query text, and thresholds remain unchanged.
+- OpenRouter and DuckDuckGo each have a circuit. An open circuit starts no new calls or allocations, consumes no rerun, performs no fallback switch, and leaves affected work pending under `blocked_external_service` or `needs_resolution`.
+- Ambiguous OpenRouter calls default to quarantine. The recipe may batch-resolve them as `retry` or `abandon`; retry records possible duplicate billing and may create only eligible attempt002.
+- Worker scheduling is fixed: rebuild index, quarantine ambiguity, resume unfinished attempts, fill missing primary allocations, finish primary work, run eligible attempt002, commit terminal attempts, rebuild projections.
+- Top-up requires earlier segments to be complete and protocol-compatible, creates a new segment, and allocates only page IDs never allocated in the run group. It never reads, transfers, clears, or modifies prior segment retry/state artifacts.
+- Cache and fresh discovery use the same run-group allocation exclusion set. Accepted, rejected, exhausted, and abandoned page IDs remain consumed.
+- Allocation/attempt files are scanned once at startup into an in-memory index; commits update the index under lock. Derived endpoints rebuild only during recovery, batch boundaries, or completion.
+- A segment is complete only when its allocation target is met, all allocations are terminal, no active checkpoint/retry/ambiguity/circuit block remains, and projection is rebuildable.
+- Page archives and checkpoints use unique temporary files, flush, file `fsync` where required, and `os.replace`; archive SHA-256 hashes remain in provenance.
+- The protected batch prediction and judge tools and the unused night orchestrator do not use the Route 3 durable executor.
 
 ## Pre-review prediction contract
 

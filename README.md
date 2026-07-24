@@ -1,6 +1,6 @@
 # Wikidata Framework Route 3 Runbook
 
-This repository is being stabilized milestone by milestone according to `docs/reconstruction/milestones.md`. This runbook documents only workflows that are already implemented on the current branch.
+This repository is being stabilized milestone by milestone according to `docs/reconstruction/milestones.md`. Commands shown without an implementation note are available on the current branch; the durable lifecycle contract below is frozen before its M8 implementation steps land.
 
 ## Formal workflow boundary
 
@@ -36,7 +36,7 @@ Valid combinations:
 
 Specific answer type plus `all5`, and `AllTypes` plus `single`, are rejected.
 
-`--page-attempt-count` is a primary-page budget, not an accepted-question target. Automatic reruns do not consume additional primary-page budget.
+`--page-attempt-count` is a unique primary-allocation target, not an accepted-question target. Attempt001 is derived from an allocation; the only eligible page-level rerun is attempt002 and it does not consume another primary allocation.
 
 The former free-form `--recipe`, `--answer-type-count`, `--answer-types`, and `--per-answer-type` inputs are not supported.
 
@@ -104,14 +104,24 @@ python scripts\run_wikipedia_infobox_recipe.py `
   --run-date 2026-07-24
 ```
 
-The segment artifacts are organized as follows:
+The durable segment artifact contract is:
 
 ```text
 outputs/recipe_segments/<run-id>/
   01_person_10/
     segment_manifest.json
+    page_allocations/
+      a<allocation_ordinal>_p<canonical_page_id>.json
     page_attempts/
       p<canonical_page_id>_attempt001.json
+      p<canonical_page_id>_attempt002.json   # only when typed retry is eligible
+    checkpoints/
+      p<canonical_page_id>_attempt001_or_002/
+        page_preparation.json
+        generation.json
+        candidate_<slot>_deterministic_validation.json
+        candidate_<slot>_ddg_<query-key>.json
+        candidate_<slot>_second_stage_<call-key>.json
   01_person_10_accepted.jsonl
   01_person_10_rejected.jsonl
   01_person_10_summary.json
@@ -122,9 +132,11 @@ outputs/<run-id>_summary.json
 outputs/<run-id>_walkthrough.md
 ```
 
-The page-attempt ledger is authoritative. Stream state is a runtime cache, while accepted JSONL, rejected JSONL, and the segment summary are rebuilt from committed ledger files. Page archives are written atomically, and their SHA-256 hashes are stored in candidate provenance.
+The authority order is manifest, immutable allocation, attempt/checkpoint, terminal ledger, and then derived endpoints. State stores discovery offsets and telemetry only. It cannot create or release allocations or decide retry. Accepted JSONL, rejected JSONL, summary, and projection are rebuildable. Page archives and checkpoints are atomic, and archive hashes remain in provenance.
 
-Resume an interrupted segment by running the exact same command with the same resolved arguments, Git commit, prompt code, run ID, seed, and run date. An incomplete matching segment resumes; a complete matching segment is reused without generation. Reusing the same segment with a different fingerprint fails and requires a new run or top-up segment.
+Resume an interrupted segment by running the exact same command with the same resolved arguments, Git commit, prompt code, run ID, seed, and run date. Pending allocations continue attempt001; successful stage checkpoints are reused. A typed exhausted DDG/OpenRouter infrastructure failure may create the single attempt002. Unexpected exceptions keep the segment incomplete and surface to the recipe. A matching complete segment is reused, while a fingerprint mismatch and an incomplete legacy schema are rejected.
+
+An OpenRouter intent without a persisted response is ambiguous. The default is quarantine: no automatic retry and no attempt003. The M8 lifecycle CLI adds same-fingerprint batch resolution as `retry` or `abandon`, with possible duplicate billing recorded for retry. OpenRouter and DuckDuckGo circuits stop new calls and allocations without switching model, endpoint, proxy, or fallback; affected segments remain `blocked_external_service` or `needs_resolution` until an explicit recipe resume.
 
 Add a separate top-up segment without modifying the prior segment:
 
@@ -138,6 +150,8 @@ python scripts\run_wikipedia_infobox_recipe.py `
   --append-to-existing-run `
   --append-run-label topup_01
 ```
+
+Top-up is permitted only after prior segments are complete and protocol-compatible. It creates a new segment and allocates only canonical page IDs never allocated anywhere in the run group. It does not move, seed, clear, or otherwise read old rerun/state work, and it does not modify prior segment files. The exact status and ambiguity-resolution CLI flags are added and documented in M8-S8; do not manipulate worker state directly in the meantime.
 
 Inspect the durable-run tests with:
 
