@@ -383,9 +383,9 @@ DDG 和 second-stage 错误进入 rerun。
 
 正式 Route 3 运行使用四层对象：
 
-1. `segment_manifest.json`：固定 fingerprint、target 和 segment 状态；
+1. `segment_manifest.json`：固定 fingerprint 和 target，并记录派生的 segment 状态；
 2. immutable page allocation：定义该 segment 消耗的 primary-page budget；
-3. page attempt 和 stage checkpoint：记录页面执行、外部调用和恢复位置；
+3. page attempt 和外部调用记录：记录页面执行、不可安全重复的调用和恢复位置；
 4. accepted/rejected/summary/state：全部是可重建的派生输出或运行时缓存。
 
 `state` 不得创建、删除或重新解释 page allocation，也不得成为 retry、resume 或 top-up 的事实来源。
@@ -434,7 +434,7 @@ page allocation
 - primary-page 数量由 unique allocations 计算，不由调度路径传入布尔字段；
 - allocation 已提交但尚未开始的页面在 resume 后继续 `attempt001`；
 -中断本身不创建新 attempt；
--只有明确、已记录的 DDG/OpenRouter infrastructure failure 可以创建 `attempt002`；
+-只有明确、已记录的 DDG/OpenRouter infrastructure failure，或用户明确授权重试的 ambiguous OpenRouter call，可以创建 `attempt002`；
 - retry 资格从 ledger 推导并跨进程生效；
 -不得创建 `attempt003`；
 - unexpected Python exception 使 segment 保持 incomplete 并报告，不得自动归入 rerun；
@@ -449,25 +449,24 @@ Terminal attempt 保存：
 - accepted/rejected/retry outcome；
 - candidate IDs；
 - timings；
-- stage artifact hashes。
+-所引用的外部调用记录。
 
-### Stage checkpoint
+### 最小持久化边界
 
-每个 attempt 对以下正式阶段做原子 checkpoint：
+正式运行只持久化不能安全、廉价重算的边界：
 
 ```text
-page preparation
-→ generation
-→ candidate deterministic validation
-→ DDG
-→ second-stage QA and grading
+immutable allocation
+→ Wikipedia page archive
+→ OpenRouter call intent/response records
+→ DDG candidate-verifier result
 → terminal page-attempt ledger
 ```
 
--成功 stage 在 resume 或 attempt002 中按 hash 复用；
-- attempt002 只从失败边界继续，不无条件重复 generation 或已成功 DDG/model calls；
-- page archive 和 checkpoint 使用唯一临时文件、flush、必要的 file `fsync` 及 `os.replace`；
-- archive hash 写入 provenance。
+- page preparation 和 deterministic validation 是便宜的本地确定性计算，不建立独立 checkpoint；
+- resume 或 attempt002 通过稳定 call/result key 复用已完成的外部调用，不无条件重复 generation、DDG 或 model calls；
+-独立 artifact 使用同目录唯一临时文件，关闭后通过 `os.replace` 发布；本阶段不以断电后的文件系统持久性为目标，不要求每个 artifact 做 `fsync`；
+- archive hash 写入 provenance，OpenRouter request hash 绑定 request intent 和 response；不建立通用 stage hash graph。
 
 ### State、索引和派生输出
 
@@ -475,7 +474,7 @@ page preparation
 - page commit 在锁内更新索引，不得每页重新扫描完整 ledger；
 - accepted/rejected/summary 在启动恢复、批次边界或 segment 结束时重建，不得每页全量重写；
 - discovery state 只保留 offset 和非权威 telemetry；
-- committed terminal page 不重复任何已持久化 stage。
+- committed terminal page 不重复任何已持久化外部调用。
 
 ### 运行模式
 
@@ -487,7 +486,7 @@ page preparation
 ### 验证
 
 - allocation 后、attempt 前中断仍恢复为 `attempt001`；
--外部 response checkpoint 后中断不重复调用；
+-外部 response record 持久化后中断不重复调用；
 - terminal ledger 后、projection 前中断可完整重建；
 - fingerprint 改变拒绝复用；
 -跨多次 resume 仍最多一个 `attempt002`；
@@ -759,18 +758,13 @@ final CSV / evaluation input
 
 - Route 3 内部允许抽取一个只执行单次物理 HTTP 请求的 thin transport；
 - Route 3 generation、second-stage QA 和 GPT-4.1-mini grading 统一经过 Route 3 durable executor；
-- durable executor 负责 checkpoint、ambiguous、circuit 和 page-attempt retry policy；
+- durable executor 负责 request/response journaling、ambiguous、circuit 和 page-attempt retry policy；
 - thin transport 不拥有 prompt、解析、retry、fallback、checkpoint 或 page state；
 -两个独立批量评测脚本不 import Route 3 durable executor，也不在本轮迁移到统一 OpenRouter 调用层；
 -批量评测脚本现有 prompt、message、retry、输出和 resume 契约保持不变；
 - `run_openrouter_night_batch.py` 不再使用。
 
-当前批量 prediction/judge 不获得 Route 3 的新 circuit 或 ambiguous 人工处置语义。尤其是 batch judge 的现有 `status=error` 结果会被相同 judge model 的 resume 视为已有结果；本轮不顺手修复。第一次正式大规模独立评测前，如果仍需要该能力，应单独规划最小评测稳定化：
-
--各脚本自己的 circuit；
--显式 `--retry-errors`；
--不修改 prompt、labels 或默认 unparseable mapping；
--不接入 Route 3 page-attempt executor。
+当前批量 prediction/judge 不获得 Route 3 的新 circuit 或 ambiguous 人工处置语义。尤其是 batch judge 的现有 `status=error` 结果会被相同 judge model 的 resume 视为已有结果；本轮不顺手修复。第一次正式大规模独立评测前，如果仍需要该能力，应另立最小评测稳定化 milestone，本文件不预设其 circuit、CLI 或恢复实现。
 
 M8 rehearsal 不运行大规模独立批量评测。
 
@@ -803,10 +797,10 @@ M8 先完成 Route 3 的最小稳定化，再运行真实 rehearsal。以下子�
 
 -删除“stale in-progress 自动进入 rerun pool”；
 -删除“top-up 搬运旧 rerun pool”；
--定义 allocation、attempt、stage checkpoint 和 terminal ledger；
+-定义 allocation、attempt、外部调用记录和 terminal ledger；
 -定义 initial run、resume、rerun、top-up 的条件和顺序；
 -定义 OpenRouter ambiguous、批量人工处置和 circuit；
--定义 DDG checkpoint 和 circuit；
+-定义 DDG candidate-verifier result 和 circuit；
 -定义 batch prediction/judge 不接入 Route 3 durable executor；
 -明确独立夜间评测编排脚本不再使用。
 
@@ -837,7 +831,8 @@ docs(reconstruction): define durable page lifecycle
 - segment-level in-memory ledger index；
 -从 allocation 推导 primary-page 数量；
 -从最高 attempt 推导页面状态；
-- manifest 状态：`incomplete`、`blocked_external_service`、`needs_resolution`、`complete`。
+- manifest 状态：`incomplete` 或 `complete`，并用 `blocking_reasons` 集合记录 `external_service` 和/或 `ambiguous`。
+- `status` 和 `blocking_reasons` 从 allocation、attempt 和 external-call records 派生，不得自行创建 allocation 或 retry。
 
 Allocation 至少保存：
 
@@ -874,45 +869,48 @@ refactor(route3): separate page allocations from attempts
 - state 能创建或释放 allocation；
 - page commit 仍全量扫描 ledger 或重写完整 endpoints。
 
-### M8-S2：实现 page stage checkpoint
+### M8-S2：建立最小持久化与提交边界
 
 #### 工作
 
-为每个 page attempt 建立原子 stage checkpoint：
+正式运行只建立以下持久化边界：
 
 ```text
-page_preparation
-generation
-candidate/<slot>/deterministic_validation
-candidate/<slot>/ddg
-candidate/<slot>/second_stage
+allocation record
+→ Wikipedia page archive
+→ external-call records
+→ terminal page-attempt ledger
+→ derived projections
 ```
 
 要求：
 
--线程间唯一临时文件；
-- flush、必要的 file `fsync` 和 `os.replace`；
--每个 page attempt 独立 checkpoint lock；
-- all5 使用稳定 slot key；
-- attempt002 按 hash 引用 attempt001 已完成 stage；
-- terminal attempt 包含完整 audit 和 stage hashes；
-- terminal ledger 权威，checkpoint 只负责未完成工作恢复。
+- page preparation 和 deterministic validation 不建立独立 checkpoint，可在同一 attempt 内安全重算；
+- all5 使用稳定 slot key，并在一个 terminal page attempt 中提交；
+- attempt002 通过稳定 call/result key 和 request hash 复用已完成的外部调用；
+-独立 artifact 使用同目录唯一临时文件，关闭后以 `os.replace` 发布；不为所有本地阶段增加 `fsync`；
+- terminal page-attempt ledger 是页面结果的权威来源；
+-不建立通用 stage hash graph、stage lock registry 或确定性本地阶段 checkpoint。
 
 #### 验证
 
-分别在 allocation、attempt 创建、generation response、部分 all5 slot、部分 DDG query、一个 second-stage response、terminal ledger 后注入中断。resume 只能执行未完成 stage。
+- allocation 后中断仍恢复为 `attempt001`；
+-外部 response 已持久化后中断不产生重复调用；
+- terminal ledger 后、projection 前中断可从 ledger 重建；
+- deterministic local work 中断后可重算，且不创建 `attempt002`。
 
 #### Commit
 
 ```text
-feat(route3): checkpoint page processing stages
+feat(route3): establish minimal durable boundaries
 ```
 
 #### 停止条件
 
 - attempt002 无条件重新 generation；
 - all5 slot 跨 terminal attempts 混合提交；
-- checkpoint 覆盖已提交 terminal ledger。
+- summary/state 覆盖已提交 terminal ledger；
+-新增通用 stage checkpoint/hash graph。
 
 ### M8-S3：建立 Route 3 thin OpenRouter transport 和 durable executor
 
@@ -952,6 +950,7 @@ generation
 second_stage_answer/<slot>/<model>
 second_stage_grade/<slot>
 ```
+call key 属于 allocation 下的 logical call，不包含 attempt number，使 `attempt002` 可以复用 `attempt001` 已完成的相同请求。
 
 调用顺序：
 
@@ -966,7 +965,7 @@ persist intent
 
 -无 intent：可调用；
 - response 已持久化：直接复用；
--明确 HTTP error 已持久化：definite failure；
+-明确 HTTP error 已持久化：definite outcome，再按 status code 分类为 retryable 或 non-retryable failure；
 - intent 存在但无 response：`ambiguous_external_call`；
 - raw response 存在但解析失败：确定性 rejection，不重试。
 
@@ -996,25 +995,25 @@ feat(route3): journal OpenRouter calls durably
 - API key 或 secret 写入 artifact；
 - protected evaluation prompt、labels 或 unparseable mapping 改变。
 
-### M8-S4：实现 DDG query checkpoint
+### M8-S4：持久化 DDG candidate-verifier result
 
 #### 工作
 
-对 long-tail verifier 的逻辑 query 做 checkpoint：
+以 candidate 为边界持久化 long-tail verifier 结果：
 
-- key 由 candidate slot、query category、normalized query 和 ordinal 构造；
--成功 query 的 titles/snippets/URLs 和 request audit 立即持久化；
-- resume 只执行未完成 query；
-- verifier 成功后持久化最终 decision；
+- key 由 allocation、candidate slot 和 segment fingerprint 构造；
+- verifier 完成后一次保存最终 decision，以及完整 query strings、titles/snippets/URLs 和 request audit；
+- resume 复用已完成的 candidate-verifier result；
+- verifier 中途被打断时只重跑当前 candidate 的有限 query 集合；
 -保留现有 DDG endpoint、bounded retry、cooldown 和 fallback 顺序；
--不增加新搜索 fallback 或 cheap-model rejection gate。
+-不增加 query-level checkpoint、新搜索 fallback 或 cheap-model rejection gate。
 
-DDG 是只读且不计费的。它不使用 OpenRouter 的 intent-without-response 人工 quarantine；没有成功结果的 query 可以重试，但已持久化成功 query 不得因 page resume 重跑。
+DDG 是只读且不计费的，因此进程中断后重复当前 candidate 的少量查询是可接受边界。它不使用 OpenRouter 的 intent-without-response 人工 quarantine；已完成的 candidate-verifier result 不得因 page resume 重跑。
 
 #### 验证
 
--三个 queries 在第二个后中断，resume 只执行第三个；
--已持久化结果和排序不变；
+-三个 candidates 在第二个 verifier 中断，resume 复用第一个、重跑第二个 verifier，再执行第三个；
+-已持久化 candidate result、audit 和排序不变；
 -正常 long-tail reject 不进入 retry/circuit；
 -现有 DDG client 耗尽有限尝试后产生 typed infrastructure failure；
 -query 文本和阈值不变。
@@ -1022,12 +1021,13 @@ DDG 是只读且不计费的。它不使用 OpenRouter 的 intent-without-respon
 #### Commit
 
 ```text
-feat(route3): checkpoint DDG long-tail queries
+feat(route3): persist DDG verifier results
 ```
 
 #### 停止条件
 
-- resume 重跑全部成功 DDG queries；
+- resume 重跑已完成 candidate 的 DDG verifier；
+-为每条 DDG query 建立独立 checkpoint；
 -新增 fallback 或 heuristic；
 -内容 rejection 被计为网络故障。
 
@@ -1042,11 +1042,12 @@ openrouter
 duckduckgo
 ```
 
-统一默认连续基础设施失败阈值为 3，记录在 manifest/summary 并由 recipe CLI 配置。一个成功操作清零对应 service 的连续失败计数。
+连续基础设施失败阈值固定为 3，并记录在 manifest/summary；本阶段不暴露阈值调节 CLI。一个成功操作清零对应 service 的连续失败计数。
 
 OpenRouter：
 
-- `401/402/403` 第一次即打开 circuit；
+- `401/402` 第一次即打开 circuit；
+- `403` 是当前调用的 definite non-retryable failure，不自动重试，也不单独打开全局 circuit；
 -明确 `408/429/5xx` 和 transport ambiguity 计入连续失败；
 - circuit 打开后不启动新 OpenRouter calls。
 
@@ -1061,8 +1062,10 @@ Circuit 打开时：
 -等待 calls 的页面保持原 attempt pending；
 -未发送 call 不消耗 rerun；
 -worker 停止分配新 pages；
--segment 写入 `blocked_external_service` 或 `needs_resolution`；
+-segment 保持 `status: incomplete`，并添加对应 `blocking_reasons`；
 -不切换模型、endpoint、代理或新增 fallback。
+
+Circuit 不在同一次 invocation 内自动关闭或自动恢复调用。用户确认服务恢复后，显式执行 same-fingerprint resume；新 invocation 从零开始统计连续失败，page-attempt 资格仍由既有 ledger 决定。
 
 #### Ambiguous 人工处置
 
@@ -1075,13 +1078,12 @@ Recipe 是唯一用户入口，增加：
 
 规则：
 
--参数缺省：隔离 affected allocation；circuit 未打开时继续健康页面；生成 report；segment 保持 `needs_resolution` 且不得 complete/top-up；
+-参数缺省：隔离 affected allocation；circuit 未打开时继续健康页面；生成 report；segment 保持 `incomplete`、将 `ambiguous` 加入 `blocking_reasons`，且不得 complete/top-up；
 - `retry`：为仍有资格的 calls 创建 `attempt002`，并记录可能重复费用；
 - `abandon`：提交 `abandoned_ambiguous` terminal outcome；
 -只允许在 same-fingerprint resume 中使用；
 -处置动作不改变 fingerprint，但必须进入 audit；
 -默认批量作用于当前 segment 的 unresolved calls；
--仅当真实需要混合处置时，使用 optional call-ID file 选择子集，不做逐条交互式审批；
 - attempt002 再 ambiguous 时不能创建 attempt003，只能 abandon。
 
 输出：
@@ -1091,12 +1093,13 @@ ambiguous_external_calls.json
 ambiguous_external_calls.md
 ```
 
-至少包含 page/allocation/attempt、stage、call key、model、request hash、intent time、error、retry eligibility 和可能重复计费说明。
+至少包含 page/allocation/attempt、call purpose、call key、model、request hash、intent time、error、retry eligibility 和可能重复计费说明。
 
 #### 验证
 
 -连续 2 次失败不 trip；第 3 次 trip；成功后清零；
-- OpenRouter 401/402/403 立即 trip；
+- OpenRouter 401/402 立即 trip；
+- OpenRouter 403 终结当前调用，但不立即 trip；
 -trip 后新 mocked physical calls 不增长，除已在途 calls；
 -circuit-before-send 页面仍是原 attempt；
 - `retry/abandon` 行为和 audit 正确；
@@ -1153,7 +1156,7 @@ rebuild ledger index
 
 - primary allocation count 等于 target；
 -每个 allocation 有 terminal outcome；
--无 active checkpoint；
+-无未决 external-call record；
 -无 retry pending；
 -无 ambiguous call；
 -无 circuit-blocked 未完成工作；
@@ -1234,7 +1237,7 @@ fix(route3): enforce run-group page uniqueness
 -修复 `accepted_records` 在赋值前使用；
 -worker 完成后先从 ledger 重建 segment result，再做 pre-review quantity prediction；
 - `_segment_complete()` 只读取 allocation/attempt 派生状态；
--blocked/needs-resolution segment 不产生伪 complete projection；
+-带 blocking reasons 的 incomplete segment 不产生伪 complete projection；
 -recipe 暴露 resume、ambiguous resolve 和 top-up 的唯一用户 CLI；
 -根目录 README/runbook 记录 initial run、status、resume、circuit recovery、ambiguous retry/abandon、top-up、review、apply edits 和 final CSV；
 -明确 worker 是内部执行器；
@@ -1245,7 +1248,7 @@ fix(route3): enforce run-group page uniqueness
 
 -fresh recipe subprocess 不出现 `UnboundLocalError`；
 -零 accepted records 的数量预测正常；
--blocked segment 不标记 complete；
+-带 blocking reasons 的 segment 不标记 complete；
 -complete segment 重建 projection 不调用网络；
 -CLI help、runbook 和实际参数一致；
 -protected batch evaluation tests 通过。
@@ -1269,13 +1272,13 @@ fix(route3): project recipe outputs from durable ledgers
 使用 fake page archives、DDG、OpenRouter 和 fake XLSX：
 
 ```text
-20-page all5 initial target
+3-page all5 initial target
 → targeted interruption
 → resume
 → definite rerun
 → ambiguous report and batch resolution
 → DDG/OpenRouter circuit trip and resume
-→ 10-page top-up
+→ 2-page top-up
 → review MD/XLSX
 → simulated delete/edit
 → revalidation
@@ -1284,13 +1287,13 @@ fix(route3): project recipe outputs from durable ledgers
 
 必须断言：
 
--总计 30 个 unique primary allocations；
+-总计 5 个 unique primary allocations；
 -预留未执行页仍是 attempt001；
 -每个 allocation 最多 attempt002；
 -generation response 不重复调用；
--成功 DDG query 不重复；
+-已完成 DDG candidate-verifier result 不重复执行；
 -circuit trip 后不启动新 calls，除已在途 calls；
--top-up 与旧 20 页零重叠；
+-top-up 与旧 3 页零重叠；
 -accepted/rejected/summary 删除后可从 ledger 重建；
 -fake XLSX delete/edit 正确进入 final CSV；
 -protected evaluation prompt hashes 不变；
@@ -1310,7 +1313,7 @@ test(route3): prove crash-safe rehearsal lifecycle
 2. cache `all` 优先、fresh `fill` 补足；
 3.部分页面完成后受控中断目标 worker；
 4. resume 同一 segment 并完成原 20 页；
-5.检查 cache、allocation、OpenRouter/DDG checkpoints 和 attempt 类型；
+5.检查 cache、allocation、OpenRouter call records、DDG candidate-verifier results 和 attempt 类型；
 6.新 top-up segment 拉取 10 个真实新页面；
 7.确认 20 与 10 的 canonical page ID 交集为空，总计 30 个真实 unique primary pages；
 8. generation 使用 Gemini 3 Flash，判断使用规定的 GPT-4.1-mini；
