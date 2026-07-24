@@ -88,6 +88,17 @@ class ConfigTests(unittest.TestCase):
 
     def test_default_proxy_is_none(self) -> None:
         self.assertIsNone(Settings(target_time="2026").proxy)
+    def test_default_second_stage_panel_matches_formal_route3_models(self) -> None:
+        settings = Settings(target_time="2026")
+
+        self.assertEqual(
+            [config.model for config in settings.second_stage_grading_models],
+            ["openai/gpt-4.1-mini", "google/gemini-3-flash-preview"],
+        )
+        self.assertIsNotNone(settings.second_stage_grading_grader_llm)
+        self.assertEqual(settings.second_stage_grading_grader_llm.model, "openai/gpt-4.1-mini")
+
+
 
     def test_none_proxy_values_normalize_to_none(self) -> None:
         settings = Settings(target_time="2026", proxy="none")

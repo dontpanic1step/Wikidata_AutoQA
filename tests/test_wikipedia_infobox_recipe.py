@@ -18,6 +18,7 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from run_wikipedia_infobox_pipeline import EndpointResumeState, _effective_stream_random_seed  # noqa: E402
+from run_wikipedia_infobox_pipeline import parse_args as parse_worker_args, _stream_search_queries  # noqa: E402
 from run_wikipedia_infobox_recipe import (  # noqa: E402
     RecipeItem,
     _apply_recipe_big_batch_mode,
@@ -28,7 +29,7 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _existing_recipe_page_ids,
     _matching_segment_rerun_pool_seed,
     _parse_recipe,
-    parse_args,
+    parse_args as parse_recipe_args,
     _recipe_summary,
     _recipe_segment_budget,
     _decrement_recipe_budget,
@@ -58,10 +59,10 @@ def _recipe_args(**overrides):
         "timeout_seconds": 30.0,
         "proxy": "none",
         "small_model_provider": "openrouter",
-        "generation_model": "openai/gpt-4.1-mini",
+        "generation_model": "google/gemini-3-flash-preview",
         "small_model_api_key_env": "OPENROUTER_API_KEY",
         "small_model_base_url": "https://openrouter.ai/api/v1",
-        "small_model_max_tokens": 1200,
+        "small_model_max_tokens": 4096,
         "duckduckgo_top_k": 5,
         "duckduckgo_parallel_queries": 3,
         "duckduckgo_prefer_ddgs": True,
@@ -191,7 +192,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             _command_value(second_command, "--stream-exclude-page-id-file"),
             str(segment_dir / "recipe_page_id_exclusions.json"),
         )
-        self.assertEqual(_command_value(first_command, "--generation-model"), "openai/gpt-4.1-mini")
+        self.assertEqual(_command_value(first_command, "--generation-model"), "google/gemini-3-flash-preview")
         self.assertNotIn("--small-model", first_command)
         self.assertIn("--enable-kelm-rewrite", first_command)
         self.assertEqual(_command_value(first_command, "--kelm-rewrite-model"), "openai/gpt-4.1-mini")
@@ -275,7 +276,41 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             ],
         ):
             with self.assertRaises(SystemExit):
-                parse_args()
+                parse_recipe_args()
+
+    def test_formal_recipe_defaults_match_milestone(self) -> None:
+        with patch(
+            "sys.argv",
+            [
+                "run_wikipedia_infobox_recipe.py",
+                "--page-attempt-count",
+                "10",
+                "--answer-type",
+                "Person",
+            ],
+        ):
+            args = parse_recipe_args()
+
+        self.assertEqual(args.generation_model, "google/gemini-3-flash-preview")
+        self.assertEqual(args.small_model_max_tokens, 4096)
+        self.assertTrue(args.enable_second_stage_grading)
+        self.assertEqual(args.second_stage_grading_accuracy_threshold, 0.1)
+        self.assertEqual(args.stream_reuse_cached_page_count, "all")
+        self.assertEqual(args.stream_fresh_cached_page_count, "fill")
+        self.assertEqual(args.stream_page_source, "table-search")
+
+    def test_internal_worker_defaults_match_formal_recipe(self) -> None:
+        with patch("sys.argv", ["run_wikipedia_infobox_pipeline.py"]):
+            args = parse_worker_args()
+
+        self.assertEqual(args.generation_model, "google/gemini-3-flash-preview")
+        self.assertEqual(args.small_model_max_tokens, 4096)
+        self.assertTrue(args.enable_second_stage_grading)
+        self.assertEqual(args.second_stage_grading_accuracy_threshold, 0.1)
+        self.assertEqual(args.stream_reuse_cached_page_count, "all")
+        self.assertEqual(args.stream_fresh_cached_page_count, "fill")
+        self.assertEqual(args.stream_page_source, "table-search")
+        self.assertEqual(_stream_search_queries(args), ['insource:"wikitable"'])
 
     def test_recipe_segment_disables_route3_llm_table_choice_by_default(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

@@ -40,6 +40,24 @@ Specific answer type plus `all5`, and `AllTypes` plus `single`, are rejected.
 
 The former free-form `--recipe`, `--answer-type-count`, `--answer-types`, and `--per-answer-type` inputs are not supported.
 
+## Formal defaults
+
+| Setting | Default |
+| --- | --- |
+| Generation model | `google/gemini-3-flash-preview` |
+| Generation maximum tokens | `4096` |
+| Reasoning type | `single_fact` |
+| Second-stage grading | enabled |
+| Second-stage threshold | `0.1` |
+| Second-stage answer models | `openai/gpt-4.1-mini`, `google/gemini-3-flash-preview` |
+| Second-stage grader | `openai/gpt-4.1-mini` |
+| Cached-page reuse | `all` |
+| Fresh-page budget | `fill` |
+| Page source | `table-search` |
+| Search query | `insource:"wikitable"` |
+
+The formal DuckDuckGo thresholds, table filters, prose-leakage values, and minimum table score retain their existing values during reconstruction.
+
 ## Safe dry-run examples
 
 Inspect a 10-page Person segment without making generation calls:

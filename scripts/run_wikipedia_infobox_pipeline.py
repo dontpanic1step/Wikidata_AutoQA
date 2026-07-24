@@ -685,7 +685,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--proxy", type=str, default="none")
     parser.add_argument("--small-model-provider", type=str, default="openrouter")
-    parser.add_argument("--generation-model", dest="generation_model", type=str, default="openai/gpt-4.1-mini")
+    parser.add_argument("--generation-model", dest="generation_model", type=str, default="google/gemini-3-flash-preview")
     parser.add_argument(
         "--small-model",
         dest="generation_model",
@@ -695,7 +695,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--small-model-api-key-env", type=str, default="OPENROUTER_API_KEY")
     parser.add_argument("--small-model-base-url", type=str, default="https://openrouter.ai/api/v1")
-    parser.add_argument("--small-model-max-tokens", type=int, default=1200)
+    parser.add_argument("--small-model-max-tokens", type=int, default=4096)
     parser.add_argument(
         "--enable-rest-summary-fallback",
         action="store_true",
@@ -717,7 +717,7 @@ def parse_args() -> argparse.Namespace:
         default=argparse.SUPPRESS,
         help=argparse.SUPPRESS,
     )
-    parser.add_argument("--enable-second-stage-grading", action="store_true")
+    parser.add_argument("--enable-second-stage-grading", action="store_true", default=True)
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.1)
     parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-keyword-hit-rate", type=float, default=0.3)

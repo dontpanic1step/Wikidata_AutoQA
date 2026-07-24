@@ -209,7 +209,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--proxy", default="none")
     parser.add_argument("--small-model-provider", default="openrouter")
-    parser.add_argument("--generation-model", dest="generation_model", default="openai/gpt-4.1-mini")
+    parser.add_argument("--generation-model", dest="generation_model", default="google/gemini-3-flash-preview")
     parser.add_argument(
         "--small-model",
         dest="generation_model",
@@ -218,7 +218,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--small-model-api-key-env", default="OPENROUTER_API_KEY")
     parser.add_argument("--small-model-base-url", default="https://openrouter.ai/api/v1")
-    parser.add_argument("--small-model-max-tokens", type=int, default=1200)
+    parser.add_argument("--small-model-max-tokens", type=int, default=4096)
     parser.add_argument("--enable-kelm-rewrite", dest="enable_kelm_rewrite", action="store_true")
     parser.add_argument(
         "--enable-rewrite",
@@ -234,7 +234,7 @@ def parse_args() -> argparse.Namespace:
         default=argparse.SUPPRESS,
         help=argparse.SUPPRESS,
     )
-    parser.add_argument("--enable-second-stage-grading", action="store_true")
+    parser.add_argument("--enable-second-stage-grading", action="store_true", default=True)
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.1)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
     parser.add_argument("--duckduckgo-parallel-queries", type=int, default=3)
