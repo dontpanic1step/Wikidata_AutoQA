@@ -55,6 +55,13 @@ Accepted, rejected, and rerun outcomes remain traceable to their source page, se
 - Accepted JSONL, rejected JSONL, and segment summaries must be rebuildable from the ledger.
 - Page archives are atomic and their SHA-256 hashes remain in provenance.
 
+## Pre-review prediction contract
+
+- The segment manifest records accepted total, canonical unique pages, multi-QA pages, post-allocation answer-type counts, recipe seed, rebalance `N`, projected answer-type targets, and projected final total.
+- Canonical-page allocation is independent of input order and may choose only an answer type present on that page.
+- Allocation uses current post-page-dedup type count, then raw pre-review type count, then recipe seed; same-page same-type candidates use lower DuckDuckGo overall hit rate and then candidate ID.
+- Quantity prediction must not perform topic selection or deletion.
+
 ## Candidate artifact contract
 
 - Candidate IDs use only run group ID, segment ID, canonical page ID, and original candidate slot.

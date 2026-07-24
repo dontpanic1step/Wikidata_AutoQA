@@ -767,6 +767,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 manifest,
                 status="complete",
                 ledger_summary={"primary_pages": 0},
+                pre_review_quantity_prediction={},
             )
             self.assertFalse(_segment_complete(paths))
 

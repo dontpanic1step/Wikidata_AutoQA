@@ -60,6 +60,12 @@ A matching complete segment is reused, and a matching incomplete segment resumes
 
 Each page attempt is atomically committed to `page_attempts/p<canonical_page_id>_attemptNNN.json` before stream state or endpoint updates. The ledger contains the generation audit, all candidate slots, DuckDuckGo and second-stage evidence, decision records, candidate IDs, and timings. Committed accepted or rejected pages are not generated again. Runtime state is recovered from the ledger, and accepted JSONL, rejected JSONL, and segment summaries are ledger-derived artifacts. Page archives use the same temporary-file plus `os.replace` discipline and expose their SHA-256 hashes through provenance.
 
+## Pre-review quantity prediction
+
+After automated acceptance, the segment manifest records accepted count, canonical unique pages, multi-QA pages, answer-type counts after canonical-page allocation, recipe seed, rebalance `N`, projected per-type targets, and projected final total. Single-QA pages count directly. Multi-QA pages are processed by canonical page ID; allocation minimizes the current post-page-dedup type count, then the pre-review raw type count, then uses the recipe seed among tied available types. Multiple candidates of the chosen type on one page are ordered by lower DuckDuckGo overall hit rate and then candidate ID.
+
+This stage predicts quantities only. It does not inspect, select, or delete topics.
+
 ## Candidate artifact schema
 
 Each formal candidate has one stable ID derived only from:

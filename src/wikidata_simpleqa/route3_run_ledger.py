@@ -121,6 +121,7 @@ def update_segment_manifest(
     *,
     status: str,
     ledger_summary: dict[str, Any],
+    pre_review_quantity_prediction: dict[str, Any],
 ) -> dict[str, Any]:
     """Persist an updated segment status without changing its fingerprint."""
     if status not in {"incomplete", "complete"}:
@@ -128,6 +129,7 @@ def update_segment_manifest(
     updated = dict(manifest)
     updated["status"] = status
     updated["ledger_summary"] = dict(ledger_summary)
+    updated["pre_review_quantity_prediction"] = dict(pre_review_quantity_prediction)
     updated["updated_at_utc"] = utc_now_iso()
     atomic_write_json(path, updated)
     return updated

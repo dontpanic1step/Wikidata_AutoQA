@@ -147,6 +147,18 @@ python -m pytest tests\test_route3_run_ledger.py `
   tests\test_wikipedia_infobox_generator.py -q
 ```
 
+## Pre-review quantity prediction
+
+After a segment finishes automated processing, its `segment_manifest.json` contains `pre_review_quantity_prediction` with:
+
+- accepted candidate count;
+- canonical unique-page and multi-QA-page counts;
+- answer-type counts after choosing one candidate per page;
+- the recorded recipe seed;
+- rebalance `N`, projected per-type targets, and projected final total.
+
+The prediction uses the formal canonical-page allocation and answer-type ratios. It does not select or delete topics; topic review starts in the later review milestones.
+
 ## Safe dry-run examples
 
 Inspect a 10-page Person segment without making generation calls:

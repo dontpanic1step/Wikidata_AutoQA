@@ -201,10 +201,15 @@ class Route3RunLedgerTests(unittest.TestCase):
                 second,
                 status="complete",
                 ledger_summary={"primary_pages": 10},
+                pre_review_quantity_prediction={"accepted_total": 10},
             )
 
             self.assertEqual(first_path.read_text(encoding="utf-8"), first_text)
             self.assertEqual(load_segment_manifest(second_path)["status"], "complete")
+            self.assertEqual(
+                load_segment_manifest(second_path)["pre_review_quantity_prediction"]["accepted_total"],
+                10,
+            )
 
     def test_derived_records_keep_all5_slots_in_one_page_decision(self) -> None:
         payload = attempt_payload(505)

@@ -27,6 +27,7 @@ from wikidata_simpleqa.page_id_lists import (
     write_page_id_entries,
 )
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids
+from wikidata_simpleqa.route3_quantity_prediction import predict_pre_review_quantities
 from wikidata_simpleqa.route3_run_ledger import (
     atomic_write_json,
     build_segment_fingerprint,
@@ -438,6 +439,10 @@ def main() -> int:
             manifest,
             status="complete" if _segment_reached_record_limit(summary) else "incomplete",
             ledger_summary=ledger_summary(paths["ledger"]),
+            pre_review_quantity_prediction=predict_pre_review_quantities(
+                accepted_records,
+                recipe_seed=segment_seed,
+            ),
         )
         if not _segment_reached_record_limit(summary):
             raise RuntimeError(
