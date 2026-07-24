@@ -18,7 +18,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
-from wikidata_simpleqa.route3_run_ledger import commit_page_attempt, load_page_attempts
+from wikidata_simpleqa.route3_run_ledger import SegmentLedgerIndex, load_page_attempts
 from wikidata_simpleqa.page_id_lists import PageIdListEntry
 from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
 from wikidata_simpleqa.wikipedia_client import (
@@ -1141,6 +1141,19 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             )
             state = PageIdStreamState.load(root / "state.json")
             client = CachedArchiveWikipediaClient()
+            ledger_index = SegmentLedgerIndex(
+                allocation_dir=root / "page_allocations",
+                attempt_dir=root / "page_attempts",
+                run_group_id="group",
+                segment_id="segment",
+                run_group_segments_dir=root.parent,
+            )
+            ledger_index.commit_allocation(
+                canonical_page_id=2468,
+                page_source="cache",
+                source_url=source_url,
+                cached_archive_path=str(archive_path),
+            )
 
             decision = _process_one_stream_page_id(
                 2468,
@@ -1166,6 +1179,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 ),
                 second_stage_model_clients=None,
                 grading_grader_client=None,
+                ledger_index=ledger_index,
                 source_url=source_url,
                 stream_page_source="cached_page_archive",
                 cached_archive_path=archive_path,
@@ -1220,6 +1234,14 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 generation_rewrite_semaphore=Semaphore(1),
                 second_stage_semaphore=Semaphore(1),
             )
+            ledger_index = SegmentLedgerIndex(
+                allocation_dir=root / "page_allocations",
+                attempt_dir=ledger_dir,
+                run_group_id="group",
+                segment_id="segment",
+                run_group_segments_dir=root.parent,
+            )
+            ledger_index.commit_allocation(canonical_page_id=2468, page_source="fresh")
 
             decision = _process_one_stream_page_id(
                 2468,
@@ -1239,6 +1261,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 concurrency=concurrency,
                 second_stage_model_clients=None,
                 grading_grader_client=None,
+                ledger_index=ledger_index,
             )
             attempts = load_page_attempts(ledger_dir)
             resumed = _process_one_stream_page_id(
@@ -1253,6 +1276,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 concurrency=concurrency,
                 second_stage_model_clients=None,
                 grading_grader_client=None,
+                ledger_index=ledger_index,
             )
 
         self.assertEqual(decision["status"], "rejected")
@@ -1314,15 +1338,19 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "answer": "Archive Guild",
                 "source_metadata": {"page_id": 2468},
             }
-            commit_page_attempt(
-                ledger_dir,
+            ledger_index = SegmentLedgerIndex(
+                allocation_dir=root / "page_allocations",
+                attempt_dir=ledger_dir,
+                run_group_id="group",
+                segment_id="segment",
+                run_group_segments_dir=root.parent,
+            )
+            ledger_index.commit_allocation(canonical_page_id=2468, page_source="fresh")
+            ledger_index.commit_attempt(
                 {
-                    "run_group_id": "group",
-                    "segment_id": "segment",
                     "canonical_page_id": 2468,
                     "canonical_page_url": "https://en.wikipedia.org/w/index.php?pageid=2468",
                     "attempt_number": 1,
-                    "primary_page_attempt": True,
                     "status": "accepted",
                     "reason": "accepted",
                     "generation_raw_audit": {},
@@ -1334,7 +1362,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     "candidate_ids": ["route3-committed"],
                     "timings": [],
                     "error_details": {},
-                },
+                }
             )
             args = SimpleNamespace(
                 page_attempt_ledger_dir=ledger_dir,
@@ -1360,6 +1388,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 ),
                 second_stage_model_clients=None,
                 grading_grader_client=None,
+                ledger_index=ledger_index,
             )
 
         self.assertTrue(decision["reused_committed_ledger"])

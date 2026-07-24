@@ -38,12 +38,9 @@ from wikidata_simpleqa.page_id_lists import (
 )
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids, route3_record_id
 from wikidata_simpleqa.route3_run_ledger import (
-    commit_page_attempt,
+    SegmentLedgerIndex,
     derived_records,
     ledger_summary,
-    latest_page_attempts,
-    load_page_attempts,
-    next_attempt_number,
     rebuild_derived_outputs,
     recover_stream_state_from_ledger,
 )
@@ -401,7 +398,19 @@ def parse_args() -> argparse.Namespace:
         help=argparse.SUPPRESS,
     )
     parser.add_argument(
+        "--page-allocation-ledger-dir",
+        type=Path,
+        required=True,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
         "--page-attempt-ledger-dir",
+        type=Path,
+        required=True,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--run-group-segments-dir",
         type=Path,
         required=True,
         help=argparse.SUPPRESS,
@@ -1273,18 +1282,20 @@ def _run_streaming_page_id_pipeline(
         state.save()
     else:
         state = PageIdStreamState.load(args.stream_state)
-    ledger_recovery = recover_stream_state_from_ledger(state, args.page_attempt_ledger_dir)
+    ledger_index = SegmentLedgerIndex(
+        allocation_dir=args.page_allocation_ledger_dir,
+        attempt_dir=args.page_attempt_ledger_dir,
+        run_group_id=_run_group_id(args),
+        segment_id=_run_segment_id(args),
+        run_group_segments_dir=args.run_group_segments_dir,
+    )
+    ledger_recovery = recover_stream_state_from_ledger(state, ledger_index)
     accepted_records, rejected_records, rerun_records = rebuild_derived_outputs(
-        args.page_attempt_ledger_dir,
+        ledger_index,
         accepted_path=args.output,
         rejected_path=args.rejected_output,
     )
-    committed_attempts = load_page_attempts(args.page_attempt_ledger_dir)
-    primary_page_ids_at_start = {
-        int(attempt["canonical_page_id"])
-        for attempt in committed_attempts
-        if bool(attempt.get("primary_page_attempt", False))
-    }
+    primary_page_ids_at_start = ledger_index.primary_page_ids
     excluded_page_ids = _load_stream_excluded_page_ids(
         args.stream_exclude_page_id_file,
         answer_types=_page_id_list_answer_types(args),
@@ -1347,6 +1358,13 @@ def _run_streaming_page_id_pipeline(
             requested_count=cached_reuse_request,
         )
         if cached_page_reuse_entries:
+            for entry in cached_page_reuse_entries:
+                ledger_index.commit_allocation(
+                    canonical_page_id=entry.page_id,
+                    page_source="cache",
+                    source_url=entry.source_url,
+                    cached_archive_path=str(entry.archive_path),
+                )
             processed_ids.extend(entry.page_id for entry in cached_page_reuse_entries)
             futures = {}
             with ThreadPoolExecutor(max_workers=min(page_workers, len(cached_page_reuse_entries))) as executor:
@@ -1365,6 +1383,7 @@ def _run_streaming_page_id_pipeline(
                             concurrency=concurrency,
                             second_stage_model_clients=second_stage_model_clients,
                             grading_grader_client=grading_grader_client,
+                            ledger_index=ledger_index,
                             source_url=entry.source_url,
                             stream_page_source="cached_page_archive",
                             cached_archive_path=entry.archive_path,
@@ -1413,6 +1432,13 @@ def _run_streaming_page_id_pipeline(
         )
         if not reserved_ids:
             break
+        for page_id in reserved_ids:
+            if ledger_index.allocation_for(page_id) is None:
+                ledger_index.commit_allocation(
+                    canonical_page_id=page_id,
+                    page_source="fresh",
+                    source_url=build_pageid_url(page_id),
+                )
         ids_remaining -= len(reserved_ids)
         processed_ids.extend(reserved_ids)
         futures = {}
@@ -1432,6 +1458,7 @@ def _run_streaming_page_id_pipeline(
                         concurrency=concurrency,
                         second_stage_model_clients=second_stage_model_clients,
                         grading_grader_client=grading_grader_client,
+                        ledger_index=ledger_index,
                     )
                 ] = index
             for future in as_completed(futures):
@@ -1496,8 +1523,8 @@ def _run_streaming_page_id_pipeline(
                             rewrite_client=rewrite_client,
                             concurrency=concurrency,
                             second_stage_model_clients=second_stage_model_clients,
-                            primary_page_attempt=False,
                             grading_grader_client=grading_grader_client,
+                            ledger_index=ledger_index,
                         )
                     ] = index
                 for future in as_completed(futures):
@@ -1511,18 +1538,11 @@ def _run_streaming_page_id_pipeline(
     auto_rerun_processed_id_set = set(auto_rerun_processed_ids)
     cached_reuse_page_id_set = set(cached_reuse_page_ids)
     accepted_records, rejected_records, rerun_records = rebuild_derived_outputs(
-        args.page_attempt_ledger_dir,
+        ledger_index,
         accepted_path=args.output,
         rejected_path=args.rejected_output,
     )
-    committed_attempts = load_page_attempts(args.page_attempt_ledger_dir)
-    processed_ids = sorted(
-        {
-            int(attempt["canonical_page_id"])
-            for attempt in committed_attempts
-            if bool(attempt.get("primary_page_attempt", False))
-        }
-    )
+    processed_ids = sorted(ledger_index.primary_page_ids)
     fresh_processed_page_ids = [
         page_id
         for page_id in processed_ids
@@ -1548,7 +1568,7 @@ def _run_streaming_page_id_pipeline(
         "run_date": settings.run_date,
         "stream_state": str(args.stream_state),
         "page_attempt_ledger_dir": str(args.page_attempt_ledger_dir),
-        "page_attempt_ledger": ledger_summary(args.page_attempt_ledger_dir),
+        "page_attempt_ledger": ledger_summary(ledger_index),
         "ledger_state_recovery": ledger_recovery,
         "stream_state_stats": state.stats(),
         "stream_state_reset": bool(args.reset_stream_state),
@@ -2048,15 +2068,15 @@ def _process_one_stream_page_id(
     concurrency: StreamingConcurrencyContext,
     second_stage_model_clients,
     grading_grader_client,
+    ledger_index: SegmentLedgerIndex,
     source_url: str | None = None,
     stream_page_source: str | None = None,
     cached_archive_path: Path | None = None,
-    primary_page_attempt: bool = True,
 ) -> dict:
     """Run one page ID and commit its complete decision to the page-attempt ledger."""
     url = source_url or build_pageid_url(page_id)
     page_source = stream_page_source or args.stream_page_source
-    existing = latest_page_attempts(load_page_attempts(args.page_attempt_ledger_dir)).get(page_id)
+    existing = ledger_index.latest_attempt_for(page_id)
     if existing is not None and str(existing.get("status", "")) in {"accepted", "rejected"}:
         accepted, rejected, _ = derived_records([existing])
         return {
@@ -2067,7 +2087,7 @@ def _process_one_stream_page_id(
             "rejected_records": rejected,
             "reused_committed_ledger": True,
         }
-    attempt_number = next_attempt_number(args.page_attempt_ledger_dir, page_id)
+    attempt_number = ledger_index.next_attempt_number(page_id)
     generated_candidates: list[GeneratedCandidate] = []
     try:
         generator = WikipediaInfoboxTableGenerator(
@@ -2111,7 +2131,7 @@ def _process_one_stream_page_id(
                 page_id=page_id,
                 url=url,
                 attempt_number=attempt_number,
-                primary_page_attempt=primary_page_attempt,
+                ledger_index=ledger_index,
                 status="rerun",
                 reason="no_generated_candidate",
                 generated_candidates=[],
@@ -2146,7 +2166,7 @@ def _process_one_stream_page_id(
                 page_id=page_id,
                 url=url,
                 attempt_number=attempt_number,
-                primary_page_attempt=primary_page_attempt,
+                ledger_index=ledger_index,
                 status="rerun" if retryable else "rejected",
                 reason=reason,
                 generated_candidates=[],
@@ -2183,7 +2203,7 @@ def _process_one_stream_page_id(
                 page_id=page_id,
                 url=url,
                 attempt_number=attempt_number,
-                primary_page_attempt=primary_page_attempt,
+                ledger_index=ledger_index,
                 status="accepted",
                 reason="accepted",
                 generated_candidates=generated_candidates,
@@ -2202,7 +2222,7 @@ def _process_one_stream_page_id(
                 page_id=page_id,
                 url=url,
                 attempt_number=attempt_number,
-                primary_page_attempt=primary_page_attempt,
+                ledger_index=ledger_index,
                 status="rerun" if retryable else "rejected",
                 reason=reason,
                 generated_candidates=generated_candidates,
@@ -2217,7 +2237,7 @@ def _process_one_stream_page_id(
             page_id=page_id,
             url=url,
             attempt_number=attempt_number,
-            primary_page_attempt=primary_page_attempt,
+            ledger_index=ledger_index,
             status="rerun",
             reason="pipeline_no_accept_or_reject",
             generated_candidates=generated_candidates,
@@ -2237,7 +2257,7 @@ def _process_one_stream_page_id(
             page_id=page_id,
             url=url,
             attempt_number=attempt_number,
-            primary_page_attempt=primary_page_attempt,
+            ledger_index=ledger_index,
             status="rerun",
             reason=f"pipeline_exception:{type(exc).__name__}",
             generated_candidates=generated_candidates,
@@ -2255,7 +2275,7 @@ def _commit_stream_page_attempt(
     page_id: int,
     url: str,
     attempt_number: int,
-    primary_page_attempt: bool,
+    ledger_index: SegmentLedgerIndex,
     status: str,
     reason: str,
     generated_candidates: list[GeneratedCandidate],
@@ -2293,7 +2313,6 @@ def _commit_stream_page_attempt(
         "canonical_page_id": page_id,
         "canonical_page_url": url,
         "attempt_number": attempt_number,
-        "primary_page_attempt": primary_page_attempt,
         "status": status,
         "reason": reason,
         "generation_raw_audit": raw_audit,
@@ -2309,12 +2328,7 @@ def _commit_stream_page_attempt(
     if page_level_failure:
         payload["page_level_failure"] = True
     with concurrency.commit_lock:
-        ledger_path = commit_page_attempt(args.page_attempt_ledger_dir, payload)
-        rebuild_derived_outputs(
-            args.page_attempt_ledger_dir,
-            accepted_path=args.output,
-            rejected_path=args.rejected_output,
-        )
+        ledger_path = ledger_index.commit_attempt(payload)
         if status == "accepted":
             state.mark_accepted(page_id)
         elif status == "rejected":

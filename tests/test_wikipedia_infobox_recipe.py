@@ -15,7 +15,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.route3_run_ledger import (
     atomic_write_json,
     build_segment_fingerprint,
-    commit_page_attempt,
+    SegmentLedgerIndex,
     create_segment_manifest,
     update_segment_manifest,
 )
@@ -373,7 +373,18 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(args.stream_fresh_cached_page_count, "fill")
 
     def test_internal_worker_defaults_match_formal_recipe(self) -> None:
-        with patch("sys.argv", ["run_wikipedia_infobox_pipeline.py", "--page-attempt-ledger-dir", "ledger"]):
+        with patch(
+            "sys.argv",
+            [
+                "run_wikipedia_infobox_pipeline.py",
+                "--page-allocation-ledger-dir",
+                "allocations",
+                "--page-attempt-ledger-dir",
+                "ledger",
+                "--run-group-segments-dir",
+                "segments",
+            ],
+        ):
             args = parse_worker_args()
 
         self.assertEqual(args.generation_model, "google/gemini-3-flash-preview")
@@ -754,12 +765,15 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
             self.assertFalse(_segment_complete(paths))
 
-    def test_complete_segment_requires_enough_primary_ledger_pages(self) -> None:
+    def test_complete_segment_requires_enough_primary_allocations(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
+            segment_root = root / "segment"
             paths = {
-                "manifest": root / "segment_manifest.json",
-                "ledger": root / "page_attempts",
+                "manifest": segment_root / "segment_manifest.json",
+                "allocations": segment_root / "page_allocations",
+                "ledger": segment_root / "page_attempts",
+                "segments_dir": root,
             }
             fingerprint = build_segment_fingerprint({"page_attempt_count": 1})
             manifest = create_segment_manifest(
@@ -769,7 +783,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 artifacts={},
             )
             atomic_write_json(paths["manifest"], manifest)
-            manifest = update_segment_manifest(
+            update_segment_manifest(
                 paths["manifest"],
                 manifest,
                 status="complete",
@@ -778,18 +792,16 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             )
             self.assertFalse(_segment_complete(paths))
 
-            commit_page_attempt(
-                paths["ledger"],
-                {
-                    "canonical_page_id": 1,
-                    "attempt_number": 1,
-                    "primary_page_attempt": True,
-                    "status": "rejected",
-                },
+            index = SegmentLedgerIndex(
+                allocation_dir=paths["allocations"],
+                attempt_dir=paths["ledger"],
+                run_group_id="group",
+                segment_id="segment",
+                run_group_segments_dir=paths["segments_dir"],
             )
+            index.commit_allocation(canonical_page_id=1, page_source="fresh")
 
             self.assertTrue(_segment_complete(paths))
-
     def test_combine_segment_records_offsets_ids_for_append_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

@@ -29,6 +29,7 @@ from wikidata_simpleqa.page_id_lists import (
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids
 from wikidata_simpleqa.route3_quantity_prediction import predict_pre_review_quantities
 from wikidata_simpleqa.route3_run_ledger import (
+    SegmentLedgerIndex,
     atomic_write_json,
     build_segment_fingerprint,
     create_segment_manifest,
@@ -368,6 +369,7 @@ def main() -> int:
                         "rejected": str(paths["rejected"]),
                         "summary": str(paths["summary"]),
                         "stream_state": str(paths["stream_state"]),
+                        "page_allocation_ledger": str(paths["allocations"]),
                         "page_attempt_ledger": str(paths["ledger"]),
                     },
                 )
@@ -379,14 +381,15 @@ def main() -> int:
                     path=paths["manifest"],
                 )
         if not args.dry_run and _segment_complete(paths):
+            segment_ledger = _segment_ledger_index(paths)
             rebuild_derived_outputs(
-                paths["ledger"],
+                segment_ledger,
                 accepted_path=paths["accepted"],
                 rejected_path=paths["rejected"],
             )
             summary = rebuild_summary_from_ledger(
                 paths["summary"],
-                paths["ledger"],
+                segment_ledger,
                 base_summary=_segment_summary_base(paths),
             )
             _attach_recipe_segment_budget_summary(
@@ -427,9 +430,10 @@ def main() -> int:
             stream_reuse_cached_page_count=segment_reuse_cached_page_count,
             stream_fresh_cached_page_count=segment_fresh_cached_page_count,
         )
+        segment_ledger = _segment_ledger_index(paths)
         summary = rebuild_summary_from_ledger(
             paths["summary"],
-            paths["ledger"],
+            segment_ledger,
             base_summary=summary,
         )
         if manifest is None:
@@ -438,7 +442,7 @@ def main() -> int:
             paths["manifest"],
             manifest,
             status="complete" if _segment_reached_record_limit(summary) else "incomplete",
-            ledger_summary=ledger_summary(paths["ledger"]),
+            ledger_summary=ledger_summary(segment_ledger),
             pre_review_quantity_prediction=predict_pre_review_quantities(
                 accepted_records,
                 recipe_seed=segment_seed,
@@ -1121,6 +1125,7 @@ def _segment_command(
     segment_id = _append_segment_id(base_segment_id or _base_segment_id(item, index), append_label)
     segment_root = segment_dir / segment_id
     segment_manifest = segment_root / "segment_manifest.json"
+    page_allocation_ledger_dir = segment_root / "page_allocations"
     page_attempt_ledger_dir = segment_root / "page_attempts"
     accepted = segment_dir / f"{segment_id}_accepted.jsonl"
     rejected = segment_dir / f"{segment_id}_rejected.jsonl"
@@ -1165,8 +1170,12 @@ def _segment_command(
         str(rejected),
         "--summary-output",
         str(summary),
+        "--page-allocation-ledger-dir",
+        str(page_allocation_ledger_dir),
         "--page-attempt-ledger-dir",
         str(page_attempt_ledger_dir),
+        "--run-group-segments-dir",
+        str(segment_dir),
         "--target-time",
         str(args.target_time),
         "--cutoff-year",
@@ -1291,9 +1300,24 @@ def _segment_command(
         "stream_state": stream_state,
         "segment_root": segment_root,
         "manifest": segment_manifest,
+        "allocations": page_allocation_ledger_dir,
         "ledger": page_attempt_ledger_dir,
+        "segments_dir": segment_dir,
     }
 
+
+def _segment_ledger_index(paths: dict[str, Path]) -> SegmentLedgerIndex:
+    """Build one index for a segment boundary or recovery operation."""
+    manifest = load_segment_manifest(paths["manifest"])
+    if manifest is None:
+        raise ValueError(f"Missing segment manifest: {paths['manifest']}")
+    return SegmentLedgerIndex(
+        allocation_dir=paths["allocations"],
+        attempt_dir=paths["ledger"],
+        run_group_id=str(manifest.get("run_group_id", "")),
+        segment_id=str(manifest.get("segment_id", "")),
+        run_group_segments_dir=paths["segments_dir"],
+    )
 
 def _segment_complete(paths: dict[str, Path]) -> bool:
     """Return whether a recipe segment has a complete matching ledger."""
@@ -1306,7 +1330,7 @@ def _segment_complete(paths: dict[str, Path]) -> bool:
         target = int(inputs["page_attempt_count"])
     except (KeyError, TypeError, ValueError):
         return False
-    return int(ledger_summary(paths["ledger"])["primary_pages"]) >= target
+    return int(ledger_summary(_segment_ledger_index(paths))["primary_pages"]) >= target
 
 
 def _segment_summary_base(paths: dict[str, Path]) -> dict:
