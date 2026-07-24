@@ -2220,6 +2220,10 @@ def _commit_stream_page_attempt(
     concurrency: StreamingConcurrencyContext,
 ) -> dict:
     """Commit one ledger record before rebuilding endpoints and updating state."""
+    for candidate in generated_candidates:
+        candidate.source_metadata["page_attempt"] = attempt_number
+    for record in [*accepted_records, *rejected_records]:
+        record["source_metadata"]["page_attempt"] = attempt_number
     candidate_snapshots = [candidate.to_output_record("") for candidate in generated_candidates]
     for record in candidate_snapshots:
         record["id"] = _wikipedia_stream_record_id(record)
@@ -2540,6 +2544,9 @@ def _attach_run_artifact_metadata(metadata: dict, *, args: argparse.Namespace) -
         return
     metadata["run_group_id"] = run_group_id
     metadata["segment_id"] = _run_segment_id(args)
+    metadata["generation_model"] = args.generation_model
+    metadata["generation_parameters"] = {"max_tokens": args.small_model_max_tokens}
+    metadata["recipe_seed"] = args.stream_random_seed
     manifest_path = _run_artifact_manifest_path(args, run_group_id)
     if manifest_path is not None:
         metadata["run_artifact_manifest"] = str(manifest_path)

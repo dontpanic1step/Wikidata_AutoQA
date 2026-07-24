@@ -159,6 +159,58 @@ After a segment finishes automated processing, its `segment_manifest.json` conta
 
 The prediction uses the formal canonical-page allocation and answer-type ratios. It does not select or delete topics; topic review starts in the later review milestones.
 
+## Manual review loop
+
+Install the project dependency before creating review workbooks:
+
+```powershell
+python -m pip install -e .
+```
+
+Export accepted candidates to durable review state, Markdown, and XLSX:
+
+```powershell
+python scripts\run_route3_review.py export `
+  --accepted-input outputs\<run-id>_accepted.jsonl `
+  --segment-manifest outputs\recipe_segments\<run-id>\<segment-id>\segment_manifest.json `
+  --state-output outputs\reviews\<run-id>\review_state.json `
+  --markdown-output outputs\reviews\<run-id>\review.md `
+  --xlsx-output outputs\reviews\<run-id>\review.xlsx `
+  --run-id <run-id>
+```
+
+Repeat `--segment-manifest` for every top-up segment represented in the accepted JSONL. The Markdown contains accepted candidates only, with stable ID, Q/A, answer type, Wikipedia page, selected table, and two-model answers.
+
+The XLSX columns are exactly:
+
+```text
+id
+question
+reference_answer
+wikipedia_url
+topic
+delete
+edited_question
+edited_reference_answer
+edit_reason
+```
+
+`delete` defaults to `No` and has a `Yes/No` dropdown. `topic` has the formal ten-topic dropdown. Empty topics are allowed during review but are rejected by finalization.
+
+After editing the workbook, apply it and produce the next review round:
+
+```powershell
+python scripts\run_route3_review.py apply `
+  --state-input outputs\reviews\<run-id>\review_state.json `
+  --xlsx-input outputs\reviews\<run-id>\review.xlsx `
+  --state-output outputs\reviews\<run-id>\review_state.json `
+  --markdown-output outputs\reviews\<run-id>\review.md `
+  --xlsx-output outputs\reviews\<run-id>\review.xlsx `
+  --run-id <run-id>
+```
+
+Deleted rows skip validation. Q/A edits preserve the stable ID and immutable generation provenance, append a revision, clear stale checks, and rerun the formal post-generation checks, DuckDuckGo filter, and two-model second stage. This apply command makes network calls only when the state contains Q/A edits or pending reruns. The next Markdown/XLSX contains only latest accepted revisions.
+
 ## Safe dry-run examples
 
 Inspect a 10-page Person segment without making generation calls:

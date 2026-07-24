@@ -1131,6 +1131,8 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 page_attempt_ledger_dir=root / "page_attempts",
                 run_group_id="group",
                 run_segment_id="segment",
+                generation_model="google/gemini-3-flash-preview",
+                small_model_max_tokens=4096,
                 stream_page_id_min=1,
                 stream_page_id_max=999999,
                 stream_random_seed=1,
@@ -1179,6 +1181,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertTrue(metadata["route3_page_archive"]["archive_read_only"])
         self.assertEqual(metadata["streaming_discovery"]["page_source"], "cached_page_archive")
         self.assertEqual(metadata["streaming_discovery"]["cached_archive_path"], str(archive_path))
+        self.assertEqual(metadata["page_attempt"], 1)
+        self.assertEqual(metadata["generation_model"], "google/gemini-3-flash-preview")
+        self.assertEqual(metadata["generation_parameters"], {"max_tokens": 4096})
+        self.assertEqual(metadata["recipe_seed"], 1)
 
     def test_page_archive_is_atomic_and_records_hash(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

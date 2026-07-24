@@ -347,3 +347,27 @@ def revise_route3_candidate_artifact(
         status="rerun" if qa_changed else ("rejected" if delete_value else current.status),
     )
     return replace(artifact, revisions=(*artifact.revisions, revision))
+
+def complete_route3_candidate_rerun(
+    artifact: Route3CandidateArtifact,
+    *,
+    source_validation: dict[str, Any],
+    integrated_answer_type_gate: dict[str, Any],
+    ddg: dict[str, Any],
+    second_stage: dict[str, Any],
+    status: str,
+) -> Route3CandidateArtifact:
+    """Complete the latest rerun revision with fresh post-generation results."""
+    if artifact.current_revision.status != "rerun":
+        raise ValueError("Only a rerun revision can receive fresh validation results")
+    if status not in REVISION_STATUSES:
+        raise ValueError(f"invalid rerun completion status: {status!r}")
+    completed = replace(
+        artifact.current_revision,
+        source_validation=deepcopy(source_validation),
+        integrated_answer_type_gate=deepcopy(integrated_answer_type_gate),
+        ddg=deepcopy(ddg),
+        second_stage=deepcopy(second_stage),
+        status=status,
+    )
+    return replace(artifact, revisions=(*artifact.revisions[:-1], completed))

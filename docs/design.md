@@ -66,6 +66,12 @@ After automated acceptance, the segment manifest records accepted count, canonic
 
 This stage predicts quantities only. It does not inspect, select, or delete topics.
 
+## Manual review loop
+
+Each run exports accepted candidates only to Markdown and an XLSX with the exact English columns `id`, `question`, `reference_answer`, `wikipedia_url`, `topic`, `delete`, `edited_question`, `edited_reference_answer`, and `edit_reason`. Markdown includes stable identity, authoritative Q/A, answer type, canonical Wikipedia page, selected-table Markdown, and the two-model answers. The workbook constrains delete to `Yes/No` and topic to the formal ten-topic enumeration.
+
+Review state maps every candidate to its M1 artifact and current full processing record, and maps each segment identity to its own fingerprint. Top-up candidates therefore rerun with their own segment configuration. A deletion appends a rejected revision and skips validation. A Q/A edit appends a rerun revision, preserves immutable generation provenance and stable ID, applies the M1 alias rules, clears old checks, and reruns all post-generation checks, DuckDuckGo, and second-stage grading. Each new Markdown/XLSX contains only latest accepted revisions.
+
 ## Candidate artifact schema
 
 Each formal candidate has one stable ID derived only from:

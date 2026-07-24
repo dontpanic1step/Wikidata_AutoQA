@@ -62,6 +62,15 @@ Accepted, rejected, and rerun outcomes remain traceable to their source page, se
 - Allocation uses current post-page-dedup type count, then raw pre-review type count, then recipe seed; same-page same-type candidates use lower DuckDuckGo overall hit rate and then candidate ID.
 - Quantity prediction must not perform topic selection or deletion.
 
+## Manual review contract
+
+- Review Markdown and XLSX contain latest accepted candidates only.
+- XLSX headers and order are fixed in English; delete defaults to `No`, delete values are `Yes/No`, and topic values use the formal ten-topic enumeration.
+- Duplicate or unknown IDs, invalid topics, invalid delete values, and deleted rows with Q/A edits are rejected. Finalization additionally rejects empty topics.
+- Question-only, answer-only, and combined Q/A edits are allowed and never change stable identity or immutable generation provenance.
+- Deleted rows skip validation. Q/A edits clear old checks and rerun the complete post-generation validation, DuckDuckGo, and second-stage sequence using that candidate's segment fingerprint.
+- Answer edits clear active aliases; revision history retains all original and prior values.
+
 ## Candidate artifact contract
 
 - Candidate IDs use only run group ID, segment ID, canonical page ID, and original candidate slot.

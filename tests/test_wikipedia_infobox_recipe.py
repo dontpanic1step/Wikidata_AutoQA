@@ -24,6 +24,7 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
+from run_route3_review import _settings_from_fingerprint  # noqa: E402
 from run_wikipedia_infobox_pipeline import EndpointResumeState, _effective_stream_random_seed  # noqa: E402
 from run_wikipedia_infobox_pipeline import parse_args as parse_worker_args, _stream_search_queries  # noqa: E402
 from run_wikipedia_infobox_recipe import (  # noqa: E402
@@ -266,6 +267,12 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertIn("table_ranking_and_filters", inputs)
         self.assertIn("duckduckgo", inputs)
         self.assertIn("second_stage", inputs)
+
+        settings = _settings_from_fingerprint(fingerprint)
+        self.assertEqual(settings.target_time, args.target_time)
+        self.assertEqual(settings.run_date, "2026-07-24")
+        self.assertEqual(settings.duckduckgo_top_k, args.duckduckgo_top_k)
+        self.assertEqual(settings.second_stage_grading_accuracy_threshold, 0.1)
 
 
     def test_recipe_parses_alltypes_segment_and_commands_all5_mode(self) -> None:

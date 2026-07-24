@@ -7,6 +7,7 @@ name = "wikidata-simpleqa"
 version = "0.1.0"
 description = "Conservative Wikidata-to-SimpleQA-Verified-style dataset generator"
 requires-python = ">=3.11"
+dependencies = ["openpyxl>=3.1,<4"]
 
 [tool.setuptools]
 package-dir = {"" = "src"}
