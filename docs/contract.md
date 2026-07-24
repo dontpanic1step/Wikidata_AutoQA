@@ -71,6 +71,15 @@ Accepted, rejected, and rerun outcomes remain traceable to their source page, se
 - Deleted rows skip validation. Q/A edits clear old checks and rerun the complete post-generation validation, DuckDuckGo, and second-stage sequence using that candidate's segment fingerprint.
 - Answer edits clear active aliases; revision history retains all original and prior values.
 
+## Finalization contract
+
+- Finalization rejects pending edits, reruns, missing or invalid active topics, and any XLSX that is not one-to-one with current active revisions.
+- Each canonical page contributes at most one candidate, using the M4 allocation algorithm.
+- Answer-type targets use the fixed ratios and exact `N`/`target_i` formulas in the reconstruction milestones; final total may differ from `N`.
+- Topic diversity removes rows only from over-target answer types, prioritizes the largest eligible global topic, uses the recipe seed for ties, and updates counts after every removal.
+- Historical similarity deduplication, subject-URL deduplication, domain round-robin, and `final_selection.py` are not part of formal finalization.
+- Final CSV columns are exactly `id`, `problem`, `answer`, `topic`, `answer_type`, and `urls`; `urls` is a JSON array string.
+
 ## Candidate artifact contract
 
 - Candidate IDs use only run group ID, segment ID, canonical page ID, and original candidate slot.

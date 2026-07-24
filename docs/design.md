@@ -72,6 +72,14 @@ Each run exports accepted candidates only to Markdown and an XLSX with the exact
 
 Review state maps every candidate to its M1 artifact and current full processing record, and maps each segment identity to its own fingerprint. Top-up candidates therefore rerun with their own segment configuration. A deletion appends a rejected revision and skips validation. A Q/A edit appends a rerun revision, preserves immutable generation provenance and stable ID, applies the M1 alias rules, clears old checks, and reruns all post-generation checks, DuckDuckGo, and second-stage grading. Each new Markdown/XLSX contains only latest accepted revisions.
 
+## Formal finalization
+
+Finalization requires no unprocessed Q/A edits, no rerun revisions, valid topics on every active row, and an exact XLSX-to-current-revision ID and value match. It reuses the M4 allocation to select at most one candidate per canonical page. It computes `N = min(ceil(n_i / p_i))` and `target_i = min(n_i, ceil(N * p_i))` for the fixed Person, Place, Number, Date, and Other proportions.
+
+Excess answer-type rows are removed globally and iteratively. Only over-target types are eligible; candidates in the currently largest eligible global topic are removed first, and seed-based selection resolves ties after stable ID ordering. Topic totals update after each removal. The method does not fit answer-type by topic cells and does not invoke historical similarity, subject-URL, or domain-round-robin selection.
+
+The final CSV columns are exactly `id`, `problem`, `answer`, `topic`, `answer_type`, and `urls`, with `urls` encoded as a JSON array string.
+
 ## Candidate artifact schema
 
 Each formal candidate has one stable ID derived only from:

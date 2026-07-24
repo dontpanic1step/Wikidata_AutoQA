@@ -211,6 +211,32 @@ python scripts\run_route3_review.py apply `
 
 Deleted rows skip validation. Q/A edits preserve the stable ID and immutable generation provenance, append a revision, clear stale checks, and rerun the formal post-generation checks, DuckDuckGo filter, and two-model second stage. This apply command makes network calls only when the state contains Q/A edits or pending reruns. The next Markdown/XLSX contains only latest accepted revisions.
 
+## Formal finalization
+
+Finalization requires no pending Q/A edits, no rerun revisions, a valid topic on every active row, and an XLSX that exactly matches the latest active candidate revisions.
+
+```powershell
+python scripts\finalize_route3_review.py `
+  --state-input outputs\reviews\<run-id>\review_state.json `
+  --xlsx-input outputs\reviews\<run-id>\review.xlsx `
+  --output outputs\reviews\<run-id>\final.csv
+```
+
+Finalization selects at most one candidate per canonical page with the M4 allocation algorithm, applies the formal answer-type ratios, and removes excess candidates iteratively from the largest eligible global topic with the recorded recipe seed. It does not call the historical similarity deduplication, subject-URL deduplication, domain round-robin, or `final_selection.py` paths.
+
+The final CSV columns are exactly:
+
+```text
+id
+problem
+answer
+topic
+answer_type
+urls
+```
+
+`urls` is a JSON array string. The command prints the seed, page-dedup count, rebalance `N`, targets, final counts, final total, and selected IDs as a JSON summary.
+
 ## Safe dry-run examples
 
 Inspect a 10-page Person segment without making generation calls:

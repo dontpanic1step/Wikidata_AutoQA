@@ -78,17 +78,7 @@ def predict_pre_review_quantities(
     for assignment in assignments:
         assigned_counts[str(assignment["answer_type"])] += 1
 
-    rebalance_n = min(
-        math.ceil(assigned_counts[answer_type] / ANSWER_TYPE_RATIOS[answer_type])
-        for answer_type in ANSWER_TYPES
-    )
-    projected_targets = {
-        answer_type: min(
-            assigned_counts[answer_type],
-            math.ceil(rebalance_n * ANSWER_TYPE_RATIOS[answer_type]),
-        )
-        for answer_type in ANSWER_TYPES
-    }
+    rebalance_n, projected_targets = rebalance_targets(assigned_counts)
     return {
         "accepted_total": len(rows),
         "canonical_unique_pages": len(page_counts),
@@ -100,6 +90,21 @@ def predict_pre_review_quantities(
         "projected_final_total": sum(projected_targets.values()),
     }
 
+
+def rebalance_targets(answer_type_counts: dict[str, int] | Counter) -> tuple[int, dict[str, int]]:
+    """Return formal rebalance N and per-type targets."""
+    rebalance_n = min(
+        math.ceil(int(answer_type_counts[answer_type]) / ANSWER_TYPE_RATIOS[answer_type])
+        for answer_type in ANSWER_TYPES
+    )
+    targets = {
+        answer_type: min(
+            int(answer_type_counts[answer_type]),
+            math.ceil(rebalance_n * ANSWER_TYPE_RATIOS[answer_type]),
+        )
+        for answer_type in ANSWER_TYPES
+    }
+    return rebalance_n, targets
 
 def _assignment(page_id: int, answer_type: str, record: dict[str, Any]) -> dict[str, Any]:
     return {
