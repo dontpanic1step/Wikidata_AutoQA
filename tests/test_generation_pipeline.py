@@ -21,6 +21,7 @@ from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord,
 from wikidata_simpleqa.generator_validators import run_search_based_longtail_verifier
 from wikidata_simpleqa.grading import ModelPanelMember, evaluate_model_panel
 from wikidata_simpleqa.models import AmbiguityResolution, CandidateFact, DomainTemplate
+from wikidata_simpleqa.rule_based_answer_type_gate import RuleBasedAnswerTypeGateResult
 
 
 class FakeWikipediaClient:
@@ -1206,6 +1207,91 @@ class GenerationPipelineTests(unittest.TestCase):
         self.assertTrue(passed)
         self.assertEqual(len(features["queries"]), 1)
         self.assertEqual(features["queries"][0]["query_name"], "full_question")
+
+    def test_route3_processing_stage_order_is_fixed(self) -> None:
+        candidate = make_route3_candidate(answer="Archive Guild")
+        calls: list[str] = []
+
+        def surface_check(*args, **kwargs):
+            calls.append("surface_time")
+            return None
+
+        def answer_type_gate(*args, **kwargs):
+            calls.append("answer_type_gate")
+            return RuleBasedAnswerTypeGateResult(
+                matched=True,
+                answer_type="Other",
+                details={"rule": "no_rule_for_answer_type"},
+            )
+
+        def answer_validation(*args, **kwargs):
+            calls.append("answer_in_selected_table")
+            return True, {
+                "answer_in_evidence": True,
+                "route_validation_policy": "answer_in_selected_table",
+            }
+
+        def duckduckgo(*args, **kwargs):
+            calls.append("duckduckgo")
+            return True, {"queries": []}
+
+        def second_stage(*args, **kwargs):
+            calls.append("second_stage")
+            return {
+                "enabled": True,
+                "accuracy": 0.0,
+                "models": [],
+            }
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                second_stage_grading_enabled=True,
+            )
+            with (
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.validate_question_surface",
+                    side_effect=surface_check,
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.evaluate_candidate_answer_type_gate",
+                    side_effect=answer_type_gate,
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.validate_generated_candidate",
+                    side_effect=answer_validation,
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.run_search_based_longtail_verifier",
+                    side_effect=duckduckgo,
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.evaluate_model_panel",
+                    side_effect=second_stage,
+                ),
+            ):
+                result = process_generated_candidates(
+                    [candidate],
+                    settings=settings,
+                    search_client=FakeSearchClient({}),
+                    second_stage_model_clients=[object()],
+                    grading_grader_client=object(),
+                )
+
+        self.assertEqual(len(result.accepted), 1)
+        self.assertEqual(
+            calls,
+            [
+                "surface_time",
+                "answer_type_gate",
+                "answer_in_selected_table",
+                "duckduckgo",
+                "second_stage",
+            ],
+        )
 
     def test_process_generated_candidates_rejects_when_search_verifier_errors(self) -> None:
         source_candidate = make_candidate()
