@@ -237,6 +237,30 @@ urls
 
 `urls` is a JSON array string. The command prints the seed, page-dedup count, rebalance `N`, targets, final counts, final total, and selected IDs as a JSON summary.
 
+## Independent batch evaluation
+
+The evaluation scripts run after finalization. They do not generate candidates, filter Route 3 output, perform manual review, or finalize a dataset. Do not use the historical `run_openrouter_night_batch.py` orchestrator.
+
+Create model predictions from a directory of final CSV-converted or other evaluation JSONL inputs. Each input row must include `id`, `question`, and `answer`:
+
+```powershell
+python scripts\run_openrouter_batch_predictions.py inputs\evaluation `
+  --output-dir outputs\openrouter_batch_predictions `
+  --models <prediction-model> `
+  --rounds 1 `
+  --limit 10
+```
+
+Grade one prediction JSONL file or every matching JSONL file in a directory with the protected SimpleQA Verified prompt. The default judge is `openai/gpt-4.1-mini`:
+
+```powershell
+python scripts\judge_openrouter_batch_predictions.py `
+  outputs\openrouter_batch_predictions `
+  --output-dir outputs\openrouter_batch_judged `
+  --limit 10
+```
+
+Both commands read the OpenRouter key from `OPENROUTER_API_KEY` by default. Use each command's `--help` output for the retained batch-evaluation options.
 ## Safe dry-run examples
 
 Inspect a 10-page Person segment without making generation calls:

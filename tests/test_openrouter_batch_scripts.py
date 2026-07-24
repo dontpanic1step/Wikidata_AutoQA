@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import importlib.util
 from pathlib import Path
 import sys
@@ -142,3 +143,193 @@ def test_judge_only_uses_top_level_answer_as_prediction_with_explicit_gold() -> 
 
     assert module.ensure_predictions(ambiguous) == []
     assert module.ensure_predictions(explicit)[0]["answer"] == "Predicted"
+
+
+def test_grader_template_and_interpolated_prompt_snapshots() -> None:
+    module = load_script_module(
+        "judge_openrouter_batch_predictions_prompt_snapshot",
+        "scripts/judge_openrouter_batch_predictions.py",
+    )
+    prompt = module.GRADER_TEMPLATE.format(
+        question="Which city hosted the example event?",
+        target="Example City",
+        predicted_answer="It was held in Example City.",
+    )
+
+    assert len(module.GRADER_TEMPLATE) == 7125
+    assert hashlib.sha256(module.GRADER_TEMPLATE.encode("utf-8")).hexdigest() == (
+        "84c004ec4fcf8f0703bb0d734544036a72e847bfa7116429e5aee5e53ccc8cf3"
+    )
+    assert len(prompt) == 7165
+    assert hashlib.sha256(prompt.encode("utf-8")).hexdigest() == (
+        "90ac762a5286b75464a16f6132898cd7a4a7c9f726ee64ce21034a905cc328fe"
+    )
+    assert "Question: Which city hosted the example event?" in prompt
+    assert "Gold target: Example City" in prompt
+    assert "Predicted answer: It was held in Example City." in prompt
+
+
+def test_prediction_runner_user_message_and_mocked_response(monkeypatch, tmp_path: Path) -> None:
+    module = load_script_module(
+        "run_openrouter_batch_predictions_message_snapshot",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+    captured: dict[str, object] = {}
+
+    class MockResponse:
+        status_code = 200
+        text = "ok"
+        headers: dict[str, str] = {}
+
+        @staticmethod
+        def json() -> dict[str, object]:
+            return {"choices": [{"message": {"role": "assistant", "content": "Example City"}}]}
+
+    def mock_post(*args, **kwargs):
+        captured.update(kwargs)
+        return MockResponse()
+
+    monkeypatch.setattr(module.requests, "post", mock_post)
+    settings = module.RunSettings(
+        api_key="test-key",
+        models=["example/model"],
+        output_dir=tmp_path,
+        rounds=1,
+        concurrency=1,
+        timeout_seconds=1.0,
+        max_retries=0,
+        backoff_base=0.0,
+        backoff_cap_seconds=0.0,
+        max_tokens=None,
+        temperature=0.0,
+        reasoning_effort=None,
+        proxy=None,
+        blob_mode="ignore",
+        limit=None,
+    )
+
+    user_content = module.build_user_content(
+        {"question": "Which city hosted the example event?", "blob": "Context"},
+        "ignore",
+    )
+    response = module.call_openrouter(
+        model="example/model",
+        user_content=user_content,
+        settings=settings,
+    )
+
+    assert captured["json"] == {
+        "model": "example/model",
+        "temperature": 0.0,
+        "messages": [
+            {"role": "user", "content": "Which city hosted the example event?"}
+        ],
+    }
+    assert response["choices"][0]["message"]["content"] == "Example City"
+
+
+def test_judge_grade_mapping_and_unparseable_default(monkeypatch) -> None:
+    module = load_script_module(
+        "judge_openrouter_batch_predictions_grade_mapping",
+        "scripts/judge_openrouter_batch_predictions.py",
+    )
+    client = module.OpenRouterJudgeClient(
+        api_key="test-key",
+        model="openai/gpt-4.1-mini",
+        timeout_seconds=1.0,
+        max_retries=0,
+        backoff_base=0.0,
+        backoff_cap_seconds=0.0,
+        temperature=0.0,
+        max_tokens=None,
+        proxy=None,
+    )
+
+    assert module.CHOICE_LETTER_TO_STRING == {
+        "A": "CORRECT",
+        "B": "INCORRECT",
+        "C": "NOT_ATTEMPTED",
+    }
+    assert module.DEFAULT_GRADE_IF_UNPARSEABLE == "C"
+    assert module.parse_choice_letter("unparseable response") == "C"
+
+    captured: dict[str, object] = {}
+
+    class MockResponse:
+        status_code = 200
+        text = "ok"
+        headers: dict[str, str] = {}
+
+        @staticmethod
+        def json() -> dict[str, object]:
+            return {
+                "choices": [
+                    {"message": {"role": "assistant", "content": "unparseable response"}}
+                ]
+            }
+
+    def mock_post(*args, **kwargs):
+        captured.update(kwargs)
+        return MockResponse()
+
+    monkeypatch.setattr(module.requests, "post", mock_post)
+    result = client.grade(question="Question?", target="Gold", predicted_answer="Prediction")
+
+    expected_prompt = module.GRADER_TEMPLATE.format(
+        question="Question?",
+        target="Gold",
+        predicted_answer="Prediction",
+    )
+    assert captured["json"] == {
+        "model": "openai/gpt-4.1-mini",
+        "temperature": 0.0,
+        "messages": [{"role": "user", "content": expected_prompt}],
+    }
+    assert result["letter"] == "C"
+    assert result["grade"] == "NOT_ATTEMPTED"
+    assert result["status"] == "success"
+
+
+def test_prediction_output_is_readable_by_judge(tmp_path: Path) -> None:
+    prediction_module = load_script_module(
+        "run_openrouter_batch_predictions_file_contract",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+    judge_module = load_script_module(
+        "judge_openrouter_batch_predictions_file_contract",
+        "scripts/judge_openrouter_batch_predictions.py",
+    )
+    output_path = tmp_path / "predictions.jsonl"
+    record = {
+        "id": "q1",
+        "question": "Which city hosted the example event?",
+        "answer": "Example City",
+        "predictions": [{"answer": "Example City", "model": "example/model"}],
+    }
+
+    prediction_module.atomic_write_jsonl(output_path, [record])
+    loaded = judge_module.load_jsonl(output_path)
+
+    assert len(loaded) == 1
+    assert judge_module.gold_target_answer(loaded[0]) == "Example City"
+    assert judge_module.prediction_answer(judge_module.ensure_predictions(loaded[0])[0]) == (
+        "Example City"
+    )
+
+
+def test_route3_generation_and_finalization_do_not_use_batch_evaluation_scripts() -> None:
+    route3_files = [
+        ROOT / "src" / "wikidata_simpleqa" / "wikipedia_infobox_generator.py",
+        ROOT / "src" / "wikidata_simpleqa" / "route3_finalization.py",
+        ROOT / "scripts" / "run_wikipedia_infobox_pipeline.py",
+        ROOT / "scripts" / "run_wikipedia_infobox_recipe.py",
+        ROOT / "scripts" / "finalize_route3_review.py",
+    ]
+    protected_names = (
+        "run_openrouter_batch_predictions",
+        "judge_openrouter_batch_predictions",
+    )
+
+    for path in route3_files:
+        source = path.read_text(encoding="utf-8")
+        assert all(name not in source for name in protected_names)
