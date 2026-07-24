@@ -233,3 +233,14 @@ export PYTHONPATH=src
 目前的问题：小模型那里token似乎不够用，有截断？判断比例，考虑是否延长；gemini-3.5-flash生成质量明显优于gpt-5-mini，但4096token某些情况下似乎不够用。我觉得这样也行，别无限制燃烧。
 gpt-4.1-mini什么时候会有20000级别的input？我猜是judge答案是否正确，需要检查传了什么上下文。
 other name, translation, transliteration, another name也作为marker去掉
+
+注意拉取新页面时，不要和cached pages重合。
+gemini-3-flash完全可用，可以禁用common_names
+
+1、确定正式默认值如你所说
+2、从正式 recipe 和 worker 中删除 KELM rewrite 与 LLM table choice 分支；reasoning type 不再暴露参数
+3、--route3-extra-prompt是旧有残留，实际运行中已经不再传输任何内容，我想删除；table filter mode，prose-leakage scoring非常重要，我想默认开启并不再暴露参数；pageview prefilter，broad table search是过去残留，可以删除；minimum table score保留但不再暴露参数。
+4、支持你的说法。
+5、支持你的说法 
+6、“分配给当前数量最少的 answer type”应当只在该页面实际拥有候选 QA 的 answer types 中选择；支持你的规则。
+7、N 只作为比例缩放基准，不要求最终总数等于 N；每类目标再限制为 min(n_i, ceil(N*p_i))。但这样最终比例可能略偏。
