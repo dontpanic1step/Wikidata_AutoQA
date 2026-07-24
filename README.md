@@ -87,6 +87,8 @@ The formal candidate checks run in this order:
 
 The integrated answer-type gate retains Date and Place rules. Person candidates have no local rule-based rejection heuristic and still pass through source validation, DuckDuckGo filtering, and second-stage grading.
 
+The automated flow does not remove candidates solely because they share a subject resource or exact question. Page-level deduplication is deferred until finalization after manual review.
+
 ## Safe dry-run examples
 
 Inspect a 10-page Person segment without making generation calls:

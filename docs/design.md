@@ -27,6 +27,8 @@ table/source checks
 
 DuckDuckGo and second-stage errors enter the formal rerun path. Later milestones define durable artifacts, review, and finalization without changing this order.
 
+The automated flow preserves candidates that share a subject resource or exact question. Page-level deduplication happens only during finalization after manual review.
+
 ## Formal boundaries
 
 The following are historical code, not formal generation methods:

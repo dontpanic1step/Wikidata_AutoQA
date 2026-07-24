@@ -246,11 +246,9 @@ def process_generated_candidates(
     second_stage_model_clients: list[ModelPanelMember] | None = None,
     grading_grader_client=None,
 ) -> GenerationResult:
-    """Run shared filtering, rewrite, and dedup over pre-generated candidates."""
+    """Run shared filtering and rewrite over pre-generated candidates."""
     accepted_records: list[dict] = []
     rejected_records: list[dict] = []
-    seen_questions: set[str] = set()
-    seen_subject_resources: set[str] = set()
     panel_runs: list[dict[str, object]] = []
 
     if second_stage_model_clients is None and settings.second_stage_grading_enabled:
@@ -551,32 +549,6 @@ def process_generated_candidates(
                 "reason": "second_stage_grading_disabled_or_unconfigured",
             }
 
-        subject_resource_key = candidate.subject_resource_key
-        final_question = candidate.final_question
-        if subject_resource_key and subject_resource_key in seen_subject_resources:
-            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
-            _record_candidate_timings(candidate, candidate_timings)
-            rejected_records.append(
-                candidate.to_rejected_record(
-                    reason="duplicate_subject_resource",
-                    notes={"subject_resource_key": subject_resource_key},
-                )
-            )
-            continue
-        if final_question in seen_questions:
-            candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
-            _record_candidate_timings(candidate, candidate_timings)
-            rejected_records.append(
-                candidate.to_rejected_record(
-                    reason="duplicate_question",
-                    notes={"question": final_question},
-                )
-            )
-            continue
-
-        seen_questions.add(final_question)
-        if subject_resource_key:
-            seen_subject_resources.add(subject_resource_key)
         candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
         _record_candidate_timings(candidate, candidate_timings)
         example_id = f"simpleqa_candidate_{len(accepted_records) + 1:06d}"

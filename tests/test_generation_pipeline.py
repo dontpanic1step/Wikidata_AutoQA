@@ -224,9 +224,9 @@ def make_route3_candidate(
 
 
 class GenerationPipelineTests(unittest.TestCase):
-    """Check acceptance, rejection, and dedup in the new pipeline."""
+    """Check acceptance and rejection in the shared pipeline."""
 
-    def test_pipeline_accepts_route2_candidate_and_rejects_route1_duplicate(self) -> None:
+    def test_pipeline_keeps_valid_candidates_from_the_same_subject(self) -> None:
         template = make_template()
         candidate = make_candidate()
         resolution = AmbiguityResolution(status="label_unique", descriptor="Example Film")
@@ -256,10 +256,36 @@ class GenerationPipelineTests(unittest.TestCase):
                     wikipedia_client=FakeWikipediaClient(),
                     search_client=search_client,
                 )
-        self.assertEqual(len(result.accepted), 1)
-        self.assertEqual(len(result.rejected), 1)
-        self.assertEqual(result.accepted[0]["generation_route"], "route2_wikidata_wikipedia_hybrid")
-        self.assertEqual(result.rejected[0]["rejection_reason"], "duplicate_subject_resource")
+        self.assertEqual(len(result.accepted), 2)
+        self.assertEqual(result.rejected, [])
+        self.assertEqual(
+            {record["generation_route"] for record in result.accepted},
+            {"route1_wikidata_light", "route2_wikidata_wikipedia_hybrid"},
+        )
+
+    def test_shared_pipeline_keeps_same_subject_and_exact_question(self) -> None:
+        first = make_route3_candidate(answer="Archive Guild")
+        second = make_route3_candidate(answer="Second Guild")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            result = process_generated_candidates(
+                [first, second],
+                settings=Settings(
+                    target_time="2020",
+                    pilot_total=2,
+                    output_path=Path(tmpdir) / "accepted.jsonl",
+                    rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                ),
+                search_client=FakeSearchClient({}),
+            )
+
+        self.assertEqual(len(result.accepted), 2)
+        self.assertEqual(result.rejected, [])
+        self.assertEqual(
+            [record["question"] for record in result.accepted],
+            [first.question, second.question],
+        )
+        self.assertEqual(len({record["subject_resource_key"] for record in result.accepted}), 1)
 
     def test_pipeline_rejects_candidate_at_search_verifier_stage(self) -> None:
         template = make_template()

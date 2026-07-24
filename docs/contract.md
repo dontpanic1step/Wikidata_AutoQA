@@ -236,7 +236,8 @@ The shared filtering flow is:
 4. Shared route-aware validation, including evidence-presence, available time-invariance, and route-specific deterministic checks.
 5. DuckDuckGo search-based long-tail verifier.
 6. Optional SimpleQA Verified-style model grading panel.
-7. Duplicate subject and duplicate question checks.
+
+The automated candidate flow does not reject duplicate subject resources or exact questions. Page-level deduplication runs only during finalization after manual review.
 
 Stage 1 long-tail filtering is DuckDuckGo search-based evidence. Stage 2 is optional SimpleQA-style model grading. The search verifier stores queries, result counts, titles, snippets, URLs, answer-hit flags, category hit rates, thresholds, and triggered rules.
 
