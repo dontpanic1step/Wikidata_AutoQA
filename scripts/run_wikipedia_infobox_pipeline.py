@@ -946,11 +946,7 @@ def main() -> int:
         search_client=search_client,
         rewrite_client=rewrite_client,
     )
-    _renumber_accepted_records(
-        result.accepted,
-        offset=endpoint_resume.accepted_count if args.start_from_endpoint else 0,
-        run_date=settings.run_date,
-    )
+    _renumber_accepted_records(result.accepted)
     if args.start_from_endpoint:
         append_jsonl(args.output, _accepted_output_records(result.accepted, args))
         append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
@@ -1354,14 +1350,11 @@ def _endpoint_page_ids(records: list[dict]) -> list[int]:
     return page_ids
 
 
-def _renumber_accepted_records(records: list[dict], *, offset: int, run_date: str = "") -> None:
-    """Assign stable Route 3 IDs, with legacy sequential IDs only as a fallback."""
+def _renumber_accepted_records(records: list[dict]) -> None:
+    """Assign stable Route 3 IDs."""
     for record in records:
         _ensure_page_id_list_entry_metadata(record)
-    assign_unique_route3_record_ids(records, run_date=run_date)
-    for index, record in enumerate(records, start=offset + 1):
-        if not str(record.get("id") or "").strip():
-            record["id"] = f"simpleqa_candidate_{index:06d}"
+    assign_unique_route3_record_ids(records)
 
 
 def _jsonl_record_count(path: Path) -> int:
@@ -1371,13 +1364,9 @@ def _jsonl_record_count(path: Path) -> int:
     return sum(1 for line in path.read_text(encoding="utf-8").splitlines() if line.strip())
 
 
-def _wikipedia_stream_record_id(record: dict, index: int, *, run_date: str = "") -> str:
-    """Return a stable stream ID, falling back to the legacy local sequence when needed."""
-    stable_id = route3_record_id(record, run_date=run_date)
-    if stable_id:
-        return stable_id
-    answer_type_slug = re.sub(r"[^a-z0-9]+", "_", _record_answer_type(record).lower()).strip("_")
-    return f"{answer_type_slug or 'unknown'}_wikipedia_stream_{index:06d}"
+def _wikipedia_stream_record_id(record: dict) -> str:
+    """Return the stable stream candidate ID."""
+    return route3_record_id(record)
 
 
 def _accepted_output_records(records: list[dict], args: argparse.Namespace) -> list[dict]:
@@ -2422,8 +2411,7 @@ def _process_one_stream_page_id(
         )
         if result.accepted:
             with concurrency.commit_lock:
-                accepted_index_offset = _jsonl_record_count(args.output)
-                for index, record in enumerate(result.accepted, start=accepted_index_offset + 1):
+                for record in result.accepted:
                     _attach_stream_record_metadata(
                         record,
                         page_id=page_id,
@@ -2433,7 +2421,7 @@ def _process_one_stream_page_id(
                         cached_archive_path=cached_archive_path,
                     )
                     _ensure_page_id_list_entry_metadata(record)
-                    record["id"] = _wikipedia_stream_record_id(record, index, run_date=settings.run_date)
+                    record["id"] = _wikipedia_stream_record_id(record)
                 for record in result.rejected:
                     _attach_stream_record_metadata(
                         record,
@@ -2695,6 +2683,11 @@ def _attach_stream_metadata(
     _ensure_small_model_response_metadata(candidate.source_metadata)
     _attach_run_artifact_metadata(candidate.source_metadata, args=args)
     candidate.source_metadata["table_filter_modes"] = list(args.route3_table_filter_mode)
+    candidate.source_metadata["canonical_page_id"] = page_id
+    if args.route3_answer_type_mode == "single":
+        candidate.source_metadata["original_candidate_slot"] = "single"
+    elif candidate.source_metadata.get("route3_slot_id"):
+        candidate.source_metadata["original_candidate_slot"] = candidate.source_metadata["route3_slot_id"]
     candidate.source_metadata["table_source_types"] = list(args.route3_table_source_type)
     candidate.source_metadata["prose_leakage_scoring_enabled"] = bool(args.route3_prose_leakage_scoring)
     candidate.source_metadata["page_id"] = page_id
@@ -2723,6 +2716,11 @@ def _attach_stream_record_metadata(
         _ensure_small_model_response_metadata(metadata)
         _attach_run_artifact_metadata(metadata, args=args)
         metadata["table_filter_modes"] = list(args.route3_table_filter_mode)
+        metadata["canonical_page_id"] = page_id
+        if args.route3_answer_type_mode == "single":
+            metadata["original_candidate_slot"] = "single"
+        elif metadata.get("route3_slot_id"):
+            metadata["original_candidate_slot"] = metadata["route3_slot_id"]
         metadata["table_source_types"] = list(args.route3_table_source_type)
         metadata["prose_leakage_scoring_enabled"] = bool(args.route3_prose_leakage_scoring)
         metadata["page_id"] = page_id
@@ -2769,7 +2767,7 @@ def _attach_run_artifact_metadata(metadata: dict, *, args: argparse.Namespace) -
     if not run_group_id:
         return
     metadata["run_group_id"] = run_group_id
-    metadata["run_segment_id"] = _run_segment_id(args)
+    metadata["segment_id"] = _run_segment_id(args)
     manifest_path = _run_artifact_manifest_path(args, run_group_id)
     if manifest_path is not None:
         metadata["run_artifact_manifest"] = str(manifest_path)

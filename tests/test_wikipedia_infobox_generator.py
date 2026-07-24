@@ -19,6 +19,7 @@ from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.page_id_lists import PageIdListEntry
+from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
 from wikidata_simpleqa.wikipedia_client import (
     WikipediaClient,
     build_parse_api_url,
@@ -1579,17 +1580,24 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             "answer_type": "Date",
             "source_metadata": {
                 "page_id": 123,
+                "run_group_id": "research_run",
+                "segment_id": "date_segment",
+                "canonical_page_id": 123,
+                "original_candidate_slot": "Date",
                 "selected_source_table": {"table_type": "wikitable"},
             },
         }
 
         self.assertEqual(
-            _wikipedia_stream_record_id(record, 23, run_date="2026-05-25"),
-            "route3_20260525_p123_date_wikitable",
+            _wikipedia_stream_record_id(record),
+            Route3CandidateIdentity(
+                run_group_id="research_run",
+                segment_id="date_segment",
+                canonical_page_id=123,
+                original_candidate_slot="Date",
+            ).candidate_id,
         )
 
-        fallback = {"answer_type": "Date", "source_metadata": {"answer_type": "Other"}}
-        self.assertEqual(_wikipedia_stream_record_id(fallback, 23), "date_wikipedia_stream_000023")
 
     def test_run_group_manifest_indexes_resumed_segments(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

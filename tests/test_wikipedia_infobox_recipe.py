@@ -11,6 +11,7 @@ from types import SimpleNamespace
 
 from test_support import ROOT  # noqa: F401
 
+from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
@@ -682,6 +683,10 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                         "answer_type": "Person",
                         "source_metadata": {
                             "page_id": 123,
+                            "run_group_id": "recipe",
+                            "segment_id": "01_person_10_topup1",
+                            "canonical_page_id": 123,
+                            "original_candidate_slot": "single",
                             "selected_source_table": {"table_type": "infobox"},
                         },
                     }
@@ -709,7 +714,15 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             )
 
         self.assertEqual(rejected, [])
-        self.assertEqual(accepted[0]["id"], "route3_20260525_p123_person_infobox")
+        self.assertEqual(
+            accepted[0]["id"],
+            Route3CandidateIdentity(
+                run_group_id="recipe",
+                segment_id="01_person_10_topup1",
+                canonical_page_id=123,
+                original_candidate_slot="single",
+            ).candidate_id,
+        )
         self.assertEqual(
             accepted[0]["source_metadata"]["page_id_list_entry"],
             {"page_id": 123, "answer_type": "Person", "table_type": "infobox"},

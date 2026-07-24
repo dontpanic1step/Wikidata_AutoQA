@@ -44,6 +44,18 @@ DDG and second-stage errors enter rerun handling. Later artifact, review, and fi
 
 Accepted, rejected, and rerun outcomes remain traceable to their source page, selected table, generation exchange, validation results, search evidence, grading evidence, and exact decision reason. Stable IDs, immutable provenance, revisions, ledgers, review sheets, and final CSV fields are introduced only in milestone order.
 
+## Candidate artifact contract
+
+- Candidate IDs use only run group ID, segment ID, canonical page ID, and original candidate slot.
+- Single uses the fixed `single` slot; all5 uses the original answer-type slot; top-up uses a new segment ID.
+- Question/answer edits never change IDs or immutable generation provenance.
+- Immutable provenance includes run/segment/page attempt, canonical page URL/ID, selected table/type, page archive hash, generation prompt/request/raw response, original Q/A/aliases/search queries, answer type, generation model/parameters, and recipe seed.
+- Each revision contains the authoritative Q/A, active aliases/search queries, topic, delete flag, edit reason, source validation, integrated answer-type gate, DuckDuckGo results, second-stage results, and accepted/rejected/rerun status.
+- Question-only edits keep the answer, aliases, and search queries.
+- Answer edits clear active aliases while preserving old answer/aliases in history.
+- Any Q/A edit clears old validation, DuckDuckGo, and second-stage results before rerun.
+- Selected-table evidence, answer type, and candidate ID are immutable across revisions.
+
 ## Protected evaluation contract
 
 The independent evaluation flow is:

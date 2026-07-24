@@ -64,6 +64,27 @@ Specific answer types use single mode. `AllTypes` uses all5 mode. Primary page-a
 
 Table filters, prose-leakage scoring, and minimum table score remain fixed at their current formal values. They are method internals, not user switches. Other legacy CLI surfaces are catalogued in `docs/compatibility_legacy_settings.md`.
 
+## Candidate artifact schema
+
+Each formal candidate has one stable ID derived only from:
+
+```text
+run_group_id
++ segment_id
++ canonical_page_id
++ original_candidate_slot
+```
+
+Single mode uses the fixed `single` slot. All5 mode uses the original answer-type slot. Top-up work uses a new segment ID. Human edits never change the candidate ID.
+
+The artifact keeps immutable run/segment/page-attempt data, canonical page and selected-table evidence, page archive hash, generation prompt/request/raw response, original Q/A/aliases/search queries, answer type, model parameters, and recipe seed.
+
+An append-only revision stores the authoritative question and reference answer, active aliases and search queries, topic, delete flag, edit reason, source validation, integrated answer-type gate, DuckDuckGo evidence, second-stage evidence, and accepted/rejected/rerun status.
+
+Question-only edits retain the answer, aliases, and search queries. An answer edit clears active aliases. Any Q/A edit clears active validation, DuckDuckGo, and second-stage results and moves the revision to rerun. Original values remain in immutable provenance and revision history; selected-table evidence, answer type, and candidate ID do not change.
+
+The schema implementation is `src/wikidata_simpleqa/route3_artifacts.py`.
+
 ## Protected evaluation tools
 
 The following scripts are retained, independent SimpleQA Verified-style evaluation tools:
