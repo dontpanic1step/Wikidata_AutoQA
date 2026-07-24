@@ -496,8 +496,6 @@ p<canonical_page_id>_attempt001.json
 
 ### 验证和停止条件
 
-与原计划一致：
-
 -输入顺序不影响结果；
 - seed 被记录；
 -不能把页面分给不存在的 answer type；
@@ -671,8 +669,6 @@ urls
 
 ### 验证和停止条件
 
-与原计划一致：
-
 -每页最多一题；
 -各类达到 target；
 -相同 seed 可复现；
@@ -781,8 +777,6 @@ recipe
 批量评测脚本只做 mocked 或极小独立验证，不修改其 prompt。
 
 ### 停止条件
-
-除原计划条件外增加：
 
 -任何已删除 gate 仍影响 accept/reject 或 ranking；
 -删除 `question_targets_mutable_fact` 后 Route 3 import 失败；
