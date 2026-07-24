@@ -52,7 +52,6 @@ def _recipe_args(**overrides):
         "stream_random_seed": None,
         "page_attempt_count": 10,
         "answer_type": "Person",
-        "route3_reasoning_type": [],
         "run_date": None,
         "target_time": "2024",
         "cutoff_year": 2025,
@@ -77,7 +76,6 @@ def _recipe_args(**overrides):
         "search_longtail_max_full_question_hit_rate": 0.3,
         "search_longtail_max_keyword_hit_rate": 0.3,
         "search_longtail_max_overall_hit_rate": 0.3,
-        "stream_page_source": "table-search",
         "stream_search_limit": 50,
         "stream_search_max_rounds": 10,
         "stream_batch_size": 10,
@@ -95,27 +93,14 @@ def _recipe_args(**overrides):
         "duckduckgo_concurrency_limit": 4,
         "openrouter_generation_rewrite_concurrency_limit": 10,
         "second_stage_concurrency_limit": 10,
-        "route3_extra_prompt": [],
         "route3_answer_type_mode": "single",
         "route3_table_source_type": [],
-        "route3_prose_leakage_scoring": True,
-        "route3_llm_choose_table": False,
         "route3_page_archive_dir": ROOT / "cache" / "route3_pages",
-        "route3_pageview_prefilter": False,
-        "route3_pageview_window_months": 12,
-        "route3_max_monthly_average_pageviews": 5000.0,
-        "route3_max_underfilled_monthly_pageviews": 10000.0,
-        "route3_pageview_unavailable_policy": "allow",
         "route3_infobox_max_removed_row_rate": 0.60,
         "route3_infobox_min_remaining_rows": 5,
-        "disable_route3_table_filter_mode": [],
-        "enable_kelm_rewrite": True,
-        "kelm_rewrite_model": "openai/gpt-4.1-mini",
         "enable_second_stage_grading": True,
         "second_stage_grading_accuracy_threshold": 0.1,
         "disable_auto_rerun_once": False,
-        "stream_search_query": ['insource:"wikitable"'],
-        "enable_broad_table_search": False,
         "compact_output": False,
         "compact_rejected_output": False,
         "big_batch_mode": False,
@@ -161,8 +146,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 stream_state_base=segment_dir / "stream_state.json",
                 stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=0,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
             )
             second_command, second_paths = _segment_command(
                 args=args,
@@ -173,8 +156,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 stream_state_base=segment_dir / "stream_state.json",
                 stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=50,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
             )
 
         self.assertNotEqual(first_paths["stream_state"], second_paths["stream_state"])
@@ -194,8 +175,8 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         )
         self.assertEqual(_command_value(first_command, "--generation-model"), "google/gemini-3-flash-preview")
         self.assertNotIn("--small-model", first_command)
-        self.assertIn("--enable-kelm-rewrite", first_command)
-        self.assertEqual(_command_value(first_command, "--kelm-rewrite-model"), "openai/gpt-4.1-mini")
+        self.assertNotIn("--enable-kelm-rewrite", first_command)
+        self.assertNotIn("--kelm-rewrite-model", first_command)
         self.assertNotIn("--enable-rewrite", first_command)
         self.assertNotIn("--rewrite-model", first_command)
 
@@ -221,13 +202,11 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 stream_state_base=segment_dir / "stream_state.json",
                 stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=0,
-                reasoning_types=reasoning_types,
-                table_filter_modes=["not_number_dominant"],
             )
 
         self.assertEqual(_command_value(command, "--route3-answer-type-mode"), "all5")
         self.assertNotIn("--route3-answer-type", command)
-        self.assertEqual(_command_value(command, "--route3-max-underfilled-monthly-pageviews"), "10000.0")
+        self.assertNotIn("--route3-pageview-prefilter", command)
         self.assertTrue(str(paths["accepted"]).endswith("01_alltypes_200_accepted.jsonl"))
 
     def test_formal_specific_answer_type_uses_single_mode_and_page_budget(self) -> None:
@@ -297,7 +276,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(args.second_stage_grading_accuracy_threshold, 0.1)
         self.assertEqual(args.stream_reuse_cached_page_count, "all")
         self.assertEqual(args.stream_fresh_cached_page_count, "fill")
-        self.assertEqual(args.stream_page_source, "table-search")
 
     def test_internal_worker_defaults_match_formal_recipe(self) -> None:
         with patch("sys.argv", ["run_wikipedia_infobox_pipeline.py"]):
@@ -310,90 +288,37 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(args.stream_reuse_cached_page_count, "all")
         self.assertEqual(args.stream_fresh_cached_page_count, "fill")
         self.assertEqual(args.stream_page_source, "table-search")
-        self.assertEqual(_stream_search_queries(args), ['insource:"wikitable"'])
+        self.assertEqual(_stream_search_queries(), ['insource:"wikitable"'])
 
-    def test_recipe_segment_disables_route3_llm_table_choice_by_default(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            segment_dir = Path(tmpdir) / "segments"
-            args = _recipe_args()
-
-            command, _paths = _segment_command(
-                args=args,
-                item=RecipeItem(answer_type="Person", record_limit=40),
-                index=0,
-                run_id="recipe",
-                segment_dir=segment_dir,
-                stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
-                stream_search_initial_offset=0,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
-            )
-
-        self.assertIn("--no-route3-llm-choose-table", command)
-
-    def test_recipe_segment_can_enable_route3_llm_table_choice(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            segment_dir = Path(tmpdir) / "segments"
-            args = _recipe_args(route3_llm_choose_table=True)
-
-            command, _paths = _segment_command(
-                args=args,
-                item=RecipeItem(answer_type="Person", record_limit=40),
-                index=0,
-                run_id="recipe",
-                segment_dir=segment_dir,
-                stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
-                stream_search_initial_offset=0,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
-            )
-
-        self.assertIn("--route3-llm-choose-table", command)
-        self.assertNotIn("--no-route3-llm-choose-table", command)
-
-    def test_recipe_segment_disables_pageview_prefilter_by_default(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            segment_dir = Path(tmpdir) / "segments"
-            args = _recipe_args()
-
-            command, _paths = _segment_command(
-                args=args,
-                item=RecipeItem(answer_type="Person", record_limit=40),
-                index=0,
-                run_id="recipe",
-                segment_dir=segment_dir,
-                stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
-                stream_search_initial_offset=0,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
-            )
-
-        self.assertIn("--no-route3-pageview-prefilter", command)
-        self.assertNotIn("--route3-pageview-prefilter", command)
-
-    def test_recipe_segment_can_enable_pageview_prefilter(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            segment_dir = Path(tmpdir) / "segments"
-            args = _recipe_args(route3_pageview_prefilter=True)
-
-            command, _paths = _segment_command(
-                args=args,
-                item=RecipeItem(answer_type="Person", record_limit=40),
-                index=0,
-                run_id="recipe",
-                segment_dir=segment_dir,
-                stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
-                stream_search_initial_offset=0,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
-            )
-
-        self.assertIn("--route3-pageview-prefilter", command)
-        self.assertNotIn("--no-route3-pageview-prefilter", command)
+    def test_removed_route3_options_are_rejected_by_formal_interfaces(self) -> None:
+        removed_options = [
+            "--candidate-input",
+            "--enable-broad-table-search",
+            "--enable-kelm-rewrite",
+            "--enable-rest-summary-fallback",
+            "--route3-extra-prompt",
+            "--route3-llm-choose-table",
+            "--route3-pageview-prefilter",
+            "--route3-prose-leakage-scoring",
+            "--route3-reasoning-type",
+            "--route3-table-filter-mode",
+            "--start-stage",
+            "--stream-page-source",
+            "--stream-search-query",
+            "--url-file",
+        ]
+        for parse, argv in (
+            (
+                parse_recipe_args,
+                ["run_wikipedia_infobox_recipe.py", "--page-attempt-count", "1", "--answer-type", "Person"],
+            ),
+            (parse_worker_args, ["run_wikipedia_infobox_pipeline.py"]),
+        ):
+            for option in removed_options:
+                with self.subTest(parser=parse.__module__, option=option):
+                    with patch("sys.argv", [*argv, option, "removed"]):
+                        with self.assertRaises(SystemExit):
+                            parse()
 
     def test_recipe_segment_passes_route3_table_source_types(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -409,8 +334,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 stream_state_base=segment_dir / "stream_state.json",
                 stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=0,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
                 table_source_types=["infobox"],
             )
 
@@ -420,27 +343,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             if value == "--route3-table-source-type"
         ]
         self.assertEqual(source_values, ["infobox"])
-
-    def test_recipe_segment_can_disable_route3_prose_leakage_scoring(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            segment_dir = Path(tmpdir) / "segments"
-            args = _recipe_args(route3_prose_leakage_scoring=False)
-
-            command, _paths = _segment_command(
-                args=args,
-                item=RecipeItem(answer_type="Person", record_limit=40),
-                index=0,
-                run_id="recipe",
-                segment_dir=segment_dir,
-                stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
-                stream_search_initial_offset=0,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
-            )
-
-        self.assertIn("--no-route3-prose-leakage-scoring", command)
-        self.assertNotIn("--route3-prose-leakage-scoring", command)
 
     def test_big_batch_mode_aligns_batch_size_without_compacting_outputs(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -457,8 +359,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 stream_state_base=segment_dir / "stream_state.json",
                 stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=0,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
             )
 
         self.assertEqual(_command_value(command, "--stream-batch-size"), "50")
@@ -498,8 +398,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 stream_state_base=segment_dir / "stream_state.json",
                 stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=offset,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
                 append_label="topup1",
             )
 
@@ -550,8 +448,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 stream_state_base=segment_dir / "stream_state.json",
                 stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=2400,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
                 append_label="topup1",
                 rerun_pool_seed_file=seed_file,
             )
@@ -630,8 +526,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 stream_state_base=segment_dir / "stream_state.json",
                 stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=6300,
-                reasoning_types=["single_fact"],
-                table_filter_modes=["not_number_dominant"],
                 append_label="topup_1",
                 rerun_pool_seed_file=seed_file,
                 base_segment_id="02_place_2000",

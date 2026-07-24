@@ -31,23 +31,13 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
     DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE,
     DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS,
-    DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
-    DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
     DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
-    DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED,
-    DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
-    DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS,
     ROUTE3_ANSWER_TYPES,
-    DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
     DEFAULT_ROUTE3_REASONING_TYPES,
     DEFAULT_ROUTE3_TABLE_FILTER_MODES,
     DEFAULT_ROUTE3_TABLE_SOURCE_TYPES,
     normalize_route3_answer_types,
     normalize_route3_answer_type_mode,
-    normalize_route3_extra_prompts,
-    normalize_route3_pageview_unavailable_policy,
-    normalize_route3_reasoning_types,
-    normalize_route3_table_filter_modes,
     normalize_route3_table_source_types,
 )
 from wikidata_simpleqa.wikipedia_streaming import PageIdStreamState
@@ -82,9 +72,8 @@ def _apply_recipe_big_batch_mode(args: argparse.Namespace) -> None:
     """Apply recipe-level large-run defaults before segment commands are built."""
     if not getattr(args, "big_batch_mode", False):
         return
-    if getattr(args, "stream_page_source", "") == "table-search":
-        args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
-        args.stream_search_max_rounds = max(500, int(getattr(args, "stream_search_max_rounds", 10) or 10))
+    args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
+    args.stream_search_max_rounds = max(500, int(getattr(args, "stream_search_max_rounds", 10) or 10))
 
 
 def parse_args() -> argparse.Namespace:
@@ -101,30 +90,6 @@ def parse_args() -> argparse.Namespace:
         choices=[*ROUTE3_ANSWER_TYPES, ALL_TYPES_RECIPE_ANSWER_TYPE],
         required=True,
         help="One specific answer type for single mode, or AllTypes for all5 mode.",
-    )
-    parser.add_argument(
-        "--route3-reasoning-type",
-        action="append",
-        default=[],
-        help="Shared reasoning_type constraint. Defaults to single_fact when omitted from the recipe.",
-    )
-    parser.add_argument(
-        "--route3-extra-prompt",
-        action="append",
-        default=[],
-        help="Shared extra prompt text passed through to each segment.",
-    )
-    parser.add_argument(
-        "--route3-table-filter-mode",
-        action="append",
-        default=list(DEFAULT_ROUTE3_TABLE_FILTER_MODES),
-        help="Shared Route 3 table filter modes. Defaults are enabled.",
-    )
-    parser.add_argument(
-        "--disable-route3-table-filter-mode",
-        action="append",
-        default=[],
-        help="Disable one shared default Route 3 table filter mode.",
     )
     parser.add_argument(
         "--route3-table-source-type",
@@ -144,53 +109,10 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--route3-prose-leakage-scoring",
-        action=argparse.BooleanOptionalAction,
-        default=DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
-        help=(
-            "Shared Route 3 prose-leakage rank signal toggle. Default: enabled "
-            "(leakage <0.2 adds 0.5; leakage >0.8 subtracts 0.5)."
-        ),
-    )
-    parser.add_argument(
-        "--route3-llm-choose-table",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help=(
-            "Let each segment's Route 3 generation LLM choose among the top three surviving ranked tables. "
-            "By default only the single top-ranked table is passed."
-        ),
-    )
-    parser.add_argument(
         "--route3-page-archive-dir",
         type=Path,
         default=ROOT / DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
         help="Directory for unified Route 3 page archives.",
-    )
-    parser.add_argument(
-        "--route3-pageview-prefilter",
-        action=argparse.BooleanOptionalAction,
-        default=DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED,
-        help=(
-            "Enable the optional Route 3 pageview popularity prefilter before table grading "
-            "and LLM generation. Disabled by default."
-        ),
-    )
-    parser.add_argument("--route3-pageview-window-months", type=int, default=DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS)
-    parser.add_argument(
-        "--route3-max-monthly-average-pageviews",
-        type=float,
-        default=DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
-    )
-    parser.add_argument(
-        "--route3-max-underfilled-monthly-pageviews",
-        type=float,
-        default=DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
-    )
-    parser.add_argument(
-        "--route3-pageview-unavailable-policy",
-        choices=["allow", "reject", "rerun"],
-        default=DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
     )
     parser.add_argument(
         "--route3-infobox-max-removed-row-rate",
@@ -219,21 +141,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--small-model-api-key-env", default="OPENROUTER_API_KEY")
     parser.add_argument("--small-model-base-url", default="https://openrouter.ai/api/v1")
     parser.add_argument("--small-model-max-tokens", type=int, default=4096)
-    parser.add_argument("--enable-kelm-rewrite", dest="enable_kelm_rewrite", action="store_true")
-    parser.add_argument(
-        "--enable-rewrite",
-        dest="enable_kelm_rewrite",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument("--kelm-rewrite-model", dest="kelm_rewrite_model", default="openai/gpt-4.1-mini")
-    parser.add_argument(
-        "--rewrite-model",
-        dest="kelm_rewrite_model",
-        default=argparse.SUPPRESS,
-        help=argparse.SUPPRESS,
-    )
     parser.add_argument("--enable-second-stage-grading", action="store_true", default=True)
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.1)
     parser.add_argument("--duckduckgo-top-k", type=int, default=5)
@@ -243,9 +150,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-keyword-hit-rate", type=float, default=0.3)
     parser.add_argument("--search-longtail-max-overall-hit-rate", type=float, default=0.3)
-    parser.add_argument("--stream-page-source", choices=["table-search", "random-page-id"], default="table-search")
-    parser.add_argument("--stream-search-query", action="append", default=[])
-    parser.add_argument("--enable-broad-table-search", action="store_true")
     parser.add_argument("--stream-search-limit", type=int, default=50)
     parser.add_argument("--stream-search-max-rounds", type=int, default=10)
     parser.add_argument(
@@ -327,18 +231,9 @@ def main() -> int:
     run_started = perf_counter()
     recipe_items, reasoning_types = _parse_recipe(args)
     args.route3_answer_type_mode = normalize_route3_answer_type_mode(args.route3_answer_type_mode)
-    args.route3_extra_prompt = list(normalize_route3_extra_prompts(args.route3_extra_prompt))
-    enabled_filter_modes = list(normalize_route3_table_filter_modes(args.route3_table_filter_mode))
-    disabled_filter_modes = set(normalize_route3_table_filter_modes(args.disable_route3_table_filter_mode))
-    table_filter_modes = [mode for mode in enabled_filter_modes if mode not in disabled_filter_modes]
+    table_filter_modes = list(DEFAULT_ROUTE3_TABLE_FILTER_MODES)
     table_source_types = list(
         normalize_route3_table_source_types(args.route3_table_source_type or DEFAULT_ROUTE3_TABLE_SOURCE_TYPES)
-    )
-    args.route3_pageview_window_months = max(1, int(args.route3_pageview_window_months))
-    args.route3_max_monthly_average_pageviews = float(args.route3_max_monthly_average_pageviews)
-    args.route3_max_underfilled_monthly_pageviews = float(args.route3_max_underfilled_monthly_pageviews)
-    args.route3_pageview_unavailable_policy = normalize_route3_pageview_unavailable_policy(
-        args.route3_pageview_unavailable_policy
     )
     args.route3_infobox_max_removed_row_rate = max(0.0, min(1.0, float(args.route3_infobox_max_removed_row_rate)))
     args.route3_infobox_min_remaining_rows = max(0, int(args.route3_infobox_min_remaining_rows))
@@ -414,8 +309,6 @@ def main() -> int:
             )
             if append_label
             else base_stream_search_initial_offset,
-            reasoning_types=reasoning_types,
-            table_filter_modes=table_filter_modes,
             table_source_types=table_source_types,
             append_label=append_label,
             rerun_pool_seed_file=rerun_pool_seed_file,
@@ -585,9 +478,7 @@ def _parse_recipe(args: argparse.Namespace) -> tuple[list[RecipeItem], list[str]
         raise ValueError("AllTypes requires --route3-answer-type-mode all5.")
     if answer_type != ALL_TYPES_RECIPE_ANSWER_TYPE and answer_type_mode != "single":
         raise ValueError("A specific answer type requires --route3-answer-type-mode single.")
-    reasoning_types = list(normalize_route3_reasoning_types(args.route3_reasoning_type))
-    if not reasoning_types:
-        reasoning_types = list(DEFAULT_ROUTE3_REASONING_TYPES)
+    reasoning_types = list(DEFAULT_ROUTE3_REASONING_TYPES)
     return [RecipeItem(answer_type=answer_type, record_limit=page_attempt_count)], reasoning_types
 
 
@@ -1007,8 +898,6 @@ def _segment_command(
     stream_state_base: Path,
     stream_exclusion_file: Path,
     stream_search_initial_offset: int,
-    reasoning_types: list[str],
-    table_filter_modes: list[str],
     table_source_types: list[str] | None = None,
     append_label: str = "",
     rerun_pool_seed_file: Path | None = None,
@@ -1048,7 +937,6 @@ def _segment_command(
     command = [
         sys.executable,
         str(ROOT / "scripts" / "run_wikipedia_infobox_pipeline.py"),
-        "--stream-random-page-ids",
         "--stream-page-processing-target",
         str(item.record_limit),
         "--route3-answer-type-mode",
@@ -1105,8 +993,6 @@ def _segment_command(
         str(args.search_longtail_max_keyword_hit_rate),
         "--search-longtail-max-overall-hit-rate",
         str(args.search_longtail_max_overall_hit_rate),
-        "--stream-page-source",
-        str(args.stream_page_source),
         "--stream-search-limit",
         str(args.stream_search_limit),
         "--stream-search-max-rounds",
@@ -1147,14 +1033,6 @@ def _segment_command(
         str(args.second_stage_concurrency_limit),
         "--route3-page-archive-dir",
         str(args.route3_page_archive_dir),
-        "--route3-pageview-window-months",
-        str(args.route3_pageview_window_months),
-        "--route3-max-monthly-average-pageviews",
-        str(args.route3_max_monthly_average_pageviews),
-        "--route3-max-underfilled-monthly-pageviews",
-        str(args.route3_max_underfilled_monthly_pageviews),
-        "--route3-pageview-unavailable-policy",
-        str(args.route3_pageview_unavailable_policy),
         "--route3-infobox-max-removed-row-rate",
         str(args.route3_infobox_max_removed_row_rate),
         "--route3-infobox-min-remaining-rows",
@@ -1172,18 +1050,8 @@ def _segment_command(
         command.extend(["--route3-answer-type", item.answer_type])
     if args.run_date:
         command.extend(["--run-date", str(args.run_date)])
-    for reasoning_type in reasoning_types:
-        command.extend(["--route3-reasoning-type", reasoning_type])
-    for extra_prompt in args.route3_extra_prompt:
-        command.extend(["--route3-extra-prompt", extra_prompt])
-    for mode in table_filter_modes:
-        command.extend(["--route3-table-filter-mode", mode])
     for source_type in normalized_table_source_types:
         command.extend(["--route3-table-source-type", source_type])
-    for mode in args.disable_route3_table_filter_mode:
-        command.extend(["--disable-route3-table-filter-mode", str(mode)])
-    if args.enable_kelm_rewrite:
-        command.extend(["--enable-kelm-rewrite", "--kelm-rewrite-model", str(args.kelm_rewrite_model)])
     if args.enable_second_stage_grading:
         command.extend(
             [
@@ -1198,25 +1066,9 @@ def _segment_command(
         command.extend(["--stream-rerun-pool-seed-file", str(rerun_pool_seed_file)])
         command.append("--stream-prefer-rerun-pool")
         command.append("--stream-free-seeded-rerun-pool-on-completion")
-    if args.route3_llm_choose_table:
-        command.append("--route3-llm-choose-table")
-    else:
-        command.append("--no-route3-llm-choose-table")
-    if args.route3_prose_leakage_scoring:
-        command.append("--route3-prose-leakage-scoring")
-    else:
-        command.append("--no-route3-prose-leakage-scoring")
-    if args.route3_pageview_prefilter:
-        command.append("--route3-pageview-prefilter")
-    else:
-        command.append("--no-route3-pageview-prefilter")
     if args.big_batch_mode:
         command.append("--big-batch-mode")
     command.append("--reset-stream-state")
-    for query in args.stream_search_query:
-        command.extend(["--stream-search-query", str(query)])
-    if args.enable_broad_table_search:
-        command.append("--enable-broad-table-search")
     return command, {"accepted": accepted, "rejected": rejected, "summary": summary, "stream_state": stream_state}
 
 
@@ -1382,7 +1234,7 @@ def _recipe_summary(
         "start_from_endpoint": False,
         "endpoint_resume": {"enabled": False},
         "streaming_mode": "page_id_stream_recipe",
-        "stream_page_source": args.stream_page_source,
+        "stream_page_source": "table-search",
         "stream_search_queries": segment_summaries[0].get("stream_search_queries", []) if segment_summaries else [],
         "run_date": args.run_date or (segment_summaries[0].get("run_date") if segment_summaries else ""),
         "stream_state": "separate_segment_stream_states",
@@ -1431,9 +1283,6 @@ def _recipe_summary(
         "enabled_routes": ["route3_wikipedia_infobox"],
         "generation_model": args.generation_model,
         "small_model": args.generation_model,
-        "kelm_rewrite_enabled": bool(args.enable_kelm_rewrite),
-        "kelm_rewrite_model": args.kelm_rewrite_model if args.enable_kelm_rewrite else "",
-        "rewrite_enabled": bool(args.enable_kelm_rewrite),
         "second_stage_grading_enabled": bool(args.enable_second_stage_grading),
         "duckduckgo_top_k": args.duckduckgo_top_k,
         "duckduckgo_parallel_queries": args.duckduckgo_parallel_queries,
@@ -1449,17 +1298,11 @@ def _recipe_summary(
         "route3_reasoning_types": reasoning_types,
         "route3_answer_types": [item.answer_type for item in recipe_items],
         "route3_answer_type_mode": args.route3_answer_type_mode,
-        "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": table_filter_modes,
         "route3_table_source_types": normalized_table_source_types,
-        "route3_prose_leakage_scoring_enabled": bool(args.route3_prose_leakage_scoring),
-        "route3_llm_choose_table": bool(args.route3_llm_choose_table),
+        "route3_prose_leakage_scoring_enabled": True,
+        "min_table_score": 0.0,
         "route3_page_archive_dir": str(args.route3_page_archive_dir),
-        "route3_pageview_prefilter_enabled": bool(args.route3_pageview_prefilter),
-        "route3_pageview_window_months": args.route3_pageview_window_months,
-        "route3_max_monthly_average_pageviews": args.route3_max_monthly_average_pageviews,
-        "route3_max_underfilled_monthly_pageviews": args.route3_max_underfilled_monthly_pageviews,
-        "route3_pageview_unavailable_policy": args.route3_pageview_unavailable_policy,
         "route3_infobox_max_removed_row_rate": args.route3_infobox_max_removed_row_rate,
         "route3_infobox_min_remaining_rows": args.route3_infobox_min_remaining_rows,
         "compact_output": False,

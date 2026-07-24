@@ -56,7 +56,24 @@ The former free-form `--recipe`, `--answer-type-count`, `--answer-types`, and `-
 | Page source | `table-search` |
 | Search query | `insource:"wikitable"` |
 
-The formal DuckDuckGo thresholds, table filters, prose-leakage values, and minimum table score retain their existing values during reconstruction.
+The formal worker uses these fixed method settings; they are not CLI options:
+
+| Setting | Fixed value |
+| --- | --- |
+| Table discovery | MediaWiki table search only |
+| Custom, broad, or random page discovery | unavailable |
+| Table filters | `no_external_links_tables`, `no_horizontal_companion_tables`, `no_picture_heavy_tables`, `no_incomplete_tables`, `not_number_dominant`, `no_social_science_research` |
+| Prose-leakage scoring | enabled |
+| Minimum table score | `0.0` |
+| LLM table choice | disabled |
+| Pageview prefilter | disabled |
+| REST first-paragraph fallback | disabled |
+| Extra generation prompt | unavailable |
+| KELM rewrite | unavailable |
+
+The recipe passes the selected answer type, answer-type mode, and table source type to the internal worker. The worker does not accept URL lists or an old validation-stage candidate input. Use the recipe entry point for both dry runs and network runs.
+
+The DuckDuckGo thresholds retain their existing formal values during reconstruction.
 
 ## Safe dry-run examples
 
@@ -82,7 +99,7 @@ python scripts\run_wikipedia_infobox_recipe.py `
   --dry-run
 ```
 
-Use `python scripts\run_wikipedia_infobox_recipe.py --help` for the current argument list. Options scheduled for removal by later reconstruction milestones are not endorsed merely because they still appear before that milestone is committed.
+Use `python scripts\run_wikipedia_infobox_recipe.py --help` for the current formal argument list.
 
 ## Candidate artifact API
 

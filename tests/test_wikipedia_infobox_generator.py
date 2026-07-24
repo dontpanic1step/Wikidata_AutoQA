@@ -1067,7 +1067,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(second.source_metadata["route3_page_archive"]["parse_fetch_status"], "archive_hit")
         self.assertEqual(second.source_metadata["route3_page_archive"]["pageview_fetch_status"], "fetched")
 
-    def test_stream_cached_page_archive_reuse_does_not_write_back_fetched_pageview(self) -> None:
+    def test_stream_cached_page_archive_reuse_keeps_pageview_prefilter_disabled(self) -> None:
         class CachedArchiveWikipediaClient(FakeWikipediaClient):
             def __init__(self) -> None:
                 self.parse_calls = 0
@@ -1170,12 +1170,11 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
 
         self.assertEqual(decision["status"], "rejected")
         self.assertEqual(client.parse_calls, 0)
-        self.assertEqual(client.pageview_calls, 1)
+        self.assertEqual(client.pageview_calls, 0)
         self.assertEqual(archive_after, archive_before)
         record = decision["rejected_records"][0]
         metadata = record["source_metadata"]
         self.assertTrue(metadata["route3_page_archive"]["archive_read_only"])
-        self.assertEqual(metadata["route3_page_archive"]["pageview_fetch_status"], "fetched")
         self.assertEqual(metadata["streaming_discovery"]["page_source"], "cached_page_archive")
         self.assertEqual(metadata["streaming_discovery"]["cached_archive_path"], str(archive_path))
 
@@ -1320,12 +1319,8 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(pageview["status"], "error")
         self.assertEqual(pageview["errors"][0]["error_type"], "URLError")
 
-    def test_broad_table_search_query_is_opt_in(self) -> None:
-        default_args = SimpleNamespace(stream_search_query=[], enable_broad_table_search=False)
-        self.assertEqual(_stream_search_queries(default_args), ['insource:"wikitable"'])
-
-        broad_args = SimpleNamespace(stream_search_query=[], enable_broad_table_search=True)
-        self.assertEqual(_stream_search_queries(broad_args), ['insource:"wikitable"', r"insource:/\{\|/"])
+    def test_formal_table_search_query_is_fixed(self) -> None:
+        self.assertEqual(_stream_search_queries(), ['insource:"wikitable"'])
 
     def test_rerun_pool_only_reservation_does_not_discover_fresh_ids(self) -> None:
         class FailingWikipediaSearchClient:

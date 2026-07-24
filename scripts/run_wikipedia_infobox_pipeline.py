@@ -1,4 +1,4 @@
-"""Run the Wikipedia infobox/table QA route over supplied page URLs."""
+"""Run one internal Route 3 table-search segment for the formal recipe."""
 
 from __future__ import annotations
 
@@ -31,7 +31,6 @@ from wikidata_simpleqa.generation_pipeline import (
     process_generated_candidates,
 )
 from wikidata_simpleqa.io import append_jsonl, write_jsonl
-from wikidata_simpleqa.llm_rewrite import make_rewrite_client
 from wikidata_simpleqa.page_id_lists import (
     PageIdListEntry,
     build_page_id_entries,
@@ -53,10 +52,8 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
     DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
     DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
-    DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED,
     DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
     DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS,
-    DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
     DEFAULT_ROUTE3_REASONING_TYPES,
     DEFAULT_ROUTE3_TABLE_FILTER_MODES,
     DEFAULT_ROUTE3_TABLE_SOURCE_TYPES,
@@ -69,16 +66,10 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     _sanitize_answer_blind_queries,
     normalize_route3_answer_types,
     normalize_route3_answer_type_mode,
-    normalize_route3_extra_prompts,
-    normalize_route3_pageview_unavailable_policy,
     normalize_route3_reasoning_types,
-    normalize_route3_table_filter_modes,
     normalize_route3_table_source_types,
 )
 from wikidata_simpleqa.wikipedia_streaming import (
-    BROAD_TABLE_SEARCH_QUERY,
-    DEFAULT_PAGE_ID_MAX,
-    DEFAULT_PAGE_ID_MIN,
     DEFAULT_TABLE_SEARCH_QUERIES,
     PageIdStreamState,
     build_pageid_url,
@@ -100,9 +91,8 @@ def _apply_big_batch_mode(args: argparse.Namespace) -> None:
     """Apply large-run defaults that keep 10k-style recipes resumable."""
     if not getattr(args, "big_batch_mode", False):
         return
-    if getattr(args, "stream_random_page_ids", False) and getattr(args, "stream_page_source", "") == "table-search":
-        args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
-        args.stream_search_max_rounds = max(500, int(getattr(args, "stream_search_max_rounds", 10) or 10))
+    args.stream_batch_size = max(1, int(getattr(args, "stream_search_limit", 50) or 50))
+    args.stream_search_max_rounds = max(500, int(getattr(args, "stream_search_max_rounds", 10) or 10))
 
 
 @dataclass(slots=True)
@@ -261,37 +251,11 @@ def _effective_stream_random_seed(args: argparse.Namespace, endpoint_resume: End
 def parse_args() -> argparse.Namespace:
     """Parse CLI arguments for the Wikipedia table route."""
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--url", action="append", default=[], help="Wikipedia URL. Can be repeated.")
-    parser.add_argument("--url-file", type=Path, default=None, help="Text file with one Wikipedia URL per line.")
-    parser.add_argument(
-        "--stream-random-page-ids",
-        action="store_true",
-        help="Stream Wikipedia page IDs and process action=parse&pageid records incrementally.",
-    )
     parser.add_argument(
         "--stream-state",
         type=Path,
         default=ROOT / "outputs" / "wikipedia_infobox_stream_state.json",
         help="Persistent page-id cache, in-progress list, and rerun pool for streaming mode.",
-    )
-    parser.add_argument("--stream-page-id-min", type=int, default=DEFAULT_PAGE_ID_MIN)
-    parser.add_argument("--stream-page-id-max", type=int, default=DEFAULT_PAGE_ID_MAX)
-    parser.add_argument(
-        "--stream-page-source",
-        choices=["table-search", "random-page-id"],
-        default="table-search",
-        help="How streaming mode finds page IDs before action=parse&pageid processing.",
-    )
-    parser.add_argument(
-        "--stream-search-query",
-        action="append",
-        default=[],
-        help="MediaWiki srsearch query for table-search mode. Can be repeated.",
-    )
-    parser.add_argument(
-        "--enable-broad-table-search",
-        action="store_true",
-        help=r"Also include the broad MediaWiki table query insource:/\{\|/. Off by default.",
     )
     parser.add_argument("--stream-search-limit", type=int, default=50)
     parser.add_argument("--stream-search-max-rounds", type=int, default=10)
@@ -318,8 +282,8 @@ def parse_args() -> argparse.Namespace:
         type=int,
         default=None,
         help=(
-            "Seed for random-page-id streaming. When omitted, a deterministic seed is derived "
-            "from the run/segment identity so resumed or incremental runs do not reuse the same stream."
+            "Segment seed recorded for reproducibility. When omitted, a deterministic seed is derived "
+            "from the run and segment identity."
         ),
     )
     parser.add_argument("--stream-batch-size", type=int, default=10)
@@ -454,19 +418,6 @@ def parse_args() -> argparse.Namespace:
         help="Optional markdown walkthrough with survival rates, failure reasons, and timings.",
     )
     parser.add_argument(
-        "--candidate-input",
-        action="append",
-        default=[],
-        type=Path,
-        help="Existing accepted/rejected JSONL candidate file. Can be repeated.",
-    )
-    parser.add_argument(
-        "--start-stage",
-        choices=["generate", "validation"],
-        default="generate",
-        help="Start from URL generation or from existing post-rewrite candidates.",
-    )
-    parser.add_argument(
         "--start-from-endpoint",
         action="store_true",
         help=(
@@ -509,21 +460,6 @@ def parse_args() -> argparse.Namespace:
     add_duckduckgo_transport_args(parser)
     parser.add_argument("--generated-search-query-count", type=int, default=2)
     parser.add_argument(
-        "--min-table-score",
-        type=float,
-        default=0.0,
-        help="Drop Route 3 candidate tables with rank score below this value before paragraph/alias extraction and LLM generation.",
-    )
-    parser.add_argument(
-        "--route3-reasoning-type",
-        action="append",
-        default=[],
-        help=(
-            "Restrict Route 3 generation to one or more reasoning_type values. "
-            "Repeat the flag or pass comma-separated values. Default: single_fact."
-        ),
-    )
-    parser.add_argument(
         "--route3-answer-type",
         action="append",
         default=[],
@@ -542,31 +478,6 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--route3-extra-prompt",
-        action="append",
-        default=[],
-        help=(
-            "Add a stricter Route 3 prompt rule by passing literal prompt text. Can be repeated. "
-            "Social-science table exclusion is now a default table filter mode."
-        ),
-    )
-    parser.add_argument(
-        "--route3-table-filter-mode",
-        action="append",
-        default=list(DEFAULT_ROUTE3_TABLE_FILTER_MODES),
-        help=(
-            "Enable one or more early Route 3 table filter modes. Repeat the flag or pass comma-separated "
-            "values. Defaults: no_external_links_tables,no_horizontal_companion_tables,"
-            "no_picture_heavy_tables,no_incomplete_tables,not_number_dominant,no_social_science_research."
-        ),
-    )
-    parser.add_argument(
-        "--disable-route3-table-filter-mode",
-        action="append",
-        default=[],
-        help="Disable a default Route 3 table filter mode for this run. Can be repeated.",
-    )
-    parser.add_argument(
         "--route3-table-source-type",
         action="append",
         default=[],
@@ -576,64 +487,10 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     parser.add_argument(
-        "--route3-prose-leakage-scoring",
-        action=argparse.BooleanOptionalAction,
-        default=DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
-        help=(
-            "Enable the lightweight prose-leakage rank signal. Default: enabled "
-            "(leakage <0.2 adds 0.5; leakage >0.8 subtracts 0.5)."
-        ),
-    )
-    parser.add_argument(
-        "--route3-llm-choose-table",
-        action=argparse.BooleanOptionalAction,
-        default=False,
-        help=(
-            "Let the Route 3 generation LLM choose among the top three surviving ranked tables. "
-            "By default only the single top-ranked table is passed."
-        ),
-    )
-    parser.add_argument(
         "--route3-page-archive-dir",
         type=Path,
         default=ROOT / DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
         help="Directory for unified Route 3 page archives containing parse HTML and pageview metadata.",
-    )
-    parser.add_argument(
-        "--route3-pageview-prefilter",
-        action=argparse.BooleanOptionalAction,
-        default=DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED,
-        help=(
-            "Enable the optional Route 3 pageview popularity prefilter before table grading "
-            "and LLM generation. Disabled by default."
-        ),
-    )
-    parser.add_argument(
-        "--route3-pageview-window-months",
-        type=int,
-        default=DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS,
-        help="Complete monthly pageview window used by the Route 3 prefilter.",
-    )
-    parser.add_argument(
-        "--route3-max-monthly-average-pageviews",
-        type=float,
-        default=DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
-        help="Maximum allowed monthly average pageviews for Route 3 pageview prefilter.",
-    )
-    parser.add_argument(
-        "--route3-max-underfilled-monthly-pageviews",
-        type=float,
-        default=DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
-        help=(
-            "Maximum allowed single-month pageviews when the Route 3 pageview response contains fewer months "
-            "than --route3-pageview-window-months."
-        ),
-    )
-    parser.add_argument(
-        "--route3-pageview-unavailable-policy",
-        choices=["allow", "reject", "rerun"],
-        default=DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
-        help="Route 3 decision when pageview data is unavailable.",
     )
     parser.add_argument(
         "--route3-infobox-max-removed-row-rate",
@@ -696,27 +553,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--small-model-api-key-env", type=str, default="OPENROUTER_API_KEY")
     parser.add_argument("--small-model-base-url", type=str, default="https://openrouter.ai/api/v1")
     parser.add_argument("--small-model-max-tokens", type=int, default=4096)
-    parser.add_argument(
-        "--enable-rest-summary-fallback",
-        action="store_true",
-        help="Fetch REST page summaries only when action=parse HTML has no first paragraph. Off by default.",
-    )
-    parser.add_argument("--enable-kelm-rewrite", dest="enable_kelm_rewrite", action="store_true")
-    parser.add_argument(
-        "--enable-rewrite",
-        dest="enable_kelm_rewrite",
-        action="store_true",
-        default=argparse.SUPPRESS,
-        help=argparse.SUPPRESS,
-    )
-    parser.add_argument("--kelm-rewrite-model", dest="kelm_rewrite_model", type=str, default="openai/gpt-4.1-mini")
-    parser.add_argument(
-        "--rewrite-model",
-        dest="kelm_rewrite_model",
-        type=str,
-        default=argparse.SUPPRESS,
-        help=argparse.SUPPRESS,
-    )
     parser.add_argument("--enable-second-stage-grading", action="store_true", default=True)
     parser.add_argument("--second-stage-grading-accuracy-threshold", type=float, default=0.1)
     parser.add_argument("--search-longtail-max-full-question-hit-rate", type=float, default=0.3)
@@ -737,7 +573,12 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         default=ROOT / "outputs" / "wikipedia_infobox_summary.json",
     )
-    return parser.parse_args()
+    args = parser.parse_args()
+    args.stream_page_source = "table-search"
+    args.route3_reasoning_type = list(DEFAULT_ROUTE3_REASONING_TYPES)
+    args.route3_table_filter_mode = list(DEFAULT_ROUTE3_TABLE_FILTER_MODES)
+    args.route3_prose_leakage_scoring = True
+    return args
 
 
 def main() -> int:
@@ -747,36 +588,28 @@ def main() -> int:
     endpoint_resume = _load_endpoint_resume(args)
     args.stream_random_seed_was_explicit = args.stream_random_seed is not None
     args.stream_random_seed = _effective_stream_random_seed(args, endpoint_resume)
-    url_entries = _load_url_entries(args.url, args.url_file)
-    skipped_endpoint_urls: list[str] = []
     effective_record_limit = args.record_limit
-    if args.start_from_endpoint and args.start_stage == "generate" and not args.stream_random_page_ids:
-        url_entries, skipped_endpoint_urls = _filter_endpoint_url_entries(url_entries, endpoint_resume)
-        effective_record_limit = _remaining_after_endpoint(args.record_limit, endpoint_resume.final_decision_count)
-    urls = [entry.url for entry in url_entries]
-    if args.stream_random_page_ids and args.start_stage != "generate":
-        raise ValueError("--stream-random-page-ids only supports --start-stage generate.")
-    if args.stream_random_page_ids and args.stream_batch_size < 1:
+    if args.stream_batch_size < 1:
         raise ValueError("--stream-batch-size must be at least 1.")
-    if args.stream_random_page_ids and args.stream_search_limit < 1:
+    if args.stream_search_limit < 1:
         raise ValueError("--stream-search-limit must be at least 1.")
-    if args.stream_random_page_ids and args.stream_search_max_rounds < 1:
+    if args.stream_search_max_rounds < 1:
         raise ValueError("--stream-search-max-rounds must be at least 1.")
-    if args.stream_random_page_ids and args.stream_discovery_max_retries < 0:
+    if args.stream_discovery_max_retries < 0:
         raise ValueError("--stream-discovery-max-retries must be non-negative.")
-    if args.stream_random_page_ids and args.stream_discovery_retry_backoff_seconds < 0:
+    if args.stream_discovery_retry_backoff_seconds < 0:
         raise ValueError("--stream-discovery-retry-backoff-seconds must be non-negative.")
-    if args.stream_random_page_ids and args.stream_discovery_retry_max_sleep_seconds < 0:
+    if args.stream_discovery_retry_max_sleep_seconds < 0:
         raise ValueError("--stream-discovery-retry-max-sleep-seconds must be non-negative.")
-    if args.stream_random_page_ids and args.stream_page_workers < 1:
+    if args.stream_page_workers < 1:
         raise ValueError("--stream-page-workers must be at least 1.")
-    if args.stream_random_page_ids and args.wikipedia_concurrency_limit < 1:
+    if args.wikipedia_concurrency_limit < 1:
         raise ValueError("--wikipedia-concurrency-limit must be at least 1.")
-    if args.stream_random_page_ids and args.duckduckgo_concurrency_limit < 1:
+    if args.duckduckgo_concurrency_limit < 1:
         raise ValueError("--duckduckgo-concurrency-limit must be at least 1.")
-    if args.stream_random_page_ids and args.openrouter_generation_rewrite_concurrency_limit < 1:
+    if args.openrouter_generation_rewrite_concurrency_limit < 1:
         raise ValueError("--openrouter-generation-rewrite-concurrency-limit must be at least 1.")
-    if args.stream_random_page_ids and args.second_stage_concurrency_limit < 1:
+    if args.second_stage_concurrency_limit < 1:
         raise ValueError("--second-stage-concurrency-limit must be at least 1.")
     if args.wikipedia_429_backoff_seconds < 0:
         raise ValueError("--wikipedia-429-backoff-seconds must be non-negative.")
@@ -784,53 +617,31 @@ def main() -> int:
         raise ValueError("--wikipedia-429-max-backoff-seconds must be non-negative.")
     if args.wikipedia_429_recovery_seconds < 0:
         raise ValueError("--wikipedia-429-recovery-seconds must be non-negative.")
-    if args.stream_random_page_ids and args.stream_rerun_pool_limit < 0:
+    if args.stream_rerun_pool_limit < 0:
         raise ValueError("--stream-rerun-pool-limit must be non-negative.")
-    if args.stream_random_page_ids:
-        args.stream_reuse_cached_page_count = _normalize_stream_reuse_cached_page_count(
-            args.stream_reuse_cached_page_count
-        )
-        args.stream_fresh_cached_page_count = _normalize_stream_fresh_cached_page_count(
-            args.stream_fresh_cached_page_count
-        )
-        if args.stream_page_processing_target < 0:
-            raise ValueError("--stream-page-processing-target must be non-negative.")
+    args.stream_reuse_cached_page_count = _normalize_stream_reuse_cached_page_count(
+        args.stream_reuse_cached_page_count
+    )
+    args.stream_fresh_cached_page_count = _normalize_stream_fresh_cached_page_count(
+        args.stream_fresh_cached_page_count
+    )
+    if args.stream_page_processing_target < 0:
+        raise ValueError("--stream-page-processing-target must be non-negative.")
     if args.stream_free_seeded_rerun_pool_on_completion and not args.stream_prefer_rerun_pool:
         raise ValueError("--stream-free-seeded-rerun-pool-on-completion requires --stream-prefer-rerun-pool.")
-    if args.reset_stream_state and not args.stream_random_page_ids:
-        raise ValueError("--reset-stream-state only applies to streaming page-ID runs.")
     if args.reset_stream_state and args.start_from_endpoint:
         raise ValueError("--reset-stream-state cannot be combined with --start-from-endpoint.")
     if args.reset_stream_state and args.stream_rerun_pool_only:
         raise ValueError("--reset-stream-state cannot be combined with --stream-rerun-pool-only.")
     if args.run_artifact_manifest is not None and not args.run_group_id.strip():
         raise ValueError("--run-artifact-manifest requires --run-group-id.")
-    args.route3_reasoning_type = list(
-        normalize_route3_reasoning_types(args.route3_reasoning_type) or DEFAULT_ROUTE3_REASONING_TYPES
-    )
     args.route3_answer_type = list(normalize_route3_answer_types(args.route3_answer_type))
-    args.route3_extra_prompt = list(normalize_route3_extra_prompts(args.route3_extra_prompt))
-    enabled_table_filter_modes = list(normalize_route3_table_filter_modes(args.route3_table_filter_mode))
-    disabled_table_filter_modes = set(normalize_route3_table_filter_modes(args.disable_route3_table_filter_mode))
-    args.route3_table_filter_mode = [
-        mode for mode in enabled_table_filter_modes if mode not in disabled_table_filter_modes
-    ]
     args.route3_table_source_type = list(
         normalize_route3_table_source_types(args.route3_table_source_type or DEFAULT_ROUTE3_TABLE_SOURCE_TYPES)
     )
     args.route3_answer_type_mode = normalize_route3_answer_type_mode(args.route3_answer_type_mode)
-    args.route3_pageview_unavailable_policy = normalize_route3_pageview_unavailable_policy(
-        args.route3_pageview_unavailable_policy
-    )
-    args.route3_pageview_window_months = max(1, int(args.route3_pageview_window_months))
-    args.route3_max_monthly_average_pageviews = float(args.route3_max_monthly_average_pageviews)
-    args.route3_max_underfilled_monthly_pageviews = float(args.route3_max_underfilled_monthly_pageviews)
     args.route3_infobox_max_removed_row_rate = max(0.0, min(1.0, float(args.route3_infobox_max_removed_row_rate)))
     args.route3_infobox_min_remaining_rows = max(0, int(args.route3_infobox_min_remaining_rows))
-    if args.start_stage == "generate" and not urls and not args.stream_random_page_ids and effective_record_limit > 0:
-        raise ValueError("Provide at least one Wikipedia URL with --url or --url-file.")
-    if args.start_stage == "validation" and not args.candidate_input:
-        raise ValueError("Provide --candidate-input when --start-stage validation is used.")
     proxy = _optional_proxy(args.proxy)
     small_llm = LLMConfig(
         provider=args.small_model_provider,
@@ -840,15 +651,6 @@ def main() -> int:
         proxy=proxy,
         max_tokens=args.small_model_max_tokens,
     )
-    rewrite_llm = None
-    if args.enable_kelm_rewrite:
-        rewrite_llm = LLMConfig(
-            provider=args.small_model_provider,
-            model=args.kelm_rewrite_model,
-            api_key_env=args.small_model_api_key_env,
-            base_url=args.small_model_base_url,
-            proxy=proxy,
-        )
     settings = Settings(
         target_time=args.target_time,
         run_date=args.run_date or Settings(target_time=args.target_time).run_date,
@@ -867,8 +669,8 @@ def main() -> int:
         proxy=proxy,
         output_path=args.output,
         rejected_output_path=args.rejected_output,
-        rewrite_enabled=args.enable_kelm_rewrite,
-        rewrite_llm=rewrite_llm,
+        rewrite_enabled=False,
+        rewrite_llm=None,
         **duckduckgo_settings_kwargs(args),
     )
     wikipedia_client = WikipediaClient(
@@ -882,149 +684,16 @@ def main() -> int:
     )
     search_client = DuckDuckGoSearchClient(**settings.duckduckgo_client_kwargs())
     llm_client = make_cheap_model_qa_client(small_llm, settings.timeout_seconds)
-    rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds) if settings.rewrite_enabled else None
-    if args.stream_random_page_ids:
-        summary = _run_streaming_page_id_pipeline(
-            args=args,
-            settings=settings,
-            wikipedia_client=wikipedia_client,
-            search_client=search_client,
-            llm_client=llm_client,
-            rewrite_client=rewrite_client,
-            endpoint_resume=endpoint_resume,
-        )
-        print(json.dumps(summary, indent=2, ensure_ascii=False))
-        return 0
-    if args.start_stage == "validation":
-        generated_candidates = _load_candidate_inputs(args.candidate_input, limit=effective_record_limit)
-        for candidate in generated_candidates:
-            _apply_allowed_reasoning_type_filter(candidate, args.route3_reasoning_type)
-            _apply_allowed_answer_type_filter(candidate, args.route3_answer_type)
-            _attach_route3_extra_prompts(candidate, args.route3_extra_prompt)
-            _attach_route3_table_filter_modes(candidate, args.route3_table_filter_mode)
-            _attach_route3_table_source_types(candidate, args.route3_table_source_type)
-            _attach_route3_prose_leakage_scoring(candidate, args.route3_prose_leakage_scoring)
-        if not generated_candidates:
-            raise ValueError("No candidates were loaded from --candidate-input.")
-        if not url_entries:
-            url_entries = _url_entries_from_candidates(generated_candidates)
-    else:
-        generator = WikipediaInfoboxTableGenerator(
-            urls=urls,
-            wikipedia_client=wikipedia_client,
-            llm_client=llm_client,
-            record_limit=effective_record_limit,
-            url_domains=_url_domain_map(url_entries),
-            search_query_count=args.generated_search_query_count,
-            enable_rest_summary_fallback=args.enable_rest_summary_fallback,
-            min_table_score=args.min_table_score,
-            allowed_reasoning_types=tuple(args.route3_reasoning_type),
-            allowed_answer_types=tuple(args.route3_answer_type),
-            extra_prompts=tuple(args.route3_extra_prompt),
-            table_filter_modes=tuple(args.route3_table_filter_mode),
-            table_source_types=tuple(args.route3_table_source_type),
-            prose_leakage_scoring_enabled=args.route3_prose_leakage_scoring,
-            llm_choose_table=args.route3_llm_choose_table,
-            answer_type_mode=args.route3_answer_type_mode,
-            page_archive_dir=args.route3_page_archive_dir,
-            pageview_prefilter_enabled=args.route3_pageview_prefilter,
-            pageview_window_months=args.route3_pageview_window_months,
-            max_monthly_average_pageviews=args.route3_max_monthly_average_pageviews,
-            max_underfilled_monthly_pageviews=args.route3_max_underfilled_monthly_pageviews,
-            pageview_unavailable_policy=args.route3_pageview_unavailable_policy,
-            infobox_max_removed_row_rate=args.route3_infobox_max_removed_row_rate,
-            infobox_min_remaining_rows=args.route3_infobox_min_remaining_rows,
-            page_archive_paths_by_url={url: cached_archive_path} if cached_archive_path is not None else None,
-        )
-        generated_candidates = generator.generate(
-            run_date=settings.run_date,
-            cutoff_year=settings.cutoff_year,
-        )
-    result = process_generated_candidates(
-        generated_candidates,
+    rewrite_client = None
+    summary = _run_streaming_page_id_pipeline(
+        args=args,
         settings=settings,
+        wikipedia_client=wikipedia_client,
         search_client=search_client,
+        llm_client=llm_client,
         rewrite_client=rewrite_client,
+        endpoint_resume=endpoint_resume,
     )
-    _renumber_accepted_records(result.accepted)
-    if args.start_from_endpoint:
-        append_jsonl(args.output, _accepted_output_records(result.accepted, args))
-        append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
-    else:
-        write_jsonl(args.output, _accepted_output_records(result.accepted, args))
-        write_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
-    summary = {
-        **_run_artifact_summary(args),
-        "start_stage": args.start_stage,
-        "start_from_endpoint": args.start_from_endpoint,
-        "endpoint_resume": endpoint_resume.summary(),
-        "candidate_input_paths": [str(path) for path in args.candidate_input],
-        "attempted_urls": (
-            min(len(urls), effective_record_limit)
-            if args.start_stage == "generate"
-            else len(generated_candidates)
-        ),
-        "skipped_endpoint_urls": skipped_endpoint_urls,
-        "url_domains": [
-            {"url": entry.url, "domain": entry.domain}
-            | ({"subdomain": entry.subdomain} if entry.subdomain else {})
-            for entry in url_entries[: effective_record_limit]
-        ],
-        "generated": len(generated_candidates),
-        "accepted": len(result.accepted),
-        "accepted_total": endpoint_resume.accepted_count + len(result.accepted),
-        "rejected": len(result.rejected),
-        "rejected_total": endpoint_resume.rejected_count + len(result.rejected),
-        "record_limit": args.record_limit,
-        "record_limit_remaining_at_start": effective_record_limit,
-        "output_path": str(args.output),
-        "rejected_output_path": str(args.rejected_output),
-        "summary_output": str(args.summary_output),
-        "enabled_routes": list(settings.enabled_routes),
-        "rest_summary_fallback_enabled": args.enable_rest_summary_fallback,
-        "generation_model": args.generation_model,
-        "small_model": args.generation_model,
-        "kelm_rewrite_enabled": settings.rewrite_enabled,
-        "kelm_rewrite_model": args.kelm_rewrite_model if settings.rewrite_enabled else "",
-        "rewrite_enabled": settings.rewrite_enabled,
-        "second_stage_grading_enabled": settings.second_stage_grading_enabled,
-        "duckduckgo_top_k": settings.duckduckgo_top_k,
-        "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
-        **duckduckgo_summary_fields(settings),
-        "generated_search_query_count": settings.generated_search_query_count,
-        "min_table_score": args.min_table_score,
-        "route3_reasoning_types": args.route3_reasoning_type,
-        "route3_answer_types": args.route3_answer_type,
-        "route3_extra_prompts": args.route3_extra_prompt,
-        "route3_table_filter_modes": args.route3_table_filter_mode,
-        "route3_table_source_types": args.route3_table_source_type,
-        "route3_prose_leakage_scoring_enabled": bool(args.route3_prose_leakage_scoring),
-        "route3_llm_choose_table": bool(args.route3_llm_choose_table),
-        "route3_answer_type_mode": args.route3_answer_type_mode,
-        "route3_page_archive_dir": str(args.route3_page_archive_dir),
-        "route3_pageview_prefilter_enabled": bool(args.route3_pageview_prefilter),
-        "route3_pageview_window_months": args.route3_pageview_window_months,
-        "route3_max_monthly_average_pageviews": args.route3_max_monthly_average_pageviews,
-        "route3_max_underfilled_monthly_pageviews": args.route3_max_underfilled_monthly_pageviews,
-        "route3_pageview_unavailable_policy": args.route3_pageview_unavailable_policy,
-        "route3_infobox_max_removed_row_rate": args.route3_infobox_max_removed_row_rate,
-        "route3_infobox_min_remaining_rows": args.route3_infobox_min_remaining_rows,
-        "compact_output": False,
-        "compact_output_ignored": bool(args.compact_output or args.big_batch_mode),
-        "compact_rejected_output": False,
-        "compact_rejected_output_ignored": bool(args.compact_rejected_output or args.compact_output or args.big_batch_mode),
-        "wikipedia_429_backoff_seconds": args.wikipedia_429_backoff_seconds,
-        "wikipedia_429_max_backoff_seconds": args.wikipedia_429_max_backoff_seconds,
-        "wikipedia_429_recovery_seconds": args.wikipedia_429_recovery_seconds,
-        **_llm_generation_table_yield_summary(result.accepted, result.rejected),
-        "aggregate_phase_timings_seconds": _aggregate_phase_timings(result.accepted, result.rejected),
-        "telemetry": {
-            **result.telemetry,
-            "wikipedia": wikipedia_client.request_events.copy(),
-            "search": search_client.request_events.copy(),
-        },
-    }
-    _write_summary_and_manifest(args, summary)
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0
 
@@ -1837,9 +1506,8 @@ def _run_streaming_page_id_pipeline(
             **endpoint_sync,
         },
         "streaming_mode": "page_id_stream",
-        "stream_page_source": args.stream_page_source,
-        "stream_search_queries": _stream_search_queries(args),
-        "stream_broad_table_search_enabled": args.enable_broad_table_search,
+        "stream_page_source": "table-search",
+        "stream_search_queries": _stream_search_queries(),
         "stream_search_offsets": state.table_search_offsets.copy(),
         "stream_excluded_page_ids": len(excluded_page_ids),
         "stream_exclude_page_id_files": [str(path) for path in args.stream_exclude_page_id_file],
@@ -1881,10 +1549,6 @@ def _run_streaming_page_id_pipeline(
             if state.rerun_error_details.get(page_id)
         },
         "recovered_stale_in_progress_ids": recovered_ids,
-        "page_id_bounds": {
-            "min": args.stream_page_id_min,
-            "max": args.stream_page_id_max,
-        },
         "random_seed": args.stream_random_seed,
         "random_seed_was_explicit": bool(getattr(args, "stream_random_seed_was_explicit", False)),
         "record_limit": requested_main_page_count,
@@ -1934,32 +1598,21 @@ def _run_streaming_page_id_pipeline(
         "walkthrough_output": str(args.walkthrough_output) if args.walkthrough_output else "",
         "domain_policy": "domain_and_subdomain_optional_for_page_id_streaming",
         "enabled_routes": list(settings.enabled_routes),
-        "rest_summary_fallback_enabled": args.enable_rest_summary_fallback,
         "generation_model": args.generation_model,
         "small_model": args.generation_model,
-        "kelm_rewrite_enabled": settings.rewrite_enabled,
-        "kelm_rewrite_model": args.kelm_rewrite_model if settings.rewrite_enabled else "",
-        "rewrite_enabled": settings.rewrite_enabled,
         "second_stage_grading_enabled": settings.second_stage_grading_enabled,
         "duckduckgo_top_k": settings.duckduckgo_top_k,
         "duckduckgo_parallel_queries": settings.duckduckgo_parallel_queries,
         **duckduckgo_summary_fields(settings),
         "generated_search_query_count": settings.generated_search_query_count,
-        "min_table_score": args.min_table_score,
+        "min_table_score": 0.0,
         "route3_reasoning_types": args.route3_reasoning_type,
         "route3_answer_types": args.route3_answer_type,
-        "route3_extra_prompts": args.route3_extra_prompt,
         "route3_table_filter_modes": args.route3_table_filter_mode,
         "route3_table_source_types": args.route3_table_source_type,
-        "route3_prose_leakage_scoring_enabled": bool(args.route3_prose_leakage_scoring),
-        "route3_llm_choose_table": bool(args.route3_llm_choose_table),
+        "route3_prose_leakage_scoring_enabled": True,
         "route3_answer_type_mode": args.route3_answer_type_mode,
         "route3_page_archive_dir": str(args.route3_page_archive_dir),
-        "route3_pageview_prefilter_enabled": bool(args.route3_pageview_prefilter),
-        "route3_pageview_window_months": args.route3_pageview_window_months,
-        "route3_max_monthly_average_pageviews": args.route3_max_monthly_average_pageviews,
-        "route3_max_underfilled_monthly_pageviews": args.route3_max_underfilled_monthly_pageviews,
-        "route3_pageview_unavailable_policy": args.route3_pageview_unavailable_policy,
         "route3_infobox_max_removed_row_rate": args.route3_infobox_max_removed_row_rate,
         "route3_infobox_min_remaining_rows": args.route3_infobox_min_remaining_rows,
         "compact_output": False,
@@ -2020,10 +1673,10 @@ def _stream_rerun_pool_run_limit(state: PageIdStreamState, args: argparse.Namesp
 def _initialize_table_search_offsets(state: PageIdStreamState, args: argparse.Namespace) -> None:
     """Seed table-search offsets for fresh segmented stream states."""
     initial_offset = max(0, int(getattr(args, "stream_search_initial_offset", 0) or 0))
-    if not initial_offset or getattr(args, "stream_page_source", "") != "table-search":
+    if not initial_offset:
         return
     changed = False
-    for query in _stream_search_queries(args):
+    for query in _stream_search_queries():
         if state.table_search_offset(query) >= initial_offset:
             continue
         state.table_search_offsets[query] = initial_offset
@@ -2354,22 +2007,22 @@ def _process_one_stream_page_id(
             record_limit=1,
             url_domains={},
             search_query_count=args.generated_search_query_count,
-            enable_rest_summary_fallback=args.enable_rest_summary_fallback,
-            min_table_score=args.min_table_score,
-            allowed_reasoning_types=tuple(args.route3_reasoning_type),
+            enable_rest_summary_fallback=False,
+            min_table_score=0.0,
+            allowed_reasoning_types=DEFAULT_ROUTE3_REASONING_TYPES,
             allowed_answer_types=tuple(args.route3_answer_type),
-            extra_prompts=tuple(args.route3_extra_prompt),
-            table_filter_modes=tuple(args.route3_table_filter_mode),
+            extra_prompts=(),
+            table_filter_modes=DEFAULT_ROUTE3_TABLE_FILTER_MODES,
             table_source_types=tuple(args.route3_table_source_type),
-            prose_leakage_scoring_enabled=args.route3_prose_leakage_scoring,
-            llm_choose_table=args.route3_llm_choose_table,
+            prose_leakage_scoring_enabled=True,
+            llm_choose_table=False,
             answer_type_mode=args.route3_answer_type_mode,
             page_archive_dir=args.route3_page_archive_dir,
-            pageview_prefilter_enabled=args.route3_pageview_prefilter,
-            pageview_window_months=args.route3_pageview_window_months,
-            max_monthly_average_pageviews=args.route3_max_monthly_average_pageviews,
-            max_underfilled_monthly_pageviews=args.route3_max_underfilled_monthly_pageviews,
-            pageview_unavailable_policy=args.route3_pageview_unavailable_policy,
+            pageview_prefilter_enabled=False,
+            pageview_window_months=DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS,
+            max_monthly_average_pageviews=DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
+            max_underfilled_monthly_pageviews=DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
+            pageview_unavailable_policy=DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
             infobox_max_removed_row_rate=args.route3_infobox_max_removed_row_rate,
             infobox_min_remaining_rows=args.route3_infobox_min_remaining_rows,
             page_archive_paths_by_url={url: cached_archive_path} if cached_archive_path is not None else None,
@@ -2550,21 +2203,13 @@ def _reserve_stream_page_ids(
     rerun_pool_only: bool = False,
     prefer_rerun_pool: bool = False,
 ) -> list[int]:
-    """Reserve page IDs from the configured streaming discovery source."""
+    """Reserve page IDs from the formal table-search discovery source."""
     if rerun_pool_only:
         return state.reserve_candidate_ids(
             [],
             count=count,
             source="rerun_pool_only",
             prefer_rerun_pool=True,
-        )
-    if args.stream_page_source == "random-page-id":
-        return state.reserve_ids(
-            count=count,
-            lower_bound=args.stream_page_id_min,
-            upper_bound=args.stream_page_id_max,
-            rng=rng,
-            prefer_rerun_pool=prefer_rerun_pool,
         )
 
     selected = state.reserve_candidate_ids(
@@ -2576,7 +2221,7 @@ def _reserve_stream_page_ids(
     if len(selected) >= count:
         return selected
 
-    queries = _stream_search_queries(args)
+    queries = _stream_search_queries()
     rounds = 0
     while len(selected) < count and rounds < args.stream_search_max_rounds:
         rounds += 1
@@ -2660,14 +2305,9 @@ def _extend_unique_page_ids(selected: list[int], reserved: list[int]) -> None:
         seen.add(page_id)
 
 
-def _stream_search_queries(args: argparse.Namespace) -> list[str]:
-    """Return table-search queries for streaming discovery."""
-    queries = [query.strip() for query in args.stream_search_query if query.strip()]
-    if not queries:
-        queries = list(DEFAULT_TABLE_SEARCH_QUERIES)
-    if args.enable_broad_table_search and BROAD_TABLE_SEARCH_QUERY not in queries:
-        queries.append(BROAD_TABLE_SEARCH_QUERY)
-    return queries
+def _stream_search_queries() -> list[str]:
+    """Return the fixed formal table-search queries."""
+    return list(DEFAULT_TABLE_SEARCH_QUERIES)
 
 
 def _attach_stream_metadata(
@@ -2750,8 +2390,6 @@ def _streaming_discovery_metadata(
         "page_id": page_id,
         "pageid_url": build_pageid_url(page_id),
         "source_url": url,
-        "page_id_min": args.stream_page_id_min,
-        "page_id_max": args.stream_page_id_max,
         "random_seed": args.stream_random_seed,
         "domain_policy": "domain_and_subdomain_optional",
     }
