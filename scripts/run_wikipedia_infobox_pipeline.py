@@ -30,7 +30,6 @@ from wikidata_simpleqa.generation_pipeline import (
     build_second_stage_model_panel,
     process_generated_candidates,
 )
-from wikidata_simpleqa.io import append_jsonl, write_jsonl
 from wikidata_simpleqa.page_id_lists import (
     PageIdListEntry,
     build_page_id_entries,
@@ -38,6 +37,16 @@ from wikidata_simpleqa.page_id_lists import (
     read_page_id_entries,
 )
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids, route3_record_id
+from wikidata_simpleqa.route3_run_ledger import (
+    commit_page_attempt,
+    derived_records,
+    ledger_summary,
+    latest_page_attempts,
+    load_page_attempts,
+    next_attempt_number,
+    rebuild_derived_outputs,
+    recover_stream_state_from_ledger,
+)
 from wikidata_simpleqa.search_cli import (
     add_duckduckgo_transport_args,
     duckduckgo_settings_kwargs,
@@ -389,6 +398,12 @@ def parse_args() -> argparse.Namespace:
         "--stream-page-processing-target",
         type=int,
         default=0,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--page-attempt-ledger-dir",
+        type=Path,
+        required=True,
         help=argparse.SUPPRESS,
     )
     parser.add_argument(
@@ -749,8 +764,7 @@ def _load_endpoint_jsonl(path: Path, *, label: str) -> tuple[list[dict], list[di
 
 def _write_summary_and_manifest(args: argparse.Namespace, summary: dict) -> None:
     """Write the invocation summary and update its optional run-group manifest."""
-    args.summary_output.parent.mkdir(parents=True, exist_ok=True)
-    args.summary_output.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+    _write_json_atomic(args.summary_output, summary)
     _update_run_artifact_manifest(args, summary)
 
 
@@ -1259,6 +1273,18 @@ def _run_streaming_page_id_pipeline(
         state.save()
     else:
         state = PageIdStreamState.load(args.stream_state)
+    ledger_recovery = recover_stream_state_from_ledger(state, args.page_attempt_ledger_dir)
+    accepted_records, rejected_records, rerun_records = rebuild_derived_outputs(
+        args.page_attempt_ledger_dir,
+        accepted_path=args.output,
+        rejected_path=args.rejected_output,
+    )
+    committed_attempts = load_page_attempts(args.page_attempt_ledger_dir)
+    primary_page_ids_at_start = {
+        int(attempt["canonical_page_id"])
+        for attempt in committed_attempts
+        if bool(attempt.get("primary_page_attempt", False))
+    }
     excluded_page_ids = _load_stream_excluded_page_ids(
         args.stream_exclude_page_id_file,
         answer_types=_page_id_list_answer_types(args),
@@ -1282,10 +1308,7 @@ def _run_streaming_page_id_pipeline(
         )
     recovered_ids = state.recover_stale_in_progress()
     rng = random.Random(args.stream_random_seed)
-    processed_ids: list[int] = []
-    accepted_records: list[dict] = []
-    rejected_records: list[dict] = []
-    rerun_records: list[dict] = []
+    processed_ids: list[int] = sorted(primary_page_ids_at_start)
     accepted_target = max(0, int(args.stream_accepted_target or 0))
     if args.start_from_endpoint and accepted_target:
         accepted_target = max(0, accepted_target - endpoint_resume.accepted_count)
@@ -1299,12 +1322,9 @@ def _run_streaming_page_id_pipeline(
         ids_remaining = _stream_rerun_pool_run_limit(state, args)
         page_processing_target_remaining_at_start = ids_remaining
     else:
-        page_processing_target_remaining_at_start = requested_main_page_count
-        if args.start_from_endpoint:
-            page_processing_target_remaining_at_start = _remaining_after_endpoint(
-                requested_main_page_count,
-                endpoint_resume.final_decision_count,
-            )
+        page_processing_target_remaining_at_start = max(
+            0, requested_main_page_count - len(primary_page_ids_at_start)
+        )
         ids_remaining = 0
     page_workers = 1 if accepted_target else max(1, int(args.stream_page_workers))
     auto_rerun_pool_ids_at_start: list[int] = []
@@ -1476,6 +1496,7 @@ def _run_streaming_page_id_pipeline(
                             rewrite_client=rewrite_client,
                             concurrency=concurrency,
                             second_stage_model_clients=second_stage_model_clients,
+                            primary_page_attempt=False,
                             grading_grader_client=grading_grader_client,
                         )
                     ] = index
@@ -1489,6 +1510,19 @@ def _run_streaming_page_id_pipeline(
     cached_reuse_page_ids = [entry.page_id for entry in cached_page_reuse_entries]
     auto_rerun_processed_id_set = set(auto_rerun_processed_ids)
     cached_reuse_page_id_set = set(cached_reuse_page_ids)
+    accepted_records, rejected_records, rerun_records = rebuild_derived_outputs(
+        args.page_attempt_ledger_dir,
+        accepted_path=args.output,
+        rejected_path=args.rejected_output,
+    )
+    committed_attempts = load_page_attempts(args.page_attempt_ledger_dir)
+    processed_ids = sorted(
+        {
+            int(attempt["canonical_page_id"])
+            for attempt in committed_attempts
+            if bool(attempt.get("primary_page_attempt", False))
+        }
+    )
     fresh_processed_page_ids = [
         page_id
         for page_id in processed_ids
@@ -1513,6 +1547,9 @@ def _run_streaming_page_id_pipeline(
         "stream_exclude_page_id_files": [str(path) for path in args.stream_exclude_page_id_file],
         "run_date": settings.run_date,
         "stream_state": str(args.stream_state),
+        "page_attempt_ledger_dir": str(args.page_attempt_ledger_dir),
+        "page_attempt_ledger": ledger_summary(args.page_attempt_ledger_dir),
+        "ledger_state_recovery": ledger_recovery,
         "stream_state_stats": state.stats(),
         "stream_state_reset": bool(args.reset_stream_state),
         "stream_rerun_pool_only": bool(args.stream_rerun_pool_only),
@@ -1995,10 +2032,24 @@ def _process_one_stream_page_id(
     source_url: str | None = None,
     stream_page_source: str | None = None,
     cached_archive_path: Path | None = None,
+    primary_page_attempt: bool = True,
 ) -> dict:
-    """Run one page ID through generation and shared processing."""
+    """Run one page ID and commit its complete decision to the page-attempt ledger."""
     url = source_url or build_pageid_url(page_id)
     page_source = stream_page_source or args.stream_page_source
+    existing = latest_page_attempts(load_page_attempts(args.page_attempt_ledger_dir)).get(page_id)
+    if existing is not None and str(existing.get("status", "")) in {"accepted", "rejected"}:
+        accepted, rejected, _ = derived_records([existing])
+        return {
+            "status": str(existing["status"]),
+            "page_id": page_id,
+            "url": url,
+            "accepted_records": accepted,
+            "rejected_records": rejected,
+            "reused_committed_ledger": True,
+        }
+    attempt_number = next_attempt_number(args.page_attempt_ledger_dir, page_id)
+    generated_candidates: list[GeneratedCandidate] = []
     try:
         generator = WikipediaInfoboxTableGenerator(
             urls=[url],
@@ -2037,14 +2088,21 @@ def _process_one_stream_page_id(
             cutoff_year=settings.cutoff_year,
         )
         if not generated_candidates:
-            with concurrency.commit_lock:
-                state.mark_rerun(page_id, reason="no_generated_candidate")
-            return {
-                "status": "rerun",
-                "page_id": page_id,
-                "url": url,
-                "reason": "no_generated_candidate",
-            }
+            return _commit_stream_page_attempt(
+                page_id=page_id,
+                url=url,
+                attempt_number=attempt_number,
+                primary_page_attempt=primary_page_attempt,
+                status="rerun",
+                reason="no_generated_candidate",
+                generated_candidates=[],
+                accepted_records=[],
+                rejected_records=[],
+                error_details={},
+                args=args,
+                state=state,
+                concurrency=concurrency,
+            )
         for candidate in generated_candidates:
             _attach_stream_metadata(
                 candidate,
@@ -2062,102 +2120,178 @@ def _process_one_stream_page_id(
             second_stage_model_clients=second_stage_model_clients,
             grading_grader_client=grading_grader_client,
         )
-        if result.accepted:
-            with concurrency.commit_lock:
-                for record in result.accepted:
-                    _attach_stream_record_metadata(
-                        record,
-                        page_id=page_id,
-                        url=url,
-                        args=args,
-                        page_source=page_source,
-                        cached_archive_path=cached_archive_path,
-                    )
-                    _ensure_page_id_list_entry_metadata(record)
-                    record["id"] = _wikipedia_stream_record_id(record)
-                for record in result.rejected:
-                    _attach_stream_record_metadata(
-                        record,
-                        page_id=page_id,
-                        url=url,
-                        args=args,
-                        page_source=page_source,
-                        cached_archive_path=cached_archive_path,
-                    )
-                append_jsonl(args.output, _accepted_output_records(result.accepted, args))
-                if result.rejected:
-                    append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
-                state.mark_accepted(page_id)
-            return {
-                "status": "accepted",
-                "page_id": page_id,
-                "url": url,
-                "accepted_records": result.accepted,
-                "rejected_records": result.rejected,
-            }
-        if result.rejected:
-            for record in result.rejected:
-                _attach_stream_record_metadata(
-                    record,
-                    page_id=page_id,
-                    url=url,
-                    args=args,
-                    page_source=page_source,
-                    cached_archive_path=cached_archive_path,
-                )
-            reason = _exact_failure_reason(result.rejected[0])
-            if _should_rerun_stream_rejection(result.rejected[0]):
-                error_details = _rerun_error_details_from_record(result.rejected[0])
-                with concurrency.commit_lock:
-                    state.mark_rerun(page_id, reason=reason, **error_details)
-                return {
-                    "status": "rerun",
-                    "page_id": page_id,
-                    "url": url,
-                    "accepted_records": [],
-                    "rejected_records": [],
-                    "reason": reason,
-                    **error_details,
-                }
-            with concurrency.commit_lock:
-                append_jsonl(args.rejected_output, _rejected_output_records(result.rejected, args))
-                state.mark_rejected(page_id, reason=reason)
-            return {
-                "status": "rejected",
-                "page_id": page_id,
-                "url": url,
-                "accepted_records": [],
-                "rejected_records": result.rejected,
-                "reason": reason,
-            }
-        with concurrency.commit_lock:
-            state.mark_rerun(page_id, reason="pipeline_no_accept_or_reject")
-        return {
-            "status": "rerun",
-            "page_id": page_id,
-            "url": url,
-            "reason": "pipeline_no_accept_or_reject",
-        }
-    except Exception as exc:  # noqa: BLE001
-        error_type = type(exc).__name__
-        error_message = str(exc)
-        reason = f"pipeline_exception:{error_type}"
-        with concurrency.commit_lock:
-            state.mark_rerun(
-                page_id,
-                reason=reason,
-                error_type=error_type,
-                error_message=error_message,
+        for record in [*result.accepted, *result.rejected]:
+            _attach_stream_record_metadata(
+                record,
+                page_id=page_id,
+                url=url,
+                args=args,
+                page_source=page_source,
+                cached_archive_path=cached_archive_path,
             )
-        return {
-            "status": "rerun",
-            "page_id": page_id,
-            "url": url,
-            "reason": reason,
-            "error_type": error_type,
-            "error_message": error_message,
+            _ensure_page_id_list_entry_metadata(record)
+            record["id"] = _wikipedia_stream_record_id(record)
+        if result.accepted:
+            return _commit_stream_page_attempt(
+                page_id=page_id,
+                url=url,
+                attempt_number=attempt_number,
+                primary_page_attempt=primary_page_attempt,
+                status="accepted",
+                reason="accepted",
+                generated_candidates=generated_candidates,
+                accepted_records=_accepted_output_records(result.accepted, args),
+                rejected_records=_rejected_output_records(result.rejected, args),
+                error_details={},
+                args=args,
+                state=state,
+                concurrency=concurrency,
+            )
+        if result.rejected:
+            reason = _exact_failure_reason(result.rejected[0])
+            retryable = _should_rerun_stream_rejection(result.rejected[0])
+            error_details = _rerun_error_details_from_record(result.rejected[0]) if retryable else {}
+            return _commit_stream_page_attempt(
+                page_id=page_id,
+                url=url,
+                attempt_number=attempt_number,
+                primary_page_attempt=primary_page_attempt,
+                status="rerun" if retryable else "rejected",
+                reason=reason,
+                generated_candidates=generated_candidates,
+                accepted_records=[],
+                rejected_records=_rejected_output_records(result.rejected, args),
+                error_details=error_details,
+                args=args,
+                state=state,
+                concurrency=concurrency,
+            )
+        return _commit_stream_page_attempt(
+            page_id=page_id,
+            url=url,
+            attempt_number=attempt_number,
+            primary_page_attempt=primary_page_attempt,
+            status="rerun",
+            reason="pipeline_no_accept_or_reject",
+            generated_candidates=generated_candidates,
+            accepted_records=[],
+            rejected_records=[],
+            error_details={},
+            args=args,
+            state=state,
+            concurrency=concurrency,
+        )
+    except Exception as exc:  # noqa: BLE001
+        error_details = {
+            "error_type": type(exc).__name__,
+            "error_message": str(exc),
         }
+        return _commit_stream_page_attempt(
+            page_id=page_id,
+            url=url,
+            attempt_number=attempt_number,
+            primary_page_attempt=primary_page_attempt,
+            status="rerun",
+            reason=f"pipeline_exception:{type(exc).__name__}",
+            generated_candidates=generated_candidates,
+            accepted_records=[],
+            rejected_records=[],
+            error_details=error_details,
+            args=args,
+            state=state,
+            concurrency=concurrency,
+        )
 
+
+def _commit_stream_page_attempt(
+    *,
+    page_id: int,
+    url: str,
+    attempt_number: int,
+    primary_page_attempt: bool,
+    status: str,
+    reason: str,
+    generated_candidates: list[GeneratedCandidate],
+    accepted_records: list[dict],
+    rejected_records: list[dict],
+    error_details: dict[str, str],
+    args: argparse.Namespace,
+    state: PageIdStreamState,
+    concurrency: StreamingConcurrencyContext,
+) -> dict:
+    """Commit one ledger record before rebuilding endpoints and updating state."""
+    candidate_snapshots = [candidate.to_output_record("") for candidate in generated_candidates]
+    for record in candidate_snapshots:
+        record["id"] = _wikipedia_stream_record_id(record)
+    generation_raw_audit = _generation_raw_audit(generated_candidates)
+    candidate_ids = [str(record["id"]) for record in candidate_snapshots]
+    timings = [
+        dict(record.get("source_metadata", {}).get("phase_timings_seconds", {}))
+        for record in [*accepted_records, *rejected_records]
+        if isinstance(record.get("source_metadata"), dict)
+    ]
+    payload = {
+        "run_group_id": _run_group_id(args),
+        "segment_id": _run_segment_id(args),
+        "canonical_page_id": page_id,
+        "canonical_page_url": url,
+        "attempt_number": attempt_number,
+        "primary_page_attempt": primary_page_attempt,
+        "status": status,
+        "reason": reason,
+        "generation_raw_audit": generation_raw_audit,
+        "candidates": candidate_snapshots,
+        "ddg": [record.get("search_verification_features", {}) for record in candidate_snapshots],
+        "second_stage": [record.get("panel_grading_features", {}) for record in candidate_snapshots],
+        "accepted_records": accepted_records,
+        "rejected_records": rejected_records,
+        "candidate_ids": candidate_ids,
+        "timings": timings,
+        "error_details": dict(error_details),
+    }
+    with concurrency.commit_lock:
+        ledger_path = commit_page_attempt(args.page_attempt_ledger_dir, payload)
+        rebuild_derived_outputs(
+            args.page_attempt_ledger_dir,
+            accepted_path=args.output,
+            rejected_path=args.rejected_output,
+        )
+        if status == "accepted":
+            state.mark_accepted(page_id)
+        elif status == "rejected":
+            state.mark_rejected(page_id, reason=reason)
+        else:
+            state.mark_rerun(page_id, reason=reason, **error_details)
+    return {
+        "status": status,
+        "page_id": page_id,
+        "url": url,
+        "accepted_records": accepted_records if status == "accepted" else [],
+        "rejected_records": rejected_records if status in {"accepted", "rejected"} else [],
+        "reason": reason,
+        "ledger_path": str(ledger_path),
+        **error_details,
+    }
+
+
+def _generation_raw_audit(candidates: list[GeneratedCandidate]) -> dict[str, Any]:
+    """Collect generation prompt, request, response, and archive hashes for one page."""
+    rows: list[dict[str, Any]] = []
+    for candidate in candidates:
+        metadata = candidate.source_metadata if isinstance(candidate.source_metadata, dict) else {}
+        audit = metadata.get("llm_audit", {})
+        archive = metadata.get("route3_page_archive", {})
+        rows.append(
+            {
+                "slot": metadata.get("original_candidate_slot") or metadata.get("route3_slot_id") or "single",
+                "prompt": metadata.get("llm_prompt", ""),
+                "request": audit.get("request_payload", {}) if isinstance(audit, dict) else {},
+                "response": metadata.get("llm_response", {}),
+                "audit": audit if isinstance(audit, dict) else {},
+                "page_archive_hash": archive.get("archive_sha256", "") if isinstance(archive, dict) else "",
+            }
+        )
+    return {"slots": rows}
 
 def _should_rerun_stream_rejection(record: dict) -> bool:
     """Return whether a rejected stream record represents a transient retryable failure."""

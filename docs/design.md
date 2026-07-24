@@ -52,6 +52,14 @@ Specific answer types use single mode. `AllTypes` uses all5 mode. Primary page-a
 
 Table filters, prose-leakage scoring, and minimum table score remain fixed at their current formal values. They are method internals, not user switches. Other legacy CLI surfaces are catalogued in `docs/compatibility_legacy_settings.md`.
 
+## Durable segment execution
+
+Formal non-dry runs require a clean Git worktree. Each segment owns a `segment_manifest.json` whose fingerprint covers the Git SHA, generation prompt hash, resolved result-affecting configuration, model parameters, answer and source modes, primary page budget, seed, cache policy, table ranking and filters, DuckDuckGo settings, and second-stage settings.
+
+A matching complete segment is reused, and a matching incomplete segment resumes. A fingerprint mismatch cannot reuse the segment. Top-up work uses a new segment under the same run group and does not modify the old segment.
+
+Each page attempt is atomically committed to `page_attempts/p<canonical_page_id>_attemptNNN.json` before stream state or endpoint updates. The ledger contains the generation audit, all candidate slots, DuckDuckGo and second-stage evidence, decision records, candidate IDs, and timings. Committed accepted or rejected pages are not generated again. Runtime state is recovered from the ledger, and accepted JSONL, rejected JSONL, and segment summaries are ledger-derived artifacts. Page archives use the same temporary-file plus `os.replace` discipline and expose their SHA-256 hashes through provenance.
+
 ## Candidate artifact schema
 
 Each formal candidate has one stable ID derived only from:

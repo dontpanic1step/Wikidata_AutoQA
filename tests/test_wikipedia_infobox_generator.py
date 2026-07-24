@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import sys
-import json
 import hashlib
+import json
 import random
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -18,6 +18,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
+from wikidata_simpleqa.route3_run_ledger import commit_page_attempt
 from wikidata_simpleqa.page_id_lists import PageIdListEntry
 from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
 from wikidata_simpleqa.wikipedia_client import (
@@ -44,6 +45,7 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     _rejected_placeholder,
     _sanitize_answer_blind_queries,
     _subject_anchor_context,
+    _write_route3_page_archive,
     normalize_route3_table_source_types,
 )
 
@@ -1126,10 +1128,12 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 route3_infobox_max_removed_row_rate=0.6,
                 route3_infobox_min_remaining_rows=5,
                 stream_page_source="table-search",
+                page_attempt_ledger_dir=root / "page_attempts",
+                run_group_id="group",
+                run_segment_id="segment",
                 stream_page_id_min=1,
                 stream_page_id_max=999999,
                 stream_random_seed=1,
-                run_group_id="",
                 output=root / "accepted.jsonl",
                 rejected_output=root / "rejected.jsonl",
             )
@@ -1175,6 +1179,90 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertTrue(metadata["route3_page_archive"]["archive_read_only"])
         self.assertEqual(metadata["streaming_discovery"]["page_source"], "cached_page_archive")
         self.assertEqual(metadata["streaming_discovery"]["cached_archive_path"], str(archive_path))
+
+    def test_page_archive_is_atomic_and_records_hash(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            archive_path = root / "p123.json"
+            payload = {"page_id": 123, "title": "Archive Test"}
+
+            metadata = _write_route3_page_archive(archive_path, payload)
+
+            self.assertEqual(json.loads(archive_path.read_text(encoding="utf-8")), payload)
+            self.assertEqual(
+                metadata["archive_sha256"],
+                hashlib.sha256(archive_path.read_bytes()).hexdigest(),
+            )
+            self.assertEqual(list(root.glob(".*.tmp")), [])
+    def test_committed_page_ledger_skips_generation(self) -> None:
+        class NoGenerationWikipediaClient(FakeWikipediaClient):
+            def __init__(self) -> None:
+                self.fetch_calls = 0
+
+            def fetch_parse(self, title_or_url: str) -> dict:
+                self.fetch_calls += 1
+                raise AssertionError("A committed page must not be generated again.")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            ledger_dir = root / "page_attempts"
+            accepted_record = {
+                "id": "route3-committed",
+                "question": "Which archive signed the agreement?",
+                "answer": "Archive Guild",
+                "source_metadata": {"page_id": 2468},
+            }
+            commit_page_attempt(
+                ledger_dir,
+                {
+                    "run_group_id": "group",
+                    "segment_id": "segment",
+                    "canonical_page_id": 2468,
+                    "canonical_page_url": "https://en.wikipedia.org/w/index.php?pageid=2468",
+                    "attempt_number": 1,
+                    "primary_page_attempt": True,
+                    "status": "accepted",
+                    "reason": "accepted",
+                    "generation_raw_audit": {},
+                    "candidates": [],
+                    "ddg": [],
+                    "second_stage": [],
+                    "accepted_records": [accepted_record],
+                    "rejected_records": [],
+                    "candidate_ids": ["route3-committed"],
+                    "timings": [],
+                    "error_details": {},
+                },
+            )
+            args = SimpleNamespace(
+                page_attempt_ledger_dir=ledger_dir,
+                stream_page_source="table-search",
+            )
+            client = NoGenerationWikipediaClient()
+
+            decision = _process_one_stream_page_id(
+                2468,
+                args=args,
+                settings=Settings(target_time="2024"),
+                state=PageIdStreamState.load(root / "state.json"),
+                wikipedia_client=client,
+                search_client=FakeSearchClient(),
+                llm_client=FakeLLMClient(),
+                rewrite_client=None,
+                concurrency=StreamingConcurrencyContext(
+                    commit_lock=Lock(),
+                    wikipedia_semaphore=Semaphore(1),
+                    duckduckgo_semaphore=Semaphore(1),
+                    generation_rewrite_semaphore=Semaphore(1),
+                    second_stage_semaphore=Semaphore(1),
+                ),
+                second_stage_model_clients=None,
+                grading_grader_client=None,
+            )
+
+        self.assertTrue(decision["reused_committed_ledger"])
+        self.assertEqual(decision["accepted_records"], [accepted_record])
+        self.assertEqual(client.fetch_calls, 0)
 
     def test_pageview_prefilter_rejects_high_popularity_before_llm(self) -> None:
         class PopularWikipediaClient(FakeWikipediaClient):

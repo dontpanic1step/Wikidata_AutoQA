@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import inspect
 import json
 import re
 import subprocess
@@ -26,6 +27,17 @@ from wikidata_simpleqa.page_id_lists import (
     write_page_id_entries,
 )
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids
+from wikidata_simpleqa.route3_run_ledger import (
+    atomic_write_json,
+    build_segment_fingerprint,
+    create_segment_manifest,
+    ledger_summary,
+    load_segment_manifest,
+    rebuild_derived_outputs,
+    rebuild_summary_from_ledger,
+    require_matching_fingerprint,
+    update_segment_manifest,
+)
 from wikidata_simpleqa.search_cli import add_duckduckgo_transport_args, duckduckgo_settings_kwargs
 from wikidata_simpleqa.wikipedia_infobox_generator import (
     DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
@@ -38,6 +50,9 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     DEFAULT_ROUTE3_TABLE_SOURCE_TYPES,
     normalize_route3_answer_types,
     normalize_route3_answer_type_mode,
+    build_route3_infobox_prompt,
+    build_route3_wikitable_prompt,
+    build_wikipedia_infobox_prompt,
     normalize_route3_table_source_types,
 )
 from wikidata_simpleqa.wikipedia_streaming import PageIdStreamState
@@ -229,6 +244,7 @@ def main() -> int:
     args = parse_args()
     _apply_recipe_big_batch_mode(args)
     run_started = perf_counter()
+    args.run_date = args.run_date or date.today().isoformat()
     recipe_items, reasoning_types = _parse_recipe(args)
     args.route3_answer_type_mode = normalize_route3_answer_type_mode(args.route3_answer_type_mode)
     table_filter_modes = list(DEFAULT_ROUTE3_TABLE_FILTER_MODES)
@@ -248,10 +264,12 @@ def main() -> int:
     output = args.output or ROOT / "outputs" / f"{run_id}_accepted.jsonl"
     rejected_output = args.rejected_output or ROOT / "outputs" / f"{run_id}_rejected.jsonl"
     summary_output = args.summary_output or ROOT / "outputs" / f"{run_id}_summary.json"
-    walkthrough_output = args.walkthrough_output or ROOT / "docs" / "walkthroughs" / f"{run_id}.md"
+    walkthrough_output = args.walkthrough_output or ROOT / "outputs" / f"{run_id}_walkthrough.md"
     stream_state_base = args.stream_state or segment_dir / "stream_state.json"
     stream_exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
     append_label = _recipe_append_label(args)
+    if not args.dry_run:
+        _require_clean_worktree()
 
     segment_dir.mkdir(parents=True, exist_ok=True)
     segment_summaries: list[dict] = []
@@ -294,6 +312,15 @@ def main() -> int:
             index,
             args.stream_search_limit,
         )
+        segment_stream_search_initial_offset = (
+            _append_stream_search_initial_offset(
+                segment_dir=segment_dir,
+                base_segment_id=base_segment_id,
+                base_offset=base_stream_search_initial_offset,
+            )
+            if append_label
+            else base_stream_search_initial_offset
+        )
         command, paths = _segment_command(
             args=args,
             item=item,
@@ -302,13 +329,7 @@ def main() -> int:
             segment_dir=segment_dir,
             stream_state_base=stream_state_base,
             stream_exclusion_file=stream_exclusion_file,
-            stream_search_initial_offset=_append_stream_search_initial_offset(
-                segment_dir=segment_dir,
-                base_segment_id=base_segment_id,
-                base_offset=base_stream_search_initial_offset,
-            )
-            if append_label
-            else base_stream_search_initial_offset,
+            stream_search_initial_offset=segment_stream_search_initial_offset,
             table_source_types=table_source_types,
             append_label=append_label,
             rerun_pool_seed_file=rerun_pool_seed_file,
@@ -316,8 +337,57 @@ def main() -> int:
             stream_reuse_cached_page_count=segment_reuse_cached_page_count,
             stream_fresh_cached_page_count=segment_fresh_cached_page_count,
         )
-        if _segment_complete(paths):
-            summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+        manifest: dict | None = None
+        if not args.dry_run:
+            segment_seed = _recipe_segment_seed(
+                args=args,
+                run_id=run_id,
+                segment_id=segment_id,
+                answer_type=item.answer_type,
+                index=index,
+            )
+            fingerprint = _segment_fingerprint(
+                args=args,
+                item=item,
+                run_id=run_id,
+                segment_id=segment_id,
+                stream_random_seed=segment_seed,
+                table_source_types=table_source_types,
+                stream_reuse_cached_page_count=segment_reuse_cached_page_count,
+                stream_fresh_cached_page_count=segment_fresh_cached_page_count,
+            )
+            manifest = load_segment_manifest(paths["manifest"])
+            if manifest is None:
+                manifest = create_segment_manifest(
+                    run_group_id=run_id,
+                    segment_id=segment_id,
+                    fingerprint=fingerprint,
+                    artifacts={
+                        "accepted": str(paths["accepted"]),
+                        "rejected": str(paths["rejected"]),
+                        "summary": str(paths["summary"]),
+                        "stream_state": str(paths["stream_state"]),
+                        "page_attempt_ledger": str(paths["ledger"]),
+                    },
+                )
+                atomic_write_json(paths["manifest"], manifest)
+            else:
+                require_matching_fingerprint(
+                    manifest,
+                    fingerprint,
+                    path=paths["manifest"],
+                )
+        if not args.dry_run and _segment_complete(paths):
+            rebuild_derived_outputs(
+                paths["ledger"],
+                accepted_path=paths["accepted"],
+                rejected_path=paths["rejected"],
+            )
+            summary = rebuild_summary_from_ledger(
+                paths["summary"],
+                paths["ledger"],
+                base_summary=_segment_summary_base(paths),
+            )
             _attach_recipe_segment_budget_summary(
                 summary,
                 item=item,
@@ -355,6 +425,19 @@ def main() -> int:
             item=item,
             stream_reuse_cached_page_count=segment_reuse_cached_page_count,
             stream_fresh_cached_page_count=segment_fresh_cached_page_count,
+        )
+        summary = rebuild_summary_from_ledger(
+            paths["summary"],
+            paths["ledger"],
+            base_summary=summary,
+        )
+        if manifest is None:
+            raise RuntimeError("Segment manifest was not initialized before execution.")
+        manifest = update_segment_manifest(
+            paths["manifest"],
+            manifest,
+            status="complete" if _segment_reached_record_limit(summary) else "incomplete",
+            ledger_summary=ledger_summary(paths["ledger"]),
         )
         if not _segment_reached_record_limit(summary):
             raise RuntimeError(
@@ -605,6 +688,127 @@ def _recipe_segment_seed(
         stream_rerun_pool_only=False,
     )
     return _effective_stream_random_seed(seed_args)
+
+
+def _require_clean_worktree() -> None:
+    """Require a clean Git worktree for a formal network run."""
+    result = subprocess.run(
+        ["git", "status", "--porcelain"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    if result.stdout.strip():
+        raise RuntimeError("Formal Route 3 runs require a clean Git worktree.")
+
+
+def _git_sha() -> str:
+    """Return the current Git commit SHA."""
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=ROOT,
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    return result.stdout.strip()
+
+
+def _generation_prompt_hash() -> str:
+    """Hash the exact source of the formal Route 3 prompt builders."""
+    sources = [
+        inspect.getsource(build_wikipedia_infobox_prompt),
+        inspect.getsource(build_route3_infobox_prompt),
+        inspect.getsource(build_route3_wikitable_prompt),
+    ]
+    return build_segment_fingerprint({"prompt_sources": sources})["sha256"]
+
+
+def _segment_fingerprint(
+    *,
+    args: argparse.Namespace,
+    item: RecipeItem,
+    run_id: str,
+    segment_id: str,
+    stream_random_seed: int,
+    table_source_types: list[str],
+    stream_reuse_cached_page_count: int | str,
+    stream_fresh_cached_page_count: int | str,
+) -> dict:
+    """Build the complete resolved fingerprint for one formal segment."""
+    resolved_config = {
+        "target_time": args.target_time,
+        "run_date": args.run_date,
+        "cutoff_year": args.cutoff_year,
+        "timeout_seconds": args.timeout_seconds,
+        "proxy": args.proxy,
+        "generation_provider": args.small_model_provider,
+        "generation_base_url": args.small_model_base_url,
+        "generation_api_key_env": args.small_model_api_key_env,
+        "generated_search_query_count": args.generated_search_query_count,
+        "stream_search_limit": args.stream_search_limit,
+        "stream_search_max_rounds": args.stream_search_max_rounds,
+        "stream_discovery_max_retries": args.stream_discovery_max_retries,
+        "stream_discovery_retry_backoff_seconds": args.stream_discovery_retry_backoff_seconds,
+        "stream_discovery_retry_max_sleep_seconds": args.stream_discovery_retry_max_sleep_seconds,
+        "wikipedia_429_backoff_seconds": args.wikipedia_429_backoff_seconds,
+        "wikipedia_429_max_backoff_seconds": args.wikipedia_429_max_backoff_seconds,
+        "wikipedia_429_recovery_seconds": args.wikipedia_429_recovery_seconds,
+        "auto_rerun_once": not args.disable_auto_rerun_once,
+        "stream_batch_size": args.stream_batch_size,
+        "stream_page_workers": args.stream_page_workers,
+        "wikipedia_concurrency_limit": args.wikipedia_concurrency_limit,
+        "duckduckgo_concurrency_limit": args.duckduckgo_concurrency_limit,
+        "openrouter_generation_rewrite_concurrency_limit": args.openrouter_generation_rewrite_concurrency_limit,
+        "second_stage_concurrency_limit": args.second_stage_concurrency_limit,
+    }
+    return build_segment_fingerprint(
+        {
+            "git_sha": _git_sha(),
+            "prompt_hash": _generation_prompt_hash(),
+            "run_group_id": run_id,
+            "segment_id": segment_id,
+            "resolved_result_affecting_config": resolved_config,
+            "generation": {
+                "model": args.generation_model,
+                "max_tokens": args.small_model_max_tokens,
+            },
+            "answer_mode": {
+                "answer_type": item.answer_type,
+                "answer_type_mode": "all5" if item.answer_type == ALL_TYPES_RECIPE_ANSWER_TYPE else args.route3_answer_type_mode,
+            },
+            "source_mode": list(table_source_types),
+            "page_attempt_count": item.record_limit,
+            "seed": stream_random_seed,
+            "cache_policy": {
+                "reuse_cached_page_count": stream_reuse_cached_page_count,
+                "fresh_cached_page_count": stream_fresh_cached_page_count,
+                "page_archive_dir": str(args.route3_page_archive_dir),
+            },
+            "table_ranking_and_filters": {
+                "filter_modes": list(DEFAULT_ROUTE3_TABLE_FILTER_MODES),
+                "prose_leakage_scoring": True,
+                "minimum_table_score": 0.0,
+                "infobox_max_removed_row_rate": args.route3_infobox_max_removed_row_rate,
+                "infobox_min_remaining_rows": args.route3_infobox_min_remaining_rows,
+            },
+            "duckduckgo": {
+                "top_k": args.duckduckgo_top_k,
+                "parallel_queries": args.duckduckgo_parallel_queries,
+                "max_full_question_hit_rate": args.search_longtail_max_full_question_hit_rate,
+                "max_keyword_hit_rate": args.search_longtail_max_keyword_hit_rate,
+                "max_overall_hit_rate": args.search_longtail_max_overall_hit_rate,
+                **duckduckgo_settings_kwargs(args),
+            },
+            "second_stage": {
+                "enabled": args.enable_second_stage_grading,
+                "accuracy_threshold": args.second_stage_grading_accuracy_threshold,
+                "answer_models": ["openai/gpt-4.1-mini", "google/gemini-3-flash-preview"],
+                "grader_model": "openai/gpt-4.1-mini",
+            },
+        }
+    )
 
 
 def _segment_stream_search_initial_offset(
@@ -910,6 +1114,9 @@ def _segment_command(
         normalize_route3_table_source_types(table_source_types or DEFAULT_ROUTE3_TABLE_SOURCE_TYPES)
     )
     segment_id = _append_segment_id(base_segment_id or _base_segment_id(item, index), append_label)
+    segment_root = segment_dir / segment_id
+    segment_manifest = segment_root / "segment_manifest.json"
+    page_attempt_ledger_dir = segment_root / "page_attempts"
     accepted = segment_dir / f"{segment_id}_accepted.jsonl"
     rejected = segment_dir / f"{segment_id}_rejected.jsonl"
     summary = segment_dir / f"{segment_id}_summary.json"
@@ -953,6 +1160,8 @@ def _segment_command(
         str(rejected),
         "--summary-output",
         str(summary),
+        "--page-attempt-ledger-dir",
+        str(page_attempt_ledger_dir),
         "--target-time",
         str(args.target_time),
         "--cutoff-year",
@@ -1068,19 +1277,60 @@ def _segment_command(
         command.append("--stream-free-seeded-rerun-pool-on-completion")
     if args.big_batch_mode:
         command.append("--big-batch-mode")
-    command.append("--reset-stream-state")
-    return command, {"accepted": accepted, "rejected": rejected, "summary": summary, "stream_state": stream_state}
+    if not segment_manifest.exists():
+        command.append("--reset-stream-state")
+    return command, {
+        "accepted": accepted,
+        "rejected": rejected,
+        "summary": summary,
+        "stream_state": stream_state,
+        "segment_root": segment_root,
+        "manifest": segment_manifest,
+        "ledger": page_attempt_ledger_dir,
+    }
 
 
 def _segment_complete(paths: dict[str, Path]) -> bool:
-    """Return whether a recipe segment already has reusable artifacts."""
-    if not all(paths[name].exists() for name in ("accepted", "rejected", "summary")):
+    """Return whether a recipe segment has a complete matching ledger."""
+    manifest = load_segment_manifest(paths["manifest"])
+    if manifest is None or manifest.get("status") != "complete":
         return False
+    fingerprint = manifest.get("fingerprint", {})
+    inputs = fingerprint.get("inputs", {}) if isinstance(fingerprint, dict) else {}
     try:
-        summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
+        target = int(inputs["page_attempt_count"])
+    except (KeyError, TypeError, ValueError):
         return False
-    return _segment_reached_record_limit(summary)
+    return int(ledger_summary(paths["ledger"])["primary_pages"]) >= target
+
+
+def _segment_summary_base(paths: dict[str, Path]) -> dict:
+    """Load an existing summary or reconstruct its segment identity from the manifest."""
+    if paths["summary"].exists():
+        try:
+            payload = json.loads(paths["summary"].read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            payload = None
+        if isinstance(payload, dict):
+            return payload
+    manifest = load_segment_manifest(paths["manifest"])
+    if manifest is None:
+        raise ValueError(f"Missing segment manifest: {paths['manifest']}")
+    fingerprint = manifest.get("fingerprint", {})
+    inputs = fingerprint.get("inputs", {}) if isinstance(fingerprint, dict) else {}
+    answer_mode = inputs.get("answer_mode", {}) if isinstance(inputs, dict) else {}
+    page_attempt_count = int(inputs.get("page_attempt_count", 0) or 0)
+    return {
+        "run_group_id": manifest.get("run_group_id", ""),
+        "run_segment_id": manifest.get("segment_id", ""),
+        "recipe_answer_type": answer_mode.get("answer_type", "") if isinstance(answer_mode, dict) else "",
+        "recipe_record_limit": page_attempt_count,
+        "recipe_target_count": page_attempt_count,
+        "recipe_segment_expected_page_count": page_attempt_count,
+        "summary_output": str(paths["summary"]),
+        "output_path": str(paths["accepted"]),
+        "rejected_output_path": str(paths["rejected"]),
+    }
 
 
 def _segment_reached_record_limit(summary: dict) -> bool:

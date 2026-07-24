@@ -89,6 +89,64 @@ The integrated answer-type gate retains Date and Place rules. Person candidates 
 
 The automated flow does not remove candidates solely because they share a subject resource or exact question. Page-level deduplication is deferred until finalization after manual review.
 
+## Durable runs, resume, and top-up
+
+A non-dry formal run requires a clean Git worktree. Commit code and configuration changes before starting it. For a run that may cross midnight, set `--run-date` explicitly so the resolved fingerprint remains stable.
+
+Run a bounded 10-page Person segment:
+
+```powershell
+python scripts\run_wikipedia_infobox_recipe.py `
+  --page-attempt-count 10 `
+  --answer-type Person `
+  --route3-answer-type-mode single `
+  --run-id route3_person_pilot `
+  --run-date 2026-07-24
+```
+
+The segment artifacts are organized as follows:
+
+```text
+outputs/recipe_segments/<run-id>/
+  01_person_10/
+    segment_manifest.json
+    page_attempts/
+      p<canonical_page_id>_attempt001.json
+  01_person_10_accepted.jsonl
+  01_person_10_rejected.jsonl
+  01_person_10_summary.json
+  01_person_10_state.json
+outputs/<run-id>_accepted.jsonl
+outputs/<run-id>_rejected.jsonl
+outputs/<run-id>_summary.json
+outputs/<run-id>_walkthrough.md
+```
+
+The page-attempt ledger is authoritative. Stream state is a runtime cache, while accepted JSONL, rejected JSONL, and the segment summary are rebuilt from committed ledger files. Page archives are written atomically, and their SHA-256 hashes are stored in candidate provenance.
+
+Resume an interrupted segment by running the exact same command with the same resolved arguments, Git commit, prompt code, run ID, seed, and run date. An incomplete matching segment resumes; a complete matching segment is reused without generation. Reusing the same segment with a different fingerprint fails and requires a new run or top-up segment.
+
+Add a separate top-up segment without modifying the prior segment:
+
+```powershell
+python scripts\run_wikipedia_infobox_recipe.py `
+  --page-attempt-count 10 `
+  --answer-type Person `
+  --route3-answer-type-mode single `
+  --run-id route3_person_pilot `
+  --run-date 2026-07-24 `
+  --append-to-existing-run `
+  --append-run-label topup_01
+```
+
+Inspect the durable-run tests with:
+
+```powershell
+python -m pytest tests\test_route3_run_ledger.py `
+  tests\test_wikipedia_infobox_recipe.py `
+  tests\test_wikipedia_infobox_generator.py -q
+```
+
 ## Safe dry-run examples
 
 Inspect a 10-page Person segment without making generation calls:

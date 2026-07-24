@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import hashlib
+import os
 import re
 import unicodedata
 from dataclasses import dataclass, field
@@ -2401,12 +2402,14 @@ def _write_route3_page_archive(path: Path | None, payload: dict[str, Any]) -> di
             "page_id": _positive_route3_page_id(payload.get("page_id")),
         }
     path.parent.mkdir(parents=True, exist_ok=True)
-    text = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True)
-    path.write_text(text + "\n", encoding="utf-8")
+    text = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    temp_path = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temp_path.write_text(text, encoding="utf-8")
+    os.replace(temp_path, path)
     return {
         "archive_path": str(path),
         "archive_enabled": True,
-        "archive_sha256": _sha256_text(text),
+        "archive_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
         "updated_at": payload.get("updated_at", ""),
         "page_id": _positive_route3_page_id(payload.get("page_id")),
     }

@@ -45,6 +45,16 @@ DDG and second-stage errors enter rerun handling. Later artifact, review, and fi
 
 Accepted, rejected, and rerun outcomes remain traceable to their source page, selected table, generation exchange, validation results, search evidence, grading evidence, and exact decision reason. Stable IDs, immutable provenance, revisions, ledgers, review sheets, and final CSV fields are introduced only in milestone order.
 
+## Durable execution contract
+
+- Formal non-dry runs require a clean Git worktree.
+- A segment fingerprint fixes the Git SHA, prompt hash, resolved result-affecting configuration, model parameters, answer/source modes, primary page budget, seed, cache policy, table method, DuckDuckGo settings, and second-stage settings.
+- Only an identical fingerprint may resume or reuse a segment. Complete segments reuse; incomplete segments resume; top-ups use new segment IDs.
+- Atomic page-attempt ledger files are authoritative over stream state and derived endpoints.
+- Committed accepted or rejected pages must not repeat generation.
+- Accepted JSONL, rejected JSONL, and segment summaries must be rebuildable from the ledger.
+- Page archives are atomic and their SHA-256 hashes remain in provenance.
+
 ## Candidate artifact contract
 
 - Candidate IDs use only run group ID, segment ID, canonical page ID, and original candidate slot.

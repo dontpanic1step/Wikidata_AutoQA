@@ -12,6 +12,13 @@ from unittest.mock import patch
 
 from test_support import ROOT  # noqa: F401
 
+from wikidata_simpleqa.route3_run_ledger import (
+    atomic_write_json,
+    build_segment_fingerprint,
+    commit_page_attempt,
+    create_segment_manifest,
+    update_segment_manifest,
+)
 from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
 SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
@@ -31,6 +38,8 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _parse_recipe,
     parse_args as parse_recipe_args,
     _recipe_summary,
+    _require_clean_worktree,
+    _segment_fingerprint,
     _recipe_segment_budget,
     _decrement_recipe_budget,
     _segment_complete,
@@ -132,6 +141,13 @@ def _command_value(command: list[str], flag: str) -> str:
 
 
 class WikipediaInfoboxRecipeTests(unittest.TestCase):
+    def test_formal_run_requires_clean_worktree(self) -> None:
+        with patch(
+            "run_wikipedia_infobox_recipe.subprocess.run",
+            return_value=SimpleNamespace(stdout=" M tracked.py\n"),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "clean Git worktree"):
+                _require_clean_worktree()
     def test_recipe_segments_use_separate_stream_states_and_shared_recipe_seed(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
@@ -173,12 +189,84 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             _command_value(second_command, "--stream-exclude-page-id-file"),
             str(segment_dir / "recipe_page_id_exclusions.json"),
         )
-        self.assertEqual(_command_value(first_command, "--generation-model"), "google/gemini-3-flash-preview")
+        self.assertEqual(
+            _command_value(first_command, "--generation-model"),
+            "google/gemini-3-flash-preview",
+        )
         self.assertNotIn("--small-model", first_command)
         self.assertNotIn("--enable-kelm-rewrite", first_command)
         self.assertNotIn("--kelm-rewrite-model", first_command)
         self.assertNotIn("--enable-rewrite", first_command)
         self.assertNotIn("--rewrite-model", first_command)
+
+    def test_existing_segment_manifest_makes_worker_resume_without_reset(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            args = _recipe_args()
+            command, paths = _segment_command(
+                args=args,
+                item=RecipeItem("Person", 10),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "exclusions.json",
+                stream_search_initial_offset=0,
+            )
+            self.assertIn("--reset-stream-state", command)
+            atomic_write_json(
+                paths["manifest"],
+                create_segment_manifest(
+                    run_group_id="recipe",
+                    segment_id="01_person_10",
+                    fingerprint=build_segment_fingerprint({"page_attempt_count": 10}),
+                    artifacts={},
+                ),
+            )
+
+            resumed_command, resumed_paths = _segment_command(
+                args=args,
+                item=RecipeItem("Person", 10),
+                index=0,
+                run_id="recipe",
+                segment_dir=segment_dir,
+                stream_state_base=segment_dir / "stream_state.json",
+                stream_exclusion_file=segment_dir / "exclusions.json",
+                stream_search_initial_offset=0,
+            )
+
+        self.assertNotIn("--reset-stream-state", resumed_command)
+        self.assertEqual(resumed_paths["ledger"], paths["ledger"])
+
+    def test_segment_fingerprint_contains_required_inputs(self) -> None:
+        args = _recipe_args(run_date="2026-07-24")
+        with (
+            patch("run_wikipedia_infobox_recipe._git_sha", return_value="abc123"),
+            patch("run_wikipedia_infobox_recipe._generation_prompt_hash", return_value="prompt123"),
+        ):
+            fingerprint = _segment_fingerprint(
+                args=args,
+                item=RecipeItem("Person", 10),
+                run_id="recipe",
+                segment_id="01_person_10",
+                stream_random_seed=42,
+                table_source_types=["infobox", "wikitable"],
+                stream_reuse_cached_page_count="all",
+                stream_fresh_cached_page_count="fill",
+            )
+
+        inputs = fingerprint["inputs"]
+        self.assertEqual(inputs["git_sha"], "abc123")
+        self.assertEqual(inputs["prompt_hash"], "prompt123")
+        self.assertEqual(inputs["page_attempt_count"], 10)
+        self.assertEqual(inputs["generation"]["model"], "google/gemini-3-flash-preview")
+        self.assertEqual(inputs["answer_mode"]["answer_type"], "Person")
+        self.assertEqual(inputs["source_mode"], ["infobox", "wikitable"])
+        self.assertEqual(inputs["seed"], 42)
+        self.assertIn("table_ranking_and_filters", inputs)
+        self.assertIn("duckduckgo", inputs)
+        self.assertIn("second_stage", inputs)
+
 
     def test_recipe_parses_alltypes_segment_and_commands_all5_mode(self) -> None:
         args = _recipe_args(
@@ -278,7 +366,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(args.stream_fresh_cached_page_count, "fill")
 
     def test_internal_worker_defaults_match_formal_recipe(self) -> None:
-        with patch("sys.argv", ["run_wikipedia_infobox_pipeline.py"]):
+        with patch("sys.argv", ["run_wikipedia_infobox_pipeline.py", "--page-attempt-ledger-dir", "ledger"]):
             args = parse_worker_args()
 
         self.assertEqual(args.generation_model, "google/gemini-3-flash-preview")
@@ -640,6 +728,8 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "accepted": root / "accepted.jsonl",
                 "rejected": root / "rejected.jsonl",
                 "summary": root / "summary.json",
+                "manifest": root / "segment_manifest.json",
+                "ledger": root / "page_attempts",
             }
             paths["accepted"].write_text("", encoding="utf-8")
             paths["rejected"].write_text("", encoding="utf-8")
@@ -647,8 +737,50 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 json.dumps({"record_limit": 2000, "stream_state_stats": {"used": 190}}),
                 encoding="utf-8",
             )
+            manifest = create_segment_manifest(
+                run_group_id="group",
+                segment_id="segment",
+                fingerprint=build_segment_fingerprint({"page_attempt_count": 2000}),
+                artifacts={},
+            )
+            atomic_write_json(paths["manifest"], manifest)
 
             self.assertFalse(_segment_complete(paths))
+
+    def test_complete_segment_requires_enough_primary_ledger_pages(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            paths = {
+                "manifest": root / "segment_manifest.json",
+                "ledger": root / "page_attempts",
+            }
+            fingerprint = build_segment_fingerprint({"page_attempt_count": 1})
+            manifest = create_segment_manifest(
+                run_group_id="group",
+                segment_id="segment",
+                fingerprint=fingerprint,
+                artifacts={},
+            )
+            atomic_write_json(paths["manifest"], manifest)
+            manifest = update_segment_manifest(
+                paths["manifest"],
+                manifest,
+                status="complete",
+                ledger_summary={"primary_pages": 0},
+            )
+            self.assertFalse(_segment_complete(paths))
+
+            commit_page_attempt(
+                paths["ledger"],
+                {
+                    "canonical_page_id": 1,
+                    "attempt_number": 1,
+                    "primary_page_attempt": True,
+                    "status": "rejected",
+                },
+            )
+
+            self.assertTrue(_segment_complete(paths))
 
     def test_combine_segment_records_offsets_ids_for_append_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
