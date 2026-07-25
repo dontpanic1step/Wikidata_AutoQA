@@ -18,6 +18,8 @@ from wikidata_simpleqa.route3_run_ledger import (
     SegmentLedgerIndex,
     create_segment_manifest,
     derive_segment_manifest_state,
+    file_sha256,
+    ledger_summary,
     update_segment_manifest,
 )
 from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
@@ -31,14 +33,16 @@ from run_wikipedia_infobox_pipeline import parse_args as parse_worker_args, _str
 from run_wikipedia_infobox_recipe import (  # noqa: E402
     RecipeItem,
     _apply_recipe_big_batch_mode,
-    _append_stream_search_initial_offset,
+
     _base_segment_id_for_run,
     _combine_segment_records,
-    _existing_recipe_page_ids,
+    _generation_protocol_compatibility_fingerprint,
+
     _parse_recipe,
     parse_args as parse_recipe_args,
     _recipe_summary,
     _require_clean_worktree,
+    _require_top_up_prerequisites,
     _segment_fingerprint,
     _recipe_segment_budget,
     _decrement_recipe_budget,
@@ -93,7 +97,7 @@ def _recipe_args(**overrides):
         "stream_discovery_retry_max_sleep_seconds": 60.0,
         "stream_reuse_cached_page_count": "all",
         "stream_fresh_cached_page_count": "fill",
-        "stream_reuse_cached_page_used_id_file": [],
+
         "wikipedia_429_backoff_seconds": 30.0,
         "wikipedia_429_max_backoff_seconds": 300.0,
         "wikipedia_429_recovery_seconds": 120.0,
@@ -139,6 +143,73 @@ def _command_value(command: list[str], flag: str) -> str:
     return command[command.index(flag) + 1]
 
 
+def _complete_test_segment(
+    root: Path,
+    *,
+    run_group_id: str,
+    segment_id: str,
+    page_ids: list[int],
+) -> tuple[dict, SegmentLedgerIndex]:
+    """Create one complete manifest-backed segment for top-up tests."""
+    fingerprint = build_segment_fingerprint(
+        {
+            "git_sha": "abc123",
+            "prompt_hash": "prompt123",
+            "run_group_id": run_group_id,
+            "segment_id": segment_id,
+            "generation": {"model": "google/gemini-3-flash-preview"},
+            "answer_mode": {"answer_type": "AllTypes", "answer_type_mode": "all5"},
+            "page_attempt_count": len(page_ids),
+            "seed": 42,
+            "cache_policy": {
+                "reuse_cached_page_count": "all",
+                "fresh_cached_page_count": "fill",
+                "page_archive_dir": "cache/route3_pages",
+            },
+        }
+    )
+    segment_root = root / segment_id
+    manifest_path = segment_root / "segment_manifest.json"
+    manifest = create_segment_manifest(
+        run_group_id=run_group_id,
+        segment_id=segment_id,
+        fingerprint=fingerprint,
+        artifacts={},
+    )
+    index = SegmentLedgerIndex(
+        allocation_dir=segment_root / "page_allocations",
+        attempt_dir=segment_root / "page_attempts",
+        run_group_id=run_group_id,
+        segment_id=segment_id,
+        run_group_segments_dir=root,
+    )
+    for ordinal, page_id in enumerate(page_ids, start=1):
+        index.commit_allocation(canonical_page_id=page_id, page_source="fresh")
+        index.commit_attempt(
+            {
+                "canonical_page_id": page_id,
+                "attempt_number": 1,
+                "status": "accepted" if ordinal <= len(page_ids) - 2 else "rejected",
+                "accepted_records": [],
+                "rejected_records": [],
+                "error_details": {
+                    "reason": (
+                        "abandoned_ambiguous_external_call"
+                        if ordinal == len(page_ids)
+                        else "deterministic_rejection"
+                    )
+                },
+            }
+        )
+    manifest = update_segment_manifest(
+        manifest_path,
+        manifest,
+        segment_state=derive_segment_manifest_state(manifest, index),
+        ledger_summary=ledger_summary(index),
+        pre_review_quantity_prediction={},
+    )
+    return manifest, index
+
 class WikipediaInfoboxRecipeTests(unittest.TestCase):
     def test_formal_run_requires_clean_worktree(self) -> None:
         with patch(
@@ -159,7 +230,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=0,
             )
             second_command, second_paths = _segment_command(
@@ -169,7 +239,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=50,
             )
 
@@ -184,10 +253,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         )
         self.assertEqual(_command_value(first_command, "--stream-search-initial-offset"), "0")
         self.assertEqual(_command_value(second_command, "--stream-search-initial-offset"), "50")
-        self.assertEqual(
-            _command_value(second_command, "--stream-exclude-page-id-file"),
-            str(segment_dir / "recipe_page_id_exclusions.json"),
-        )
+
         self.assertEqual(
             _command_value(first_command, "--generation-model"),
             "google/gemini-3-flash-preview",
@@ -209,7 +275,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "exclusions.json",
                 stream_search_initial_offset=0,
             )
             self.assertIn("--reset-stream-state", command)
@@ -230,7 +295,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "exclusions.json",
                 stream_search_initial_offset=0,
             )
 
@@ -293,7 +357,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=0,
             )
 
@@ -413,6 +476,8 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             "--start-stage",
             "--stream-page-source",
             "--stream-search-query",
+            "--stream-exclude-page-id-file",
+            "--stream-reuse-cached-page-used-id-file",
             "--url-file",
         ]
         for parse, argv in (
@@ -440,7 +505,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=0,
                 table_source_types=["infobox"],
             )
@@ -465,7 +529,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=0,
             )
 
@@ -477,67 +540,29 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(_command_value(command, "--stream-discovery-max-retries"), "5")
         self.assertEqual(_command_value(command, "--wikipedia-429-backoff-seconds"), "30.0")
 
-    def test_append_recipe_segment_uses_suffixed_artifacts_and_prior_offsets(self) -> None:
+    def test_append_recipe_segment_uses_new_artifacts_without_old_state(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
-            segment_dir.mkdir()
-            (segment_dir / "01_person_2000_state.json").write_text(
-                json.dumps(
-                    {
-                        "used_ids": [101, 102],
-                        "table_search_offsets": {'insource:"wikitable"': 2400},
-                    }
-                ),
-                encoding="utf-8",
-            )
             args = _recipe_args(append_to_existing_run=True, append_run_label="topup1")
-            offset = _append_stream_search_initial_offset(
-                segment_dir=segment_dir,
-                base_segment_id="01_person_2000",
-                base_offset=0,
-            )
 
             command, paths = _segment_command(
                 args=args,
-                item=RecipeItem(answer_type="Person", record_limit=2000),
+                item=RecipeItem(answer_type="Person", record_limit=10),
                 index=0,
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
-                stream_search_initial_offset=offset,
+                stream_search_initial_offset=0,
                 append_label="topup1",
+                base_segment_id="01_person_20",
             )
 
-        self.assertTrue(str(paths["accepted"]).endswith("01_person_2000_topup1_accepted.jsonl"))
-        self.assertTrue(str(paths["stream_state"]).endswith("01_person_2000_topup1_state.json"))
-        self.assertEqual(_command_value(command, "--stream-search-initial-offset"), "2400")
+        self.assertTrue(str(paths["accepted"]).endswith("01_person_20_topup1_accepted.jsonl"))
+        self.assertTrue(str(paths["stream_state"]).endswith("01_person_20_topup1_state.json"))
+        self.assertEqual(_command_value(command, "--stream-search-initial-offset"), "0")
+        self.assertNotIn("--stream-exclude-page-id-file", command)
+        self.assertNotIn("--stream-reuse-cached-page-used-id-file", command)
         self.assertIn("--reset-stream-state", command)
-
-    def test_append_recipe_offset_ignores_zero_attempt_topup_state(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            segment_dir = Path(tmpdir) / "segments"
-            segment_dir.mkdir()
-            (segment_dir / "01_person_2000_state.json").write_text(
-                json.dumps({"table_search_offsets": {'insource:"wikitable"': 2400}}),
-                encoding="utf-8",
-            )
-            (segment_dir / "01_person_2000_topup_1_state.json").write_text(
-                json.dumps({"table_search_offsets": {'insource:"wikitable"': 5250}}),
-                encoding="utf-8",
-            )
-            (segment_dir / "01_person_2000_topup_1_summary.json").write_text(
-                json.dumps({"attempted_page_ids": 0, "stream_state_stats": {"used": 6153}}),
-                encoding="utf-8",
-            )
-
-            offset = _append_stream_search_initial_offset(
-                segment_dir=segment_dir,
-                base_segment_id="01_person_2000",
-                base_offset=0,
-            )
-
-        self.assertEqual(offset, 2400)
 
     def test_append_recipe_command_has_no_generic_rerun_controls(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -552,7 +577,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 run_id="recipe",
                 segment_dir=segment_dir,
                 stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=2400,
                 append_label="topup1",
             )
@@ -561,13 +585,20 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertNotIn("--stream-prefer-rerun-pool", command)
         self.assertNotIn("--stream-free-seeded-rerun-pool-on-completion", command)
         self.assertNotIn("--stream-auto-rerun-once", command)
+
     def test_append_subset_recipe_reuses_existing_answer_type_segment_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
             segment_dir.mkdir()
-            (segment_dir / "02_place_2000_state.json").write_text(
-                json.dumps({"rerun_pool": [201, 202]}),
-                encoding="utf-8",
+            manifest_path = segment_dir / "02_place_2000" / "segment_manifest.json"
+            atomic_write_json(
+                manifest_path,
+                create_segment_manifest(
+                    run_group_id="recipe",
+                    segment_id="02_place_2000",
+                    fingerprint=build_segment_fingerprint({"page_attempt_count": 2000}),
+                    artifacts={},
+                ),
             )
 
             base_segment_id = _base_segment_id_for_run(
@@ -579,80 +610,98 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
         self.assertEqual(base_segment_id, "02_place_2000")
 
-    def test_segment_used_count_subtracts_append_exclusions(self) -> None:
-        summary = {
-            "attempted_page_ids": 0,
-            "stream_excluded_page_ids": 6153,
-            "stream_state_stats": {"used": 6153},
-        }
-
-        self.assertEqual(_segment_used_count(summary), 0)
-
-    def test_existing_recipe_page_ids_reads_exclusion_summaries_and_states(self) -> None:
+    def test_top_up_preserves_old_files_and_reaches_thirty_unique_allocations(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
-            segment_dir.mkdir()
-            exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
-            exclusion_file.write_text(json.dumps([101]), encoding="utf-8")
-            (segment_dir / "01_person_2000_summary.json").write_text(
-                json.dumps({"page_ids": [201, "202"]}),
-                encoding="utf-8",
+            base_manifest, _base_index = _complete_test_segment(
+                segment_dir,
+                run_group_id="recipe",
+                segment_id="01_alltypes_20",
+                page_ids=list(range(1, 21)),
             )
-            (segment_dir / "01_person_2000_state.json").write_text(
-                json.dumps({"used_ids": [301], "in_progress_ids": [301], "rerun_pool": [401], "accepted_ids": [501]}),
-                encoding="utf-8",
+            requested_inputs = dict(base_manifest["fingerprint"]["inputs"])
+            requested_inputs["segment_id"] = "01_alltypes_20_topup_10"
+            requested_inputs["page_attempt_count"] = 10
+            requested_inputs["cache_policy"] = {
+                **requested_inputs["cache_policy"],
+                "reuse_cached_page_count": 0,
+                "fresh_cached_page_count": 10,
+            }
+            requested_fingerprint = build_segment_fingerprint(requested_inputs)
+            self.assertEqual(
+                _generation_protocol_compatibility_fingerprint(base_manifest["fingerprint"])["sha256"],
+                _generation_protocol_compatibility_fingerprint(requested_fingerprint)["sha256"],
+            )
+            old_hashes = {
+                path.relative_to(segment_dir).as_posix(): file_sha256(path)
+                for path in (segment_dir / "01_alltypes_20").rglob("*")
+                if path.is_file()
+            }
+
+            _require_top_up_prerequisites(
+                segment_dir=segment_dir,
+                run_group_id="recipe",
+                base_segment_id="01_alltypes_20",
+                current_segment_id="01_alltypes_20_topup_10",
+                requested_fingerprint=requested_fingerprint,
+            )
+            top_up_index = SegmentLedgerIndex(
+                allocation_dir=segment_dir / "01_alltypes_20_topup_10" / "page_allocations",
+                attempt_dir=segment_dir / "01_alltypes_20_topup_10" / "page_attempts",
+                run_group_id="recipe",
+                segment_id="01_alltypes_20_topup_10",
+                run_group_segments_dir=segment_dir,
+            )
+            self.assertTrue({19, 20}.issubset(top_up_index.run_group_page_ids))
+            with self.assertRaisesRegex(ValueError, "already allocated"):
+                top_up_index.commit_allocation(canonical_page_id=20, page_source="cache")
+            for page_id in range(21, 31):
+                top_up_index.commit_allocation(canonical_page_id=page_id, page_source="fresh")
+
+            self.assertEqual(top_up_index.run_group_page_ids, set(range(1, 31)))
+            self.assertEqual(
+                old_hashes,
+                {
+                    path.relative_to(segment_dir).as_posix(): file_sha256(path)
+                    for path in (segment_dir / "01_alltypes_20").rglob("*")
+                    if path.is_file()
+                },
             )
 
-            page_ids = _existing_recipe_page_ids(segment_dir, exclusion_file)
-
-        self.assertEqual(page_ids, {101, 301, 401, 501})
-
-    def test_existing_recipe_page_ids_ignores_summary_page_ids_when_state_exists(self) -> None:
+    def test_top_up_rejects_incomplete_or_incompatible_base_segment(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
-            segment_dir.mkdir()
-            exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
-            (segment_dir / "01_person_2000_summary.json").write_text(
-                json.dumps({"page_ids": [101, 102, 201]}),
-                encoding="utf-8",
+            base_manifest, _index = _complete_test_segment(
+                segment_dir,
+                run_group_id="recipe",
+                segment_id="01_alltypes_2",
+                page_ids=[1, 2],
             )
-            (segment_dir / "01_person_2000_state.json").write_text(
-                json.dumps({"accepted_ids": [201], "rejected_ids": [301]}),
-                encoding="utf-8",
-            )
+            requested_inputs = dict(base_manifest["fingerprint"]["inputs"])
+            requested_inputs["segment_id"] = "01_alltypes_2_topup"
+            requested_inputs["page_attempt_count"] = 1
+            requested_inputs["generation"] = {"model": "different-model"}
+            with self.assertRaisesRegex(ValueError, "protocol fingerprint mismatch"):
+                _require_top_up_prerequisites(
+                    segment_dir=segment_dir,
+                    run_group_id="recipe",
+                    base_segment_id="01_alltypes_2",
+                    current_segment_id="01_alltypes_2_topup",
+                    requested_fingerprint=build_segment_fingerprint(requested_inputs),
+                )
 
-            page_ids = _existing_recipe_page_ids(segment_dir, exclusion_file)
-
-        self.assertEqual(page_ids, {201, 301})
-
-    def test_existing_recipe_page_ids_does_not_reexclude_raw_append_used_ids(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            segment_dir = Path(tmpdir) / "segments"
-            segment_dir.mkdir()
-            exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
-            (segment_dir / "01_person_2000_topup_1_summary.json").write_text(
-                json.dumps({"page_ids": [201]}),
-                encoding="utf-8",
-            )
-            (segment_dir / "01_person_2000_topup_1_state.json").write_text(
-                json.dumps(
-                    {
-                        "used_ids": [101, 102, 201, 301, 401],
-                        "accepted_ids": [201],
-                        "rejected_ids": [301],
-                        "in_progress_ids": [401],
-                        "rerun_pool": [501],
-                    }
-                ),
-                encoding="utf-8",
-            )
-
-            page_ids = _existing_recipe_page_ids(segment_dir, exclusion_file)
-
-        self.assertEqual(page_ids, {201, 301, 401, 501})
-        self.assertNotIn(101, page_ids)
-        self.assertNotIn(102, page_ids)
-
+            manifest_path = segment_dir / "01_alltypes_2" / "segment_manifest.json"
+            incomplete = dict(base_manifest)
+            incomplete["status"] = "incomplete"
+            atomic_write_json(manifest_path, incomplete)
+            with self.assertRaisesRegex(ValueError, "complete prior segment"):
+                _require_top_up_prerequisites(
+                    segment_dir=segment_dir,
+                    run_group_id="recipe",
+                    base_segment_id="01_alltypes_2",
+                    current_segment_id="01_alltypes_2_topup",
+                    requested_fingerprint=base_manifest["fingerprint"],
+                )
     def test_incomplete_existing_segment_is_not_reused(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -850,8 +899,8 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "wall_clock_seconds": 20.0,
                 "random_seed": 456,
                 "stream_state": "date_state.json",
-                "stream_state_stats": {"used": 42, "accepted": 1, "rejected": 38, "rerun_pool": 1},
-                "stream_excluded_page_ids": 2,
+                "stream_state_stats": {"used": 40, "accepted": 1, "rejected": 38, "rerun_pool": 1},
+
                 "page_ids": [3, 4],
             },
         ]

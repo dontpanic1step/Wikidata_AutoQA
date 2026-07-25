@@ -23,8 +23,6 @@ from wikidata_simpleqa.page_id_lists import (
     PageIdListEntry,
     build_page_id_entries,
     extract_page_id_entries_from_payload,
-    read_page_id_entries,
-    write_page_id_entries,
 )
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids
 from wikidata_simpleqa.route3_quantity_prediction import predict_pre_review_quantities
@@ -196,16 +194,6 @@ def parse_args() -> argparse.Namespace:
         default="fill",
         help="Recipe-level fresh-page budget: a non-negative integer or 'fill' to fetch fresh pages until segment targets are met.",
     )
-    parser.add_argument(
-        "--stream-reuse-cached-page-used-id-file",
-        action="append",
-        type=Path,
-        default=[],
-        help=(
-            "Extra helper-generated used-ID JSON/JSONL/plain files for cache reuse. "
-            "The recipe segment exclusion file is also passed automatically when cache reuse is enabled."
-        ),
-    )
     parser.add_argument("--wikipedia-429-backoff-seconds", type=float, default=30.0)
     parser.add_argument("--wikipedia-429-max-backoff-seconds", type=float, default=300.0)
     parser.add_argument("--wikipedia-429-recovery-seconds", type=float, default=120.0)
@@ -273,7 +261,6 @@ def main() -> int:
     summary_output = args.summary_output or ROOT / "outputs" / f"{run_id}_summary.json"
     walkthrough_output = args.walkthrough_output or ROOT / "outputs" / f"{run_id}_walkthrough.md"
     stream_state_base = args.stream_state or segment_dir / "stream_state.json"
-    stream_exclusion_file = segment_dir / "recipe_page_id_exclusions.json"
     append_label = _recipe_append_label(args)
     if not args.dry_run:
         _require_clean_worktree()
@@ -282,9 +269,6 @@ def main() -> int:
     segment_summaries: list[dict] = []
     remaining_reuse_cached_page_count = args.stream_reuse_cached_page_count
     remaining_fresh_cached_page_count = args.stream_fresh_cached_page_count
-    stream_excluded_page_entries: set[PageIdListEntry] = (
-        _existing_recipe_page_id_entries(segment_dir, stream_exclusion_file) if append_label else set()
-    )
     for index, item in enumerate(recipe_items):
         segment_reuse_cached_page_count = _recipe_segment_budget(
             remaining_reuse_cached_page_count,
@@ -294,7 +278,6 @@ def main() -> int:
             remaining_fresh_cached_page_count,
             item.record_limit,
         )
-        _write_stream_exclusion_file(stream_exclusion_file, stream_excluded_page_entries)
         base_segment_id = _base_segment_id_for_run(
             segment_dir=segment_dir,
             item=item,
@@ -307,15 +290,7 @@ def main() -> int:
             index,
             args.stream_search_limit,
         )
-        segment_stream_search_initial_offset = (
-            _append_stream_search_initial_offset(
-                segment_dir=segment_dir,
-                base_segment_id=base_segment_id,
-                base_offset=base_stream_search_initial_offset,
-            )
-            if append_label
-            else base_stream_search_initial_offset
-        )
+        segment_stream_search_initial_offset = base_stream_search_initial_offset
         command, paths = _segment_command(
             args=args,
             item=item,
@@ -323,7 +298,6 @@ def main() -> int:
             run_id=run_id,
             segment_dir=segment_dir,
             stream_state_base=stream_state_base,
-            stream_exclusion_file=stream_exclusion_file,
             stream_search_initial_offset=segment_stream_search_initial_offset,
             table_source_types=table_source_types,
             append_label=append_label,
@@ -350,6 +324,14 @@ def main() -> int:
                 stream_reuse_cached_page_count=segment_reuse_cached_page_count,
                 stream_fresh_cached_page_count=segment_fresh_cached_page_count,
             )
+            if append_label:
+                _require_top_up_prerequisites(
+                    segment_dir=segment_dir,
+                    run_group_id=run_id,
+                    base_segment_id=base_segment_id,
+                    current_segment_id=segment_id,
+                    requested_fingerprint=fingerprint,
+                )
             manifest = load_segment_manifest(paths["manifest"])
             if manifest is None and args.resolve_ambiguous:
                 raise ValueError(
@@ -411,7 +393,6 @@ def main() -> int:
             summary["segment_accepted_output"] = str(paths["accepted"])
             summary["segment_rejected_output"] = str(paths["rejected"])
             segment_summaries.append(summary)
-            stream_excluded_page_entries.update(_summary_page_id_entries(summary))
             remaining_reuse_cached_page_count = _decrement_recipe_budget(
                 remaining_reuse_cached_page_count,
                 int(summary.get("stream_reused_cached_page_count", 0) or 0),
@@ -487,7 +468,6 @@ def main() -> int:
         summary["segment_accepted_output"] = str(paths["accepted"])
         summary["segment_rejected_output"] = str(paths["rejected"])
         segment_summaries.append(summary)
-        stream_excluded_page_entries.update(_summary_page_id_entries(summary))
         remaining_reuse_cached_page_count = _decrement_recipe_budget(
             remaining_reuse_cached_page_count,
             int(summary.get("stream_reused_cached_page_count", 0) or 0),
@@ -661,28 +641,24 @@ def _base_segment_id_for_run(
     index: int,
     append_label: str,
 ) -> str:
-    """Return the existing answer-type segment ID when appending a subset recipe."""
+    """Return the original manifest-backed segment ID for a top-up."""
     default_id = _base_segment_id(item, index)
-    if not append_label or not segment_dir.exists():
+    if not append_label:
         return default_id
-    answer_type = item.answer_type.lower()
+    answer_type = re.escape(item.answer_type.lower())
+    base_pattern = re.compile(rf"^\d+_{answer_type}_\d+$")
     candidates: set[str] = set()
-    for path in [*segment_dir.glob("*_state.json"), *segment_dir.glob("*_summary.json")]:
-        stem = path.stem
-        if stem.endswith("_state"):
-            stem = stem.removesuffix("_state")
-        elif stem.endswith("_summary"):
-            stem = stem.removesuffix("_summary")
-        parts = stem.split("_")
-        if len(parts) < 3:
+    for manifest_path in segment_dir.glob("*/segment_manifest.json"):
+        manifest = load_segment_manifest(manifest_path)
+        if manifest is None:
             continue
-        if parts[1] != answer_type:
-            continue
-        if not (parts[0].isdigit() and parts[2].isdigit()):
-            continue
-        candidates.add("_".join(parts[:3]))
+        segment_id = str(manifest.get("segment_id", ""))
+        if base_pattern.fullmatch(segment_id):
+            candidates.add(segment_id)
     if not candidates:
-        return default_id
+        raise ValueError(
+            f"Top-up requires an original {item.answer_type} segment manifest in {segment_dir}"
+        )
     return sorted(candidates, key=lambda value: (value.split("_")[0], value))[0]
 
 
@@ -842,6 +818,62 @@ def _segment_fingerprint(
     )
 
 
+def _generation_protocol_compatibility_fingerprint(fingerprint: dict) -> dict:
+    """Build the protocol fingerprint shared by initial and top-up segments."""
+    inputs = dict(fingerprint.get("inputs", {}))
+    inputs.pop("segment_id", None)
+    inputs.pop("page_attempt_count", None)
+    cache_policy = dict(inputs.get("cache_policy", {}))
+    cache_policy.pop("reuse_cached_page_count", None)
+    cache_policy.pop("fresh_cached_page_count", None)
+    inputs["cache_policy"] = cache_policy
+    return build_segment_fingerprint(inputs)
+
+
+def _require_top_up_prerequisites(
+    *,
+    segment_dir: Path,
+    run_group_id: str,
+    base_segment_id: str,
+    current_segment_id: str,
+    requested_fingerprint: dict,
+) -> None:
+    """Require complete prior segments and a matching generation protocol."""
+    prior_manifests: dict[str, tuple[Path, dict]] = {}
+    for manifest_path in sorted(segment_dir.glob("*/segment_manifest.json")):
+        manifest = load_segment_manifest(manifest_path)
+        if manifest is None:
+            continue
+        segment_id = str(manifest.get("segment_id", ""))
+        if segment_id == current_segment_id:
+            continue
+        if str(manifest.get("run_group_id", "")) != run_group_id:
+            raise ValueError(f"Unexpected run group in {manifest_path}")
+        index = SegmentLedgerIndex(
+            allocation_dir=manifest_path.parent / "page_allocations",
+            attempt_dir=manifest_path.parent / "page_attempts",
+            run_group_id=run_group_id,
+            segment_id=segment_id,
+            run_group_segments_dir=segment_dir,
+        )
+        derived = derive_segment_manifest_state(manifest, index)
+        if manifest.get("status") != "complete" or derived.get("status") != "complete":
+            raise ValueError(f"Top-up requires complete prior segment: {segment_id}")
+        prior_manifests[segment_id] = (manifest_path, manifest)
+    if base_segment_id not in prior_manifests:
+        raise ValueError(f"Top-up base segment is not complete: {base_segment_id}")
+    base_path, base_manifest = prior_manifests[base_segment_id]
+    base_fingerprint = base_manifest.get("fingerprint", {})
+    existing_protocol = _generation_protocol_compatibility_fingerprint(base_fingerprint)
+    requested_protocol = _generation_protocol_compatibility_fingerprint(requested_fingerprint)
+    if existing_protocol["sha256"] != requested_protocol["sha256"]:
+        raise ValueError(
+            "Top-up generation protocol fingerprint mismatch for "
+            f"{base_path}: existing={existing_protocol['sha256']} "
+            f"requested={requested_protocol['sha256']}"
+        )
+
+
 def _segment_stream_search_initial_offset(
     recipe_items: list[RecipeItem],
     index: int,
@@ -854,163 +886,6 @@ def _segment_stream_search_initial_offset(
         chunks = max(1, (int(item.record_limit) + search_limit - 1) // search_limit)
         offset += chunks * search_limit
     return offset
-
-
-def _write_stream_exclusion_file(path: Path, page_ids: set[int] | set[PageIdListEntry]) -> None:
-    """Write recipe-level page IDs or triadic page-ID entries that later segments must skip."""
-    entries: set[PageIdListEntry] = set()
-    for value in page_ids:
-        if isinstance(value, PageIdListEntry):
-            entries.add(value)
-            continue
-        try:
-            page_id = int(value)
-        except (TypeError, ValueError):
-            continue
-        if page_id > 0:
-            entries.add(PageIdListEntry(page_id=page_id))
-    write_page_id_entries(path, entries)
-
-
-def _existing_recipe_page_ids(segment_dir: Path, stream_exclusion_file: Path) -> set[int]:
-    """Return page IDs already touched by previous recipe invocations."""
-    page_ids: set[int] = set()
-    page_ids.update(_page_ids_from_json_path(stream_exclusion_file))
-    if segment_dir.exists():
-        for summary_path in segment_dir.glob("*_summary.json"):
-            try:
-                summary = json.loads(summary_path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            if not _matching_state_path_for_summary(summary_path).exists():
-                page_ids.update(_summary_page_ids(summary))
-        for state_path in segment_dir.glob("*_state.json"):
-            try:
-                state = json.loads(state_path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            page_ids.update(_positive_ints(state.get("accepted_ids", [])))
-            page_ids.update(_positive_ints(state.get("rejected_ids", [])))
-            page_ids.update(_positive_ints(state.get("in_progress_ids", [])))
-            page_ids.update(_positive_ints(state.get("rerun_pool", [])))
-    return page_ids
-
-
-def _existing_recipe_page_id_entries(segment_dir: Path, stream_exclusion_file: Path) -> set[PageIdListEntry]:
-    """Return triadic page-ID entries already touched by previous recipe invocations."""
-    entries: set[PageIdListEntry] = set()
-    entries.update(read_page_id_entries(stream_exclusion_file))
-    if segment_dir.exists():
-        for summary_path in segment_dir.glob("*_summary.json"):
-            try:
-                summary = json.loads(summary_path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            if not _matching_state_path_for_summary(summary_path).exists():
-                entries.update(_summary_page_id_entries(summary))
-        for state_path in segment_dir.glob("*_state.json"):
-            try:
-                state = json.loads(state_path.read_text(encoding="utf-8"))
-            except (OSError, json.JSONDecodeError):
-                continue
-            summary = _state_summary_payload(state_path)
-            page_ids = set()
-            page_ids.update(_positive_ints(state.get("accepted_ids", [])))
-            page_ids.update(_positive_ints(state.get("rejected_ids", [])))
-            page_ids.update(_positive_ints(state.get("in_progress_ids", [])))
-            page_ids.update(_positive_ints(state.get("rerun_pool", [])))
-            if summary:
-                entries.update(_summary_page_id_entries({**summary, "page_ids": sorted(page_ids)}))
-            else:
-                entries.update(PageIdListEntry(page_id=page_id) for page_id in page_ids)
-    return entries
-
-
-def _state_summary_payload(state_path: Path) -> dict:
-    summary_path = _matching_summary_path_for_state(state_path)
-    if not summary_path.exists():
-        return {}
-    try:
-        payload = json.loads(summary_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return {}
-    return payload if isinstance(payload, dict) else {}
-
-
-def _matching_summary_path_for_state(state_path: Path) -> Path:
-    """Return the conventional summary path for one stream-state path."""
-    return state_path.with_name(state_path.name.removesuffix("_state.json") + "_summary.json")
-
-
-def _matching_state_path_for_summary(summary_path: Path) -> Path:
-    """Return the conventional stream-state path for one segment summary."""
-    return summary_path.with_name(summary_path.name.removesuffix("_summary.json") + "_state.json")
-
-
-def _append_stream_search_initial_offset(*, segment_dir: Path, base_segment_id: str, base_offset: int) -> int:
-    """Return a top-up table-search offset after prior runs of the same segment."""
-    offset = max(0, int(base_offset))
-    if not segment_dir.exists():
-        return offset
-    for state_path in segment_dir.glob(f"{base_segment_id}*_state.json"):
-        if not _state_has_attempted_pages(state_path):
-            continue
-        try:
-            state = json.loads(state_path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError):
-            continue
-        offsets = state.get("table_search_offsets", {})
-        if not isinstance(offsets, dict):
-            continue
-        for value in offsets.values():
-            try:
-                offset = max(offset, int(value))
-            except (TypeError, ValueError):
-                continue
-    return offset
-
-
-def _state_has_attempted_pages(state_path: Path) -> bool:
-    """Return whether a stream state belongs to a segment that attempted fresh pages."""
-    summary_path = state_path.with_name(state_path.name.removesuffix("_state.json") + "_summary.json")
-    if not summary_path.exists():
-        return True
-    try:
-        summary = json.loads(summary_path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return True
-    return int(summary.get("attempted_page_ids_unique", summary.get("attempted_page_ids", 0)) or 0) > 0
-
-
-def _page_ids_from_json_path(path: Path) -> set[int]:
-    """Return positive page IDs stored in a JSON page-ID helper file."""
-    if not path.exists():
-        return set()
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError):
-        return set()
-    return _positive_ints(payload)
-
-
-def _positive_ints(values: object) -> set[int]:
-    """Return positive integer values from a JSON-like payload."""
-    if isinstance(values, dict):
-        values = values.values()
-    elif isinstance(values, (str, bytes)) or not hasattr(values, "__iter__"):
-        values = [values]
-    result: set[int] = set()
-    for value in values:
-        if isinstance(value, (list, tuple, set, dict)):
-            result.update(_positive_ints(value))
-            continue
-        try:
-            page_id = int(value)
-        except (TypeError, ValueError):
-            continue
-        if page_id > 0:
-            result.add(page_id)
-    return result
 
 
 def _summary_page_ids(summary: dict) -> set[int]:
@@ -1072,7 +947,6 @@ def _segment_command(
     run_id: str,
     segment_dir: Path,
     stream_state_base: Path,
-    stream_exclusion_file: Path,
     stream_search_initial_offset: int,
     table_source_types: list[str] | None = None,
     append_label: str = "",
@@ -1208,8 +1082,6 @@ def _segment_command(
         str(args.wikipedia_429_recovery_seconds),
         "--stream-search-initial-offset",
         str(max(0, int(stream_search_initial_offset))),
-        "--stream-exclude-page-id-file",
-        str(stream_exclusion_file),
         "--stream-random-seed",
         str(stream_random_seed),
         "--stream-batch-size",
@@ -1235,10 +1107,6 @@ def _segment_command(
         command.extend(["--duckduckgo-disable-fallback", str(fallback)])
     command.append("--duckduckgo-prefer-ddgs" if args.duckduckgo_prefer_ddgs else "--no-duckduckgo-prefer-ddgs")
     command.append("--duckduckgo-cooldown" if args.duckduckgo_cooldown else "--no-duckduckgo-cooldown")
-    if effective_reuse_cached_page_count == "all" or _stream_budget_numeric_count(effective_reuse_cached_page_count) > 0:
-        command.extend(["--stream-reuse-cached-page-used-id-file", str(stream_exclusion_file)])
-    for path in args.stream_reuse_cached_page_used_id_file:
-        command.extend(["--stream-reuse-cached-page-used-id-file", str(path)])
     if item.answer_type != ALL_TYPES_RECIPE_ANSWER_TYPE:
         command.extend(["--route3-answer-type", item.answer_type])
     if args.run_date:
@@ -1360,8 +1228,7 @@ def _segment_reached_record_limit(summary: dict) -> bool:
 
 def _segment_used_count(summary: dict) -> int:
     """Return the most reliable used page count from a segment summary."""
-    stream_excluded = int(summary.get("stream_excluded_page_ids", 0) or 0)
-    used = max(0, int(summary.get("stream_state_stats", {}).get("used", 0) or 0) - stream_excluded)
+    used = max(0, int(summary.get("stream_state_stats", {}).get("used", 0) or 0))
     if not used:
         used = int(summary.get("attempted_page_ids_unique", summary.get("attempted_page_ids", 0)) or 0)
     return used
@@ -1497,7 +1364,6 @@ def _recipe_summary(
         "append_to_existing_run": bool(getattr(args, "append_to_existing_run", False)),
         "append_run_label": append_label,
         "stream_reuse_cached_page_count": args.stream_reuse_cached_page_count,
-        "stream_reuse_cached_page_used_id_files": [str(path) for path in args.stream_reuse_cached_page_used_id_file],
         "stream_reused_cached_page_count": sum(
             int(summary.get("stream_reused_cached_page_count", 0) or 0)
             for summary in segment_summaries
@@ -1606,7 +1472,6 @@ def _aggregate_stream_state_stats(segment_summaries: list[dict]) -> dict[str, in
             continue
         for key in totals:
             totals[key] += int(stats.get(key, 0) or 0)
-        totals["used"] -= int(summary.get("stream_excluded_page_ids", 0) or 0)
     totals["used"] = max(0, totals["used"])
     return totals
 

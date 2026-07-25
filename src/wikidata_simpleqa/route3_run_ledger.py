@@ -300,6 +300,11 @@ class SegmentLedgerIndex:
         return set(self._segment_allocations)
 
     @property
+    def run_group_page_ids(self) -> set[int]:
+        """Return every page ID allocated anywhere in this run group."""
+        return set(self._run_group_allocations)
+
+    @property
     def pending_primary_page_ids(self) -> list[int]:
         """Return allocated pages that have not started attempt001."""
         return [

@@ -74,7 +74,7 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _aggregate_phase_timings,
     _llm_generation_table_yield_summary,
     _load_endpoint_jsonl,
-    _load_stream_excluded_page_ids,
+
     _load_url_entries,
     _load_urls,
     _phase_timing_stats,
@@ -936,34 +936,79 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             write_archive(cache_dir / "page_b.json", 102)
             write_archive(cache_dir / "page_c.json", 103)
             (cache_dir / "page_invalid.json").write_text(json.dumps({"page_id": 104}), encoding="utf-8")
-            used_file = root / "used_ids.json"
-            used_file.write_text(
-                json.dumps(
-                    [
-                        101,
-                        {"page_id": 102, "answer_type": "Person", "table_type": "infobox"},
-                    ]
-                ),
-                encoding="utf-8",
-            )
             state = PageIdStreamState.load(root / "state.json")
             args = SimpleNamespace(
                 stream_reuse_cached_page_count=5,
                 route3_page_archive_dir=cache_dir,
-                stream_reuse_cached_page_used_id_file=[used_file],
             )
 
-            selected, summary = _reserve_stream_cached_page_archives(state=state, args=args)
+            selected, summary = _reserve_stream_cached_page_archives(
+                state=state,
+                args=args,
+                excluded_page_ids={101, 102},
+            )
 
         self.assertEqual([entry.page_id for entry in selected], [103])
         self.assertEqual(summary["requested_count"], 5)
         self.assertEqual(summary["cached_archive_valid_page_count"], 3)
-        self.assertEqual(summary["used_id_excluded_page_count"], 2)
+        self.assertEqual(summary["run_group_allocation_excluded_page_count"], 2)
         self.assertEqual(summary["reusable_cached_page_count"], 1)
         self.assertEqual(summary["selected_count"], 1)
         self.assertEqual(state.in_progress_ids, {103})
         self.assertTrue(any(event.get("event") == "reserve_cached_page_archives" for event in state.events))
 
+    def test_cache_and_fresh_discovery_share_run_group_exclusions(self) -> None:
+        class FakeWikipediaSearchClient:
+            def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
+                return [SimpleNamespace(page_id=101), SimpleNamespace(page_id=102)]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            cache_dir = root / "route3_pages"
+            cache_dir.mkdir()
+            for page_id in (101, 102):
+                (cache_dir / f"page_{page_id}.json").write_text(
+                    json.dumps(
+                        {
+                            "source_url": f"https://en.wikipedia.org/w/index.php?pageid={page_id}",
+                            "page_id": page_id,
+                            "parse_payload": {
+                                "parse": {
+                                    "title": f"Cached page {page_id}",
+                                    "pageid": page_id,
+                                    "text": FIXTURE_HTML,
+                                }
+                            },
+                        }
+                    ),
+                    encoding="utf-8",
+                )
+            args = SimpleNamespace(
+                stream_reuse_cached_page_count=1,
+                route3_page_archive_dir=cache_dir,
+                stream_search_max_rounds=1,
+                stream_search_limit=50,
+            )
+            allocated_page_ids: set[int] = set()
+            cached, _summary = _reserve_stream_cached_page_archives(
+                state=PageIdStreamState.load(root / "cache_state.json"),
+                args=args,
+                excluded_page_ids=allocated_page_ids,
+            )
+            allocated_page_ids.update(entry.page_id for entry in cached)
+            fresh_state = PageIdStreamState.load(root / "fresh_state.json")
+            fresh_state.used_ids.add(102)
+            fresh = _reserve_stream_page_ids(
+                state=fresh_state,
+                args=args,
+                wikipedia_client=FakeWikipediaSearchClient(),
+                rng=random.Random(1),
+                count=1,
+                excluded_page_ids=allocated_page_ids,
+            )
+
+        self.assertEqual([entry.page_id for entry in cached], [101])
+        self.assertEqual(fresh, [102])
     def test_pageview_prefilter_disabled_by_default_records_disabled_metadata(self) -> None:
         class NoPageviewWikipediaClient(FakeWikipediaClient):
             def __init__(self) -> None:
@@ -1672,6 +1717,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 wikipedia_client=FakeWikipediaSearchClient(),
                 rng=random.Random(1),
                 count=1,
+                excluded_page_ids=set(),
             )
 
         self.assertEqual(selected, [303])
@@ -1703,10 +1749,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
 
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
-            exclusion_file = root / "exclude.json"
-            exclusion_file.write_text(json.dumps([101, 102]), encoding="utf-8")
             state = PageIdStreamState.load(root / "state.json")
-            state.used_ids.update(_load_stream_excluded_page_ids([exclusion_file]))
             args = SimpleNamespace(
                 stream_page_source="table-search",
                 stream_search_max_rounds=2,
@@ -1721,48 +1764,12 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 wikipedia_client=FakeWikipediaSearchClient(),
                 rng=random.Random(1),
                 count=1,
+                excluded_page_ids={101, 102},
             )
 
         self.assertEqual(selected, [201])
         self.assertEqual(state.table_search_offset('insource:"wikitable"'), 100)
-        self.assertTrue({101, 102, 201}.issubset(state.used_ids))
-
-    def test_triadic_stream_exclusions_match_current_answer_and_table_context(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            exclusion_file = Path(tmpdir) / "exclude.json"
-            exclusion_file.write_text(
-                json.dumps(
-                    [
-                        {"page_id": 101, "answer_type": "Person", "table_type": "infobox"},
-                        {"page_id": 102, "answer_type": "Person", "table_type": "infobox"},
-                        {"page_id": 102, "answer_type": "Person", "table_type": "wikitable"},
-                        {"page_id": 103},
-                        {"page_id": 104, "answer_type": "Person"},
-                        {"page_id": 105, "table_type": "infobox"},
-                    ]
-                ),
-                encoding="utf-8",
-            )
-
-            person_infobox = _load_stream_excluded_page_ids(
-                [exclusion_file],
-                answer_types=["Person"],
-                table_types=["infobox"],
-            )
-            place_infobox = _load_stream_excluded_page_ids(
-                [exclusion_file],
-                answer_types=["Place"],
-                table_types=["infobox"],
-            )
-            person_both = _load_stream_excluded_page_ids(
-                [exclusion_file],
-                answer_types=["Person"],
-                table_types=["infobox", "wikitable"],
-            )
-
-        self.assertEqual(person_infobox, {101, 102, 103})
-        self.assertEqual(place_infobox, {103})
-        self.assertEqual(person_both, {101, 102, 103})
+        self.assertEqual(state.used_ids, {201})
 
     def test_table_search_discovery_retries_transient_errors_before_stopping(self) -> None:
         class FlakyWikipediaSearchClient:
@@ -1795,6 +1802,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 wikipedia_client=client,
                 rng=random.Random(1),
                 count=1,
+                excluded_page_ids=set(),
             )
 
         self.assertEqual(selected, [501])

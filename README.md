@@ -175,7 +175,7 @@ python scripts\run_wikipedia_infobox_recipe.py `
   --append-run-label topup_01
 ```
 
-Top-up is permitted only after prior segments are complete and protocol-compatible. It creates a new segment and allocates only canonical page IDs never allocated anywhere in the run group. It does not move, seed, clear, or otherwise read old rerun/state work, and it does not modify prior segment files. The exact status and ambiguity-resolution CLI flags are added and documented in M8-S8; do not manipulate worker state directly in the meantime.
+Top-up is permitted only after prior segments are complete and protocol-compatible. The immutable run-group allocation ledger is the single exclusion source for both cached archives and fresh discovery. A top-up creates a new segment and allocates only canonical page IDs never allocated anywhere in the run group. It does not move, seed, clear, or otherwise read old rerun/state work, and it does not modify prior segment files. The exact status and ambiguity-resolution CLI flags are added and documented in M8-S8; do not manipulate worker state directly in the meantime.
 
 Inspect the durable-run tests with:
 

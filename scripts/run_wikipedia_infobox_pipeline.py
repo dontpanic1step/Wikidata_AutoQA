@@ -30,8 +30,6 @@ from wikidata_simpleqa.grading import ModelPanelMember
 from wikidata_simpleqa.page_id_lists import (
     PageIdListEntry,
     build_page_id_entries,
-    page_ids_excluded_for_context,
-    read_page_id_entries,
 )
 from wikidata_simpleqa.route3_circuit import CircuitOpenError, ServiceCircuit
 from wikidata_simpleqa.route3_ddg import Route3DDGVerifierResultStore
@@ -271,7 +269,7 @@ def parse_args() -> argparse.Namespace:
         "--stream-state",
         type=Path,
         default=ROOT / "outputs" / "wikipedia_infobox_stream_state.json",
-        help="Persistent page-id cache, in-progress list, and rerun pool for streaming mode.",
+        help="Persistent discovery offsets and non-authoritative streaming telemetry.",
     )
     parser.add_argument("--stream-search-limit", type=int, default=50)
     parser.add_argument("--stream-search-max-rounds", type=int, default=10)
@@ -282,15 +280,6 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Initial Wikipedia search offset for table-search streaming. "
             "Useful for recipe segments with separate stream states."
-        ),
-    )
-    parser.add_argument(
-        "--stream-exclude-page-id-file",
-        action="append",
-        type=Path,
-        default=[],
-        help=(
-            "File containing page IDs or page_id/answer_type/table_type entries that streaming discovery must skip."
         ),
     )
     parser.add_argument(
@@ -357,16 +346,6 @@ def parse_args() -> argparse.Namespace:
         help=(
             "Process this many already parsed Route 3 page archives from --route3-page-archive-dir, "
             "or 'all' to reuse cached pages until the stream target is met or reusable cache is exhausted."
-        ),
-    )
-    parser.add_argument(
-        "--stream-reuse-cached-page-used-id-file",
-        action="append",
-        default=[],
-        type=Path,
-        help=(
-            "Helper-generated used-ID JSON/JSONL/plain file for cached page reuse. "
-            "Page-only and triadic entries are treated as strict numeric page-level exclusions."
         ),
     )
     parser.add_argument(
@@ -1298,15 +1277,9 @@ def _run_streaming_page_id_pipeline(
         rejected_path=args.rejected_output,
     )
     primary_page_ids_at_start = ledger_index.primary_page_ids
-    excluded_page_ids = _load_stream_excluded_page_ids(
-        args.stream_exclude_page_id_file,
-        answer_types=_page_id_list_answer_types(args),
-        table_types=args.route3_table_source_type,
-    )
-    if excluded_page_ids:
-        state.used_ids.update(excluded_page_ids)
-        state._record_event("stream_exclude_page_ids", sorted(excluded_page_ids), "external_exclusion_file")
-        state.save()
+    run_group_allocated_page_ids = ledger_index.run_group_page_ids
+    run_group_allocated_page_count_at_start = len(run_group_allocated_page_ids)
+    state.used_ids.update(run_group_allocated_page_ids)
     _initialize_table_search_offsets(state, args)
     endpoint_sync = {"accepted_ids_synced": 0, "rejected_ids_synced": 0}
     if args.start_from_endpoint:
@@ -1398,6 +1371,7 @@ def _run_streaming_page_id_pipeline(
             state=state,
             args=args,
             requested_count=request_count,
+            excluded_page_ids=run_group_allocated_page_ids,
         )
         if not entries:
             break
@@ -1408,6 +1382,7 @@ def _run_streaming_page_id_pipeline(
                 source_url=entry.source_url,
                 cached_archive_path=str(entry.archive_path),
             )
+            run_group_allocated_page_ids.add(entry.page_id)
         cached_page_reuse_entries.extend(entries)
         dispatch_phase([entry.page_id for entry in entries])
 
@@ -1428,6 +1403,7 @@ def _run_streaming_page_id_pipeline(
             wikipedia_client=wikipedia_client,
             rng=rng,
             count=request_count,
+            excluded_page_ids=run_group_allocated_page_ids,
         )
         if not reserved_ids:
             break
@@ -1437,6 +1413,7 @@ def _run_streaming_page_id_pipeline(
                 page_source="fresh",
                 source_url=build_pageid_url(page_id),
             )
+            run_group_allocated_page_ids.add(page_id)
         fresh_allocated += len(reserved_ids)
         dispatch_phase(reserved_ids)
 
@@ -1468,8 +1445,7 @@ def _run_streaming_page_id_pipeline(
         "stream_page_source": "table-search",
         "stream_search_queries": _stream_search_queries(),
         "stream_search_offsets": state.table_search_offsets.copy(),
-        "stream_excluded_page_ids": len(excluded_page_ids),
-        "stream_exclude_page_id_files": [str(path) for path in args.stream_exclude_page_id_file],
+        "run_group_allocated_page_ids_at_start": run_group_allocated_page_count_at_start,
         "run_date": settings.run_date,
         "stream_state": str(args.stream_state),
         "page_attempt_ledger_dir": str(args.page_attempt_ledger_dir),
@@ -1487,7 +1463,6 @@ def _run_streaming_page_id_pipeline(
         "stream_page_processing_target": explicit_processing_target,
         "stream_page_processing_target_remaining_at_start": page_processing_target_remaining_at_start,
         "stream_fresh_page_count_remaining_at_start": fresh_requested,
-        "stream_reuse_cached_page_used_id_files": [str(path) for path in args.stream_reuse_cached_page_used_id_file],
         "stream_cached_page_reuse": cached_page_reuse_summary,
         "stream_reused_cached_page_ids": cached_reuse_page_ids,
         "stream_reused_cached_page_count": len(cached_page_reuse_entries),
@@ -1630,31 +1605,6 @@ def _initialize_table_search_offsets(state: PageIdStreamState, args: argparse.Na
         state.save()
 
 
-def _load_stream_excluded_page_ids(
-    paths: list[Path],
-    *,
-    answer_types: list[str] | tuple[str, ...] | None = None,
-    table_types: list[str] | tuple[str, ...] | None = None,
-) -> set[int]:
-    """Load page IDs that the stream should treat as already used for this context."""
-    excluded: set[int] = set()
-    for path in paths:
-        if path is None or not Path(path).exists():
-            continue
-        entries = read_page_id_entries(Path(path))
-        if answer_types is None and table_types is None:
-            excluded.update(entry.page_id for entry in entries)
-        else:
-            excluded.update(
-                page_ids_excluded_for_context(
-                    entries,
-                    answer_types=answer_types or (),
-                    table_types=table_types or (),
-                )
-            )
-    return {page_id for page_id in excluded if page_id > 0}
-
-
 def _stream_cached_page_reuse_disabled_summary(args: argparse.Namespace) -> dict[str, object]:
     """Return the summary payload used when cached page reuse is disabled."""
     return {
@@ -1664,7 +1614,6 @@ def _stream_cached_page_reuse_disabled_summary(args: argparse.Namespace) -> dict
         ),
         "requested_count_raw": str(getattr(args, "stream_reuse_cached_page_count", 0) or 0),
         "archive_dir": str(getattr(args, "route3_page_archive_dir", "") or ""),
-        "used_id_files": [str(path) for path in getattr(args, "stream_reuse_cached_page_used_id_file", [])],
         "strict_numeric_page_id_matching": True,
         "selected_count": 0,
         "selected_page_ids": [],
@@ -1675,6 +1624,7 @@ def _reserve_stream_cached_page_archives(
     *,
     state: PageIdStreamState,
     args: argparse.Namespace,
+    excluded_page_ids: set[int],
     requested_count: int | None = None,
 ) -> tuple[list[CachedPageArchiveEntry], dict[str, object]]:
     """Reserve reusable cached parsed pages by strict numeric page ID."""
@@ -1685,11 +1635,10 @@ def _reserve_stream_cached_page_archives(
     else:
         requested_count = max(0, int(requested_count))
     archive_dir = Path(getattr(args, "route3_page_archive_dir", ROOT / DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR))
-    used_id_files = list(getattr(args, "stream_reuse_cached_page_used_id_file", []) or [])
-    used_ids = _load_stream_reuse_cached_page_used_ids(used_id_files)
     cached_entries, scan_summary = _scan_route3_cached_page_archives(archive_dir)
-    available_entries = [entry for entry in cached_entries if entry.page_id not in used_ids]
-    state_used_ids = set(state.used_ids)
+    available_entries = [
+        entry for entry in cached_entries if entry.page_id not in excluded_page_ids
+    ]
     selected = available_entries[:requested_count]
     if selected:
         for entry in selected:
@@ -1705,12 +1654,10 @@ def _reserve_stream_cached_page_archives(
         "enabled": requested_count > 0,
         "requested_count": requested_count,
         "archive_dir": str(archive_dir),
-        "used_id_files": [str(path) for path in used_id_files],
         "strict_numeric_page_id_matching": True,
         **scan_summary,
-        "used_id_excluded_page_count": len({entry.page_id for entry in cached_entries if entry.page_id in used_ids}),
-        "state_already_used_page_count": len(
-            {entry.page_id for entry in available_entries if entry.page_id in state_used_ids}
+        "run_group_allocation_excluded_page_count": len(
+            {entry.page_id for entry in cached_entries if entry.page_id in excluded_page_ids}
         ),
         "reusable_cached_page_count": len(available_entries),
         "selected_count": len(selected),
@@ -1718,17 +1665,6 @@ def _reserve_stream_cached_page_archives(
         "selected_archive_paths": [str(entry.archive_path) for entry in selected],
     }
     return selected, summary
-
-
-def _load_stream_reuse_cached_page_used_ids(paths: list[Path]) -> set[int]:
-    """Load page-level cache-reuse exclusions from helper-generated ID files."""
-    used_ids: set[int] = set()
-    for path in paths:
-        if path is None or not Path(path).exists():
-            continue
-        entries = read_page_id_entries(Path(path), include_used_ids=True)
-        used_ids.update(entry.page_id for entry in entries if entry.page_id > 0)
-    return used_ids
 
 
 def _scan_route3_cached_page_archives(cache_dir: Path) -> tuple[list[CachedPageArchiveEntry], dict[str, object]]:
@@ -2431,6 +2367,7 @@ def _reserve_stream_page_ids(
     wikipedia_client: WikipediaClient,
     rng: random.Random,
     count: int,
+    excluded_page_ids: set[int],
 ) -> list[int]:
     """Reserve fresh page IDs from the formal table-search discovery source."""
     selected: list[int] = []
@@ -2454,13 +2391,23 @@ def _reserve_stream_page_ids(
             if hits is None:
                 continue
             state.advance_table_search_offset(query, args.stream_search_limit)
-            candidate_ids = [hit.page_id for hit in hits]
-            reserved = state.reserve_candidate_ids(
-                candidate_ids,
-                count=count - len(selected),
-                source=f"table_search:{query}:offset={offset}",
-                prefer_rerun_pool=False,
-            )
+            reserved: list[int] = []
+            for hit in hits:
+                page_id = hit.page_id
+                if page_id in excluded_page_ids or page_id in selected or page_id in reserved:
+                    continue
+                reserved.append(page_id)
+                if len(reserved) >= count - len(selected):
+                    break
+            if reserved:
+                state.used_ids.update(reserved)
+                state.in_progress_ids.update(reserved)
+                state._record_event(
+                    "reserve_table_search_pages",
+                    reserved,
+                    f"table_search:{query}:offset={offset}",
+                )
+                state.save()
             if hits:
                 made_progress = True
             _extend_unique_page_ids(selected, reserved)
