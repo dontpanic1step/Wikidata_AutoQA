@@ -328,7 +328,7 @@ Design intent:
 - search checks whether the answer is exposed too directly in public retrieval
 - model grading checks whether configured answer models solve the question too reliably
 
-There is no standalone cheap-model exact-match QA rejection gate. SimpleQA Verified uses autorated model answers for difficulty/evaluation rather than a separate cheap-model long-tail rejection phase, so model-answer judgment belongs in the grading panel.
+There is no standalone cheap-model exact-match QA rejection gate. SimpleQA Verified uses autorated model answers for difficulty/evaluation rather than a separate cheap-model long-tail rejection phase, so model-answer judgment belongs in the grading panel. Low-integer answers receive the same DDG long-tail verification as other answer types and do not trigger an additional snippet-judging model call.
 
 DuckDuckGo filtering uses normalized answer matching over answer labels and aliases. It normalizes case, punctuation, common number forms, common date forms, and common country aliases where applicable. Search-result title hits and snippet hits are thresholded evidence signals, not unconditional rejection rules; setting thresholds to `1.0` intentionally lets candidates pass stage 1 for walkthrough/debug runs.
 

@@ -941,6 +941,8 @@ Route 3 durable executor 负责：
 - second-stage QA calls；
 - GPT-4.1-mini grading calls。
 
+删除 low-integer answer 的额外 GPT-4.1-mini snippet judge；Number candidates 与其他答案类型执行相同的 DDG long-tail verification，不增加替代 heuristic。
+
 正式 Route 3 不允许 OpenRouter client 内部隐藏重试、代理转直连或模型 fallback。当前未启用的 rewrite 不顺手扩展。批量 prediction/judge 不 import 该 executor。
 
 稳定 call key：
