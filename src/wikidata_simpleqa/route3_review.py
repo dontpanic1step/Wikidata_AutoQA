@@ -408,7 +408,7 @@ def _review_bundle(record: dict[str, Any]) -> dict[str, Any]:
         reference_answer=str(record["answer"]),
         aliases=tuple(str(value) for value in record["answer_aliases"]),
         search_queries=tuple(str(value) for value in record["search_queries"]),
-        topic=str(record["topic"]),
+        topic="",
         source_validation=record["validation"],
         integrated_answer_type_gate=metadata["rule_based_qa_gate"],
         ddg=record["search_verification_features"],

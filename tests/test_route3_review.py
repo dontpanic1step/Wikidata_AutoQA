@@ -178,7 +178,10 @@ def test_export_cli_writes_review_state_markdown_and_xlsx() -> None:
         state_path = root / "review_state.json"
         markdown_path = root / "review.md"
         workbook_path = root / "review.xlsx"
-        accepted_path.write_text(json.dumps(accepted_record()) + "\n", encoding="utf-8")
+        accepted_path.write_text(
+            json.dumps(accepted_record() | {"topic": "Wikipedia semi-structured data"}) + "\n",
+            encoding="utf-8",
+        )
         manifest_path.write_text(json.dumps({"segment_id": "01_alltypes_10", "fingerprint": {"sha256": "test"}}), encoding="utf-8")
 
         completed = subprocess.run(
@@ -211,10 +214,15 @@ def test_export_cli_writes_review_state_markdown_and_xlsx() -> None:
         assert exported_state["segment_artifact_roots"] == {
             "01_alltypes_10": str(root.resolve())
         }
+        artifact = Route3CandidateArtifact.from_dict(exported_state["candidates"][0]["artifact"])
+        assert artifact.current_revision.topic == ""
         assert markdown_path.exists()
         assert workbook_path.exists()
         assert json.loads(completed.stdout)["accepted"] == 1
-        assert load_workbook(workbook_path)["review"]["F2"].value == "No"
+        exported_workbook = load_workbook(workbook_path)
+        assert exported_workbook["review"]["E2"].value is None
+        assert exported_workbook["review"]["F2"].value == "No"
+        exported_workbook.close()
         workbook = load_workbook(workbook_path)
         workbook["review"]["E2"] = "History"
         workbook.save(workbook_path)
