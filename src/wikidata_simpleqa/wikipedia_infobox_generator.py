@@ -1289,7 +1289,7 @@ class WikipediaInfoboxTableGenerator:
                 canonical_url=page.canonical_url,
                 content_domain=page.content_domain,
                 first_paragraph=page.first_paragraph,
-                discard_reason=_answer_type_not_allowed_reason(response, self.allowed_answer_types),
+                discard_reason=_answer_type_not_allowed_reason(answer_type, self.allowed_answer_types),
                 tables=page.tables,
                 llm_response=response,
                 llm_prompt=prompt,
@@ -1607,7 +1607,7 @@ class WikipediaInfoboxTableGenerator:
                 canonical_url=page.canonical_url,
                 content_domain=page.content_domain,
                 first_paragraph=page.first_paragraph,
-                discard_reason=_answer_type_not_allowed_reason(response, slot_allowed_answer_types),
+                discard_reason=_answer_type_not_allowed_reason(answer_type, slot_allowed_answer_types),
                 tables=tables,
                 llm_response=response,
                 llm_prompt=prompt,
@@ -5328,13 +5328,11 @@ def _reasoning_type_not_allowed_reason(response: dict[str, Any], allowed_reasoni
     )
 
 
-def _answer_type_not_allowed_reason(response: dict[str, Any], allowed_answer_types: tuple[str, ...]) -> str:
+def _answer_type_not_allowed_reason(answer_type: str, allowed_answer_types: tuple[str, ...]) -> str:
     """Return an audit string for a configured answer-type rejection."""
-    raw_answer_type = str(response.get("answer_type") or "").strip()
-    rejected_value = _normalize_answer_type_value(raw_answer_type) or raw_answer_type or "<missing>"
     return (
         "answer_type_not_allowed:"
-        f"{rejected_value}; allowed={','.join(allowed_answer_types)}"
+        f"{answer_type or '<missing>'}; allowed={','.join(allowed_answer_types)}"
     )
 
 
@@ -5372,9 +5370,9 @@ def _normalize_answer_type(value: Any, answer: str, question: str) -> str:
     normalized = _normalize_answer_type_value(value)
     normalized_question = display_key(question)
     looks_like_temporal_answer = _looks_like_temporal_answer(answer)
-    if looks_like_temporal_answer and any(
-        token in normalized_question
-        for token in ("year", "date", "day", "month", "when")
+    if looks_like_temporal_answer and re.search(
+        r"\b(?:what|which)\s+(?:year|date|day|month)\b|\bwhen\b",
+        normalized_question,
     ):
         return "Date"
     if normalized in ROUTE3_ANSWER_TYPE_SET:

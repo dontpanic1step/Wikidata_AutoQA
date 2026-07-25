@@ -46,6 +46,7 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     extract_wikipedia_tables,
     rank_wikipedia_tables,
     _annotate_table_filter_modes,
+    _answer_type_not_allowed_reason,
     _clean_cell_text,
     _combined_markdown_headers,
     _markdown_cell,
@@ -4744,6 +4745,28 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "What year was the monastery first mentioned?",
             ),
             "Date",
+        )
+        self.assertEqual(
+            _answer_type_not_allowed_reason("Date", ("Number",)),
+            "answer_type_not_allowed:Date; allowed=Number",
+        )
+
+    def test_numeric_quantity_wording_does_not_become_date(self) -> None:
+        self.assertEqual(
+            _normalize_answer_type(
+                "Number",
+                "33",
+                "What is the average five-year survival percentage for brain tumors in the United States?",
+            ),
+            "Number",
+        )
+        self.assertEqual(
+            _normalize_answer_type(
+                "Number",
+                "115",
+                "How many years ago from 2026 was the university established?",
+            ),
+            "Number",
         )
 
     def test_temporal_question_overrides_mislabeled_era_qualified_year_answer(self) -> None:
