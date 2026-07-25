@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
-import json
 import re
 from time import perf_counter
 from typing import Any
 
-from .cheap_model_qa import parse_json_object
 from .date_reference import date_answer_variant_strings
 from .entity_normalization import normalize_name
 from .generation_models import GeneratedCandidate
@@ -342,7 +340,6 @@ def run_search_based_longtail_verifier(
     candidate: GeneratedCandidate,
     *,
     search_client,
-    snippet_judge_client=None,
     top_k: int,
     max_full_question_hit_rate: float,
     max_keyword_hit_rate: float,
@@ -475,17 +472,7 @@ def run_search_based_longtail_verifier(
         features["passed"] = False
         features["triggered_rule"] = title_rule
         return False, features
-    snippet_judge_features = _run_low_integer_snippet_judge(
-        candidate,
-        features["queries"],
-        snippet_judge_client=snippet_judge_client,
-    )
-    if snippet_judge_features is not None:
-        features["number_snippet_judge"] = snippet_judge_features
-        if snippet_judge_features.get("found_in_every_snippet"):
-            features["passed"] = False
-            features["triggered_rule"] = "number_snippet_judge:found_in_every_snippet"
-            return False, features
+
     if not features["triggered_rule"]:
         full_question_rate = features["category_hit_rates"].get("full_question", {}).get("answer_hit_rate", 0.0)
         keyword_rate = features["category_hit_rates"].get("keyword_queries", {}).get("answer_hit_rate", 0.0)
@@ -920,92 +907,3 @@ def _number_regexes(value: int) -> list[re.Pattern[str]]:
         if hyphen_form != word_form:
             patterns.append(re.compile(rf"\b{re.escape(hyphen_form)}\b"))
     return patterns
-
-
-def _run_low_integer_snippet_judge(
-    candidate: GeneratedCandidate,
-    query_rows: list[dict[str, Any]],
-    *,
-    snippet_judge_client,
-) -> dict[str, Any] | None:
-    """Judge snippet answer visibility for exact integer answers in [-10, 30]."""
-    integer_value = _parse_integer_answer(candidate.answer)
-    if candidate.answer_type != "Number" or integer_value is None or integer_value < -10 or integer_value > 30:
-        return None
-    snippets = [
-        str(result.get("snippet", "")).strip()
-        for row in query_rows
-        for result in row.get("results", [])
-        if str(result.get("snippet", "")).strip()
-    ]
-    if not snippets:
-        return {
-            "enabled": True,
-            "model_used": "",
-            "answer_integer": integer_value,
-            "snippet_count": 0,
-            "found_in_every_snippet": False,
-            "reason": "no_snippets_available",
-        }
-    if snippet_judge_client is None:
-        return {
-            "enabled": False,
-            "model_used": "",
-            "answer_integer": integer_value,
-            "snippet_count": len(snippets),
-            "found_in_every_snippet": False,
-            "reason": "snippet_judge_unavailable",
-        }
-    prompt = _build_number_snippet_judge_prompt(candidate.final_question, candidate.answer, snippets)
-    judge_audit = _complete_text_with_audit(snippet_judge_client, prompt)
-    response = parse_json_object(_audit_text(judge_audit))
-    found_in_every_snippet = bool(response.get("found_in_every_snippet", False))
-    reason = str(response.get("reason", "")).strip()
-    return {
-        "enabled": True,
-        "model_used": getattr(getattr(snippet_judge_client, "config", None), "model", ""),
-        "answer_integer": integer_value,
-        "snippet_count": len(snippets),
-        "found_in_every_snippet": found_in_every_snippet,
-        "reason": reason,
-        "judge_audit": judge_audit,
-    }
-
-
-def _complete_text_with_audit(client: Any, prompt: str) -> dict[str, Any]:
-    """Return text-completion audit metadata, accepting legacy text-only clients."""
-    if hasattr(client, "complete_text_with_audit"):
-        audit = client.complete_text_with_audit(prompt)
-        if isinstance(audit, dict):
-            return audit
-    response = client.complete_text(prompt)
-    return {
-        "text": str(response).strip(),
-        "response_body": response,
-        "response": response,
-    }
-
-
-def _audit_text(audit: dict[str, Any]) -> str:
-    """Return assistant text from one text-completion audit payload."""
-    if "text" in audit:
-        return str(audit.get("text", ""))
-    if "raw_text" in audit:
-        return str(audit.get("raw_text", ""))
-    return str(audit.get("response", ""))
-
-
-def _build_number_snippet_judge_prompt(question: str, answer: str, snippets: list[str]) -> str:
-    """Build the prompt for the low-integer snippet visibility judge."""
-    payload = {
-        "question": question,
-        "gold_answer": answer,
-        "snippets": snippets,
-    }
-    return (
-        "Decide whether the gold answer can be found in every snippet.\n"
-        "Return JSON only.\n"
-        'Format: {"found_in_every_snippet": boolean, "reason": string}.\n'
-        "Treat equivalent number forms as matches, including digits, commas, and English number words.\n\n"
-        f"{json.dumps(payload, ensure_ascii=False)}"
-    )

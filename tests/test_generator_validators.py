@@ -30,25 +30,6 @@ class FakeSearchClient:
         return [type("SearchResult", (), row)() for row in rows]
 
 
-class FakeCheapModelClient:
-    """Simple text-completion stub for snippet-judge tests."""
-
-    def __init__(self, response: str) -> None:
-        self.response = response
-        self.prompts: list[str] = []
-
-    def complete_text(self, prompt: str) -> str:
-        self.prompts.append(prompt)
-        return self.response
-
-    def complete_text_with_audit(self, prompt: str) -> dict:
-        text = self.complete_text(prompt)
-        return {
-            "text": text,
-            "request_payload": {"prompt": prompt},
-            "response_body": {"fake_snippet_judge_response": text},
-        }
-
 
 def make_generated_candidate() -> GeneratedCandidate:
     """Build a minimal shared candidate for validator tests."""
@@ -839,7 +820,6 @@ class GeneratorValidatorTests(unittest.TestCase):
         passed, features = run_search_based_longtail_verifier(
             candidate,
             search_client=client,
-            snippet_judge_client=None,
             top_k=5,
             max_full_question_hit_rate=0.0,
             max_keyword_hit_rate=0.1,
@@ -851,6 +831,8 @@ class GeneratorValidatorTests(unittest.TestCase):
             features["queries"][1]["results"][0]["snippet_number_margin_hits"],
             [],
         )
+        self.assertNotIn("number_snippet_judge", features)
+
 
     def test_search_verifier_matches_answer_aliases_in_snippets(self) -> None:
         candidate = make_generated_candidate()
@@ -915,85 +897,6 @@ class GeneratorValidatorTests(unittest.TestCase):
         self.assertEqual(features["queries"][1]["snippet_hits"], 1)
         self.assertFalse(features["queries"][1]["results"][0]["answer_hit"])
         self.assertTrue(features["queries"][1]["results"][1]["answer_hit"])
-
-    def test_search_verifier_runs_low_integer_snippet_judge_for_minus_ten_to_thirty(self) -> None:
-        candidate = make_generated_candidate()
-        candidate.answer = "-10"
-        candidate.answer_aliases = []
-        candidate.answer_type = "Number"
-        snippet_judge = FakeCheapModelClient(
-            '{"found_in_every_snippet": true, "reason": "All snippets explicitly mention minus ten."}'
-        )
-        client = FakeSearchClient(
-            {
-                "Who directed Example Film?": [
-                    {
-                        "title": "Archived record",
-                        "snippet": "The table lists minus ten points.",
-                        "url": "https://example.test/5",
-                    }
-                ],
-                "Example Film director": [
-                    {
-                        "title": "Another record",
-                        "snippet": "A total of -10 were recorded.",
-                        "url": "https://example.test/6",
-                    }
-                ],
-            }
-        )
-        passed, features = run_search_based_longtail_verifier(
-            candidate,
-            search_client=client,
-            snippet_judge_client=snippet_judge,
-            top_k=5,
-            max_full_question_hit_rate=1.0,
-            max_keyword_hit_rate=1.0,
-            max_overall_hit_rate=1.0,
-        )
-        self.assertFalse(passed)
-        self.assertEqual(
-            features["triggered_rule"],
-            "number_snippet_judge:found_in_every_snippet",
-        )
-        self.assertEqual(features["number_snippet_judge"]["answer_integer"], -10)
-        self.assertEqual(
-            features["number_snippet_judge"]["judge_audit"]["response_body"]["fake_snippet_judge_response"],
-            '{"found_in_every_snippet": true, "reason": "All snippets explicitly mention minus ten."}',
-        )
-        self.assertIn("minus ten", snippet_judge.prompts[0])
-
-    def test_search_verifier_does_not_run_snippet_judge_for_decimal_number(self) -> None:
-        candidate = make_generated_candidate()
-        candidate.answer = "12.5"
-        candidate.answer_aliases = []
-        candidate.answer_type = "Number"
-        snippet_judge = FakeCheapModelClient(
-            '{"found_in_every_snippet": true, "reason": "Should not be called."}'
-        )
-        client = FakeSearchClient(
-            {
-                "Who directed Example Film?": [
-                    {
-                        "title": "Archived record",
-                        "snippet": "The table lists 12.5.",
-                        "url": "https://example.test/decimal",
-                    }
-                ],
-            }
-        )
-        passed, features = run_search_based_longtail_verifier(
-            candidate,
-            search_client=client,
-            snippet_judge_client=snippet_judge,
-            top_k=5,
-            max_full_question_hit_rate=1.0,
-            max_keyword_hit_rate=1.0,
-            max_overall_hit_rate=1.0,
-        )
-        self.assertTrue(passed)
-        self.assertNotIn("number_snippet_judge", features)
-        self.assertEqual(snippet_judge.prompts, [])
 
 
 if __name__ == "__main__":

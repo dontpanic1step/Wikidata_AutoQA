@@ -40,6 +40,7 @@ def finalized_inputs() -> tuple[dict, list[dict[str, str]], set[str]]:
     state = create_review_state(
         records,
         segment_fingerprints={"01_alltypes_10": {"sha256": "fingerprint"}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
     )
     rows = [review_row(record["id"], topic="History") for record in records]
     state = apply_review_rows(state, rows)
@@ -100,6 +101,7 @@ def test_finalization_rejects_unready_review_state() -> None:
     state = create_review_state(
         [record],
         segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
     )
     candidate_id = record["id"]
 

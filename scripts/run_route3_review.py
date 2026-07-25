@@ -12,11 +12,9 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from wikidata_simpleqa.config import Settings
-from wikidata_simpleqa.generation_pipeline import (
-    build_second_stage_grader_client,
-    build_second_stage_model_panel,
-)
+from wikidata_simpleqa.config import LLMConfig, Settings
+from wikidata_simpleqa.grading import ModelPanelMember
+from wikidata_simpleqa.route3_openrouter import Route3OpenRouterClientFactory
 from wikidata_simpleqa.route3_run_ledger import load_segment_manifest
 from wikidata_simpleqa.route3_review import (
     accepted_review_bundles,
@@ -86,6 +84,7 @@ def main() -> int:
 def _export_state(args: argparse.Namespace) -> dict:
     records = _read_jsonl(args.accepted_input)
     segment_fingerprints: dict[str, dict] = {}
+    segment_artifact_roots: dict[str, str] = {}
     for path in args.segment_manifest:
         manifest = load_segment_manifest(path)
         if manifest is None:
@@ -94,7 +93,12 @@ def _export_state(args: argparse.Namespace) -> dict:
         if segment_id in segment_fingerprints:
             raise ValueError(f"Duplicate segment manifest: {segment_id}")
         segment_fingerprints[segment_id] = manifest["fingerprint"]
-    return create_review_state(records, segment_fingerprints=segment_fingerprints)
+        segment_artifact_roots[segment_id] = str(path.parent.resolve())
+    return create_review_state(
+        records,
+        segment_fingerprints=segment_fingerprints,
+        segment_artifact_roots=segment_artifact_roots,
+    )
 
 
 def _apply_state(args: argparse.Namespace) -> dict:
@@ -113,14 +117,51 @@ def _apply_state(args: argparse.Namespace) -> dict:
                 segment_processor = post_generation_processor(
                     settings=settings,
                     search_client=search_client,
-                    second_stage_model_clients=build_second_stage_model_panel(settings),
-                    grading_grader_client=build_second_stage_grader_client(settings),
+                    second_stage_model_clients=_build_route3_model_panel(settings),
+                    grading_grader_client=_build_route3_grader(settings),
+                    external_call_record_root=(
+                        Path(state["segment_artifact_roots"][segment_id]) / "external_calls"
+                    ),
                 )
                 processors[segment_id] = segment_processor
             return segment_processor(candidate)
 
         state = rerun_review_candidates(state, processor=processor)
     return state
+
+
+def _build_route3_model_panel(settings: Settings) -> list[ModelPanelMember] | None:
+    """Build durable answer-model factories for one review rerun."""
+    if not settings.second_stage_grading_enabled:
+        return None
+    members = []
+    for config in settings.second_stage_grading_models:
+        factory = _route3_openrouter_factory(config, settings)
+        members.append(ModelPanelMember(name=config.model, client=factory))
+    return members
+
+
+def _build_route3_grader(settings: Settings):
+    """Build the durable grader factory for one review rerun."""
+    if not settings.second_stage_grading_enabled:
+        return None
+    config = settings.second_stage_grading_grader_llm
+    if config is None:
+        return None
+    return _route3_openrouter_factory(config, settings)
+
+
+def _route3_openrouter_factory(
+    config: LLMConfig,
+    settings: Settings,
+) -> Route3OpenRouterClientFactory:
+    """Build one formal OpenRouter factory from reconstructed settings."""
+    if config.provider != "openrouter":
+        raise ValueError(f"Formal Route 3 requires OpenRouter, got: {config.provider}")
+    return Route3OpenRouterClientFactory.from_config(
+        config,
+        timeout_seconds=settings.timeout_seconds,
+    )
 
 
 def _settings_from_fingerprint(fingerprint: dict) -> Settings:

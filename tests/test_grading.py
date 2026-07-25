@@ -65,8 +65,125 @@ class FailingClient:
         raise RuntimeError("temporary network failure")
 
 
+class CallKeyRecordingClient:
+    """Record durable call-key bindings while returning prompt-aware text."""
+
+    disable_caller_retry = True
+
+    def __init__(self, responder) -> None:
+        self.responder = responder
+        self.call_keys: list[str] = []
+        self.calls = 0
+
+    def for_call(self, call_key: str):
+        self.call_keys.append(call_key)
+        return self
+
+    def complete_text(self, prompt: str) -> str:
+        self.calls += 1
+        if isinstance(self.responder, str):
+            return self.responder
+        return str(self.responder(prompt))
+
+
+class SingleSendFailingClient:
+    """Raise once so durable grader callers cannot hide a retry."""
+
+    disable_caller_retry = True
+
+    def __init__(self) -> None:
+        self.calls = 0
+
+    def complete_text(self, prompt: str) -> str:
+        self.calls += 1
+        raise RuntimeError("durable call failed")
+
+
 class GradingTests(unittest.TestCase):
     """Check SimpleQA-style model-grader paths."""
+
+    def test_route3_panel_binds_answer_and_grader_call_keys(self) -> None:
+        first_answer = CallKeyRecordingClient("John Smith")
+        second_answer = CallKeyRecordingClient("Jane Doe")
+        grader = CallKeyRecordingClient(
+            lambda prompt: "A" if "Predicted answer: Jane Doe" in prompt else "B"
+        )
+
+        result = evaluate_model_panel(
+            question="Who directed Example Film?",
+            gold_answer="Jane Doe",
+            gold_aliases=[],
+            answer_type="Person",
+            source_metadata={"original_candidate_slot": "Person"},
+            model_panel=[
+                ModelPanelMember("openai/gpt-4.1-mini", first_answer),
+                ModelPanelMember("google/gemini-3-flash-preview", second_answer),
+            ],
+            grader_client=grader,
+            accuracy_threshold=0.1,
+            early_stop_on_threshold=True,
+            parallel_answers=True,
+            batch_grader=True,
+        )
+
+        self.assertEqual(result["executed_model_count"], 2)
+        self.assertEqual(
+            first_answer.call_keys,
+            ["second_stage_answer/Person/openai/gpt-4.1-mini"],
+        )
+        self.assertEqual(
+            second_answer.call_keys,
+            ["second_stage_answer/Person/google/gemini-3-flash-preview"],
+        )
+        self.assertEqual(
+            grader.call_keys,
+            [
+                "second_stage_grade/Person/openai/gpt-4.1-mini",
+                "second_stage_grade/Person/google/gemini-3-flash-preview",
+            ],
+        )
+
+    def test_route3_revision_panel_uses_revision_call_namespace(self) -> None:
+        answer = CallKeyRecordingClient("Jane Doe")
+        grader = CallKeyRecordingClient("A")
+
+        evaluate_model_panel(
+            question="Who directed Example Film?",
+            gold_answer="Jane Doe",
+            gold_aliases=[],
+            answer_type="Person",
+            source_metadata={
+                "original_candidate_slot": "Person",
+                "route3_revision_number": 2,
+            },
+            model_panel=[
+                ModelPanelMember("openai/gpt-4.1-mini", answer),
+            ],
+            grader_client=grader,
+            parallel_answers=False,
+        )
+
+        self.assertEqual(
+            answer.call_keys,
+            ["revision/2/second_stage_answer/Person/openai/gpt-4.1-mini"],
+        )
+        self.assertEqual(
+            grader.call_keys,
+            ["revision/2/second_stage_grade/Person/openai/gpt-4.1-mini"],
+        )
+
+    def test_durable_grader_failure_is_not_retried_by_grading_helper(self) -> None:
+        grader = SingleSendFailingClient()
+
+        with self.assertRaisesRegex(RuntimeError, "durable call failed"):
+            grade_prediction(
+                question="Who directed Example Film?",
+                gold_answer="Jane Doe",
+                predicted_answer="Jane Doe",
+                grader_client=grader,
+            )
+
+        self.assertEqual(grader.calls, 1)
 
     def test_grade_prediction_requires_grader_client(self) -> None:
         with self.assertRaisesRegex(ValueError, "grader_client is required"):

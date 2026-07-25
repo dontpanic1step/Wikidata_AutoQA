@@ -3,14 +3,30 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
+from uuid import uuid4
 from typing import Any
 
-from .route3_run_ledger import atomic_write_json, canonical_json_sha256, utc_now_iso
+from .route3_run_ledger import canonical_json_sha256, utc_now_iso
 
 
 EXTERNAL_CALL_RECORD_SCHEMA_VERSION = 1
 EXTERNAL_CALL_RECORD_KINDS = {"intent", "response", "http_error"}
+
+
+def _atomic_create_json(path: Path, payload: dict[str, Any]) -> None:
+    """Atomically create one complete JSON record without replacing an existing record."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temp_path = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
+    try:
+        temp_path.write_text(
+            json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+        os.link(temp_path, path)
+    finally:
+        temp_path.unlink(missing_ok=True)
 
 
 class ExternalCallRecordStore:
@@ -50,7 +66,7 @@ class ExternalCallRecordStore:
             "payload": dict(payload),
             "committed_at_utc": utc_now_iso(),
         }
-        atomic_write_json(path, record)
+        _atomic_create_json(path, record)
         return path
 
     def load(self, *, call_key: str, record_kind: str) -> dict[str, Any] | None:

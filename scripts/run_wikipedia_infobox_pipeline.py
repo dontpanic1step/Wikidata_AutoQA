@@ -10,7 +10,7 @@ import re
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from collections import Counter, defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import datetime, timezone
 from json import JSONDecodeError
 from pathlib import Path
@@ -22,14 +22,10 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from wikidata_simpleqa.cheap_model_qa import make_cheap_model_qa_client
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.generation_models import GeneratedCandidate
-from wikidata_simpleqa.generation_pipeline import (
-    build_second_stage_grader_client,
-    build_second_stage_model_panel,
-    process_generated_candidates,
-)
+from wikidata_simpleqa.generation_pipeline import process_generated_candidates
+from wikidata_simpleqa.grading import ModelPanelMember
 from wikidata_simpleqa.page_id_lists import (
     PageIdListEntry,
     build_page_id_entries,
@@ -37,6 +33,11 @@ from wikidata_simpleqa.page_id_lists import (
     read_page_id_entries,
 )
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids, route3_record_id
+from wikidata_simpleqa.route3_openrouter import (
+    Route3OpenRouterClientFactory,
+    bind_route3_allocation_client,
+    bind_route3_allocation_panel,
+)
 from wikidata_simpleqa.route3_run_ledger import (
     SegmentLedgerIndex,
     atomic_write_json,
@@ -720,7 +721,10 @@ def main() -> int:
         rate_limit_recovery_seconds=args.wikipedia_429_recovery_seconds,
     )
     search_client = DuckDuckGoSearchClient(**settings.duckduckgo_client_kwargs())
-    llm_client = make_cheap_model_qa_client(small_llm, settings.timeout_seconds)
+    llm_client = Route3OpenRouterClientFactory.from_config(
+        small_llm,
+        timeout_seconds=settings.timeout_seconds,
+    )
     rewrite_client = None
     summary = _run_streaming_page_id_pipeline(
         args=args,
@@ -1273,11 +1277,18 @@ def _run_streaming_page_id_pipeline(
         concurrency.duckduckgo_semaphore,
         {"search"},
     )
-    llm_client = SemaphoreWrappedClient(
-        llm_client,
-        concurrency.generation_rewrite_semaphore,
-        {"complete_text", "complete_text_with_audit"},
-    )
+    if isinstance(llm_client, Route3OpenRouterClientFactory):
+        llm_client.transport = SemaphoreWrappedClient(
+            llm_client.transport,
+            concurrency.generation_rewrite_semaphore,
+            {"send_once"},
+        )
+    else:
+        llm_client = SemaphoreWrappedClient(
+            llm_client,
+            concurrency.generation_rewrite_semaphore,
+            {"complete_text", "complete_text_with_audit"},
+        )
     if rewrite_client is not None:
         rewrite_client = SemaphoreWrappedClient(
             rewrite_client,
@@ -2038,16 +2049,22 @@ def _build_streaming_second_stage_model_panel(
     settings: Settings,
     concurrency: StreamingConcurrencyContext,
 ):
-    """Construct shared second-stage clients wrapped by the second-stage semaphore."""
+    """Construct formal Route 3 answer-model factories with bounded transports."""
     if not settings.second_stage_grading_enabled:
         return None
-    members = build_second_stage_model_panel(settings)
-    for member in members:
-        member.client = SemaphoreWrappedClient(
-            member.client,
-            concurrency.second_stage_semaphore,
-            {"complete_text"},
+    members: list[ModelPanelMember] = []
+    for config in settings.second_stage_grading_models:
+        resolved = _resolve_route3_openrouter_config(config, settings)
+        factory = Route3OpenRouterClientFactory.from_config(
+            resolved,
+            timeout_seconds=settings.timeout_seconds,
         )
+        factory.transport = SemaphoreWrappedClient(
+            factory.transport,
+            concurrency.second_stage_semaphore,
+            {"send_once"},
+        )
+        members.append(ModelPanelMember(name=resolved.model, client=factory))
     return members
 
 
@@ -2055,13 +2072,33 @@ def _build_streaming_second_stage_grader_client(
     settings: Settings,
     concurrency: StreamingConcurrencyContext,
 ):
-    """Construct a shared second-stage grader client wrapped by the second-stage semaphore."""
+    """Construct the formal Route 3 grader factory with a bounded transport."""
     if not settings.second_stage_grading_enabled:
         return None
-    client = build_second_stage_grader_client(settings)
-    if client is None:
+    config = settings.second_stage_grading_grader_llm
+    if config is None:
         return None
-    return SemaphoreWrappedClient(client, concurrency.second_stage_semaphore, {"complete_text"})
+    resolved = _resolve_route3_openrouter_config(config, settings)
+    factory = Route3OpenRouterClientFactory.from_config(
+        resolved,
+        timeout_seconds=settings.timeout_seconds,
+    )
+    factory.transport = SemaphoreWrappedClient(
+        factory.transport,
+        concurrency.second_stage_semaphore,
+        {"send_once"},
+    )
+    return factory
+
+
+def _resolve_route3_openrouter_config(config: LLMConfig, settings: Settings) -> LLMConfig:
+    """Resolve inherited proxy settings for a formal Route 3 OpenRouter call."""
+    if config.provider != "openrouter":
+        raise ValueError(f"Formal Route 3 requires OpenRouter, got: {config.provider}")
+    if config.proxy is not None:
+        return config
+    return replace(config, proxy=settings.proxy)
+
 
 
 def _process_one_stream_page_id(
@@ -2097,12 +2134,34 @@ def _process_one_stream_page_id(
             "reused_committed_ledger": True,
         }
     attempt_number = ledger_index.next_attempt_number(page_id)
+    if isinstance(llm_client, Route3OpenRouterClientFactory):
+        page_llm_client = bind_route3_allocation_client(
+            llm_client,
+            record_root=args.external_call_record_dir,
+            canonical_page_id=page_id,
+            call_key="generation",
+        )
+        page_second_stage_model_clients = bind_route3_allocation_panel(
+            second_stage_model_clients,
+            record_root=args.external_call_record_dir,
+            canonical_page_id=page_id,
+        )
+        page_grading_grader_client = bind_route3_allocation_client(
+            grading_grader_client,
+            record_root=args.external_call_record_dir,
+            canonical_page_id=page_id,
+            call_key="",
+        ) if grading_grader_client is not None else None
+    else:
+        page_llm_client = llm_client
+        page_second_stage_model_clients = second_stage_model_clients
+        page_grading_grader_client = grading_grader_client
     generated_candidates: list[GeneratedCandidate] = []
     try:
         generator = WikipediaInfoboxTableGenerator(
             urls=[url],
             wikipedia_client=wikipedia_client,
-            llm_client=llm_client,
+            llm_client=page_llm_client,
             record_limit=1,
             url_domains={},
             search_query_count=args.generated_search_query_count,
@@ -2193,8 +2252,8 @@ def _process_one_stream_page_id(
             settings=settings,
             search_client=search_client,
             rewrite_client=rewrite_client,
-            second_stage_model_clients=second_stage_model_clients,
-            grading_grader_client=grading_grader_client,
+            second_stage_model_clients=page_second_stage_model_clients,
+            grading_grader_client=page_grading_grader_client,
         )
         for record in [*result.accepted, *result.rejected]:
             _attach_stream_record_metadata(

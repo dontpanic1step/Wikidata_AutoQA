@@ -183,6 +183,11 @@ def grade_predictions_batch(
         raise ValueError("grader_client is required for SimpleQA-style batch grading.")
 
     def grade_one(prediction: dict[str, Any]) -> dict[str, Any]:
+        bound_grader_client = _grader_client_for_prediction(
+            grader_client,
+            prediction=prediction,
+            source_metadata=source_metadata or {},
+        )
         row = grade_prediction(
             question=question,
             gold_answer=gold_answer,
@@ -190,7 +195,7 @@ def grade_predictions_batch(
             gold_aliases=gold_aliases,
             answer_type=answer_type,
             source_metadata=source_metadata,
-            grader_client=grader_client,
+            grader_client=bound_grader_client,
         )
         row["method"] = "simpleqa_verified_grader_batch_compat"
         return row
@@ -225,6 +230,8 @@ def evaluate_model_panel(
     batch_grader: bool = True,
 ) -> dict[str, Any]:
     """Run answer models and grade their responses."""
+    call_slot = _route3_call_slot(source_metadata)
+    call_namespace = _route3_call_namespace(source_metadata)
     model_rows: list[dict[str, Any]] = []
     total_configured = len(model_panel)
     early_stopped = False
@@ -237,7 +244,12 @@ def evaluate_model_panel(
         and total_configured > 0
         and model_panel
     ):
-        first_row = _answer_panel_member(question, model_panel[0])
+        first_row = _answer_panel_member(
+            question,
+            model_panel[0],
+            call_slot=call_slot,
+            call_namespace=call_namespace,
+        )
         first_grade = _grade_panel_predictions(
             question=question,
             gold_answer=gold_answer,
@@ -263,6 +275,8 @@ def evaluate_model_panel(
             question,
             remaining_panel,
             parallel=parallel_answers,
+            call_slot=call_slot,
+            call_namespace=call_namespace,
         )
         grade_rows = _grade_panel_predictions(
             question=question,
@@ -332,10 +346,24 @@ def _elapsed(start: float) -> float:
     return round(perf_counter() - start, 4)
 
 
-def _answer_panel_member(question: str, member: ModelPanelMember) -> dict[str, Any]:
+def _answer_panel_member(
+    question: str,
+    member: ModelPanelMember,
+    *,
+    call_slot: str = "",
+    call_namespace: str = "",
+) -> dict[str, Any]:
     """Run one second-stage answer model."""
     answer_start = perf_counter()
-    answer_audit = _complete_text_with_audit(member.client, question)
+    client = _client_for_call(
+        member.client,
+        (
+            f"{call_namespace}second_stage_answer/{call_slot}/{member.name}"
+            if call_slot
+            else ""
+        ),
+    )
+    answer_audit = _complete_text_with_audit(client, question)
     predicted_answer = _audit_text(answer_audit).strip()
     return {
         "model": member.name,
@@ -350,16 +378,32 @@ def _answer_panel_members(
     model_panel: list[ModelPanelMember],
     *,
     parallel: bool,
+    call_slot: str = "",
+    call_namespace: str = "",
 ) -> list[dict[str, Any]]:
     """Run panel answer models, preserving configured order."""
     if not model_panel:
         return []
     if not parallel or len(model_panel) == 1:
-        return [_answer_panel_member(question, member) for member in model_panel]
+        return [
+            _answer_panel_member(
+                question,
+                member,
+                call_slot=call_slot,
+                call_namespace=call_namespace,
+            )
+            for member in model_panel
+        ]
     rows: list[dict[str, Any] | None] = [None] * len(model_panel)
     with ThreadPoolExecutor(max_workers=len(model_panel)) as executor:
         future_to_index = {
-            executor.submit(_answer_panel_member, question, member): index
+            executor.submit(
+                _answer_panel_member,
+                question,
+                member,
+                call_slot=call_slot,
+                call_namespace=call_namespace,
+            ): index
             for index, member in enumerate(model_panel)
         }
         for future in as_completed(future_to_index):
@@ -399,7 +443,11 @@ def _grade_panel_predictions(
             gold_aliases=gold_aliases,
             answer_type=answer_type,
             source_metadata=source_metadata,
-            grader_client=grader_client,
+            grader_client=_grader_client_for_prediction(
+                grader_client,
+                prediction=row,
+                source_metadata=source_metadata,
+            ),
         )
         for row in rows
     ]
@@ -422,6 +470,50 @@ def _panel_counts(rows: list[dict[str, Any]]) -> dict[str, int]:
     }
 
 
+def _route3_call_slot(source_metadata: dict[str, Any]) -> str:
+    """Return the stable Route 3 candidate slot when present."""
+    return str(
+        source_metadata.get("original_candidate_slot")
+        or source_metadata.get("route3_slot_id")
+        or ""
+    ).strip()
+
+
+def _route3_call_namespace(source_metadata: dict[str, Any]) -> str:
+    """Return the revision namespace for edited Route 3 candidates."""
+    revision_number = source_metadata.get("route3_revision_number")
+    if revision_number is None:
+        return ""
+    return f"revision/{int(revision_number)}/"
+
+
+def _client_for_call(client: Any, call_key: str) -> Any:
+    """Bind a durable Route 3 client while leaving other clients unchanged."""
+    if call_key and hasattr(client, "for_call"):
+        return client.for_call(call_key)
+    return client
+
+
+def _grader_client_for_prediction(
+    grader_client: Any,
+    *,
+    prediction: dict[str, Any],
+    source_metadata: dict[str, Any],
+) -> Any:
+    """Bind one grader call to its candidate slot and answer model."""
+    slot = _route3_call_slot(source_metadata)
+    answer_model = str(prediction.get("model", "")).strip()
+    if not slot or not answer_model:
+        return grader_client
+    return _client_for_call(
+        grader_client,
+        (
+            f"{_route3_call_namespace(source_metadata)}"
+            f"second_stage_grade/{slot}/{answer_model}"
+        ),
+    )
+
+
 def _complete_text_with_audit(client: Any, prompt: str) -> dict[str, Any]:
     """Return text-completion audit metadata, accepting legacy text-only clients."""
     if hasattr(client, "complete_text_with_audit"):
@@ -438,6 +530,10 @@ def _complete_text_with_audit(client: Any, prompt: str) -> dict[str, Any]:
 
 def _complete_grader_with_retry(client: Any, prompt: str) -> dict[str, Any]:
     """Complete one grader prompt with bounded retry and NOT_ATTEMPTED fallback."""
+    if getattr(client, "disable_caller_retry", False):
+        audit = _complete_text_with_audit(client, prompt)
+        audit.setdefault("grader_retry_attempts", 0)
+        return audit
     last_error: Exception | None = None
     attempts = DEFAULT_GRADER_MAX_RETRIES + 1
     for attempt in range(attempts):

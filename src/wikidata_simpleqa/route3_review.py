@@ -19,10 +19,11 @@ from .route3_artifacts import (
     revise_route3_candidate_artifact,
 )
 from .route3_ids import route3_record_identity
+from .route3_openrouter import bind_route3_allocation_client, bind_route3_allocation_panel
 from .route3_run_ledger import atomic_write_json
 
 
-REVIEW_STATE_VERSION = 1
+REVIEW_STATE_VERSION = 2
 REVIEW_COLUMNS = (
     "id",
     "question",
@@ -57,6 +58,7 @@ def create_review_state(
     records: Iterable[dict[str, Any]],
     *,
     segment_fingerprints: dict[str, dict[str, Any]],
+    segment_artifact_roots: dict[str, str],
 ) -> dict[str, Any]:
     """Create a review state from formal accepted records."""
     bundles = [_review_bundle(record) for record in records]
@@ -64,12 +66,16 @@ def create_review_state(
     missing_segments = sorted(segment_ids - set(segment_fingerprints))
     if missing_segments:
         raise ValueError(f"missing segment fingerprints: {', '.join(missing_segments)}")
+    missing_roots = sorted(segment_ids - set(segment_artifact_roots))
+    if missing_roots:
+        raise ValueError(f"missing segment artifact roots: {', '.join(missing_roots)}")
     candidate_ids = [str(bundle["artifact"]["id"]) for bundle in bundles]
     if len(candidate_ids) != len(set(candidate_ids)):
         raise ValueError("duplicate candidate ID in accepted review input")
     return {
         "review_state_version": REVIEW_STATE_VERSION,
         "segment_fingerprints": deepcopy(segment_fingerprints),
+        "segment_artifact_roots": deepcopy(segment_artifact_roots),
         "candidates": bundles,
     }
 
@@ -318,18 +324,35 @@ def post_generation_processor(
     search_client,
     second_stage_model_clients,
     grading_grader_client,
+    external_call_record_root: Path,
 ) -> Callable[[GeneratedCandidate], tuple[str, dict[str, Any]]]:
     """Build a processor that executes the formal post-generation pipeline."""
     from .generation_pipeline import process_generated_candidates
 
     def process(candidate: GeneratedCandidate) -> tuple[str, dict[str, Any]]:
+        canonical_page_id = int(candidate.source_metadata["canonical_page_id"])
+        bound_panel = bind_route3_allocation_panel(
+            second_stage_model_clients,
+            record_root=external_call_record_root,
+            canonical_page_id=canonical_page_id,
+        )
+        bound_grader = (
+            bind_route3_allocation_client(
+                grading_grader_client,
+                record_root=external_call_record_root,
+                canonical_page_id=canonical_page_id,
+                call_key="",
+            )
+            if grading_grader_client is not None
+            else None
+        )
         result = process_generated_candidates(
             [candidate],
             settings=settings,
             search_client=search_client,
             rewrite_client=None,
-            second_stage_model_clients=second_stage_model_clients,
-            grading_grader_client=grading_grader_client,
+            second_stage_model_clients=bound_panel,
+            grading_grader_client=bound_grader,
         )
         if result.accepted:
             return "accepted", result.accepted[0]
@@ -387,6 +410,8 @@ def _generated_candidate(record: dict[str, Any], artifact: Route3CandidateArtifa
     revision = artifact.current_revision
     subject = record["subject_entity"]
     evidence = record["evidence"]
+    source_metadata = deepcopy(record["source_metadata"])
+    source_metadata["route3_revision_number"] = revision.revision_number
     return GeneratedCandidate(
         source_type=str(record["source_type"]),
         generation_route=str(record["generation_route"]),
@@ -404,5 +429,5 @@ def _generated_candidate(record: dict[str, Any], artifact: Route3CandidateArtifa
         target_time=str(record["target_time"]),
         source_template_domain=str(record["template_key"]),
         search_queries=list(revision.active_search_queries),
-        source_metadata=deepcopy(record["source_metadata"]),
+        source_metadata=source_metadata,
     )

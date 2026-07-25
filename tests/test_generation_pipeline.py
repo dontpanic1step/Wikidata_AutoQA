@@ -2015,42 +2015,6 @@ class GenerationPipelineTests(unittest.TestCase):
         )
         self.assertEqual(features["models"][0]["raw_judge_response"], "A")
 
-    def test_number_snippet_judge_trigger_range_is_minus_ten_to_thirty(self) -> None:
-        from wikidata_simpleqa.generation_pipeline import _needs_number_snippet_judge
-
-        source_candidate = make_candidate()
-        candidate = GeneratedCandidate(
-            source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
-            question="How many points did Example Film score?",
-            canonical_question="How many points did Example Film score?",
-            answer="-10",
-            answer_aliases=[],
-            subject_entity=EntityReference(name="Example Film", qid="Q1"),
-            answer_entity=EntityReference(name="-10"),
-            relation_or_claim="points",
-            evidence=EvidenceRecord(
-                text="Example Film scored -10 points.",
-                url="https://example.test",
-                source_title="Example Film",
-                retrieved_at="2026-05-13",
-            ),
-            answer_type="Number",
-            topic="Tests",
-            source_candidate=source_candidate,
-        )
-        self.assertTrue(_needs_number_snippet_judge(candidate))
-        candidate.answer = "-11"
-        self.assertFalse(_needs_number_snippet_judge(candidate))
-        candidate.answer = "30"
-        self.assertTrue(_needs_number_snippet_judge(candidate))
-        candidate.answer = "31"
-        self.assertFalse(_needs_number_snippet_judge(candidate))
-        candidate.answer = "12.5"
-        self.assertFalse(_needs_number_snippet_judge(candidate))
-        candidate.answer = "12th"
-        self.assertFalse(_needs_number_snippet_judge(candidate))
-
 
 if __name__ == "__main__":
     unittest.main()

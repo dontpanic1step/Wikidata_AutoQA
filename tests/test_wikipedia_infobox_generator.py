@@ -16,10 +16,15 @@ from urllib.error import URLError
 from unittest.mock import patch
 
 from test_support import ROOT  # noqa: F401
-from wikidata_simpleqa.config import Settings
+from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.route3_run_ledger import SegmentLedgerIndex, load_page_attempts
+from wikidata_simpleqa.route3_openrouter import (
+    OpenRouterRawResponse,
+    bind_route3_allocation_client,
+    Route3OpenRouterClientFactory,
+)
 from wikidata_simpleqa.page_id_lists import PageIdListEntry
 from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
 from wikidata_simpleqa.wikipedia_client import (
@@ -397,8 +402,60 @@ def _pageview_payload(views: int, *, months: int = 12) -> dict:
     }
 
 
+class FakeOneRequestTransport:
+    """Return one valid OpenRouter response while recording physical calls."""
+
+    def __init__(self) -> None:
+        self.calls: list[dict] = []
+
+    def send_once(self, payload: dict) -> OpenRouterRawResponse:
+        self.calls.append(payload)
+        return OpenRouterRawResponse(
+            status_code=200,
+            body_text=json.dumps(
+                {
+                    "choices": [
+                        {
+                            "message": {"content": "answer"},
+                            "finish_reason": "stop",
+                        }
+                    ]
+                }
+            ),
+        )
+
+
 class WikipediaInfoboxGeneratorTests(unittest.TestCase):
     """Check URL normalization, table extraction, generation, and shared processing."""
+
+    def test_worker_binds_generation_to_allocation_external_call_store(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            transport = FakeOneRequestTransport()
+            factory = Route3OpenRouterClientFactory(
+                config=LLMConfig(
+                    provider="openrouter",
+                    model="google/gemini-3-flash-preview",
+                    api_key_env="OPENROUTER_API_KEY",
+                    max_tokens=4096,
+                ),
+                transport=transport,
+            )
+            client = bind_route3_allocation_client(
+                factory,
+                record_root=root / "external_calls",
+                canonical_page_id=2468,
+                call_key="generation",
+            )
+
+            first = client.complete_text_with_audit("Generate.")
+            second = client.complete_text_with_audit("Generate.")
+
+            self.assertEqual(first["response_body"], second["response_body"])
+            self.assertEqual(len(transport.calls), 1)
+            page_root = root / "external_calls" / "p2468"
+            self.assertEqual(len(list(page_root.rglob("intent.json"))), 1)
+            self.assertEqual(len(list(page_root.rglob("response.json"))), 1)
 
     def test_url_normalization_and_parse_url(self) -> None:
         title = normalize_wikipedia_title("https://en.wikipedia.org/wiki/2026_FIFA_World_Cup")

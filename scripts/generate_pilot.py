@@ -39,10 +39,6 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--rewrite-model", type=str, default="openai/gpt-4.1-mini")
     parser.add_argument("--rewrite-api-key-env", type=str, default="OPENROUTER_API_KEY")
     parser.add_argument("--rewrite-base-url", type=str, default="https://openrouter.ai/api/v1")
-    parser.add_argument("--snippet-judge-provider", type=str, default="openrouter")
-    parser.add_argument("--snippet-judge-model", type=str, default="openai/gpt-4.1-mini")
-    parser.add_argument("--snippet-judge-api-key-env", type=str, default="OPENROUTER_API_KEY")
-    parser.add_argument("--snippet-judge-base-url", type=str, default="https://openrouter.ai/api/v1")
     parser.add_argument(
         "--output",
         type=Path,
@@ -68,15 +64,6 @@ def main() -> int:
             base_url=args.rewrite_base_url,
             proxy=args.proxy,
         )
-    snippet_judge_llm = LLMConfig(
-        provider=args.snippet_judge_provider,
-        model=args.snippet_judge_model,
-        api_key_env=args.snippet_judge_api_key_env,
-        base_url=args.snippet_judge_base_url,
-        proxy=args.proxy,
-        temperature=0.0,
-        max_tokens=128,
-    )
     settings = Settings(
         target_time=args.target_time,
         run_date=args.run_date or Settings(target_time=args.target_time).run_date,
@@ -85,7 +72,6 @@ def main() -> int:
         cutoff_year=args.cutoff_year,
         duckduckgo_top_k=args.duckduckgo_top_k,
         route1_light_fallback_enabled=not args.disable_route1_light_fallback,
-        number_snippet_judge_llm=snippet_judge_llm,
         proxy=args.proxy,
         output_path=args.output,
         rejected_output_path=args.rejected_output,

@@ -144,6 +144,10 @@ def test_review_state_requires_each_top_up_segment_fingerprint() -> None:
         create_review_state(
             records,
             segment_fingerprints={"01_alltypes_10": {"sha256": "first"}},
+            segment_artifact_roots={
+                "01_alltypes_10": "C:/artifacts/01_alltypes_10",
+                "01_alltypes_10_topup_01": "C:/artifacts/01_alltypes_10_topup_01",
+            },
         )
 
     state = create_review_state(
@@ -152,8 +156,16 @@ def test_review_state_requires_each_top_up_segment_fingerprint() -> None:
             "01_alltypes_10": {"sha256": "first"},
             "01_alltypes_10_topup_01": {"sha256": "second"},
         },
+        segment_artifact_roots={
+            "01_alltypes_10": "C:/artifacts/01_alltypes_10",
+            "01_alltypes_10_topup_01": "C:/artifacts/01_alltypes_10_topup_01",
+        },
     )
     assert set(state["segment_fingerprints"]) == {
+        "01_alltypes_10",
+        "01_alltypes_10_topup_01",
+    }
+    assert set(state["segment_artifact_roots"]) == {
         "01_alltypes_10",
         "01_alltypes_10_topup_01",
     }
@@ -194,6 +206,11 @@ def test_export_cli_writes_review_state_markdown_and_xlsx() -> None:
         )
 
         assert state_path.exists()
+        exported_state = json.loads(state_path.read_text(encoding="utf-8"))
+        assert exported_state["review_state_version"] == 2
+        assert exported_state["segment_artifact_roots"] == {
+            "01_alltypes_10": str(root.resolve())
+        }
         assert markdown_path.exists()
         assert workbook_path.exists()
         assert json.loads(completed.stdout)["accepted"] == 1
@@ -234,7 +251,11 @@ def test_export_cli_writes_review_state_markdown_and_xlsx() -> None:
         assert load_workbook(next_workbook_path)["review"]["E2"].value == "History"
 
 def test_markdown_and_workbook_show_only_formal_review_fields() -> None:
-    state = create_review_state([accepted_record()], segment_fingerprints={"01_alltypes_10": {"sha256": "fingerprint"}})
+    state = create_review_state(
+        [accepted_record()],
+        segment_fingerprints={"01_alltypes_10": {"sha256": "fingerprint"}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
     candidate_id = state["candidates"][0]["artifact"]["id"]
 
     markdown = render_review_markdown(state, run_id="review-run")
@@ -261,7 +282,11 @@ def test_markdown_and_workbook_show_only_formal_review_fields() -> None:
 
 
 def test_workbook_rejects_noncanonical_header() -> None:
-    state = create_review_state([accepted_record()], segment_fingerprints={"01_alltypes_10": {}})
+    state = create_review_state(
+        [accepted_record()],
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "review.xlsx"
         write_review_workbook(path, state)
@@ -303,7 +328,11 @@ def test_review_validation_rejects_invalid_rows() -> None:
 
 def test_question_edit_preserves_id_and_aliases_but_clears_old_checks() -> None:
     original_record = accepted_record()
-    state = create_review_state([original_record], segment_fingerprints={"01_alltypes_10": {}})
+    state = create_review_state(
+        [original_record],
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
     candidate_id = original_record["id"]
 
     updated = apply_review_rows(
@@ -324,7 +353,11 @@ def test_question_edit_preserves_id_and_aliases_but_clears_old_checks() -> None:
 
 def test_answer_edit_clears_aliases_and_delete_skips_rerun() -> None:
     original_record = accepted_record()
-    state = create_review_state([original_record], segment_fingerprints={"01_alltypes_10": {}})
+    state = create_review_state(
+        [original_record],
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
     candidate_id = original_record["id"]
     answer_edited = apply_review_rows(
         state,
@@ -345,7 +378,11 @@ def test_answer_edit_clears_aliases_and_delete_skips_rerun() -> None:
 
 def test_rerun_uses_fresh_checks_and_only_latest_accepted_is_exported() -> None:
     original = accepted_record()
-    state = create_review_state([original], segment_fingerprints={"01_alltypes_10": {}})
+    state = create_review_state(
+        [original],
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
     candidate_id = original["id"]
     edited = apply_review_rows(
         state,
@@ -357,6 +394,7 @@ def test_rerun_uses_fresh_checks_and_only_latest_accepted_is_exported() -> None:
         seen_candidates.append(deepcopy(candidate))
         assert candidate.search_verification_features == {}
         assert candidate.panel_grading_features == {}
+        assert candidate.source_metadata["route3_revision_number"] == 2
         record = candidate.to_output_record("")
         record["validation"] = {"fresh": True}
         record["source_metadata"]["rule_based_qa_gate"] = {"fresh": True}

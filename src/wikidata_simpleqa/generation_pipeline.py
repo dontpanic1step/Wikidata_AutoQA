@@ -132,7 +132,6 @@ def run_generation_pipeline(
     wikidata_client: WikidataClient | None = None,
     wikipedia_client: WikipediaClient | None = None,
     search_client: DuckDuckGoSearchClient | None = None,
-    snippet_judge_client=None,
     second_stage_model_clients: list[ModelPanelMember] | None = None,
     grading_grader_client=None,
 ) -> GenerationResult:
@@ -187,7 +186,6 @@ def run_generation_pipeline(
         all_generated_candidates,
         settings=settings,
         search_client=search_client,
-        snippet_judge_client=snippet_judge_client,
         rewrite_client=rewrite_client,
         second_stage_model_clients=second_stage_model_clients,
         grading_grader_client=grading_grader_client,
@@ -241,7 +239,6 @@ def process_generated_candidates(
     *,
     settings: Settings,
     search_client,
-    snippet_judge_client=None,
     rewrite_client=None,
     second_stage_model_clients: list[ModelPanelMember] | None = None,
     grading_grader_client=None,
@@ -271,11 +268,6 @@ def process_generated_candidates(
             )
             continue
 
-        if snippet_judge_client is None and _needs_number_snippet_judge(candidate):
-            snippet_judge_client = make_cheap_model_qa_client(
-                settings.number_snippet_judge_llm or _default_number_snippet_judge_llm(settings),
-                settings.timeout_seconds,
-            )
 
         rewrite_start = perf_counter()
         _apply_rewrite_if_enabled(candidate, rewrite_client, settings)
@@ -452,7 +444,6 @@ def process_generated_candidates(
             search_passed, search_features = run_search_based_longtail_verifier(
                 candidate,
                 search_client=search_client,
-                snippet_judge_client=snippet_judge_client,
                 top_k=settings.duckduckgo_top_k,
                 max_full_question_hit_rate=settings.search_longtail_max_full_question_hit_rate,
                 max_keyword_hit_rate=settings.search_longtail_max_keyword_hit_rate,
@@ -897,28 +888,6 @@ def _build_route_rewrite_payload(
     payload["task_type"] = "generic_question_and_queries"
     return payload
 
-
-def _needs_number_snippet_judge(candidate: GeneratedCandidate) -> bool:
-    """Return whether one candidate has an exact integer answer in [-10, 30]."""
-    if candidate.answer_type != "Number":
-        return False
-    answer = candidate.answer.strip().replace(",", "")
-    if not answer.lstrip("-").isdigit():
-        return False
-    return -10 <= int(answer) <= 30
-
-
-def _default_number_snippet_judge_llm(settings: Settings) -> LLMConfig:
-    """Return the default OpenRouter config for low-integer snippet judging."""
-    return LLMConfig(
-        provider="openrouter",
-        model="openai/gpt-4.1-mini",
-        api_key_env="OPENROUTER_API_KEY",
-        base_url="https://openrouter.ai/api/v1",
-        proxy=settings.proxy,
-        temperature=0.0,
-        max_tokens=128,
-    )
 
 
 def build_second_stage_model_panel(settings: Settings) -> list[ModelPanelMember]:

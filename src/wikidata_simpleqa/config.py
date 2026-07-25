@@ -101,7 +101,6 @@ class Settings:
     second_stage_grading_grader_llm: LLMConfig | None = field(
         default_factory=_default_second_stage_grading_grader_llm
     )
-    number_snippet_judge_llm: LLMConfig | None = None
     longtail_prefilter_max_sitelinks: int = 80
     longtail_prefilter_max_claims: int = 400
     search_longtail_max_full_question_hit_rate: float = 0.3
