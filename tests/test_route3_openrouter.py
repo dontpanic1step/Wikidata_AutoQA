@@ -195,6 +195,36 @@ class Route3OpenRouterTests(unittest.TestCase):
             self.assertEqual(len(transport.calls), 1)
             self.assertIsNotNone(store.load(call_key="generation", record_kind="http_error"))
 
+    def test_authorized_retry_uses_attempt002_once_and_never_attempt003(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            transport = FakeTransport(OpenRouterHTTPError(status_code=429, body_text="rate limited"))
+            store, executor = self.make_executor(Path(temp_dir), transport)
+            request = {"model": "test/model", "messages": []}
+
+            with self.assertRaises(DefiniteOpenRouterHTTPError):
+                executor.execute(call_key="generation", request_payload=request)
+            transport.outcome = OpenRouterRawResponse(200, RESPONSE_BODY)
+            first_retry = executor.execute(
+                call_key="generation",
+                request_payload=request,
+                authorized_retry=True,
+            )
+            resumed = executor.execute(
+                call_key="generation",
+                request_payload=request,
+                authorized_retry=True,
+            )
+
+            self.assertEqual(first_retry, resumed)
+            self.assertEqual(len(transport.calls), 2)
+            self.assertIsNotNone(
+                store.load(call_key="generation", record_kind="intent", call_attempt=2)
+            )
+            self.assertIsNotNone(
+                store.load(call_key="generation", record_kind="response", call_attempt=2)
+            )
+            with self.assertRaisesRegex(ValueError, "attempt001 and attempt002"):
+                store.load(call_key="generation", record_kind="intent", call_attempt=3)
     def test_invalid_raw_response_is_definite_and_not_recalled(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             transport = FakeTransport(OpenRouterRawResponse(200, "not-json"))

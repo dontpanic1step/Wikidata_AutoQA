@@ -24,6 +24,7 @@ if str(SRC) not in sys.path:
 
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.generation_models import GeneratedCandidate
+from wikidata_simpleqa.generator_validators import SearchLongtailVerifierError
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.grading import ModelPanelMember
 from wikidata_simpleqa.page_id_lists import (
@@ -34,12 +35,14 @@ from wikidata_simpleqa.page_id_lists import (
 )
 from wikidata_simpleqa.route3_circuit import CircuitOpenError, ServiceCircuit
 from wikidata_simpleqa.route3_ddg import Route3DDGVerifierResultStore
+from wikidata_simpleqa.route3_external_lifecycle import scan_ambiguous_external_calls
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids, route3_record_id
 from wikidata_simpleqa.route3_openrouter import (
     AbandonedExternalCallError,
     AmbiguousExternalCallError,
     DefiniteOpenRouterHTTPError,
     Route3OpenRouterClientFactory,
+    openrouter_http_failure_is_retryable,
     bind_route3_allocation_client,
     bind_route3_allocation_panel,
 )
@@ -258,7 +261,6 @@ def _effective_stream_random_seed(args: argparse.Namespace, endpoint_resume: End
         getattr(args, "stream_state", ""),
         "endpoint_resume" if getattr(args, "start_from_endpoint", False) else "",
         resume_count if getattr(args, "start_from_endpoint", False) else "",
-        "rerun_pool_only" if getattr(args, "stream_rerun_pool_only", False) else "",
     )
 
 
@@ -350,30 +352,6 @@ def parse_args() -> argparse.Namespace:
         help="Maximum concurrent second-stage answer/grader OpenRouter calls across streaming workers.",
     )
     parser.add_argument(
-        "--stream-accepted-target",
-        type=int,
-        default=0,
-        help="Optional accepted-record target; 0 means process the configured streaming page budget.",
-    )
-    parser.add_argument(
-        "--stream-rerun-pool-only",
-        action="store_true",
-        help="Process the current streaming rerun pool once and do not discover fresh page IDs.",
-    )
-    parser.add_argument(
-        "--stream-rerun-pool-limit",
-        type=int,
-        default=0,
-        help="Maximum rerun-pool IDs to process with --stream-rerun-pool-only; 0 means the whole pool.",
-    )
-    parser.add_argument(
-        "--stream-rerun-pool-seed-file",
-        action="append",
-        default=[],
-        type=Path,
-        help="JSON/JSONL file containing rerun-pool page IDs to seed into this stream state before discovery.",
-    )
-    parser.add_argument(
         "--stream-reuse-cached-page-count",
         default="all",
         help=(
@@ -434,21 +412,6 @@ def parse_args() -> argparse.Namespace:
         type=Path,
         required=True,
         help=argparse.SUPPRESS,
-    )
-    parser.add_argument(
-        "--stream-prefer-rerun-pool",
-        action="store_true",
-        help="In normal streaming mode, reserve rerun-pool IDs before discovering fresh page IDs.",
-    )
-    parser.add_argument(
-        "--stream-free-seeded-rerun-pool-on-completion",
-        action="store_true",
-        help="When the configured page/accepted target is reached, clear any seeded rerun-pool IDs that remain unresolved.",
-    )
-    parser.add_argument(
-        "--stream-auto-rerun-once",
-        action="store_true",
-        help="After the normal streaming pass, immediately process the rerun pool once, then stop.",
     )
     parser.add_argument(
         "--reset-stream-state",
@@ -661,8 +624,6 @@ def main() -> int:
         raise ValueError("--wikipedia-429-max-backoff-seconds must be non-negative.")
     if args.wikipedia_429_recovery_seconds < 0:
         raise ValueError("--wikipedia-429-recovery-seconds must be non-negative.")
-    if args.stream_rerun_pool_limit < 0:
-        raise ValueError("--stream-rerun-pool-limit must be non-negative.")
     args.stream_reuse_cached_page_count = _normalize_stream_reuse_cached_page_count(
         args.stream_reuse_cached_page_count
     )
@@ -671,12 +632,8 @@ def main() -> int:
     )
     if args.stream_page_processing_target < 0:
         raise ValueError("--stream-page-processing-target must be non-negative.")
-    if args.stream_free_seeded_rerun_pool_on_completion and not args.stream_prefer_rerun_pool:
-        raise ValueError("--stream-free-seeded-rerun-pool-on-completion requires --stream-prefer-rerun-pool.")
     if args.reset_stream_state and args.start_from_endpoint:
         raise ValueError("--reset-stream-state cannot be combined with --start-from-endpoint.")
-    if args.reset_stream_state and args.stream_rerun_pool_only:
-        raise ValueError("--reset-stream-state cannot be combined with --stream-rerun-pool-only.")
     if args.run_artifact_manifest is not None and not args.run_group_id.strip():
         raise ValueError("--run-artifact-manifest requires --run-group-id.")
     args.route3_answer_type = list(normalize_route3_answer_types(args.route3_answer_type))
@@ -852,8 +809,6 @@ def _manifest_segment(summary: dict) -> dict[str, object]:
         "start_from_endpoint": bool(summary.get("start_from_endpoint", False)),
         "start_stage": summary.get("start_stage", ""),
         "streaming_mode": summary.get("streaming_mode", ""),
-        "stream_rerun_pool_only": bool(summary.get("stream_rerun_pool_only", False)),
-        "stream_auto_rerun_once": bool(summary.get("stream_auto_rerun_once", False)),
         "stream_reused_cached_page_count": summary.get("stream_reused_cached_page_count", 0),
         "route3_reasoning_types": summary.get("route3_reasoning_types", []),
         "route3_answer_types": summary.get("route3_answer_types", []),
@@ -863,12 +818,11 @@ def _manifest_segment(summary: dict) -> dict[str, object]:
         "route3_prose_leakage_scoring_enabled": bool(summary.get("route3_prose_leakage_scoring_enabled", True)),
         "record_limit": summary.get("record_limit", 0),
         "attempted_page_ids": summary.get("attempted_page_ids", summary.get("attempted_urls", 0)),
-        "auto_rerun_attempted_page_ids": summary.get("auto_rerun_attempted_page_ids", 0),
         "accepted": summary.get("accepted", 0),
         "accepted_total": summary.get("accepted_total", summary.get("accepted", 0)),
         "rejected": summary.get("rejected", 0),
         "rejected_total": summary.get("rejected_total", summary.get("rejected", 0)),
-        "rerun": summary.get("rerun", 0),
+        "retry_pending": summary.get("retry_pending", 0),
         "wall_clock_seconds": summary.get("wall_clock_seconds"),
         "output_path": summary.get("output_path", ""),
         "rejected_output_path": summary.get("rejected_output_path", ""),
@@ -1331,8 +1285,14 @@ def _run_streaming_page_id_pipeline(
         segment_id=_run_segment_id(args),
         run_group_segments_dir=args.run_group_segments_dir,
     )
+    ambiguous_calls = scan_ambiguous_external_calls(args.external_call_record_dir)
+    quarantined_page_ids = {
+        int(row["page_id"])
+        for row in ambiguous_calls
+        if str(row.get("retry_eligibility", "")) != "retry_authorized"
+    }
     ledger_recovery = recover_stream_state_from_ledger(state, ledger_index)
-    accepted_records, rejected_records, rerun_records = rebuild_derived_outputs(
+    accepted_records, rejected_records, retry_pending_records = rebuild_derived_outputs(
         ledger_index,
         accepted_path=args.output,
         rejected_path=args.rejected_output,
@@ -1347,11 +1307,6 @@ def _run_streaming_page_id_pipeline(
         state.used_ids.update(excluded_page_ids)
         state._record_event("stream_exclude_page_ids", sorted(excluded_page_ids), "external_exclusion_file")
         state.save()
-    seeded_rerun_pool_ids = sorted(_load_stream_excluded_page_ids(args.stream_rerun_pool_seed_file))
-    seeded_rerun_pool_ids = state.seed_rerun_pool(
-        seeded_rerun_pool_ids,
-        reason="external_rerun_pool_seed_file",
-    )
     _initialize_table_search_offsets(state, args)
     endpoint_sync = {"accepted_ids_synced": 0, "rejected_ids_synced": 0}
     if args.start_from_endpoint:
@@ -1359,136 +1314,36 @@ def _run_streaming_page_id_pipeline(
             accepted_ids=_endpoint_page_ids(endpoint_resume.accepted_records),
             rejected_ids=_endpoint_page_ids(endpoint_resume.rejected_records),
         )
-    recovered_ids = state.recover_stale_in_progress()
     rng = random.Random(args.stream_random_seed)
-    processed_ids: list[int] = sorted(primary_page_ids_at_start)
-    accepted_target = max(0, int(args.stream_accepted_target or 0))
-    if args.start_from_endpoint and accepted_target:
-        accepted_target = max(0, accepted_target - endpoint_resume.accepted_count)
+
     reuse_budget = args.stream_reuse_cached_page_count
     fresh_budget = args.stream_fresh_cached_page_count
     explicit_processing_target = max(0, int(getattr(args, "stream_page_processing_target", 0) or 0))
     requested_main_page_count = explicit_processing_target or (
         _stream_budget_numeric_count(reuse_budget) + _stream_budget_numeric_count(fresh_budget)
     )
-    if args.stream_rerun_pool_only:
-        ids_remaining = _stream_rerun_pool_run_limit(state, args)
-        page_processing_target_remaining_at_start = ids_remaining
-    else:
-        page_processing_target_remaining_at_start = max(
-            0, requested_main_page_count - len(primary_page_ids_at_start)
-        )
-        ids_remaining = 0
-    page_workers = 1 if accepted_target else max(1, int(args.stream_page_workers))
-    auto_rerun_pool_ids_at_start: list[int] = []
-    auto_rerun_processed_ids: list[int] = []
+    page_processing_target_remaining_at_start = max(
+        0, requested_main_page_count - len(primary_page_ids_at_start)
+    )
+    page_workers = max(1, int(args.stream_page_workers))
+    batch_limit = max(1, int(args.stream_batch_size))
+    processed_this_invocation: list[int] = []
     cached_page_reuse_entries: list[CachedPageArchiveEntry] = []
     cached_page_reuse_summary = _stream_cached_page_reuse_disabled_summary(args)
-    if reuse_budget == "all":
-        reuse_requested = page_processing_target_remaining_at_start
-    else:
-        reuse_requested = _stream_budget_numeric_count(reuse_budget)
-    cached_reuse_request = (
-        min(reuse_requested, page_processing_target_remaining_at_start)
-        if page_processing_target_remaining_at_start > 0
-        else 0
-    )
-    if cached_reuse_request > 0 and not args.stream_rerun_pool_only and page_processing_target_remaining_at_start > 0:
-        cached_page_reuse_entries, cached_page_reuse_summary = _reserve_stream_cached_page_archives(
-            state=state,
-            args=args,
-            requested_count=cached_reuse_request,
-        )
-        if cached_page_reuse_entries:
-            for entry in cached_page_reuse_entries:
-                ledger_index.commit_allocation(
-                    canonical_page_id=entry.page_id,
-                    page_source="cache",
-                    source_url=entry.source_url,
-                    cached_archive_path=str(entry.archive_path),
-                )
-            processed_ids.extend(entry.page_id for entry in cached_page_reuse_entries)
-            futures = {}
-            with ThreadPoolExecutor(max_workers=min(page_workers, len(cached_page_reuse_entries))) as executor:
-                for index, entry in enumerate(cached_page_reuse_entries):
-                    futures[
-                        executor.submit(
-                            _process_one_stream_page_id,
-                            entry.page_id,
-                            args=args,
-                            settings=settings,
-                            state=state,
-                            wikipedia_client=wikipedia_client,
-                            search_client=search_client,
-                            llm_client=llm_client,
-                            rewrite_client=rewrite_client,
-                            concurrency=concurrency,
-                            second_stage_model_clients=second_stage_model_clients,
-                            grading_grader_client=grading_grader_client,
-                            ddg_verifier_result_store=ddg_verifier_result_store,
-                            ledger_index=ledger_index,
-                            source_url=entry.source_url,
-                            stream_page_source="cached_page_archive",
-                            cached_archive_path=entry.archive_path,
-                        )
-                    ] = index
-                for future in as_completed(futures):
-                    index = futures[future]
-                    decision = future.result()
-                    accepted_records.extend(decision.get("accepted_records", []))
-                    rejected_records.extend(decision.get("rejected_records", []))
-                    if decision.get("status") == "rerun":
-                        rerun_records.append(decision)
-                    if accepted_target and len(accepted_records) >= accepted_target:
-                        for pending_future in futures:
-                            pending_future.cancel()
-                        for unprocessed_entry in cached_page_reuse_entries[index + 1 :]:
-                            with concurrency.commit_lock:
-                                state.mark_rerun(
-                                    unprocessed_entry.page_id,
-                                    reason="accepted_target_reached_before_processing",
-                                )
-                        break
 
-    if not args.stream_rerun_pool_only:
-        fresh_budget_after_reuse = max(0, page_processing_target_remaining_at_start - len(cached_page_reuse_entries))
-        if fresh_budget == "fill":
-            fresh_requested = fresh_budget_after_reuse
-        else:
-            fresh_requested = min(_stream_budget_numeric_count(fresh_budget), fresh_budget_after_reuse)
-        ids_remaining = fresh_requested
-    else:
-        fresh_requested = 0
-    initial_ids_remaining = ids_remaining
-    while ids_remaining > 0:
-        if _external_circuit_is_open(openrouter_circuit, duckduckgo_circuit):
-            break
-        if accepted_target and len(accepted_records) >= accepted_target:
-            break
-        batch_size = 1 if accepted_target else min(max(1, int(args.stream_batch_size)), ids_remaining)
-        reserved_ids = _reserve_stream_page_ids(
-            state=state,
-            args=args,
-            wikipedia_client=wikipedia_client,
-            rng=rng,
-            count=batch_size,
-            rerun_pool_only=args.stream_rerun_pool_only,
-            prefer_rerun_pool=args.stream_rerun_pool_only or args.stream_prefer_rerun_pool,
-        )
-        if not reserved_ids:
-            break
-        for page_id in reserved_ids:
-            if ledger_index.allocation_for(page_id) is None:
-                ledger_index.commit_allocation(
-                    canonical_page_id=page_id,
-                    page_source="fresh",
-                    source_url=build_pageid_url(page_id),
-                )
-        ids_remaining -= len(reserved_ids)
-        processed_ids.extend(reserved_ids)
+    def dispatch_allocations(page_ids: list[int]) -> list[dict]:
+        """Dispatch one bounded allocation batch and propagate unexpected failures."""
+        selected = [page_id for page_id in page_ids if page_id not in quarantined_page_ids]
+        if not selected:
+            return []
         futures = {}
-        with ThreadPoolExecutor(max_workers=min(page_workers, len(reserved_ids))) as executor:
-            for index, page_id in enumerate(reserved_ids):
+        with ThreadPoolExecutor(max_workers=min(page_workers, len(selected))) as executor:
+            for page_id in selected:
+                allocation = ledger_index.allocation_for(page_id)
+                if allocation is None:
+                    raise ValueError(f"Page {page_id} has no allocation")
+                cached_path_text = str(allocation.get("cached_archive_path", ""))
+                cached_path = Path(cached_path_text) if cached_path_text else None
                 futures[
                     executor.submit(
                         _process_one_stream_page_id,
@@ -1505,104 +1360,100 @@ def _run_streaming_page_id_pipeline(
                         grading_grader_client=grading_grader_client,
                         ddg_verifier_result_store=ddg_verifier_result_store,
                         ledger_index=ledger_index,
+                        source_url=str(allocation.get("source_url", "")) or build_pageid_url(page_id),
+                        stream_page_source=(
+                            "cached_page_archive"
+                            if str(allocation.get("page_source", "")) == "cache"
+                            else args.stream_page_source
+                        ),
+                        cached_archive_path=cached_path,
                     )
-                ] = index
-            for future in as_completed(futures):
-                index = futures[future]
-                decision = future.result()
-                accepted_records.extend(decision.get("accepted_records", []))
-                rejected_records.extend(decision.get("rejected_records", []))
-                if decision.get("status") == "rerun":
-                    rerun_records.append(decision)
-                if accepted_target and len(accepted_records) >= accepted_target:
-                    for pending_future in futures:
-                        pending_future.cancel()
-                    for unprocessed_page_id in reserved_ids[index + 1 :]:
-                        with concurrency.commit_lock:
-                            state.mark_rerun(
-                                unprocessed_page_id,
-                                reason="accepted_target_reached_before_processing",
-                            )
-                    break
+                ] = page_id
+            decisions = [future.result() for future in as_completed(futures)]
+        processed_this_invocation.extend(selected)
+        return decisions
 
-    seeded_rerun_pool_ids_freed_on_completion: list[int] = []
-    target_reached = ids_remaining <= 0 or (accepted_target > 0 and len(accepted_records) >= accepted_target)
-    if args.stream_free_seeded_rerun_pool_on_completion and target_reached and seeded_rerun_pool_ids:
-        seeded_rerun_pool_ids_freed_on_completion = state.clear_rerun_pool(
-            seeded_rerun_pool_ids,
-            free_unused_page_ids=True,
-            reason="stream_target_reached_free_seeded_rerun_pool",
-        )
-
-    if (
-        args.stream_auto_rerun_once
-        and not args.stream_rerun_pool_only
-        and state.rerun_pool
-        and not _external_circuit_is_open(openrouter_circuit, duckduckgo_circuit)
-    ):
-        auto_rerun_pool_ids_at_start = state.rerun_pool.copy()
-        auto_ids_remaining = len(auto_rerun_pool_ids_at_start)
-        while auto_ids_remaining > 0:
+    def dispatch_phase(page_ids: list[int]) -> list[dict]:
+        """Run ledger-derived work in bounded batches until a circuit opens."""
+        decisions: list[dict] = []
+        for offset in range(0, len(page_ids), batch_limit):
             if _external_circuit_is_open(openrouter_circuit, duckduckgo_circuit):
                 break
-            batch_size = min(max(1, int(args.stream_batch_size)), auto_ids_remaining)
-            reserved_ids = _reserve_stream_page_ids(
-                state=state,
-                args=args,
-                wikipedia_client=wikipedia_client,
-                rng=rng,
-                count=batch_size,
-                rerun_pool_only=True,
-                prefer_rerun_pool=True,
+            decisions.extend(dispatch_allocations(page_ids[offset : offset + batch_limit]))
+        return decisions
+
+    # Resume allocated attempt001 work before discovering any new pages.
+    dispatch_phase(ledger_index.pending_primary_page_ids)
+
+    missing_primary = max(0, requested_main_page_count - len(ledger_index.primary_page_ids))
+    if reuse_budget == "all":
+        reuse_requested = missing_primary
+    else:
+        reuse_requested = min(_stream_budget_numeric_count(reuse_budget), missing_primary)
+    while len(cached_page_reuse_entries) < reuse_requested:
+        if _external_circuit_is_open(openrouter_circuit, duckduckgo_circuit):
+            break
+        request_count = min(batch_limit, reuse_requested - len(cached_page_reuse_entries))
+        entries, cached_page_reuse_summary = _reserve_stream_cached_page_archives(
+            state=state,
+            args=args,
+            requested_count=request_count,
+        )
+        if not entries:
+            break
+        for entry in entries:
+            ledger_index.commit_allocation(
+                canonical_page_id=entry.page_id,
+                page_source="cache",
+                source_url=entry.source_url,
+                cached_archive_path=str(entry.archive_path),
             )
-            if not reserved_ids:
-                break
-            auto_ids_remaining -= len(reserved_ids)
-            processed_ids.extend(reserved_ids)
-            auto_rerun_processed_ids.extend(reserved_ids)
-            futures = {}
-            with ThreadPoolExecutor(max_workers=min(page_workers, len(reserved_ids))) as executor:
-                for index, page_id in enumerate(reserved_ids):
-                    futures[
-                        executor.submit(
-                            _process_one_stream_page_id,
-                            page_id,
-                            args=args,
-                            settings=settings,
-                            state=state,
-                            wikipedia_client=wikipedia_client,
-                            search_client=search_client,
-                            llm_client=llm_client,
-                            rewrite_client=rewrite_client,
-                            concurrency=concurrency,
-                            second_stage_model_clients=second_stage_model_clients,
-                            grading_grader_client=grading_grader_client,
-                            ddg_verifier_result_store=ddg_verifier_result_store,
-                            ledger_index=ledger_index,
-                        )
-                    ] = index
-                for future in as_completed(futures):
-                    decision = future.result()
-                    accepted_records.extend(decision.get("accepted_records", []))
-                    rejected_records.extend(decision.get("rejected_records", []))
-                    if decision.get("status") == "rerun":
-                        rerun_records.append(decision)
+        cached_page_reuse_entries.extend(entries)
+        dispatch_phase([entry.page_id for entry in entries])
+
+    missing_after_cache = max(0, requested_main_page_count - len(ledger_index.primary_page_ids))
+    fresh_requested = (
+        missing_after_cache
+        if fresh_budget == "fill"
+        else min(_stream_budget_numeric_count(fresh_budget), missing_after_cache)
+    )
+    fresh_allocated = 0
+    while fresh_allocated < fresh_requested:
+        if _external_circuit_is_open(openrouter_circuit, duckduckgo_circuit):
+            break
+        request_count = min(batch_limit, fresh_requested - fresh_allocated)
+        reserved_ids = _reserve_stream_page_ids(
+            state=state,
+            args=args,
+            wikipedia_client=wikipedia_client,
+            rng=rng,
+            count=request_count,
+        )
+        if not reserved_ids:
+            break
+        for page_id in reserved_ids:
+            ledger_index.commit_allocation(
+                canonical_page_id=page_id,
+                page_source="fresh",
+                source_url=build_pageid_url(page_id),
+            )
+        fresh_allocated += len(reserved_ids)
+        dispatch_phase(reserved_ids)
+
+    # Retry eligibility is derived once from attempt001 history, never from process startup.
+    dispatch_phase(ledger_index.eligible_retry_page_ids)
 
     cached_reuse_page_ids = [entry.page_id for entry in cached_page_reuse_entries]
-    auto_rerun_processed_id_set = set(auto_rerun_processed_ids)
-    cached_reuse_page_id_set = set(cached_reuse_page_ids)
-    accepted_records, rejected_records, rerun_records = rebuild_derived_outputs(
+    accepted_records, rejected_records, retry_pending_records = rebuild_derived_outputs(
         ledger_index,
         accepted_path=args.output,
         rejected_path=args.rejected_output,
     )
     processed_ids = sorted(ledger_index.primary_page_ids)
     fresh_processed_page_ids = [
-        page_id
-        for page_id in processed_ids
-        if not args.stream_rerun_pool_only
-        and page_id not in cached_reuse_page_id_set
-        and page_id not in auto_rerun_processed_id_set
+        int(row["canonical_page_id"])
+        for row in ledger_index.allocations
+        if str(row.get("page_source", "")) == "fresh"
     ]
     all_decision_records = [*accepted_records, *rejected_records]
     summary = {
@@ -1626,40 +1477,24 @@ def _run_streaming_page_id_pipeline(
         "ledger_state_recovery": ledger_recovery,
         "stream_state_stats": state.stats(),
         "stream_state_reset": bool(args.reset_stream_state),
-        "stream_rerun_pool_only": bool(args.stream_rerun_pool_only),
-        "stream_rerun_pool_limit": args.stream_rerun_pool_limit,
-        "stream_rerun_pool_seed_files": [str(path) for path in args.stream_rerun_pool_seed_file],
+        "ambiguous_external_calls": ambiguous_calls,
+        "quarantined_page_ids": sorted(quarantined_page_ids),
         "stream_reuse_cached_page_count": reuse_requested,
         "stream_reuse_cached_page_count_raw": str(reuse_budget),
         "stream_fresh_cached_page_count": fresh_requested,
-        "stream_fresh_cached_page_count_raw": str(fresh_budget),        "stream_requested_main_page_count": requested_main_page_count,
+        "stream_fresh_cached_page_count_raw": str(fresh_budget),
+        "stream_requested_main_page_count": requested_main_page_count,
         "stream_page_processing_target": explicit_processing_target,
         "stream_page_processing_target_remaining_at_start": page_processing_target_remaining_at_start,
-        "stream_fresh_page_count_remaining_at_start": initial_ids_remaining if not args.stream_rerun_pool_only else 0,
+        "stream_fresh_page_count_remaining_at_start": fresh_requested,
         "stream_reuse_cached_page_used_id_files": [str(path) for path in args.stream_reuse_cached_page_used_id_file],
         "stream_cached_page_reuse": cached_page_reuse_summary,
         "stream_reused_cached_page_ids": cached_reuse_page_ids,
         "stream_reused_cached_page_count": len(cached_page_reuse_entries),
         "stream_fresh_processed_page_ids": fresh_processed_page_ids,
         "stream_fresh_processed_page_count": len(fresh_processed_page_ids),
-        "stream_prefer_rerun_pool": bool(args.stream_prefer_rerun_pool),
-        "seeded_rerun_pool_ids": seeded_rerun_pool_ids,
-        "seeded_rerun_pool_ids_freed_on_completion": seeded_rerun_pool_ids_freed_on_completion,
-        "stream_auto_rerun_once": bool(args.stream_auto_rerun_once),
-        "auto_rerun_pool_ids_at_start": auto_rerun_pool_ids_at_start,
-        "auto_rerun_processed_page_ids": auto_rerun_processed_ids,
-        "auto_rerun_attempted_page_ids": len(auto_rerun_processed_ids),
-        "rerun_pool_ids_after_run": state.rerun_pool.copy(),
-        "rerun_pool_failure_reasons_after_run": {
-            str(page_id): state.failure_reasons.get(page_id, "")
-            for page_id in state.rerun_pool
-        },
-        "rerun_pool_error_details_after_run": {
-            str(page_id): state.rerun_error_details.get(page_id, {})
-            for page_id in state.rerun_pool
-            if state.rerun_error_details.get(page_id)
-        },
-        "recovered_stale_in_progress_ids": recovered_ids,
+        "processed_this_invocation": sorted(set(processed_this_invocation)),
+        "retry_pending_page_ids": ledger_index.eligible_retry_page_ids,
         "random_seed": args.stream_random_seed,
         "random_seed_was_explicit": bool(getattr(args, "stream_random_seed_was_explicit", False)),
         "record_limit": requested_main_page_count,
@@ -1685,8 +1520,6 @@ def _run_streaming_page_id_pipeline(
             "openrouter": openrouter_circuit.snapshot(),
             "duckduckgo": duckduckgo_circuit.snapshot(),
         },
-        "stream_accepted_target": args.stream_accepted_target,
-        "stream_accepted_target_remaining_at_start": accepted_target,
         "attempted_page_ids": len(processed_ids),
         "attempted_page_ids_unique": len(set(processed_ids)),
         "page_ids": processed_ids,
@@ -1700,7 +1533,7 @@ def _run_streaming_page_id_pipeline(
                     table_types=args.route3_table_source_type,
                     page_level_failure_ids={
                         int(attempt["canonical_page_id"])
-                        for attempt in committed_attempts
+                        for attempt in ledger_index.attempts
                         if bool(attempt.get("page_level_failure", False))
                     },
                 )
@@ -1710,7 +1543,7 @@ def _run_streaming_page_id_pipeline(
         "accepted_total": endpoint_resume.accepted_count + len(accepted_records),
         "rejected": len(rejected_records),
         "rejected_total": endpoint_resume.rejected_count + len(rejected_records),
-        "rerun": len(rerun_records),
+        "retry_pending": len(retry_pending_records),
         "wall_clock_seconds": round(perf_counter() - run_started, 4),
         "output_path": str(args.output),
         "rejected_output_path": str(args.rejected_output),
@@ -1739,14 +1572,14 @@ def _run_streaming_page_id_pipeline(
         "compact_output_ignored": bool(args.compact_output or args.big_batch_mode),
         "compact_rejected_output": False,
         "compact_rejected_output_ignored": bool(args.compact_rejected_output or args.compact_output or args.big_batch_mode),
-        **_llm_generation_table_yield_summary(accepted_records, rejected_records, rerun_records=rerun_records),
+        **_llm_generation_table_yield_summary(accepted_records, rejected_records, rerun_records=retry_pending_records),
         "survival_by_layer": _survival_by_layer(
             attempted_count=len(processed_ids),
             accepted_records=accepted_records,
             rejected_records=rejected_records,
-            rerun_records=rerun_records,
+            rerun_records=retry_pending_records,
         ),
-        "failure_reason_counts": _failure_reason_counts(rejected_records, rerun_records),
+        "failure_reason_counts": _failure_reason_counts(rejected_records, retry_pending_records),
         "phase_timing_stats_seconds": _phase_timing_stats(all_decision_records),
         "aggregate_phase_timings_seconds": _aggregate_phase_timings(accepted_records, rejected_records),
         "telemetry": {
@@ -1760,7 +1593,7 @@ def _run_streaming_page_id_pipeline(
             summary=summary,
             accepted_records=accepted_records,
             rejected_records=rejected_records,
-            rerun_records=rerun_records,
+            rerun_records=retry_pending_records,
             existing_accepted_records=endpoint_resume.accepted_records if endpoint_resume.enabled else [],
             existing_rejected_records=endpoint_resume.rejected_records if endpoint_resume.enabled else [],
         )
@@ -1779,15 +1612,6 @@ def _build_streaming_concurrency_context(args: argparse.Namespace) -> StreamingC
         ),
         second_stage_semaphore=Semaphore(max(1, int(args.second_stage_concurrency_limit))),
     )
-
-
-def _stream_rerun_pool_run_limit(state: PageIdStreamState, args: argparse.Namespace) -> int:
-    """Return how many rerun-pool IDs this invocation should attempt."""
-    pool_size = len(state.rerun_pool)
-    configured_limit = max(0, int(getattr(args, "stream_rerun_pool_limit", 0) or 0))
-    if configured_limit:
-        return min(pool_size, configured_limit)
-    return pool_size
 
 
 def _initialize_table_search_offsets(state: PageIdStreamState, args: argparse.Namespace) -> None:
@@ -2209,17 +2033,20 @@ def _process_one_stream_page_id(
             record_root=args.external_call_record_dir,
             canonical_page_id=page_id,
             call_key="generation",
+            page_attempt_number=attempt_number,
         )
         page_second_stage_model_clients = bind_route3_allocation_panel(
             second_stage_model_clients,
             record_root=args.external_call_record_dir,
             canonical_page_id=page_id,
+            page_attempt_number=attempt_number,
         )
         page_grading_grader_client = bind_route3_allocation_client(
             grading_grader_client,
             record_root=args.external_call_record_dir,
             canonical_page_id=page_id,
             call_key="",
+            page_attempt_number=attempt_number,
         ) if grading_grader_client is not None else None
     else:
         page_llm_client = llm_client
@@ -2269,7 +2096,7 @@ def _process_one_stream_page_id(
                 url=url,
                 attempt_number=attempt_number,
                 ledger_index=ledger_index,
-                status="rerun",
+                status="rejected",
                 reason="no_generated_candidate",
                 generated_candidates=[],
                 accepted_records=[],
@@ -2298,13 +2125,12 @@ def _process_one_stream_page_id(
             discard_reason = str(page_failure.source_metadata.get("discard_reason") or "").strip()
             if discard_reason:
                 error_details["discard_reason"] = discard_reason
-            retryable = _should_rerun_stream_rejection(diagnostic_record)
             return _commit_stream_page_attempt(
                 page_id=page_id,
                 url=url,
                 attempt_number=attempt_number,
                 ledger_index=ledger_index,
-                status="rerun" if retryable else "rejected",
+                status="rejected",
                 reason=reason,
                 generated_candidates=[],
                 accepted_records=[],
@@ -2354,38 +2180,22 @@ def _process_one_stream_page_id(
             )
         if result.rejected:
             reason = _exact_failure_reason(result.rejected[0])
-            retryable = _should_rerun_stream_rejection(result.rejected[0])
-            error_details = _rerun_error_details_from_record(result.rejected[0]) if retryable else {}
             return _commit_stream_page_attempt(
                 page_id=page_id,
                 url=url,
                 attempt_number=attempt_number,
                 ledger_index=ledger_index,
-                status="rerun" if retryable else "rejected",
+                status="rejected",
                 reason=reason,
                 generated_candidates=generated_candidates,
                 accepted_records=[],
                 rejected_records=_rejected_output_records(result.rejected, args),
-                error_details=error_details,
+                error_details={},
                 args=args,
                 state=state,
                 concurrency=concurrency,
             )
-        return _commit_stream_page_attempt(
-            page_id=page_id,
-            url=url,
-            attempt_number=attempt_number,
-            ledger_index=ledger_index,
-            status="rerun",
-            reason="pipeline_no_accept_or_reject",
-            generated_candidates=generated_candidates,
-            accepted_records=[],
-            rejected_records=[],
-            error_details={},
-            args=args,
-            state=state,
-            concurrency=concurrency,
-        )
+        raise RuntimeError("Pipeline produced neither accepted nor rejected records")
     except CircuitOpenError as exc:
         return {
             "status": "blocked_external_service",
@@ -2410,7 +2220,41 @@ def _process_one_stream_page_id(
             "accepted_records": [],
             "rejected_records": [],
         }
+    except SearchLongtailVerifierError as exc:
+        return _commit_typed_infrastructure_failure(
+            page_id=page_id,
+            url=url,
+            attempt_number=attempt_number,
+            ledger_index=ledger_index,
+            service="duckduckgo",
+            generated_candidates=generated_candidates,
+            error_details={
+                "error_type": type(exc).__name__,
+                "error_message": str(exc),
+            },
+            args=args,
+            state=state,
+            concurrency=concurrency,
+        )
     except DefiniteOpenRouterHTTPError as exc:
+        if openrouter_http_failure_is_retryable(exc.status_code):
+            return _commit_typed_infrastructure_failure(
+                page_id=page_id,
+                url=url,
+                attempt_number=attempt_number,
+                ledger_index=ledger_index,
+                service="openrouter",
+                generated_candidates=generated_candidates,
+                error_details={
+                    "error_type": type(exc).__name__,
+                    "error_message": str(exc),
+                    "call_key": exc.call_key,
+                    "status_code": str(exc.status_code),
+                },
+                args=args,
+                state=state,
+                concurrency=concurrency,
+            )
         return _commit_stream_page_attempt(
             page_id=page_id,
             url=url,
@@ -2448,28 +2292,42 @@ def _process_one_stream_page_id(
             state=state,
             concurrency=concurrency,
         )
-    except Exception as exc:  # noqa: BLE001
-        error_details = {
-            "error_type": type(exc).__name__,
-            "error_message": str(exc),
-        }
-        return _commit_stream_page_attempt(
-            page_id=page_id,
-            url=url,
-            attempt_number=attempt_number,
-            ledger_index=ledger_index,
-            status="rerun",
-            reason=f"pipeline_exception:{type(exc).__name__}",
-            generated_candidates=generated_candidates,
-            accepted_records=[],
-            rejected_records=[],
-            error_details=error_details,
-            args=args,
-            state=state,
-            concurrency=concurrency,
-        )
 
 
+def _commit_typed_infrastructure_failure(
+    *,
+    page_id: int,
+    url: str,
+    attempt_number: int,
+    ledger_index: SegmentLedgerIndex,
+    service: str,
+    generated_candidates: list[GeneratedCandidate],
+    error_details: dict[str, str],
+    args: argparse.Namespace,
+    state: PageIdStreamState,
+    concurrency: StreamingConcurrencyContext,
+) -> dict:
+    """Commit the sole retry eligibility transition for typed infrastructure failures."""
+    retry_pending = int(attempt_number) == 1
+    return _commit_stream_page_attempt(
+        page_id=page_id,
+        url=url,
+        attempt_number=attempt_number,
+        ledger_index=ledger_index,
+        status="retryable_failure" if retry_pending else "rejected",
+        reason=(
+            f"{service}_infrastructure_failure"
+            if retry_pending
+            else f"retry_exhausted:{service}"
+        ),
+        generated_candidates=generated_candidates,
+        accepted_records=[],
+        rejected_records=[],
+        error_details=error_details,
+        args=args,
+        state=state,
+        concurrency=concurrency,
+    )
 def _commit_stream_page_attempt(
     *,
     page_id: int,
@@ -2534,7 +2392,7 @@ def _commit_stream_page_attempt(
         elif status == "rejected":
             state.mark_rejected(page_id, reason=reason)
         else:
-            state.mark_rerun(page_id, reason=reason, **error_details)
+            state.mark_retryable_failure(page_id, reason=reason, **error_details)
     return {
         "status": status,
         "page_id": page_id,
@@ -2566,40 +2424,6 @@ def _generation_raw_audit(candidates: list[GeneratedCandidate]) -> dict[str, Any
         )
     return {"slots": rows}
 
-def _should_rerun_stream_rejection(record: dict) -> bool:
-    """Return whether a rejected stream record represents a transient retryable failure."""
-    reason = str(record.get("rejection_reason", "")).strip()
-    if reason in {"search_longtail_verifier_error", "second_stage_grading_error", "wikipedia_pageview_prefilter_unavailable"}:
-        return True
-    if not reason.startswith("wikipedia_infobox_generation_error:"):
-        return False
-    metadata = record.get("source_metadata", {})
-    if not isinstance(metadata, dict):
-        metadata = {}
-    error_text = " ".join(
-        str(value)
-        for value in (
-            reason,
-            metadata.get("error_message", ""),
-            ";".join(str(note) for note in record.get("notes", [])),
-        )
-        if value
-    )
-    retryable_markers = (
-        "URLError",
-        "SSL:",
-        "UNEXPECTED_EOF_WHILE_READING",
-        "RemoteDisconnected",
-        "TimeoutError",
-        "timed out",
-        "ConnectionResetError",
-        "Temporary failure",
-        "HTTP Error 429",
-        "Too Many Requests",
-    )
-    return any(marker in error_text for marker in retryable_markers)
-
-
 def _reserve_stream_page_ids(
     *,
     state: PageIdStreamState,
@@ -2607,26 +2431,9 @@ def _reserve_stream_page_ids(
     wikipedia_client: WikipediaClient,
     rng: random.Random,
     count: int,
-    rerun_pool_only: bool = False,
-    prefer_rerun_pool: bool = False,
 ) -> list[int]:
-    """Reserve page IDs from the formal table-search discovery source."""
-    if rerun_pool_only:
-        return state.reserve_candidate_ids(
-            [],
-            count=count,
-            source="rerun_pool_only",
-            prefer_rerun_pool=True,
-        )
-
-    selected = state.reserve_candidate_ids(
-        [],
-        count=count,
-        source="rerun_pool",
-        prefer_rerun_pool=prefer_rerun_pool,
-    )
-    if len(selected) >= count:
-        return selected
+    """Reserve fresh page IDs from the formal table-search discovery source."""
+    selected: list[int] = []
 
     queries = _stream_search_queries()
     rounds = 0
@@ -3536,12 +3343,6 @@ def _write_stream_walkthrough(
         lines.append(f"- Unique attempted page IDs: {summary.get('attempted_page_ids_unique', 0)}")
     if summary.get("stream_state_reset"):
         lines.append("- Stream state reset at run start: yes")
-    if summary.get("stream_rerun_pool_only"):
-        lines.append("- Rerun-pool-only mode: yes")
-        lines.append(f"- Rerun-pool processing limit: {summary.get('stream_rerun_pool_limit', 0) or 'all'}")
-    if summary.get("stream_auto_rerun_once"):
-        lines.append("- Auto rerun pool once: yes")
-        lines.append(f"- Auto-rerun attempted page IDs: {summary.get('auto_rerun_attempted_page_ids', 0)}")
     lines.append(f"- Accepted QAs: {summary.get('accepted', 0)}")
     if isinstance(endpoint_resume, dict) and endpoint_resume.get("enabled"):
         lines.append(f"- Accepted QAs after resume: {summary.get('accepted_total', 0)}")

@@ -470,6 +470,11 @@ def process_generated_candidates(
         except CircuitOpenError:
             raise
         except Exception as exc:  # noqa: BLE001
+            if (
+                isinstance(exc, SearchLongtailVerifierError)
+                and candidate.generation_route == "route3_wikipedia_infobox"
+            ):
+                raise
             candidate_timings["duckduckgo_search_seconds"] = _elapsed(search_start)
             candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
             _record_candidate_timings(candidate, candidate_timings)

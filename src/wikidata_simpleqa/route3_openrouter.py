@@ -160,6 +160,12 @@ class Route3OpenRouterTransport:
             raise OpenRouterAmbiguousTransportError(f"{type(exc).__name__}: {exc}") from exc
 
 
+def openrouter_http_failure_is_retryable(status_code: int) -> bool:
+    """Return whether one definite HTTP failure permits page attempt002."""
+    status = int(status_code)
+    return status in {401, 402, 408, 429} or status >= 500
+
+
 @dataclass(slots=True)
 class Route3DurableOpenRouterExecutor:
     """Journal one logical OpenRouter call around a one-request transport."""
@@ -168,12 +174,19 @@ class Route3DurableOpenRouterExecutor:
     transport: Any
     circuit: ServiceCircuit | None = None
 
-    def execute(self, *, call_key: str, request_payload: dict[str, Any]) -> dict[str, Any]:
+    def execute(
+        self,
+        *,
+        call_key: str,
+        request_payload: dict[str, Any],
+        authorized_retry: bool = False,
+    ) -> dict[str, Any]:
         """Return a persisted or newly received OpenRouter response object."""
         request_hash = canonical_json_sha256(request_payload)
         call_attempt = self._call_attempt(
             call_key=call_key,
             request_hash=request_hash,
+            authorized_retry=authorized_retry,
         )
         outcome = self.store.load_matching_outcome(
             call_key=call_key,
@@ -269,7 +282,13 @@ class Route3DurableOpenRouterExecutor:
             request_hash=request_hash,
         )
 
-    def _call_attempt(self, *, call_key: str, request_hash: str) -> int:
+    def _call_attempt(
+        self,
+        *,
+        call_key: str,
+        request_hash: str,
+        authorized_retry: bool,
+    ) -> int:
         """Resolve a logical call to initial, explicitly retried, or abandoned state."""
         for attempt in (2, 1):
             intent = self.store.load(
@@ -287,6 +306,15 @@ class Route3DurableOpenRouterExecutor:
                     raise ValueError(f"External-call outcome has no intent: {call_key}")
                 if str(intent.get("request_hash", "")) != request_hash:
                     raise ValueError(f"External-call request hash mismatch: {call_key}")
+                if (
+                    attempt == 1
+                    and authorized_retry
+                    and str(outcome.get("record_kind", "")) == "http_error"
+                    and openrouter_http_failure_is_retryable(
+                        int(dict(outcome.get("payload", {}))["status_code"])
+                    )
+                ):
+                    return 2
                 return attempt
             if intent is None:
                 continue
@@ -395,6 +423,7 @@ def bind_route3_allocation_client(
     record_root: Path,
     canonical_page_id: int,
     call_key: str,
+    page_attempt_number: int = 1,
 ) -> Any:
     """Bind a formal factory to one allocation and leave test clients unchanged."""
     if isinstance(client, Route3OpenRouterClientFactory):
@@ -402,6 +431,7 @@ def bind_route3_allocation_client(
             record_root=record_root,
             canonical_page_id=canonical_page_id,
             call_key=call_key,
+            page_attempt_number=page_attempt_number,
         )
     return client
 
@@ -411,6 +441,7 @@ def bind_route3_allocation_panel(
     *,
     record_root: Path,
     canonical_page_id: int,
+    page_attempt_number: int = 1,
 ) -> list[ModelPanelMember] | None:
     """Bind every formal answer-model factory to one allocation."""
     if members is None:
@@ -423,6 +454,7 @@ def bind_route3_allocation_panel(
                 record_root=record_root,
                 canonical_page_id=canonical_page_id,
                 call_key="",
+                page_attempt_number=page_attempt_number,
             ),
         )
         for member in members
@@ -436,6 +468,7 @@ class Route3DurableOpenRouterClient:
     config: LLMConfig
     executor: Route3DurableOpenRouterExecutor
     call_key: str
+    authorized_retry: bool = False
     disable_caller_retry: bool = True
 
     def for_call(self, call_key: str) -> "Route3DurableOpenRouterClient":
@@ -444,6 +477,7 @@ class Route3DurableOpenRouterClient:
             config=self.config,
             executor=self.executor,
             call_key=str(call_key),
+            authorized_retry=self.authorized_retry,
         )
 
     def complete_text(self, prompt: str) -> str:
@@ -464,6 +498,7 @@ class Route3DurableOpenRouterClient:
         body = self.executor.execute(
             call_key=self.call_key,
             request_payload=request_payload,
+            authorized_retry=self.authorized_retry,
         )
         try:
             choice = body["choices"][0]
@@ -516,6 +551,7 @@ class Route3OpenRouterClientFactory:
         record_root: Path,
         canonical_page_id: int,
         call_key: str,
+        page_attempt_number: int = 1,
     ) -> Route3DurableOpenRouterClient:
         """Bind this factory to one allocation and logical call."""
         store = ExternalCallRecordStore(
@@ -530,4 +566,5 @@ class Route3OpenRouterClientFactory:
                 circuit=self.circuit,
             ),
             call_key=call_key,
+            authorized_retry=int(page_attempt_number) == 2,
         )

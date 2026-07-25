@@ -19,6 +19,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
+from wikidata_simpleqa.generator_validators import SearchLongtailVerifierError
 from wikidata_simpleqa.route3_circuit import CircuitOpenError
 from wikidata_simpleqa.route3_ddg import Route3DDGVerifierResultStore
 from wikidata_simpleqa.route3_run_ledger import SegmentLedgerIndex, load_page_attempts
@@ -85,8 +86,6 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _reserve_stream_cached_page_archives,
     _reserve_stream_page_ids,
     _run_artifact_summary,
-    _should_rerun_stream_rejection,
-    _stream_rerun_pool_run_limit,
     _stream_page_id_list_entries,
     _stream_search_queries,
     _survival_by_layer,
@@ -1651,30 +1650,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
     def test_formal_table_search_query_is_fixed(self) -> None:
         self.assertEqual(_stream_search_queries(), ['insource:"wikitable"'])
 
-    def test_rerun_pool_only_reservation_does_not_discover_fresh_ids(self) -> None:
-        class FailingWikipediaSearchClient:
-            def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
-                raise AssertionError("rerun-pool-only mode must not call discovery")
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            state = PageIdStreamState.load(Path(tmpdir) / "state.json")
-            state.mark_rerun(101, reason="search_longtail_verifier_error")
-            state.mark_rerun(102, reason="second_stage_grading_error")
-            args = SimpleNamespace(stream_page_source="table-search")
-
-            selected = _reserve_stream_page_ids(
-                state=state,
-                args=args,
-                wikipedia_client=FailingWikipediaSearchClient(),
-                rng=random.Random(1),
-                count=5,
-                rerun_pool_only=True,
-            )
-
-        self.assertEqual(selected, [101, 102])
-        self.assertEqual(state.rerun_pool, [])
-        self.assertEqual(state.in_progress_ids, {101, 102})
-
     def test_normal_table_search_reservation_does_not_consume_rerun_pool(self) -> None:
         class FakeWikipediaSearchClient:
             def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
@@ -1701,35 +1676,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
 
         self.assertEqual(selected, [303])
         self.assertEqual(state.rerun_pool, [301])
-
-    def test_table_search_reservation_can_prefer_rerun_pool_then_fresh_ids(self) -> None:
-        class FakeWikipediaSearchClient:
-            def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
-                return [SimpleNamespace(page_id=303)]
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            state = PageIdStreamState.load(Path(tmpdir) / "state.json")
-            state.mark_rerun(301, reason="transient")
-            args = SimpleNamespace(
-                stream_page_source="table-search",
-                stream_search_max_rounds=1,
-                stream_search_limit=50,
-                stream_search_query=[],
-                enable_broad_table_search=False,
-            )
-
-            selected = _reserve_stream_page_ids(
-                state=state,
-                args=args,
-                wikipedia_client=FakeWikipediaSearchClient(),
-                rng=random.Random(1),
-                count=2,
-                prefer_rerun_pool=True,
-            )
-
-        self.assertEqual(selected, [301, 303])
-        self.assertEqual(state.rerun_pool, [])
-        self.assertEqual(state.in_progress_ids, {301, 303})
 
     def test_stream_state_can_seed_and_free_rerun_pool_ids(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1855,15 +1801,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(client.calls, 2)
         self.assertEqual(state.table_search_offset('insource:"wikitable"'), 50)
         self.assertTrue(any(event.get("event") == "discovery_error" for event in state.events))
-
-    def test_rerun_pool_limit_defaults_to_whole_pool(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            state = PageIdStreamState.load(Path(tmpdir) / "state.json")
-            for page_id in [201, 202, 203]:
-                state.mark_rerun(page_id, reason="transient")
-
-            self.assertEqual(_stream_rerun_pool_run_limit(state, SimpleNamespace(stream_rerun_pool_limit=0)), 3)
-            self.assertEqual(_stream_rerun_pool_run_limit(state, SimpleNamespace(stream_rerun_pool_limit=2)), 2)
 
     def test_endpoint_resume_loads_jsonl_and_skips_malformed_lines(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -4996,20 +4933,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(entries[0].domain, "Architecture and Transportation")
         self.assertEqual(entries[0].subdomain, "bridges")
 
-    def test_streaming_retries_transient_wikipedia_generation_errors(self) -> None:
-        retryable = {
-            "rejection_reason": "wikipedia_infobox_generation_error:URLError",
-            "notes": ["wikipedia_infobox_generation_error:URLError"],
-            "source_metadata": {
-                "error_message": (
-                    "<urlopen error [SSL: UNEXPECTED_EOF_WHILE_READING] "
-                    "EOF occurred in violation of protocol (_ssl.c:1017)>"
-                )
-            },
-        }
-        self.assertTrue(_should_rerun_stream_rejection(retryable))
-        self.assertTrue(_should_rerun_stream_rejection({"rejection_reason": "search_longtail_verifier_error"}))
-        self.assertTrue(_should_rerun_stream_rejection({"rejection_reason": "second_stage_grading_error"}))
+    def test_streaming_error_details_preserve_typed_failure_audit(self) -> None:
         search_error = {
             "rejection_reason": "search_longtail_verifier_error",
             "rejection_notes": {
@@ -5024,15 +4948,8 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "error_message": "timed out while searching",
             },
         )
-        permanent = {
-            "rejection_reason": "wikipedia_infobox_no_tables",
-            "source_metadata": {"error_message": ""},
-        }
-        self.assertFalse(_should_rerun_stream_rejection(permanent))
 
-
-
-    def test_circuit_before_send_keeps_original_page_attempt_pending(self) -> None:
+    def test_page_attempt_lifecycle_has_one_typed_retry_and_propagates_bugs(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)
             args = SimpleNamespace(
@@ -5099,6 +5016,70 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             self.assertEqual(decision["attempt"], 1)
             self.assertEqual(load_page_attempts(root / "page_attempts"), [])
             self.assertEqual(ledger_index.next_attempt_number(2468), 1)
+            def process(page_id: int) -> dict:
+                return _process_one_stream_page_id(
+                    page_id,
+                    args=args,
+                    settings=Settings(target_time="2024"),
+                    state=state,
+                    wikipedia_client=FakeWikipediaClient(),
+                    search_client=FakeSearchClient(),
+                    llm_client=FakeLLMClient(),
+                    rewrite_client=None,
+                    concurrency=StreamingConcurrencyContext(
+                        commit_lock=Lock(),
+                        wikipedia_semaphore=Semaphore(1),
+                        duckduckgo_semaphore=Semaphore(1),
+                        generation_rewrite_semaphore=Semaphore(1),
+                        second_stage_semaphore=Semaphore(1),
+                    ),
+                    second_stage_model_clients=None,
+                    grading_grader_client=None,
+                    ddg_verifier_result_store=Route3DDGVerifierResultStore(
+                        root / "ddg_verifier_results",
+                        segment_fingerprint="fingerprint",
+                    ),
+                    ledger_index=ledger_index,
+                )
+
+            ledger_index.commit_allocation(canonical_page_id=2469, page_source="fresh")
+            with patch.object(
+                WikipediaInfoboxTableGenerator,
+                "generate",
+                side_effect=RuntimeError("unexpected bug"),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "unexpected bug"):
+                    process(2469)
+            self.assertEqual(ledger_index.page_state(2469), "pending_primary")
+            self.assertEqual(ledger_index.next_attempt_number(2469), 1)
+
+            ledger_index.commit_allocation(canonical_page_id=2470, page_source="fresh")
+            typed_error = SearchLongtailVerifierError(
+                "DDG unavailable",
+                features={"query": "test"},
+            )
+            with patch.object(
+                WikipediaInfoboxTableGenerator,
+                "generate",
+                side_effect=typed_error,
+            ) as mocked_generate:
+                first = process(2470)
+                second = process(2470)
+                third = process(2470)
+            self.assertEqual(first["status"], "retryable_failure")
+            self.assertEqual(second["status"], "rejected")
+            self.assertEqual(second["reason"], "retry_exhausted:duckduckgo")
+            self.assertTrue(third["reused_committed_ledger"])
+            self.assertEqual(mocked_generate.call_count, 2)
+            page_attempts = [
+                row for row in ledger_index.attempts
+                if int(row["canonical_page_id"]) == 2470
+            ]
+            self.assertEqual([row["attempt_number"] for row in page_attempts], [1, 2])
+            self.assertEqual(
+                [row["status"] for row in page_attempts],
+                ["retryable_failure", "rejected"],
+            )
 
 
 

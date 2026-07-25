@@ -19,7 +19,7 @@ PAGE_ATTEMPT_SCHEMA_VERSION = 2
 SEGMENT_MANIFEST_STATUSES = {"incomplete", "complete"}
 SEGMENT_BLOCKING_REASONS = {"external_service", "ambiguous"}
 PAGE_ALLOCATION_SOURCES = {"cache", "fresh"}
-PAGE_ATTEMPT_STATUSES = {"accepted", "rejected", "rerun"}
+PAGE_ATTEMPT_STATUSES = {"accepted", "rejected", "retryable_failure"}
 
 
 def utc_now_iso() -> str:
@@ -142,7 +142,7 @@ def derive_segment_manifest_state(
         elif state == "blocked_external_service":
             blocking_reasons.add("external_service")
             unresolved_external_calls += 1
-        elif state == "intent":
+        elif state in {"intent", "retry_pending"}:
             unresolved_external_calls += 1
     terminal_page_ids = {
         page_id
@@ -308,6 +308,15 @@ class SegmentLedgerIndex:
             if not self._attempts_by_page.get(int(row["canonical_page_id"]))
         ]
 
+    @property
+    def eligible_retry_page_ids(self) -> list[int]:
+        """Return pages whose attempt001 recorded a typed retryable failure."""
+        return [
+            int(row["canonical_page_id"])
+            for row in self.allocations
+            if self.page_state(int(row["canonical_page_id"])) == "retry_pending"
+        ]
+
     def allocation_for(self, canonical_page_id: int) -> dict[str, Any] | None:
         """Return the current-segment allocation for a page."""
         row = self._segment_allocations.get(int(canonical_page_id))
@@ -327,9 +336,9 @@ class SegmentLedgerIndex:
         if latest is None:
             return "pending_primary"
         status = str(latest["status"])
-        if status != "rerun":
+        if status != "retryable_failure":
             return status
-        return "rerun_eligible" if int(latest["attempt_number"]) == 1 else "rerun_exhausted"
+        return "retry_pending"
 
     def next_attempt_number(self, canonical_page_id: int) -> int:
         """Derive the only valid next attempt number from committed schema."""
@@ -339,8 +348,14 @@ class SegmentLedgerIndex:
         rows = self._attempts_by_page.get(page_id, [])
         if not rows:
             return 1
-        if len(rows) == 1 and int(rows[0]["attempt_number"]) == 1:
+        if (
+            len(rows) == 1
+            and int(rows[0]["attempt_number"]) == 1
+            and str(rows[0]["status"]) == "retryable_failure"
+        ):
             return 2
+        if len(rows) == 1:
+            raise ValueError(f"Page {page_id} already has a terminal attempt")
         raise ValueError(f"Page {page_id} already consumed attempt002")
 
     @staticmethod
@@ -408,11 +423,13 @@ class SegmentLedgerIndex:
             )
         if attempt_number == 2:
             previous = self._attempts_by_page[page_id][-1]
-            if str(previous["status"]) != "rerun":
+            if str(previous["status"]) != "retryable_failure":
                 raise ValueError(f"Page {page_id} is not eligible for attempt002")
         status = str(payload["status"])
         if status not in PAGE_ATTEMPT_STATUSES:
             raise ValueError(f"Unsupported page-attempt status: {status}")
+        if attempt_number == 2 and status == "retryable_failure":
+            raise ValueError("attempt002 infrastructure failure must commit a terminal rejection")
         path = page_attempt_path(self.attempt_dir, page_id, attempt_number)
         if path.exists():
             raise FileExistsError(f"Page attempt is already committed: {path}")
@@ -504,8 +521,10 @@ class SegmentLedgerIndex:
             )
             if primary is None:
                 raise ValueError(f"Attempt002 has no attempt001 for page {page_id}: {path}")
-            if str(primary["status"]) != "rerun":
+            if str(primary["status"]) != "retryable_failure":
                 raise ValueError(f"Attempt002 follows an ineligible attempt001 for page {page_id}: {path}")
+            if str(payload["status"]) == "retryable_failure":
+                raise ValueError(f"Attempt002 must be terminal for page {page_id}: {path}")
         row = dict(payload)
         row["ledger_path"] = str(path)
         rows.append(row)
@@ -515,10 +534,10 @@ class SegmentLedgerIndex:
 def derived_records(
     attempts: Iterable[dict[str, Any]],
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
-    """Derive accepted, rejected, and rerun outputs from latest page attempts."""
+    """Derive accepted, rejected, and retry-pending outputs from latest attempts."""
     accepted: list[dict[str, Any]] = []
     rejected: list[dict[str, Any]] = []
-    rerun: list[dict[str, Any]] = []
+    retry_pending: list[dict[str, Any]] = []
     for page_id, attempt in sorted(latest_page_attempts(attempts).items()):
         status = str(attempt["status"])
         if status == "accepted":
@@ -527,16 +546,16 @@ def derived_records(
         elif status == "rejected":
             rejected.extend(_record_dicts(attempt.get("rejected_records", [])))
         else:
-            rerun.append(
+            retry_pending.append(
                 {
-                    "status": "rerun",
+                    "status": "retryable_failure",
                     "page_id": page_id,
                     "url": attempt.get("canonical_page_url", ""),
                     "reason": attempt.get("reason", ""),
                     **dict(attempt.get("error_details", {})),
                 }
             )
-    return accepted, rejected, rerun
+    return accepted, rejected, retry_pending
 
 
 def rebuild_derived_outputs(
@@ -546,10 +565,10 @@ def rebuild_derived_outputs(
     rejected_path: Path,
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]], list[dict[str, Any]]]:
     """Rebuild endpoint JSONL files from the current in-memory ledger index."""
-    accepted, rejected, rerun = derived_records(index.attempts)
+    accepted, rejected, retry_pending = derived_records(index.attempts)
     atomic_write_jsonl(accepted_path, accepted)
     atomic_write_jsonl(rejected_path, rejected)
-    return accepted, rejected, rerun
+    return accepted, rejected, retry_pending
 
 
 def recover_stream_state_from_ledger(
@@ -578,7 +597,6 @@ def recover_stream_state_from_ledger(
             state.failure_reasons[page_id] = str(attempt.get("reason", ""))
             state.rerun_error_details.pop(page_id, None)
         else:
-            state.rerun_pool.append(page_id)
             state.failure_reasons[page_id] = str(attempt.get("reason", ""))
             details = dict(attempt.get("error_details", {}))
             if details:
@@ -598,7 +616,9 @@ def recover_stream_state_from_ledger(
         "pending_primary_pages": len(index.pending_primary_page_ids),
         "accepted_pages": sum(str(row["status"]) == "accepted" for row in latest.values()),
         "rejected_pages": sum(str(row["status"]) == "rejected" for row in latest.values()),
-        "rerun_pages": sum(str(row["status"]) == "rerun" for row in latest.values()),
+        "retry_pending_pages": sum(
+            str(row["status"]) == "retryable_failure" for row in latest.values()
+        ),
     }
 
 
@@ -613,7 +633,9 @@ def ledger_summary(index: SegmentLedgerIndex) -> dict[str, Any]:
         "primary_pages": len(index.primary_page_ids),
         "accepted_pages": sum(str(row["status"]) == "accepted" for row in latest.values()),
         "rejected_pages": sum(str(row["status"]) == "rejected" for row in latest.values()),
-        "rerun_pages": sum(str(row["status"]) == "rerun" for row in latest.values()),
+        "retry_pending_pages": sum(
+            str(row["status"]) == "retryable_failure" for row in latest.values()
+        ),
     }
 
 
@@ -635,7 +657,10 @@ def rebuild_summary_from_ledger(
             "page_ids": primary_page_ids,
             "accepted": len(accepted),
             "rejected": len(rejected),
-            "rerun": sum(str(attempt["status"]) == "rerun" for attempt in latest.values()),
+            "retry_pending": sum(
+                str(attempt["status"]) == "retryable_failure"
+                for attempt in latest.values()
+            ),
             "page_allocation_ledger_dir": str(index.allocation_dir),
             "page_attempt_ledger_dir": str(index.attempt_dir),
             "page_attempt_ledger": ledger_summary(index),

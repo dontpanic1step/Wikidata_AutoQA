@@ -34,9 +34,7 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _append_stream_search_initial_offset,
     _base_segment_id_for_run,
     _combine_segment_records,
-    _clear_rerun_pool_ids_from_states,
     _existing_recipe_page_ids,
-    _matching_segment_rerun_pool_seed,
     _parse_recipe,
     parse_args as parse_recipe_args,
     _recipe_summary,
@@ -131,7 +129,6 @@ def _pipeline_seed_args(**overrides):
         "summary_output": Path("outputs/fresh_summary.json"),
         "stream_state": Path("outputs/fresh_state.json"),
         "start_from_endpoint": False,
-        "stream_rerun_pool_only": False,
     }
     values.update(overrides)
     return SimpleNamespace(**values)
@@ -542,12 +539,10 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
         self.assertEqual(offset, 2400)
 
-    def test_append_recipe_command_seeds_matching_rerun_pool(self) -> None:
+    def test_append_recipe_command_has_no_generic_rerun_controls(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
             segment_dir.mkdir()
-            seed_file = segment_dir / "01_person_2000_topup1_rerun_pool_seed.json"
-            seed_file.write_text(json.dumps([101, 102]), encoding="utf-8")
             args = _recipe_args(append_to_existing_run=True, append_run_label="topup1")
 
             command, _paths = _segment_command(
@@ -560,39 +555,12 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
                 stream_search_initial_offset=2400,
                 append_label="topup1",
-                rerun_pool_seed_file=seed_file,
             )
 
-        self.assertEqual(_command_value(command, "--stream-rerun-pool-seed-file"), str(seed_file))
-        self.assertIn("--stream-prefer-rerun-pool", command)
-        self.assertIn("--stream-free-seeded-rerun-pool-on-completion", command)
-
-    def test_matching_segment_rerun_pool_seed_uses_same_segment_only(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            segment_dir = Path(tmpdir) / "segments"
-            segment_dir.mkdir()
-            (segment_dir / "01_person_2000_state.json").write_text(
-                json.dumps({"rerun_pool": [101, 102], "accepted_ids": []}),
-                encoding="utf-8",
-            )
-            (segment_dir / "01_person_2000_topup_1_state.json").write_text(
-                json.dumps({"rerun_pool": [103], "accepted_ids": [102]}),
-                encoding="utf-8",
-            )
-            (segment_dir / "02_place_2000_state.json").write_text(
-                json.dumps({"rerun_pool": [201]}),
-                encoding="utf-8",
-            )
-
-            seed_ids, source_paths = _matching_segment_rerun_pool_seed(
-                segment_dir=segment_dir,
-                base_segment_id="01_person_2000",
-                current_segment_id="01_person_2000_topup_2",
-            )
-
-        self.assertEqual(seed_ids, [101, 103])
-        self.assertEqual({path.name for path in source_paths}, {"01_person_2000_state.json", "01_person_2000_topup_1_state.json"})
-
+        self.assertNotIn("--stream-rerun-pool-seed-file", command)
+        self.assertNotIn("--stream-prefer-rerun-pool", command)
+        self.assertNotIn("--stream-free-seeded-rerun-pool-on-completion", command)
+        self.assertNotIn("--stream-auto-rerun-once", command)
     def test_append_subset_recipe_reuses_existing_answer_type_segment_id(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
@@ -610,65 +578,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             )
 
         self.assertEqual(base_segment_id, "02_place_2000")
-
-    def test_place_only_append_can_target_existing_rerun_pool_without_fresh_lane(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            segment_dir = Path(tmpdir) / "segments"
-            segment_dir.mkdir()
-            (segment_dir / "02_place_2000_state.json").write_text(
-                json.dumps({"rerun_pool": [201, 202]}),
-                encoding="utf-8",
-            )
-            seed_ids, _source_paths = _matching_segment_rerun_pool_seed(
-                segment_dir=segment_dir,
-                base_segment_id="02_place_2000",
-                current_segment_id="02_place_2000_topup_1",
-            )
-            seed_file = segment_dir / "02_place_2000_topup_1_rerun_pool_seed.json"
-            seed_file.write_text(json.dumps(seed_ids), encoding="utf-8")
-            args = _recipe_args(append_to_existing_run=True, append_run_label="topup_1")
-
-            command, paths = _segment_command(
-                args=args,
-                item=RecipeItem(answer_type="Place", record_limit=2),
-                index=0,
-                run_id="recipe",
-                segment_dir=segment_dir,
-                stream_state_base=segment_dir / "stream_state.json",
-                stream_exclusion_file=segment_dir / "recipe_page_id_exclusions.json",
-                stream_search_initial_offset=6300,
-                append_label="topup_1",
-                rerun_pool_seed_file=seed_file,
-                base_segment_id="02_place_2000",
-            )
-
-        self.assertEqual(seed_ids, [201, 202])
-        self.assertTrue(str(paths["accepted"]).endswith("02_place_2000_topup_1_accepted.jsonl"))
-        self.assertTrue(str(paths["stream_state"]).endswith("02_place_2000_topup_1_state.json"))
-        self.assertNotIn("--record-limit", command)
-        self.assertEqual(_command_value(command, "--stream-page-processing-target"), "2")
-        self.assertEqual(_command_value(command, "--stream-rerun-pool-seed-file"), str(seed_file))
-        self.assertIn("--stream-prefer-rerun-pool", command)
-
-    def test_clear_rerun_pool_ids_from_states_frees_undecided_ids(self) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            state_path = Path(tmpdir) / "state.json"
-            state_path.write_text(
-                json.dumps({"used_ids": [101, 102], "rerun_pool": [101, 102], "accepted_ids": [102]}),
-                encoding="utf-8",
-            )
-
-            cleared = _clear_rerun_pool_ids_from_states(
-                state_paths=[state_path],
-                page_ids=[101, 102],
-                reason="test_transfer",
-            )
-            state = json.loads(state_path.read_text(encoding="utf-8"))
-
-        self.assertEqual(cleared, {str(state_path): 2})
-        self.assertNotIn(101, state["used_ids"])
-        self.assertIn(102, state["used_ids"])
-        self.assertEqual(state["rerun_pool"], [])
 
     def test_segment_used_count_subtracts_append_exclusions(self) -> None:
         summary = {
@@ -923,13 +832,11 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "attempted_page_ids": 40,
                 "accepted": 2,
                 "rejected": 35,
-                "rerun": 3,
+                "retry_pending": 3,
                 "wall_clock_seconds": 12.5,
                 "random_seed": 123,
                 "stream_state": "person_state.json",
                 "stream_state_stats": {"used": 40, "accepted": 2, "rejected": 35, "rerun_pool": 3},
-                "rerun_pool_ids_after_run": [101],
-                "rerun_pool_failure_reasons_after_run": {"101": "search_longtail_verifier_error"},
                 "page_ids": [1, 2],
             },
             {
@@ -939,17 +846,12 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "attempted_page_ids": 40,
                 "accepted": 1,
                 "rejected": 38,
-                "rerun": 1,
+                "retry_pending": 1,
                 "wall_clock_seconds": 20.0,
                 "random_seed": 456,
                 "stream_state": "date_state.json",
                 "stream_state_stats": {"used": 42, "accepted": 1, "rejected": 38, "rerun_pool": 1},
                 "stream_excluded_page_ids": 2,
-                "rerun_pool_ids_after_run": [101, 202],
-                "rerun_pool_failure_reasons_after_run": {
-                    "101": "second_stage_grading_error",
-                    "202": "search_longtail_verifier_error",
-                },
                 "page_ids": [3, 4],
             },
         ]
@@ -981,9 +883,8 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(summary["stream_state"], "separate_segment_stream_states")
         self.assertEqual(summary["stream_states"], ["person_state.json", "date_state.json"])
         self.assertEqual(summary["stream_state_stats"]["used"], 80)
-        self.assertEqual(summary["rerun_pool_ids_after_run"], [101, 202])
-        self.assertIn("01_person_40:101", summary["rerun_pool_failure_reasons_after_run"])
-        self.assertIn("02_date_40:101", summary["rerun_pool_failure_reasons_after_run"])
+        self.assertEqual(summary["retry_pending"], 4)
+
         self.assertEqual(summary["route3_table_source_types"], ["infobox", "wikitable"])
         self.assertTrue(summary["route3_prose_leakage_scoring_enabled"])
 

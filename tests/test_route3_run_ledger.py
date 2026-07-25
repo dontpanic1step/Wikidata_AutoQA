@@ -185,8 +185,14 @@ class Route3RunLedgerTests(unittest.TestCase):
             index = self.make_index(Path(temp_dir))
             index.commit_allocation(canonical_page_id=303, page_source="fresh")
             first_path = index.commit_attempt(
-                self.attempt_payload(303, attempt_number=1, status="rerun")
+                self.attempt_payload(303, attempt_number=1, status="retryable_failure")
             )
+            self.assertEqual(index.page_state(303), "retry_pending")
+            self.assertEqual(index.eligible_retry_page_ids, [303])
+            with self.assertRaisesRegex(ValueError, "must commit a terminal rejection"):
+                index.commit_attempt(
+                    self.attempt_payload(303, attempt_number=2, status="retryable_failure")
+                )
             second_path = index.commit_attempt(
                 self.attempt_payload(303, attempt_number=2, status="accepted")
             )
@@ -215,7 +221,7 @@ class Route3RunLedgerTests(unittest.TestCase):
             index = self.make_index(Path(temp_dir))
             index.commit_allocation(canonical_page_id=505, page_source="fresh")
             index.commit_attempt(self.attempt_payload(505, status="accepted"))
-            with self.assertRaisesRegex(ValueError, "not eligible"):
+            with self.assertRaisesRegex(ValueError, "terminal"):
                 index.commit_attempt(
                     self.attempt_payload(505, attempt_number=2, status="accepted")
                 )
@@ -308,7 +314,7 @@ class Route3RunLedgerTests(unittest.TestCase):
     def test_derived_outputs_use_highest_attempt(self) -> None:
         attempts = [
             {
-                **self.attempt_payload(606, attempt_number=1, status="rerun"),
+                **self.attempt_payload(606, attempt_number=1, status="retryable_failure"),
                 "attempt_kind": "primary",
             },
             {

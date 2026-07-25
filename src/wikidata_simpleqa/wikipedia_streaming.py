@@ -296,6 +296,25 @@ class PageIdStreamState:
         self._record_event("rejected", [page_id], reason)
         self.save()
 
+    def mark_retryable_failure(
+        self,
+        page_id: int,
+        *,
+        reason: str,
+        **error_details: str,
+    ) -> None:
+        """Record retry telemetry without populating the legacy rerun pool."""
+        self.in_progress_ids.discard(page_id)
+        self.failure_reasons[page_id] = reason
+        details = _error_details(error_details)
+        if details:
+            self.rerun_error_details[page_id] = details
+        else:
+            self.rerun_error_details.pop(page_id, None)
+        self._record_event("retryable_failure", [page_id], reason, **details)
+        self.save()
+
+
     def mark_rerun(
         self,
         page_id: int,
