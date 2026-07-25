@@ -14,6 +14,7 @@ from wikidata_simpleqa.route3_run_ledger import (
     build_segment_fingerprint,
     create_segment_manifest,
     derived_records,
+    derive_segment_manifest_state,
     ledger_summary,
     require_matching_fingerprint,
     update_segment_manifest,
@@ -177,32 +178,48 @@ class Route3RunLedgerTests(unittest.TestCase):
                 path=Path("segment_manifest.json"),
             )
 
-    def test_manifest_v2_supports_all_formal_statuses(self) -> None:
+    def test_manifest_state_is_derived_with_blocking_reasons(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
-            path = Path(temp_dir) / "segment_manifest.json"
-            fingerprint = build_segment_fingerprint({"page_attempt_count": 2})
+            root = Path(temp_dir)
+            path = root / "segment-a" / "segment_manifest.json"
+            fingerprint = build_segment_fingerprint({"page_attempt_count": 1})
             manifest = create_segment_manifest(
                 run_group_id="run-1",
                 segment_id="segment-a",
                 fingerprint=fingerprint,
                 artifacts={},
             )
+            index = self.make_index(root)
             self.assertEqual(manifest["manifest_version"], SEGMENT_MANIFEST_VERSION)
-            for status in (
-                "incomplete",
-                "blocked_external_service",
-                "needs_resolution",
-                "complete",
-            ):
-                manifest = update_segment_manifest(
-                    path,
-                    manifest,
-                    status=status,
-                    ledger_summary={},
-                    pre_review_quantity_prediction={},
-                )
-                self.assertEqual(manifest["status"], status)
+            self.assertEqual(manifest["blocking_reasons"], [])
 
+            state = derive_segment_manifest_state(
+                manifest,
+                index,
+                [{"state": "blocked_external_service"}],
+            )
+            manifest = update_segment_manifest(
+                path,
+                manifest,
+                segment_state=state,
+                ledger_summary=ledger_summary(index),
+                pre_review_quantity_prediction={},
+            )
+            self.assertEqual(manifest["status"], "incomplete")
+            self.assertEqual(manifest["blocking_reasons"], ["external_service"])
+
+            index.commit_allocation(canonical_page_id=1, page_source="fresh")
+            index.commit_attempt(self.attempt_payload(1, status="accepted"))
+            state = derive_segment_manifest_state(manifest, index)
+            manifest = update_segment_manifest(
+                path,
+                manifest,
+                segment_state=state,
+                ledger_summary=ledger_summary(index),
+                pre_review_quantity_prediction={},
+            )
+            self.assertEqual(manifest["status"], "complete")
+            self.assertEqual(manifest["blocking_reasons"], [])
     def test_derived_outputs_use_highest_attempt(self) -> None:
         attempts = [
             {

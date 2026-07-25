@@ -15,12 +15,8 @@ from .wikipedia_streaming import PageIdStreamState
 SEGMENT_MANIFEST_VERSION = 2
 PAGE_ALLOCATION_SCHEMA_VERSION = 1
 PAGE_ATTEMPT_SCHEMA_VERSION = 2
-SEGMENT_MANIFEST_STATUSES = {
-    "incomplete",
-    "blocked_external_service",
-    "needs_resolution",
-    "complete",
-}
+SEGMENT_MANIFEST_STATUSES = {"incomplete", "complete"}
+SEGMENT_BLOCKING_REASONS = {"external_service", "ambiguous"}
 PAGE_ALLOCATION_SOURCES = {"cache", "fresh"}
 PAGE_ATTEMPT_STATUSES = {"accepted", "rejected", "rerun"}
 
@@ -86,6 +82,7 @@ def create_segment_manifest(
         "run_group_id": run_group_id,
         "segment_id": segment_id,
         "status": "incomplete",
+        "blocking_reasons": [],
         "fingerprint": fingerprint,
         "artifacts": dict(artifacts),
         "created_at_utc": now,
@@ -124,25 +121,74 @@ def require_matching_fingerprint(
         )
 
 
+def derive_segment_manifest_state(
+    manifest: dict[str, Any],
+    index: SegmentLedgerIndex,
+    external_call_records: Iterable[dict[str, Any]] = (),
+) -> dict[str, Any]:
+    """Derive segment status and blocking reasons from durable records."""
+    fingerprint = manifest.get("fingerprint", {})
+    inputs = fingerprint.get("inputs", {}) if isinstance(fingerprint, dict) else {}
+    target = int(inputs.get("page_attempt_count", 0) or 0)
+    latest = latest_page_attempts(index.attempts)
+    blocking_reasons: set[str] = set()
+    unresolved_external_calls = 0
+    for record in external_call_records:
+        state = str(record.get("state", ""))
+        if state == "ambiguous_external_call":
+            blocking_reasons.add("ambiguous")
+            unresolved_external_calls += 1
+        elif state == "blocked_external_service":
+            blocking_reasons.add("external_service")
+            unresolved_external_calls += 1
+        elif state == "intent":
+            unresolved_external_calls += 1
+    terminal_page_ids = {
+        page_id
+        for page_id, attempt in latest.items()
+        if str(attempt.get("status", "")) in {"accepted", "rejected"}
+    }
+    complete = (
+        target > 0
+        and len(index.primary_page_ids) == target
+        and terminal_page_ids == index.primary_page_ids
+        and unresolved_external_calls == 0
+        and not blocking_reasons
+    )
+    return {
+        "status": "complete" if complete else "incomplete",
+        "blocking_reasons": sorted(blocking_reasons),
+    }
+
+
 def update_segment_manifest(
     path: Path,
     manifest: dict[str, Any],
     *,
-    status: str,
+    segment_state: dict[str, Any],
     ledger_summary: dict[str, Any],
     pre_review_quantity_prediction: dict[str, Any],
 ) -> dict[str, Any]:
-    """Persist an updated segment status without changing its fingerprint."""
+    """Persist record-derived segment state without changing its fingerprint."""
+    status = str(segment_state.get("status", ""))
+    blocking_reasons = {
+        str(reason)
+        for reason in segment_state.get("blocking_reasons", [])
+    }
     if status not in SEGMENT_MANIFEST_STATUSES:
         raise ValueError(f"Unsupported segment status: {status}")
+    if not blocking_reasons.issubset(SEGMENT_BLOCKING_REASONS):
+        raise ValueError(f"Unsupported segment blocking reasons: {sorted(blocking_reasons)}")
+    if status == "complete" and blocking_reasons:
+        raise ValueError("A complete segment cannot have blocking reasons")
     updated = dict(manifest)
     updated["status"] = status
+    updated["blocking_reasons"] = sorted(blocking_reasons)
     updated["ledger_summary"] = dict(ledger_summary)
     updated["pre_review_quantity_prediction"] = dict(pre_review_quantity_prediction)
     updated["updated_at_utc"] = utc_now_iso()
     atomic_write_json(path, updated)
     return updated
-
 
 def page_allocation_path(
     allocation_dir: Path,

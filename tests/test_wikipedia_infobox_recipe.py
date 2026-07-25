@@ -17,6 +17,7 @@ from wikidata_simpleqa.route3_run_ledger import (
     build_segment_fingerprint,
     SegmentLedgerIndex,
     create_segment_manifest,
+    derive_segment_manifest_state,
     update_segment_manifest,
 )
 from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
@@ -765,7 +766,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
             self.assertFalse(_segment_complete(paths))
 
-    def test_complete_segment_requires_enough_primary_allocations(self) -> None:
+    def test_complete_segment_requires_terminal_allocations(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
             segment_root = root / "segment"
@@ -775,23 +776,12 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "ledger": segment_root / "page_attempts",
                 "segments_dir": root,
             }
-            fingerprint = build_segment_fingerprint({"page_attempt_count": 1})
             manifest = create_segment_manifest(
                 run_group_id="group",
                 segment_id="segment",
-                fingerprint=fingerprint,
+                fingerprint=build_segment_fingerprint({"page_attempt_count": 1}),
                 artifacts={},
             )
-            atomic_write_json(paths["manifest"], manifest)
-            update_segment_manifest(
-                paths["manifest"],
-                manifest,
-                status="complete",
-                ledger_summary={"primary_pages": 0},
-                pre_review_quantity_prediction={},
-            )
-            self.assertFalse(_segment_complete(paths))
-
             index = SegmentLedgerIndex(
                 allocation_dir=paths["allocations"],
                 attempt_dir=paths["ledger"],
@@ -799,7 +789,33 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 segment_id="segment",
                 run_group_segments_dir=paths["segments_dir"],
             )
+            manifest = update_segment_manifest(
+                paths["manifest"],
+                manifest,
+                segment_state=derive_segment_manifest_state(manifest, index),
+                ledger_summary={"primary_pages": 0},
+                pre_review_quantity_prediction={},
+            )
+            self.assertFalse(_segment_complete(paths))
+
             index.commit_allocation(canonical_page_id=1, page_source="fresh")
+            index.commit_attempt(
+                {
+                    "canonical_page_id": 1,
+                    "attempt_number": 1,
+                    "status": "accepted",
+                    "accepted_records": [],
+                    "rejected_records": [],
+                    "error_details": {},
+                }
+            )
+            update_segment_manifest(
+                paths["manifest"],
+                manifest,
+                segment_state=derive_segment_manifest_state(manifest, index),
+                ledger_summary={"primary_pages": 1},
+                pre_review_quantity_prediction={},
+            )
 
             self.assertTrue(_segment_complete(paths))
     def test_combine_segment_records_offsets_ids_for_append_output(self) -> None:

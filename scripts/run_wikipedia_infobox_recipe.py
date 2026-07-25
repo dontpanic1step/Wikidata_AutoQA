@@ -33,6 +33,7 @@ from wikidata_simpleqa.route3_run_ledger import (
     atomic_write_json,
     build_segment_fingerprint,
     create_segment_manifest,
+    derive_segment_manifest_state,
     ledger_summary,
     load_segment_manifest,
     rebuild_derived_outputs,
@@ -441,7 +442,7 @@ def main() -> int:
         manifest = update_segment_manifest(
             paths["manifest"],
             manifest,
-            status="complete" if _segment_reached_record_limit(summary) else "incomplete",
+            segment_state=derive_segment_manifest_state(manifest, segment_ledger),
             ledger_summary=ledger_summary(segment_ledger),
             pre_review_quantity_prediction=predict_pre_review_quantities(
                 accepted_records,
