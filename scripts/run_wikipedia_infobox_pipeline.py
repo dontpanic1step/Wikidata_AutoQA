@@ -32,9 +32,13 @@ from wikidata_simpleqa.page_id_lists import (
     page_ids_excluded_for_context,
     read_page_id_entries,
 )
+from wikidata_simpleqa.route3_circuit import CircuitOpenError, ServiceCircuit
 from wikidata_simpleqa.route3_ddg import Route3DDGVerifierResultStore
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids, route3_record_id
 from wikidata_simpleqa.route3_openrouter import (
+    AbandonedExternalCallError,
+    AmbiguousExternalCallError,
+    DefiniteOpenRouterHTTPError,
     Route3OpenRouterClientFactory,
     bind_route3_allocation_client,
     bind_route3_allocation_panel,
@@ -723,9 +727,12 @@ def main() -> int:
         rate_limit_recovery_seconds=args.wikipedia_429_recovery_seconds,
     )
     search_client = DuckDuckGoSearchClient(**settings.duckduckgo_client_kwargs())
+    openrouter_circuit = ServiceCircuit("openrouter")
+    duckduckgo_circuit = ServiceCircuit("duckduckgo")
     llm_client = Route3OpenRouterClientFactory.from_config(
         small_llm,
         timeout_seconds=settings.timeout_seconds,
+        circuit=openrouter_circuit,
     )
     rewrite_client = None
     summary = _run_streaming_page_id_pipeline(
@@ -736,6 +743,8 @@ def main() -> int:
         llm_client=llm_client,
         rewrite_client=rewrite_client,
         endpoint_resume=endpoint_resume,
+        openrouter_circuit=openrouter_circuit,
+        duckduckgo_circuit=duckduckgo_circuit,
     )
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0
@@ -1263,6 +1272,8 @@ def _run_streaming_page_id_pipeline(
     llm_client,
     rewrite_client,
     endpoint_resume: EndpointResumeState,
+    openrouter_circuit: ServiceCircuit,
+    duckduckgo_circuit: ServiceCircuit,
 ) -> dict:
     """Process random Wikipedia page IDs and append decisions incrementally."""
     run_started = perf_counter()
@@ -1297,9 +1308,17 @@ def _run_streaming_page_id_pipeline(
             concurrency.generation_rewrite_semaphore,
             {"rewrite_question", "rewrite_question_with_audit"},
         )
-    second_stage_model_clients = _build_streaming_second_stage_model_panel(settings, concurrency)
-    grading_grader_client = _build_streaming_second_stage_grader_client(settings, concurrency)
-    ddg_verifier_result_store = _build_ddg_verifier_result_store(args)
+    second_stage_model_clients = _build_streaming_second_stage_model_panel(
+        settings,
+        concurrency,
+        openrouter_circuit,
+    )
+    grading_grader_client = _build_streaming_second_stage_grader_client(
+        settings,
+        concurrency,
+        openrouter_circuit,
+    )
+    ddg_verifier_result_store = _build_ddg_verifier_result_store(args, duckduckgo_circuit)
     if args.reset_stream_state:
         state = PageIdStreamState(path=args.stream_state)
         state.save()
@@ -1442,6 +1461,8 @@ def _run_streaming_page_id_pipeline(
         fresh_requested = 0
     initial_ids_remaining = ids_remaining
     while ids_remaining > 0:
+        if _external_circuit_is_open(openrouter_circuit, duckduckgo_circuit):
+            break
         if accepted_target and len(accepted_records) >= accepted_target:
             break
         batch_size = 1 if accepted_target else min(max(1, int(args.stream_batch_size)), ids_remaining)
@@ -1513,10 +1534,17 @@ def _run_streaming_page_id_pipeline(
             reason="stream_target_reached_free_seeded_rerun_pool",
         )
 
-    if args.stream_auto_rerun_once and not args.stream_rerun_pool_only and state.rerun_pool:
+    if (
+        args.stream_auto_rerun_once
+        and not args.stream_rerun_pool_only
+        and state.rerun_pool
+        and not _external_circuit_is_open(openrouter_circuit, duckduckgo_circuit)
+    ):
         auto_rerun_pool_ids_at_start = state.rerun_pool.copy()
         auto_ids_remaining = len(auto_rerun_pool_ids_at_start)
         while auto_ids_remaining > 0:
+            if _external_circuit_is_open(openrouter_circuit, duckduckgo_circuit):
+                break
             batch_size = min(max(1, int(args.stream_batch_size)), auto_ids_remaining)
             reserved_ids = _reserve_stream_page_ids(
                 state=state,
@@ -1653,6 +1681,10 @@ def _run_streaming_page_id_pipeline(
         "duckduckgo_concurrency_limit": args.duckduckgo_concurrency_limit,
         "openrouter_generation_rewrite_concurrency_limit": args.openrouter_generation_rewrite_concurrency_limit,
         "second_stage_concurrency_limit": args.second_stage_concurrency_limit,
+        "service_circuits": {
+            "openrouter": openrouter_circuit.snapshot(),
+            "duckduckgo": duckduckgo_circuit.snapshot(),
+        },
         "stream_accepted_target": args.stream_accepted_target,
         "stream_accepted_target_remaining_at_start": accepted_target,
         "attempted_page_ids": len(processed_ids),
@@ -2051,8 +2083,14 @@ def _page_ids_from_payload(payload: object) -> set[int]:
     return page_ids
 
 
+def _external_circuit_is_open(*circuits: ServiceCircuit) -> bool:
+    """Return whether either formal external-service circuit is open."""
+    return any(circuit.is_open for circuit in circuits)
+
+
 def _build_ddg_verifier_result_store(
     args: argparse.Namespace,
+    circuit: ServiceCircuit,
 ) -> Route3DDGVerifierResultStore:
     """Build the candidate-level DDG result store for one formal segment."""
     manifest_path = (
@@ -2067,12 +2105,14 @@ def _build_ddg_verifier_result_store(
     return Route3DDGVerifierResultStore(
         root=args.ddg_verifier_result_dir,
         segment_fingerprint=fingerprint,
+        circuit=circuit,
     )
 
 
 def _build_streaming_second_stage_model_panel(
     settings: Settings,
     concurrency: StreamingConcurrencyContext,
+    circuit: ServiceCircuit,
 ):
     """Construct formal Route 3 answer-model factories with bounded transports."""
     if not settings.second_stage_grading_enabled:
@@ -2083,6 +2123,7 @@ def _build_streaming_second_stage_model_panel(
         factory = Route3OpenRouterClientFactory.from_config(
             resolved,
             timeout_seconds=settings.timeout_seconds,
+            circuit=circuit,
         )
         factory.transport = SemaphoreWrappedClient(
             factory.transport,
@@ -2096,6 +2137,7 @@ def _build_streaming_second_stage_model_panel(
 def _build_streaming_second_stage_grader_client(
     settings: Settings,
     concurrency: StreamingConcurrencyContext,
+    circuit: ServiceCircuit,
 ):
     """Construct the formal Route 3 grader factory with a bounded transport."""
     if not settings.second_stage_grading_enabled:
@@ -2107,6 +2149,7 @@ def _build_streaming_second_stage_grader_client(
     factory = Route3OpenRouterClientFactory.from_config(
         resolved,
         timeout_seconds=settings.timeout_seconds,
+        circuit=circuit,
     )
     factory.transport = SemaphoreWrappedClient(
         factory.transport,
@@ -2339,6 +2382,68 @@ def _process_one_stream_page_id(
             accepted_records=[],
             rejected_records=[],
             error_details={},
+            args=args,
+            state=state,
+            concurrency=concurrency,
+        )
+    except CircuitOpenError as exc:
+        return {
+            "status": "blocked_external_service",
+            "state": "blocked_external_service",
+            "service": exc.service,
+            "reason": exc.reason,
+            "page_id": page_id,
+            "url": url,
+            "attempt": attempt_number,
+            "accepted_records": [],
+            "rejected_records": [],
+        }
+    except AmbiguousExternalCallError as exc:
+        return {
+            "status": "ambiguous_external_call",
+            "state": "ambiguous_external_call",
+            "page_id": page_id,
+            "url": url,
+            "attempt": attempt_number,
+            "call_attempt": exc.call_attempt,
+            "call_key": exc.call_key,
+            "accepted_records": [],
+            "rejected_records": [],
+        }
+    except DefiniteOpenRouterHTTPError as exc:
+        return _commit_stream_page_attempt(
+            page_id=page_id,
+            url=url,
+            attempt_number=attempt_number,
+            ledger_index=ledger_index,
+            status="rejected",
+            reason=f"openrouter_http_error:{exc.status_code}",
+            generated_candidates=generated_candidates,
+            accepted_records=[],
+            rejected_records=[],
+            error_details={
+                "call_key": exc.call_key,
+                "status_code": str(exc.status_code),
+            },
+            args=args,
+            state=state,
+            concurrency=concurrency,
+        )
+    except AbandonedExternalCallError as exc:
+        return _commit_stream_page_attempt(
+            page_id=page_id,
+            url=url,
+            attempt_number=attempt_number,
+            ledger_index=ledger_index,
+            status="rejected",
+            reason="abandoned_ambiguous_external_call",
+            generated_candidates=generated_candidates,
+            accepted_records=[],
+            rejected_records=[],
+            error_details={
+                "call_key": exc.call_key,
+                "call_attempt": str(exc.call_attempt),
+            },
             args=args,
             state=state,
             concurrency=concurrency,

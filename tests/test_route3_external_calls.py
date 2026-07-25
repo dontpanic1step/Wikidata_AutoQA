@@ -61,8 +61,8 @@ class Route3ExternalCallRecordTests(unittest.TestCase):
             self.assertEqual(len(outcome["call_key_hash"]), 64)
             self.assertEqual(outcome["payload"], {"text": "answer"})
             self.assertIn("p202", first_path.parts)
-            self.assertNotIn("attempt001", str(first_path))
-            self.assertNotIn("attempt002", str(first_path))
+            self.assertIn("attempt001", first_path.parts)
+            self.assertNotIn("attempt002", first_path.parts)
 
     def test_request_hash_mismatch_is_rejected(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

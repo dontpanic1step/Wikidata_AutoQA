@@ -18,6 +18,7 @@ from .route3_artifacts import (
     create_route3_candidate_artifact,
     revise_route3_candidate_artifact,
 )
+from .route3_circuit import ServiceCircuit
 from .route3_ddg import Route3DDGVerifierResultStore
 from .route3_ids import route3_record_identity
 from .route3_openrouter import bind_route3_allocation_client, bind_route3_allocation_panel
@@ -328,6 +329,7 @@ def post_generation_processor(
     external_call_record_root: Path,
     ddg_verifier_result_root: Path,
     segment_fingerprint: str,
+    duckduckgo_circuit: ServiceCircuit,
 ) -> Callable[[GeneratedCandidate], tuple[str, dict[str, Any]]]:
     """Build a processor that executes the formal post-generation pipeline."""
     from .generation_pipeline import process_generated_candidates
@@ -335,6 +337,7 @@ def post_generation_processor(
     ddg_verifier_result_store = Route3DDGVerifierResultStore(
         root=ddg_verifier_result_root,
         segment_fingerprint=segment_fingerprint,
+        circuit=duckduckgo_circuit,
     )
 
     def process(candidate: GeneratedCandidate) -> tuple[str, dict[str, Any]]:

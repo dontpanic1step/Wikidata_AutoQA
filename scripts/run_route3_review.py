@@ -14,6 +14,7 @@ if str(SRC) not in sys.path:
 
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.grading import ModelPanelMember
+from wikidata_simpleqa.route3_circuit import ServiceCircuit
 from wikidata_simpleqa.route3_openrouter import Route3OpenRouterClientFactory
 from wikidata_simpleqa.route3_run_ledger import load_segment_manifest
 from wikidata_simpleqa.route3_review import (
@@ -107,6 +108,8 @@ def _apply_state(args: argparse.Namespace) -> dict:
     state = apply_review_rows(state, rows)
     if _status_count(state, "rerun"):
         processors: dict[str, object] = {}
+        openrouter_circuit = ServiceCircuit("openrouter")
+        duckduckgo_circuit = ServiceCircuit("duckduckgo")
 
         def processor(candidate):
             segment_id = str(candidate.source_metadata["segment_id"])
@@ -117,8 +120,8 @@ def _apply_state(args: argparse.Namespace) -> dict:
                 segment_processor = post_generation_processor(
                     settings=settings,
                     search_client=search_client,
-                    second_stage_model_clients=_build_route3_model_panel(settings),
-                    grading_grader_client=_build_route3_grader(settings),
+                    second_stage_model_clients=_build_route3_model_panel(settings, openrouter_circuit),
+                    grading_grader_client=_build_route3_grader(settings, openrouter_circuit),
                     external_call_record_root=(
                         Path(state["segment_artifact_roots"][segment_id]) / "external_calls"
                     ),
@@ -129,6 +132,7 @@ def _apply_state(args: argparse.Namespace) -> dict:
                     segment_fingerprint=str(
                         state["segment_fingerprints"][segment_id]["sha256"]
                     ),
+                    duckduckgo_circuit=duckduckgo_circuit,
                 )
                 processors[segment_id] = segment_processor
             return segment_processor(candidate)
@@ -137,30 +141,31 @@ def _apply_state(args: argparse.Namespace) -> dict:
     return state
 
 
-def _build_route3_model_panel(settings: Settings) -> list[ModelPanelMember] | None:
+def _build_route3_model_panel(settings: Settings, circuit: ServiceCircuit) -> list[ModelPanelMember] | None:
     """Build durable answer-model factories for one review rerun."""
     if not settings.second_stage_grading_enabled:
         return None
     members = []
     for config in settings.second_stage_grading_models:
-        factory = _route3_openrouter_factory(config, settings)
+        factory = _route3_openrouter_factory(config, settings, circuit)
         members.append(ModelPanelMember(name=config.model, client=factory))
     return members
 
 
-def _build_route3_grader(settings: Settings):
+def _build_route3_grader(settings: Settings, circuit: ServiceCircuit):
     """Build the durable grader factory for one review rerun."""
     if not settings.second_stage_grading_enabled:
         return None
     config = settings.second_stage_grading_grader_llm
     if config is None:
         return None
-    return _route3_openrouter_factory(config, settings)
+    return _route3_openrouter_factory(config, settings, circuit)
 
 
 def _route3_openrouter_factory(
     config: LLMConfig,
     settings: Settings,
+    circuit: ServiceCircuit,
 ) -> Route3OpenRouterClientFactory:
     """Build one formal OpenRouter factory from reconstructed settings."""
     if config.provider != "openrouter":
@@ -168,6 +173,7 @@ def _route3_openrouter_factory(
     return Route3OpenRouterClientFactory.from_config(
         config,
         timeout_seconds=settings.timeout_seconds,
+        circuit=circuit,
     )
 
 

@@ -28,6 +28,10 @@ from wikidata_simpleqa.page_id_lists import (
 )
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids
 from wikidata_simpleqa.route3_quantity_prediction import predict_pre_review_quantities
+from wikidata_simpleqa.route3_external_lifecycle import (
+    resolve_ambiguous_external_calls,
+    write_ambiguous_external_call_reports,
+)
 from wikidata_simpleqa.route3_run_ledger import (
     SegmentLedgerIndex,
     atomic_write_json,
@@ -238,6 +242,12 @@ def parse_args() -> argparse.Namespace:
         default="",
         help="Path-safe suffix for --append-to-existing-run segment artifacts. Defaults to a UTC timestamp.",
     )
+    parser.add_argument(
+        "--resolve-ambiguous",
+        choices=("retry", "abandon"),
+        default=None,
+        help="Resolve every unresolved ambiguous call in an existing same-fingerprint segment.",
+    )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
 
@@ -360,6 +370,10 @@ def main() -> int:
                 stream_fresh_cached_page_count=segment_fresh_cached_page_count,
             )
             manifest = load_segment_manifest(paths["manifest"])
+            if manifest is None and args.resolve_ambiguous:
+                raise ValueError(
+                    "--resolve-ambiguous requires an existing same-fingerprint segment resume"
+                )
             if manifest is None:
                 manifest = create_segment_manifest(
                     run_group_id=run_id,
@@ -374,6 +388,8 @@ def main() -> int:
                         "page_attempt_ledger": str(paths["ledger"]),
                         "external_call_records": str(paths["external_calls"]),
                         "ddg_verifier_results": str(paths["ddg_results"]),
+                        "ambiguous_external_calls_json": str(paths["ambiguous_json"]),
+                        "ambiguous_external_calls_markdown": str(paths["ambiguous_markdown"]),
                     },
                 )
                 atomic_write_json(paths["manifest"], manifest)
@@ -383,6 +399,16 @@ def main() -> int:
                     fingerprint,
                     path=paths["manifest"],
                 )
+                if args.resolve_ambiguous:
+                    resolve_ambiguous_external_calls(
+                        paths["external_calls"],
+                        action=args.resolve_ambiguous,
+                    )
+            write_ambiguous_external_call_reports(
+                paths["external_calls"],
+                json_path=paths["ambiguous_json"],
+                markdown_path=paths["ambiguous_markdown"],
+            )
         if not args.dry_run and _segment_complete(paths):
             segment_ledger = _segment_ledger_index(paths)
             rebuild_derived_outputs(
@@ -441,17 +467,37 @@ def main() -> int:
         )
         if manifest is None:
             raise RuntimeError("Segment manifest was not initialized before execution.")
+        ambiguous_rows = write_ambiguous_external_call_reports(
+            paths["external_calls"],
+            json_path=paths["ambiguous_json"],
+            markdown_path=paths["ambiguous_markdown"],
+        )
+        external_states = [*ambiguous_rows, *_open_circuit_states(summary)]
+        summary["ambiguous_external_calls"] = {
+            "count": len(ambiguous_rows),
+            "json": str(paths["ambiguous_json"]),
+            "markdown": str(paths["ambiguous_markdown"]),
+        }
+        atomic_write_json(paths["summary"], summary)
         manifest = update_segment_manifest(
             paths["manifest"],
             manifest,
-            segment_state=derive_segment_manifest_state(manifest, segment_ledger),
+            segment_state=derive_segment_manifest_state(
+                manifest,
+                segment_ledger,
+                external_states,
+            ),
             ledger_summary=ledger_summary(segment_ledger),
             pre_review_quantity_prediction=predict_pre_review_quantities(
                 accepted_records,
                 recipe_seed=segment_seed,
             ),
+            service_circuits=dict(summary.get("service_circuits", {})),
         )
-        if not _segment_reached_record_limit(summary):
+        if (
+            not _segment_reached_record_limit(summary)
+            and not manifest.get("blocking_reasons")
+        ):
             raise RuntimeError(
                 "Recipe segment stopped before using its requested page budget: "
                 f"{summary.get('run_segment_id', paths['summary'].stem)} "
@@ -1132,6 +1178,8 @@ def _segment_command(
     page_attempt_ledger_dir = segment_root / "page_attempts"
     external_call_record_dir = segment_root / "external_calls"
     ddg_verifier_result_dir = segment_root / "ddg_verifier_results"
+    ambiguous_json = segment_root / "ambiguous_external_calls.json"
+    ambiguous_markdown = segment_root / "ambiguous_external_calls.md"
     accepted = segment_dir / f"{segment_id}_accepted.jsonl"
     rejected = segment_dir / f"{segment_id}_rejected.jsonl"
     summary = segment_dir / f"{segment_id}_summary.json"
@@ -1314,6 +1362,8 @@ def _segment_command(
         "segments_dir": segment_dir,
         "external_calls": external_call_record_dir,
         "ddg_results": ddg_verifier_result_dir,
+        "ambiguous_json": ambiguous_json,
+        "ambiguous_markdown": ambiguous_markdown,
     }
 
 
@@ -1329,6 +1379,22 @@ def _segment_ledger_index(paths: dict[str, Path]) -> SegmentLedgerIndex:
         segment_id=str(manifest.get("segment_id", "")),
         run_group_segments_dir=paths["segments_dir"],
     )
+
+def _open_circuit_states(summary: dict) -> list[dict[str, str]]:
+    """Return manifest blocking records for invocation circuits that opened."""
+    circuits = summary.get("service_circuits", {})
+    if not isinstance(circuits, dict):
+        return []
+    return [
+        {
+            "state": "blocked_external_service",
+            "service": str(service),
+            "reason": str(snapshot.get("open_reason", "")),
+        }
+        for service, snapshot in sorted(circuits.items())
+        if isinstance(snapshot, dict) and bool(snapshot.get("open", False))
+    ]
+
 
 def _segment_complete(paths: dict[str, Path]) -> bool:
     """Return whether a recipe segment has a complete matching ledger."""

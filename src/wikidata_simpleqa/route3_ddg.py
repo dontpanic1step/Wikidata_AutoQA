@@ -12,6 +12,7 @@ from typing import Any
 from uuid import uuid4
 
 from .generation_models import GeneratedCandidate
+from .route3_circuit import ServiceCircuit
 from .generator_validators import (
     SearchLongtailVerifierError,
     run_search_based_longtail_verifier,
@@ -42,6 +43,7 @@ class Route3DDGVerifierResultStore:
 
     root: Path
     segment_fingerprint: str
+    circuit: ServiceCircuit | None = None
 
     def __post_init__(self) -> None:
         self.root = Path(self.root)
@@ -75,6 +77,8 @@ class Route3DDGVerifierResultStore:
         if existing is not None:
             return bool(existing["passed"]), deepcopy(existing["features"])
 
+        if self.circuit is not None:
+            self.circuit.before_call()
         started = perf_counter()
         try:
             passed, features = run_search_based_longtail_verifier(
@@ -87,8 +91,12 @@ class Route3DDGVerifierResultStore:
                 max_parallel_queries=max_parallel_queries,
             )
         except SearchLongtailVerifierError as exc:
+            if self.circuit is not None:
+                self.circuit.record_failure(reason="verifier_attempts_exhausted")
             exc.features["duration_seconds"] = round(perf_counter() - started, 4)
             raise
+        if self.circuit is not None:
+            self.circuit.record_success()
         durable_features = deepcopy(features)
         durable_features["duration_seconds"] = round(perf_counter() - started, 4)
         record = {

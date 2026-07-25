@@ -5,14 +5,21 @@ from __future__ import annotations
 import json
 import os
 from pathlib import Path
-from uuid import uuid4
 from typing import Any
+from uuid import uuid4
 
 from .route3_run_ledger import canonical_json_sha256, utc_now_iso
 
 
-EXTERNAL_CALL_RECORD_SCHEMA_VERSION = 1
-EXTERNAL_CALL_RECORD_KINDS = {"intent", "response", "http_error"}
+EXTERNAL_CALL_RECORD_SCHEMA_VERSION = 2
+EXTERNAL_CALL_RECORD_KINDS = {
+    "intent",
+    "response",
+    "http_error",
+    "resolution",
+    "abandoned_ambiguous",
+}
+EXTERNAL_CALL_ATTEMPTS = {1, 2}
 
 
 def _atomic_create_json(path: Path, payload: dict[str, Any]) -> None:
@@ -30,7 +37,7 @@ def _atomic_create_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 class ExternalCallRecordStore:
-    """Persist immutable intent and definite outcome records by logical call key."""
+    """Persist immutable call-attempt records under one allocation and logical key."""
 
     def __init__(self, root: Path, *, canonical_page_id: int) -> None:
         self.root = Path(root)
@@ -45,15 +52,19 @@ class ExternalCallRecordStore:
         record_kind: str,
         request_hash: str,
         payload: dict[str, Any],
+        call_attempt: int = 1,
     ) -> Path:
-        """Commit one immutable external-call record."""
+        """Commit one immutable external call-attempt record."""
         kind = str(record_kind)
+        attempt = int(call_attempt)
         if kind not in EXTERNAL_CALL_RECORD_KINDS:
             raise ValueError(f"Unsupported external-call record kind: {kind}")
+        if attempt not in EXTERNAL_CALL_ATTEMPTS:
+            raise ValueError("Only external call attempt001 and attempt002 are valid")
         normalized_hash = str(request_hash).strip()
         if not normalized_hash:
             raise ValueError("request_hash is required")
-        path = self.record_path(call_key, kind)
+        path = self.record_path(call_key, kind, call_attempt=attempt)
         if path.exists():
             raise FileExistsError(f"External-call record is already committed: {path}")
         record = {
@@ -61,6 +72,7 @@ class ExternalCallRecordStore:
             "canonical_page_id": self.canonical_page_id,
             "call_key": str(call_key),
             "call_key_hash": canonical_json_sha256(str(call_key)),
+            "call_attempt": attempt,
             "record_kind": kind,
             "request_hash": normalized_hash,
             "payload": dict(payload),
@@ -69,9 +81,15 @@ class ExternalCallRecordStore:
         _atomic_create_json(path, record)
         return path
 
-    def load(self, *, call_key: str, record_kind: str) -> dict[str, Any] | None:
-        """Load one external-call record when present."""
-        path = self.record_path(call_key, record_kind)
+    def load(
+        self,
+        *,
+        call_key: str,
+        record_kind: str,
+        call_attempt: int = 1,
+    ) -> dict[str, Any] | None:
+        """Load one external call-attempt record when present."""
+        path = self.record_path(call_key, record_kind, call_attempt=call_attempt)
         if not path.exists():
             return None
         payload = json.loads(path.read_text(encoding="utf-8"))
@@ -83,6 +101,8 @@ class ExternalCallRecordStore:
             raise ValueError(f"External-call record page mismatch: {path}")
         if str(payload.get("call_key", "")) != str(call_key):
             raise ValueError(f"External-call key mismatch: {path}")
+        if int(payload.get("call_attempt", 0) or 0) != int(call_attempt):
+            raise ValueError(f"External-call attempt mismatch: {path}")
         if str(payload.get("record_kind", "")) != str(record_kind):
             raise ValueError(f"External-call record kind mismatch: {path}")
         return dict(payload)
@@ -92,12 +112,21 @@ class ExternalCallRecordStore:
         *,
         call_key: str,
         request_hash: str,
+        call_attempt: int = 1,
     ) -> dict[str, Any] | None:
-        """Return a persisted definite outcome for the same logical request."""
-        response = self.load(call_key=call_key, record_kind="response")
-        http_error = self.load(call_key=call_key, record_kind="http_error")
+        """Return a persisted definite outcome for one logical call attempt."""
+        response = self.load(
+            call_key=call_key,
+            record_kind="response",
+            call_attempt=call_attempt,
+        )
+        http_error = self.load(
+            call_key=call_key,
+            record_kind="http_error",
+            call_attempt=call_attempt,
+        )
         if response is not None and http_error is not None:
-            raise ValueError(f"Logical call has multiple definite outcomes: {call_key}")
+            raise ValueError(f"Logical call attempt has multiple definite outcomes: {call_key}")
         outcome = response or http_error
         if outcome is None:
             return None
@@ -105,18 +134,28 @@ class ExternalCallRecordStore:
             raise ValueError(f"External-call request hash mismatch: {call_key}")
         return outcome
 
-    def record_path(self, call_key: str, record_kind: str) -> Path:
-        """Return a stable allocation-scoped record path."""
+    def record_path(
+        self,
+        call_key: str,
+        record_kind: str,
+        *,
+        call_attempt: int = 1,
+    ) -> Path:
+        """Return a stable allocation, logical-key, and call-attempt record path."""
         key = str(call_key).strip()
         if not key:
             raise ValueError("call_key is required")
         kind = str(record_kind)
         if kind not in EXTERNAL_CALL_RECORD_KINDS:
             raise ValueError(f"Unsupported external-call record kind: {kind}")
+        attempt = int(call_attempt)
+        if attempt not in EXTERNAL_CALL_ATTEMPTS:
+            raise ValueError("Only external call attempt001 and attempt002 are valid")
         key_hash = canonical_json_sha256(key)
         return (
             self.root
             / f"p{self.canonical_page_id}"
             / f"c_{key_hash}"
+            / f"attempt{attempt:03d}"
             / f"{kind}.json"
         )

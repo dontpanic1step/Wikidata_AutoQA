@@ -18,6 +18,7 @@ from .cheap_model_qa import (
     SYSTEM_PROMPT,
 )
 from .config import LLMConfig
+from .route3_circuit import ServiceCircuit
 from .grading import ModelPanelMember
 from .network import install_proxy
 from .route3_external_calls import ExternalCallRecordStore
@@ -58,14 +59,27 @@ class AmbiguousExternalCallError(RuntimeError):
         call_key: str,
         request_hash: str,
         transport_error: str = "",
+        call_attempt: int = 1,
     ) -> None:
         self.call_key = str(call_key)
         self.request_hash = str(request_hash)
         self.transport_error = str(transport_error)
+        self.call_attempt = int(call_attempt)
+        self.retry_eligible = self.call_attempt == 1
         message = f"Ambiguous external call requires explicit resolution: {self.call_key}"
         if self.transport_error:
             message = f"{message}: {self.transport_error}"
         super().__init__(message)
+
+
+class AbandonedExternalCallError(RuntimeError):
+    """An ambiguous logical call was explicitly abandoned."""
+
+    def __init__(self, *, call_key: str, request_hash: str, call_attempt: int) -> None:
+        self.call_key = str(call_key)
+        self.request_hash = str(request_hash)
+        self.call_attempt = int(call_attempt)
+        super().__init__(f"Ambiguous external call was abandoned: {self.call_key}")
 
 
 class DefiniteOpenRouterHTTPError(RuntimeError):
@@ -152,54 +166,64 @@ class Route3DurableOpenRouterExecutor:
 
     store: ExternalCallRecordStore
     transport: Any
+    circuit: ServiceCircuit | None = None
 
     def execute(self, *, call_key: str, request_payload: dict[str, Any]) -> dict[str, Any]:
         """Return a persisted or newly received OpenRouter response object."""
         request_hash = canonical_json_sha256(request_payload)
-        intent = self.store.load(call_key=call_key, record_kind="intent")
-        outcome = self.store.load_matching_outcome(
+        call_attempt = self._call_attempt(
             call_key=call_key,
             request_hash=request_hash,
         )
+        outcome = self.store.load_matching_outcome(
+            call_key=call_key,
+            request_hash=request_hash,
+            call_attempt=call_attempt,
+        )
         if outcome is not None:
-            if intent is None:
-                raise ValueError(f"External-call outcome has no intent: {call_key}")
-            if str(intent.get("request_hash", "")) != request_hash:
-                raise ValueError(f"External-call request hash mismatch: {call_key}")
             return self._resolve_outcome(outcome, call_key=call_key, request_hash=request_hash)
 
-        if intent is not None:
-            if str(intent.get("request_hash", "")) != request_hash:
-                raise ValueError(f"External-call request hash mismatch: {call_key}")
-            raise AmbiguousExternalCallError(
-                call_key=call_key,
-                request_hash=request_hash,
-            )
-
+        if self.circuit is not None:
+            self.circuit.before_call()
         try:
             self.store.commit(
                 call_key=call_key,
                 record_kind="intent",
                 request_hash=request_hash,
                 payload={"request_payload": deepcopy(request_payload)},
+                call_attempt=call_attempt,
             )
         except FileExistsError as exc:
             raise AmbiguousExternalCallError(
                 call_key=call_key,
                 request_hash=request_hash,
+                call_attempt=call_attempt,
             ) from exc
         try:
             raw_response = self.transport.send_once(request_payload)
         except OpenRouterHTTPError as exc:
-            self.store.commit(
-                call_key=call_key,
-                record_kind="http_error",
-                request_hash=request_hash,
-                payload={
-                    "status_code": exc.status_code,
-                    "body_text": exc.body_text,
-                },
-            )
+            self._record_http_failure(exc.status_code)
+            try:
+                self.store.commit(
+                    call_key=call_key,
+                    record_kind="http_error",
+                    request_hash=request_hash,
+                    payload={
+                        "status_code": exc.status_code,
+                        "body_text": exc.body_text,
+                    },
+                    call_attempt=call_attempt,
+                )
+            except Exception as persistence_error:  # noqa: BLE001
+                raise AmbiguousExternalCallError(
+                    call_key=call_key,
+                    request_hash=request_hash,
+                    transport_error=(
+                        "outcome_persistence_failed:"
+                        f"{type(persistence_error).__name__}:{persistence_error}"
+                    ),
+                    call_attempt=call_attempt,
+                ) from persistence_error
             raise DefiniteOpenRouterHTTPError(
                 call_key=call_key,
                 request_hash=request_hash,
@@ -207,26 +231,117 @@ class Route3DurableOpenRouterExecutor:
                 body_text=exc.body_text,
             ) from exc
         except OpenRouterAmbiguousTransportError as exc:
+            if self.circuit is not None:
+                self.circuit.record_failure(reason="transport_ambiguity")
             raise AmbiguousExternalCallError(
                 call_key=call_key,
                 request_hash=request_hash,
                 transport_error=str(exc),
+                call_attempt=call_attempt,
             ) from exc
 
-        self.store.commit(
-            call_key=call_key,
-            record_kind="response",
-            request_hash=request_hash,
-            payload={
-                "status_code": raw_response.status_code,
-                "body_text": raw_response.body_text,
-            },
-        )
+        try:
+            self.store.commit(
+                call_key=call_key,
+                record_kind="response",
+                request_hash=request_hash,
+                payload={
+                    "status_code": raw_response.status_code,
+                    "body_text": raw_response.body_text,
+                },
+                call_attempt=call_attempt,
+            )
+        except Exception as persistence_error:  # noqa: BLE001
+            raise AmbiguousExternalCallError(
+                call_key=call_key,
+                request_hash=request_hash,
+                transport_error=(
+                    "outcome_persistence_failed:"
+                    f"{type(persistence_error).__name__}:{persistence_error}"
+                ),
+                call_attempt=call_attempt,
+            ) from persistence_error
+        if self.circuit is not None:
+            self.circuit.record_success()
         return self._decode_response(
             raw_response.body_text,
             call_key=call_key,
             request_hash=request_hash,
         )
+
+    def _call_attempt(self, *, call_key: str, request_hash: str) -> int:
+        """Resolve a logical call to initial, explicitly retried, or abandoned state."""
+        for attempt in (2, 1):
+            intent = self.store.load(
+                call_key=call_key,
+                record_kind="intent",
+                call_attempt=attempt,
+            )
+            outcome = self.store.load_matching_outcome(
+                call_key=call_key,
+                request_hash=request_hash,
+                call_attempt=attempt,
+            )
+            if outcome is not None:
+                if intent is None:
+                    raise ValueError(f"External-call outcome has no intent: {call_key}")
+                if str(intent.get("request_hash", "")) != request_hash:
+                    raise ValueError(f"External-call request hash mismatch: {call_key}")
+                return attempt
+            if intent is None:
+                continue
+            if str(intent.get("request_hash", "")) != request_hash:
+                raise ValueError(f"External-call request hash mismatch: {call_key}")
+            abandoned = self.store.load(
+                call_key=call_key,
+                record_kind="abandoned_ambiguous",
+                call_attempt=attempt,
+            )
+            if abandoned is not None:
+                raise AbandonedExternalCallError(
+                    call_key=call_key,
+                    request_hash=request_hash,
+                    call_attempt=attempt,
+                )
+            if attempt == 2:
+                raise AmbiguousExternalCallError(
+                    call_key=call_key,
+                    request_hash=request_hash,
+                    call_attempt=2,
+                )
+            resolution = self.store.load(
+                call_key=call_key,
+                record_kind="resolution",
+                call_attempt=1,
+            )
+            action = str((resolution or {}).get("payload", {}).get("action", ""))
+            if action == "retry":
+                return 2
+            if action == "abandon":
+                raise AbandonedExternalCallError(
+                    call_key=call_key,
+                    request_hash=request_hash,
+                    call_attempt=1,
+                )
+            raise AmbiguousExternalCallError(
+                call_key=call_key,
+                request_hash=request_hash,
+                call_attempt=1,
+            )
+        return 1
+
+    def _record_http_failure(self, status_code: int) -> None:
+        """Record only milestone-defined OpenRouter infrastructure statuses."""
+        if self.circuit is None:
+            return
+        status = int(status_code)
+        if status in {401, 402}:
+            self.circuit.record_failure(
+                reason=f"http_{status}",
+                immediate_open=True,
+            )
+        elif status in {408, 429} or status >= 500:
+            self.circuit.record_failure(reason=f"http_{status}")
 
     def _resolve_outcome(
         self,
@@ -375,6 +490,7 @@ class Route3OpenRouterClientFactory:
 
     config: LLMConfig
     transport: Any
+    circuit: ServiceCircuit | None = None
 
     @classmethod
     def from_config(
@@ -382,6 +498,7 @@ class Route3OpenRouterClientFactory:
         config: LLMConfig,
         *,
         timeout_seconds: float,
+        circuit: ServiceCircuit,
     ) -> "Route3OpenRouterClientFactory":
         """Build a factory with the formal one-request transport."""
         return cls(
@@ -390,6 +507,7 @@ class Route3OpenRouterClientFactory:
                 config=config,
                 timeout_seconds=timeout_seconds,
             ),
+            circuit=circuit,
         )
 
     def for_allocation(
@@ -409,6 +527,7 @@ class Route3OpenRouterClientFactory:
             executor=Route3DurableOpenRouterExecutor(
                 store=store,
                 transport=self.transport,
+                circuit=self.circuit,
             ),
             call_key=call_key,
         )

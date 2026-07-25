@@ -169,6 +169,7 @@ def update_segment_manifest(
     segment_state: dict[str, Any],
     ledger_summary: dict[str, Any],
     pre_review_quantity_prediction: dict[str, Any],
+    service_circuits: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Persist record-derived segment state without changing its fingerprint."""
     status = str(segment_state.get("status", ""))
@@ -187,6 +188,8 @@ def update_segment_manifest(
     updated["blocking_reasons"] = sorted(blocking_reasons)
     updated["ledger_summary"] = dict(ledger_summary)
     updated["pre_review_quantity_prediction"] = dict(pre_review_quantity_prediction)
+    if service_circuits is not None:
+        updated["service_circuits"] = dict(service_circuits)
     updated["updated_at_utc"] = utc_now_iso()
     atomic_write_json(path, updated)
     return updated

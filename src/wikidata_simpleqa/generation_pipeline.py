@@ -14,6 +14,12 @@ from .text_normalization import build_text_matcher, display_key, text_contains_m
 from .config import LLMConfig, Settings
 from .domain_templates import get_all_templates, get_stage1_templates
 from .generation_models import GeneratedCandidate
+from .route3_circuit import CircuitOpenError
+from .route3_openrouter import (
+    AbandonedExternalCallError,
+    AmbiguousExternalCallError,
+    DefiniteOpenRouterHTTPError,
+)
 from .generator_validators import (
     SearchLongtailVerifierError,
     run_search_based_longtail_verifier,
@@ -461,6 +467,8 @@ def process_generated_candidates(
                 "duration_seconds",
                 candidate_timings["duckduckgo_search_seconds"],
             )
+        except CircuitOpenError:
+            raise
         except Exception as exc:  # noqa: BLE001
             candidate_timings["duckduckgo_search_seconds"] = _elapsed(search_start)
             candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
@@ -519,6 +527,13 @@ def process_generated_candidates(
                 )
                 candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
                 panel_features["duration_seconds"] = candidate_timings["second_stage_grading_seconds"]
+            except (
+                AbandonedExternalCallError,
+                AmbiguousExternalCallError,
+                CircuitOpenError,
+                DefiniteOpenRouterHTTPError,
+            ):
+                raise
             except Exception as exc:  # noqa: BLE001
                 candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
                 candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)

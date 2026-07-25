@@ -17,6 +17,12 @@ from typing import Any, Iterable
 from uuid import uuid4
 
 from .cheap_model_qa import parse_json_object
+from .route3_circuit import CircuitOpenError
+from .route3_openrouter import (
+    AbandonedExternalCallError,
+    AmbiguousExternalCallError,
+    DefiniteOpenRouterHTTPError,
+)
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .date_reference import normalize_date_answer, normalize_gate_date_answer
 from .llm_rewrite import NO_SOCIAL_SCIENCE_RESEARCH_PROMPT
@@ -601,6 +607,13 @@ class WikipediaInfoboxTableGenerator:
                     cutoff_year=cutoff_year,
                     timings=timings,
                 )
+            except (
+                AbandonedExternalCallError,
+                AmbiguousExternalCallError,
+                CircuitOpenError,
+                DefiniteOpenRouterHTTPError,
+            ):
+                raise
             except Exception as exc:  # noqa: BLE001
                 timings["total_generation_seconds"] = _elapsed(candidate_start)
                 page_candidates = [_rejected_placeholder(

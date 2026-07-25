@@ -172,8 +172,9 @@ class Route3OpenRouterTests(unittest.TestCase):
                 return original_commit(**kwargs)
 
             with patch.object(store, "commit", side_effect=crash_before_response_commit):
-                with self.assertRaisesRegex(RuntimeError, "persistence crash"):
+                with self.assertRaises(AmbiguousExternalCallError) as caught:
                     executor.execute(call_key="generation", request_payload=request)
+                self.assertIn("outcome_persistence_failed", caught.exception.transport_error)
 
             resumed = Route3DurableOpenRouterExecutor(store=store, transport=transport)
             with self.assertRaises(AmbiguousExternalCallError):

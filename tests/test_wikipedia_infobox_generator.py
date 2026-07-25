@@ -19,6 +19,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
+from wikidata_simpleqa.route3_circuit import CircuitOpenError
 from wikidata_simpleqa.route3_ddg import Route3DDGVerifierResultStore
 from wikidata_simpleqa.route3_run_ledger import SegmentLedgerIndex, load_page_attempts
 from wikidata_simpleqa.route3_openrouter import (
@@ -5028,6 +5029,76 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             "source_metadata": {"error_message": ""},
         }
         self.assertFalse(_should_rerun_stream_rejection(permanent))
+
+
+
+    def test_circuit_before_send_keeps_original_page_attempt_pending(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            args = SimpleNamespace(
+                generated_search_query_count=2,
+                route3_answer_type=[],
+                route3_table_filter_mode=[],
+                route3_table_source_type=["infobox", "wikitable"],
+                route3_prose_leakage_scoring=True,
+                route3_llm_choose_table=False,
+                route3_answer_type_mode="all5",
+                route3_page_archive_dir=root / "page_archive",
+                route3_infobox_max_removed_row_rate=0.6,
+                route3_infobox_min_remaining_rows=5,
+                stream_page_source="table-search",
+                page_attempt_ledger_dir=root / "page_attempts",
+                run_group_id="group",
+                run_segment_id="segment",
+                generation_model="google/gemini-3-flash-preview",
+                small_model_max_tokens=4096,
+                stream_random_seed=7,
+                output=root / "accepted.jsonl",
+                rejected_output=root / "rejected.jsonl",
+            )
+            state = PageIdStreamState.load(root / "state.json")
+            ledger_index = SegmentLedgerIndex(
+                allocation_dir=root / "page_allocations",
+                attempt_dir=root / "page_attempts",
+                run_group_id="group",
+                segment_id="segment",
+                run_group_segments_dir=root.parent,
+            )
+            ledger_index.commit_allocation(canonical_page_id=2468, page_source="fresh")
+            with patch.object(
+                WikipediaInfoboxTableGenerator,
+                "generate",
+                side_effect=CircuitOpenError(service="openrouter", reason="http_401"),
+            ):
+                decision = _process_one_stream_page_id(
+                    2468,
+                    args=args,
+                    settings=Settings(target_time="2024"),
+                    state=state,
+                    wikipedia_client=FakeWikipediaClient(),
+                    search_client=FakeSearchClient(),
+                    llm_client=FakeLLMClient(),
+                    rewrite_client=None,
+                    concurrency=StreamingConcurrencyContext(
+                        commit_lock=Lock(),
+                        wikipedia_semaphore=Semaphore(1),
+                        duckduckgo_semaphore=Semaphore(1),
+                        generation_rewrite_semaphore=Semaphore(1),
+                        second_stage_semaphore=Semaphore(1),
+                    ),
+                    second_stage_model_clients=None,
+                    grading_grader_client=None,
+                    ddg_verifier_result_store=Route3DDGVerifierResultStore(
+                        root / "ddg_verifier_results",
+                        segment_fingerprint="fingerprint",
+                    ),
+                    ledger_index=ledger_index,
+                )
+
+            self.assertEqual(decision["status"], "blocked_external_service")
+            self.assertEqual(decision["attempt"], 1)
+            self.assertEqual(load_page_attempts(root / "page_attempts"), [])
+            self.assertEqual(ledger_index.next_attempt_number(2468), 1)
 
 
 
