@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+from contextlib import ExitStack, contextmanager
 import inspect
 import json
 import re
@@ -245,6 +246,12 @@ def parse_args() -> argparse.Namespace:
 
 
 def main() -> int:
+    """Hold segment writer locks for the complete recipe invocation."""
+    with ExitStack() as segment_writer_locks:
+        return _main(segment_writer_locks)
+
+
+def _main(segment_writer_locks: ExitStack) -> int:
     """Run the recipe segments and combine their artifacts."""
     args = parse_args()
     _validate_lifecycle_args(args)
@@ -301,6 +308,8 @@ def main() -> int:
             append_label=append_label,
         )
         segment_id = _append_segment_id(base_segment_id, append_label)
+        if not args.dry_run:
+            segment_writer_locks.enter_context(_segment_writer_lock(segment_dir / segment_id))
         base_stream_search_initial_offset = _segment_stream_search_initial_offset(
             recipe_items,
             index,
@@ -699,6 +708,35 @@ def _require_clean_worktree() -> None:
     )
     if result.stdout.strip():
         raise RuntimeError("Formal Route 3 runs require a clean Git worktree.")
+
+
+@contextmanager
+def _segment_writer_lock(segment_root: Path):
+    """Hold one non-blocking OS lock for the segment writer lifetime."""
+    segment_root.mkdir(parents=True, exist_ok=True)
+    lock_path = segment_root / ".recipe_writer.lock"
+    handle = lock_path.open("a+b")
+    handle.seek(0, 2)
+    if handle.tell() == 0:
+        handle.write(b"\0")
+        handle.flush()
+    handle.seek(0)
+    try:
+        if sys.platform == "win32":
+            import msvcrt
+
+            msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
+        else:
+            import fcntl
+
+            fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except OSError as exc:
+        handle.close()
+        raise RuntimeError(f"Segment already has an active recipe writer: {segment_root}") from exc
+    try:
+        yield
+    finally:
+        handle.close()
 
 
 def _git_sha() -> str:

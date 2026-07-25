@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+from contextlib import contextmanager
 import io
 import json
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -50,6 +52,7 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _segment_complete,
     _segment_stream_search_initial_offset,
     _segment_command,
+    _segment_writer_lock,
     _validate_lifecycle_args,
     main as recipe_main,
 )
@@ -266,6 +269,38 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "clean Git worktree"):
                 _require_clean_worktree()
 
+    def test_segment_writer_lock_is_exclusive_and_released_when_holder_is_killed(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_root = Path(tmpdir) / "segment"
+            child_code = (
+                "import sys,time;"
+                f"sys.path.insert(0,{str(SCRIPTS)!r});"
+                "from run_wikipedia_infobox_recipe import _segment_writer_lock;"
+                "from pathlib import Path;"
+                f"lock=_segment_writer_lock(Path({str(segment_root)!r}));"
+                "lock.__enter__();"
+                "print('locked',flush=True);"
+                "time.sleep(60)"
+            )
+            holder = subprocess.Popen(
+                [sys.executable, "-c", child_code],
+                cwd=ROOT,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+            )
+            try:
+                self.assertEqual(holder.stdout.readline().strip(), "locked")
+                with self.assertRaisesRegex(RuntimeError, "active recipe writer"):
+                    with _segment_writer_lock(segment_root):
+                        pass
+            finally:
+                holder.kill()
+                holder.wait(timeout=10)
+
+            with _segment_writer_lock(segment_root):
+                self.assertTrue((segment_root / ".recipe_writer.lock").exists())
+
     def test_fresh_recipe_projects_zero_accepted_records_after_worker(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -275,8 +310,27 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 answer_type="Person",
                 answer_type_mode="single",
             )
+            lock_events = []
+
+            @contextmanager
+            def observed_lock(segment_root):
+                self.assertFalse((segment_root / "segment_manifest.json").exists())
+                lock_events.append("acquired")
+                try:
+                    yield
+                finally:
+                    lock_events.append("released")
+
+            def checked_segment_command(**kwargs):
+                self.assertEqual(lock_events, ["acquired"])
+                return _segment_command(**kwargs)
+
+            def checked_combine_segment_records(**kwargs):
+                self.assertEqual(lock_events, ["acquired"])
+                return _combine_segment_records(**kwargs)
 
             def fake_worker(command, *, cwd, check):  # noqa: ANN001
+                self.assertEqual(lock_events, ["acquired"])
                 index = SegmentLedgerIndex(
                     allocation_dir=Path(_command_value(command, "--page-allocation-ledger-dir")),
                     attempt_dir=Path(_command_value(command, "--page-attempt-ledger-dir")),
@@ -315,6 +369,12 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 patch("run_wikipedia_infobox_recipe._require_clean_worktree"),
                 patch("run_wikipedia_infobox_recipe._git_sha", return_value="abc123"),
                 patch("run_wikipedia_infobox_recipe._generation_prompt_hash", return_value="prompt123"),
+                patch("run_wikipedia_infobox_recipe._segment_writer_lock", side_effect=observed_lock),
+                patch("run_wikipedia_infobox_recipe._segment_command", side_effect=checked_segment_command),
+                patch(
+                    "run_wikipedia_infobox_recipe._combine_segment_records",
+                    side_effect=checked_combine_segment_records,
+                ),
                 patch("run_wikipedia_infobox_recipe.subprocess.run", side_effect=fake_worker),
                 patch("builtins.print"),
             ):
@@ -327,6 +387,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             self.assertEqual(manifest["status"], "complete")
             self.assertEqual(manifest["pre_review_quantity_prediction"]["accepted_total"], 0)
             self.assertEqual((root / "accepted.jsonl").read_text(encoding="utf-8"), "")
+            self.assertEqual(lock_events, ["acquired", "released"])
 
     def test_complete_segment_rebuilds_projection_without_worker(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
