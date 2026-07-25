@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-import sys
+import io
 import json
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -37,9 +38,9 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _base_segment_id_for_run,
     _combine_segment_records,
     _generation_protocol_compatibility_fingerprint,
-
     _parse_recipe,
     parse_args as parse_recipe_args,
+    _recipe_status_payload,
     _recipe_summary,
     _require_clean_worktree,
     _require_top_up_prerequisites,
@@ -47,9 +48,10 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _recipe_segment_budget,
     _decrement_recipe_budget,
     _segment_complete,
-    _segment_used_count,
     _segment_stream_search_initial_offset,
     _segment_command,
+    _validate_lifecycle_args,
+    main as recipe_main,
 )
 from wikidata_simpleqa.search_client import (  # noqa: E402
     DUCKDUCKGO_COOLDOWN_FAILURE_THRESHOLD,
@@ -119,6 +121,10 @@ def _recipe_args(**overrides):
         "big_batch_mode": False,
         "append_to_existing_run": False,
         "append_run_label": "",
+        "resume": False,
+        "status": False,
+        "resolve_ambiguous": None,
+        "run_id": "",
     }
     values.update(overrides)
     return SimpleNamespace(**values)
@@ -143,15 +149,56 @@ def _command_value(command: list[str], flag: str) -> str:
     return command[command.index(flag) + 1]
 
 
+def _parsed_main_args(
+    root: Path,
+    *,
+    page_attempt_count: int,
+    answer_type: str,
+    answer_type_mode: str,
+    resume: bool = False,
+) -> SimpleNamespace:
+    """Parse a complete formal recipe invocation rooted in a temporary directory."""
+    argv = [
+        "run_wikipedia_infobox_recipe.py",
+        "--page-attempt-count",
+        str(page_attempt_count),
+        "--answer-type",
+        answer_type,
+        "--route3-answer-type-mode",
+        answer_type_mode,
+        "--run-id",
+        "recipe",
+        "--run-date",
+        "2026-07-25",
+        "--stream-random-seed",
+        "42",
+        "--segment-dir",
+        str(root / "segments"),
+        "--output",
+        str(root / "accepted.jsonl"),
+        "--rejected-output",
+        str(root / "rejected.jsonl"),
+        "--summary-output",
+        str(root / "summary.json"),
+        "--walkthrough-output",
+        str(root / "walkthrough.md"),
+    ]
+    if resume:
+        argv.append("--resume")
+    with patch("sys.argv", argv):
+        return parse_recipe_args()
+
+
 def _complete_test_segment(
     root: Path,
     *,
     run_group_id: str,
     segment_id: str,
     page_ids: list[int],
+    fingerprint: dict | None = None,
 ) -> tuple[dict, SegmentLedgerIndex]:
     """Create one complete manifest-backed segment for top-up tests."""
-    fingerprint = build_segment_fingerprint(
+    fingerprint = fingerprint or build_segment_fingerprint(
         {
             "git_sha": "abc123",
             "prompt_hash": "prompt123",
@@ -218,6 +265,164 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(RuntimeError, "clean Git worktree"):
                 _require_clean_worktree()
+
+    def test_fresh_recipe_projects_zero_accepted_records_after_worker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            args = _parsed_main_args(
+                root,
+                page_attempt_count=1,
+                answer_type="Person",
+                answer_type_mode="single",
+            )
+
+            def fake_worker(command, *, cwd, check):  # noqa: ANN001
+                index = SegmentLedgerIndex(
+                    allocation_dir=Path(_command_value(command, "--page-allocation-ledger-dir")),
+                    attempt_dir=Path(_command_value(command, "--page-attempt-ledger-dir")),
+                    run_group_id="recipe",
+                    segment_id="01_person_1",
+                    run_group_segments_dir=Path(_command_value(command, "--run-group-segments-dir")),
+                )
+                index.commit_allocation(canonical_page_id=101, page_source="fresh")
+                index.commit_attempt(
+                    {
+                        "canonical_page_id": 101,
+                        "attempt_number": 1,
+                        "status": "rejected",
+                        "accepted_records": [],
+                        "rejected_records": [],
+                        "error_details": {"reason": "deterministic_rejection"},
+                    }
+                )
+                atomic_write_json(
+                    Path(_command_value(command, "--summary-output")),
+                    {
+                        "run_group_id": "recipe",
+                        "run_segment_id": "01_person_1",
+                        "run_date": "2026-07-25",
+                        "stream_search_queries": ['insource:"wikitable"'],
+                        "stream_state_stats": {"used": 1},
+                        "stream_reused_cached_page_count": 0,
+                        "stream_fresh_processed_page_count": 1,
+                        "service_circuits": {},
+                    },
+                )
+                return SimpleNamespace(returncode=0)
+
+            with (
+                patch("run_wikipedia_infobox_recipe.parse_args", return_value=args),
+                patch("run_wikipedia_infobox_recipe._require_clean_worktree"),
+                patch("run_wikipedia_infobox_recipe._git_sha", return_value="abc123"),
+                patch("run_wikipedia_infobox_recipe._generation_prompt_hash", return_value="prompt123"),
+                patch("run_wikipedia_infobox_recipe.subprocess.run", side_effect=fake_worker),
+                patch("builtins.print"),
+            ):
+                result = recipe_main()
+
+            manifest = json.loads(
+                (root / "segments" / "01_person_1" / "segment_manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(result, 0)
+            self.assertEqual(manifest["status"], "complete")
+            self.assertEqual(manifest["pre_review_quantity_prediction"]["accepted_total"], 0)
+            self.assertEqual((root / "accepted.jsonl").read_text(encoding="utf-8"), "")
+
+    def test_complete_segment_rebuilds_projection_without_worker(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            args = _parsed_main_args(
+                root,
+                page_attempt_count=2,
+                answer_type="AllTypes",
+                answer_type_mode="all5",
+                resume=True,
+            )
+            with (
+                patch("run_wikipedia_infobox_recipe._git_sha", return_value="abc123"),
+                patch("run_wikipedia_infobox_recipe._generation_prompt_hash", return_value="prompt123"),
+            ):
+                fingerprint = _segment_fingerprint(
+                    args=args,
+                    item=RecipeItem("AllTypes", 2),
+                    run_id="recipe",
+                    segment_id="01_alltypes_2",
+                    stream_random_seed=42,
+                    table_source_types=["infobox", "wikitable"],
+                    stream_reuse_cached_page_count="all",
+                    stream_fresh_cached_page_count="fill",
+                )
+            _complete_test_segment(
+                root / "segments",
+                run_group_id="recipe",
+                segment_id="01_alltypes_2",
+                page_ids=[201, 202],
+                fingerprint=fingerprint,
+            )
+
+            with (
+                patch("run_wikipedia_infobox_recipe.parse_args", return_value=args),
+                patch("run_wikipedia_infobox_recipe._require_clean_worktree"),
+                patch("run_wikipedia_infobox_recipe._git_sha", return_value="abc123"),
+                patch("run_wikipedia_infobox_recipe._generation_prompt_hash", return_value="prompt123"),
+                patch("run_wikipedia_infobox_recipe.subprocess.run") as worker_run,
+                patch("builtins.print"),
+            ):
+                result = recipe_main()
+
+            worker_run.assert_not_called()
+            manifest = json.loads(
+                (root / "segments" / "01_alltypes_2" / "segment_manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(result, 0)
+            self.assertEqual(manifest["pre_review_quantity_prediction"]["accepted_total"], 0)
+            self.assertTrue((root / "segments" / "01_alltypes_2_accepted.jsonl").exists())
+            self.assertTrue((root / "summary.json").exists())
+
+    def test_blocked_worker_does_not_publish_combined_projection(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            args = _parsed_main_args(
+                root,
+                page_attempt_count=1,
+                answer_type="Person",
+                answer_type_mode="single",
+            )
+
+            def fake_worker(command, *, cwd, check):  # noqa: ANN001
+                atomic_write_json(
+                    Path(_command_value(command, "--summary-output")),
+                    {
+                        "run_group_id": "recipe",
+                        "run_segment_id": "01_person_1",
+                        "run_date": "2026-07-25",
+                        "stream_state_stats": {"used": 0},
+                        "service_circuits": {
+                            "openrouter": {"open": True, "open_reason": "mock outage"}
+                        },
+                    },
+                )
+                return SimpleNamespace(returncode=0)
+
+            with (
+                patch("run_wikipedia_infobox_recipe.parse_args", return_value=args),
+                patch("run_wikipedia_infobox_recipe._require_clean_worktree"),
+                patch("run_wikipedia_infobox_recipe._git_sha", return_value="abc123"),
+                patch("run_wikipedia_infobox_recipe._generation_prompt_hash", return_value="prompt123"),
+                patch("run_wikipedia_infobox_recipe.subprocess.run", side_effect=fake_worker),
+                patch("builtins.print"),
+            ):
+                result = recipe_main()
+
+            manifest = json.loads(
+                (root / "segments" / "01_person_1" / "segment_manifest.json").read_text(encoding="utf-8")
+            )
+            self.assertEqual(result, 2)
+            self.assertEqual(manifest["status"], "incomplete")
+            self.assertEqual(manifest["blocking_reasons"], ["external_service"])
+            self.assertFalse((root / "accepted.jsonl").exists())
+            self.assertFalse((root / "summary.json").exists())
+
     def test_recipe_segments_use_separate_stream_states_and_shared_recipe_seed(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             segment_dir = Path(tmpdir) / "segments"
@@ -412,6 +617,54 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         ):
             with self.assertRaises(SystemExit):
                 parse_recipe_args()
+
+    def test_status_cli_requires_only_run_id_and_is_read_only(self) -> None:
+        with patch(
+            "sys.argv",
+            ["run_wikipedia_infobox_recipe.py", "--run-id", "recipe", "--status"],
+        ):
+            args = parse_recipe_args()
+
+        _validate_lifecycle_args(args)
+        self.assertTrue(args.status)
+        self.assertIsNone(args.page_attempt_count)
+        self.assertIsNone(args.answer_type)
+
+    def test_lifecycle_cli_requires_explicit_resume_relationships(self) -> None:
+        with self.assertRaisesRegex(ValueError, "requires --resume"):
+            _validate_lifecycle_args(_recipe_args(resolve_ambiguous="retry"))
+        with self.assertRaisesRegex(ValueError, "requires --append-to-existing-run"):
+            _validate_lifecycle_args(_recipe_args(append_run_label="topup"))
+        _validate_lifecycle_args(_recipe_args(resume=True, resolve_ambiguous="abandon"))
+
+    def test_cli_help_and_root_runbook_cover_the_formal_lifecycle(self) -> None:
+        help_output = io.StringIO()
+        with (
+            patch("sys.argv", ["run_wikipedia_infobox_recipe.py", "--help"]),
+            patch("sys.stdout", help_output),
+            self.assertRaises(SystemExit) as raised,
+        ):
+            parse_recipe_args()
+
+        self.assertEqual(raised.exception.code, 0)
+        runbook = (ROOT / "README.md").read_text(encoding="utf-8")
+        for option in (
+            "--page-attempt-count",
+            "--answer-type",
+            "--route3-answer-type-mode",
+            "--run-id",
+            "--run-date",
+            "--status",
+            "--resume",
+            "--resolve-ambiguous",
+            "--append-to-existing-run",
+            "--append-run-label",
+        ):
+            with self.subTest(option=option):
+                self.assertIn(option, help_output.getvalue())
+                self.assertIn(option, runbook)
+        self.assertIn("internal segment worker", runbook)
+        self.assertIn("scripts/run_openrouter_night_batch.py` are historical", runbook)
 
     def test_formal_recipe_defaults_match_milestone(self) -> None:
         with patch(
@@ -710,7 +963,9 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "rejected": root / "rejected.jsonl",
                 "summary": root / "summary.json",
                 "manifest": root / "segment_manifest.json",
+                "allocations": root / "page_allocations",
                 "ledger": root / "page_attempts",
+                "segments_dir": root,
             }
             paths["accepted"].write_text("", encoding="utf-8")
             paths["rejected"].write_text("", encoding="utf-8")
@@ -780,6 +1035,14 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
             )
 
             self.assertTrue(_segment_complete(paths))
+
+            blocked = json.loads(paths["manifest"].read_text(encoding="utf-8"))
+            blocked["status"] = "incomplete"
+            blocked["blocking_reasons"] = ["ambiguous"]
+            atomic_write_json(paths["manifest"], blocked)
+            self.assertFalse(_segment_complete(paths))
+            self.assertEqual(_recipe_status_payload("group", root)["status"], "incomplete")
+
     def test_combine_segment_records_offsets_ids_for_append_output(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)

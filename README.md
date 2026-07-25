@@ -1,6 +1,6 @@
 # Wikidata Framework Route 3 Runbook
 
-This repository is being stabilized milestone by milestone according to `docs/reconstruction/milestones.md`. Commands shown without an implementation note are available on the current branch; the durable lifecycle contract below is frozen before its M8 implementation steps land.
+This repository is stabilized milestone by milestone according to `docs/reconstruction/milestones.md`. The commands below describe the current formal Route 3 workflow.
 
 ## Formal workflow boundary
 
@@ -104,6 +104,26 @@ python scripts\run_wikipedia_infobox_recipe.py `
   --run-date 2026-07-24
 ```
 
+Check ledger-derived status without starting a worker or making a network call:
+
+```powershell
+python scripts\run_wikipedia_infobox_recipe.py `
+  --run-id route3_person_pilot `
+  --status
+```
+
+Resume an interrupted segment with the exact initial arguments and explicit resume mode:
+
+```powershell
+python scripts\run_wikipedia_infobox_recipe.py `
+  --page-attempt-count 10 `
+  --answer-type Person `
+  --route3-answer-type-mode single `
+  --run-id route3_person_pilot `
+  --run-date 2026-07-24 `
+  --resume
+```
+
 The durable segment artifact contract is:
 
 ```text
@@ -148,16 +168,16 @@ Resume an interrupted segment by running the exact same command with the same re
 
 The worker uses bounded batches in a fixed order: unfinished attempt001 work, missing primary allocations, the remaining primary work, then ledger-authorized attempt002 work. There is no rerun-pool, rerun-seed, or caller-selected primary/secondary CLI in the formal workflow; retry eligibility comes only from immutable attempt history.
 
-An OpenRouter intent without a persisted response is ambiguous. The default is quarantine: no automatic retry and no attempt003. The two reports under the segment root list every unresolved call and its audit fields. OpenRouter and DuckDuckGo circuits use a fixed threshold of three and stop new calls and allocations without switching model, endpoint, proxy, or fallback. The segment remains `incomplete` and records `external_service` and/or `ambiguous` in `blocking_reasons` until an explicit recipe resume.
+An OpenRouter intent without a persisted response is ambiguous. The default is quarantine: no automatic retry and no attempt003. The two reports under the segment root list every unresolved call and its audit fields. OpenRouter and DuckDuckGo circuits use a fixed threshold of three and stop new calls and allocations without switching model, endpoint, proxy, or fallback. The segment remains `incomplete` and records `external_service` and/or `ambiguous` in `blocking_reasons`. After confirming that a tripped service has recovered, run the same recipe command with `--resume`; circuit counters start fresh for that invocation while ledger retry eligibility remains unchanged.
 
 Resolve all currently unresolved calls in the same-fingerprint segment, then resume it with the otherwise identical recipe command:
 
 ```powershell
 # Authorize one final physical call as external attempt002.
-python scripts\run_wikipedia_infobox_recipe.py <same arguments> --resolve-ambiguous retry
+python scripts\run_wikipedia_infobox_recipe.py <same arguments> --resume --resolve-ambiguous retry
 
 # Commit terminal abandonment without another physical call.
-python scripts\run_wikipedia_infobox_recipe.py <same arguments> --resolve-ambiguous abandon
+python scripts\run_wikipedia_infobox_recipe.py <same arguments> --resume --resolve-ambiguous abandon
 ```
 
 Retry records the possible duplicate billing risk. If attempt002 is also ambiguous, `retry` is rejected and only `abandon` is allowed. Neither action changes the segment fingerprint, and neither option is valid for a new or top-up segment.
@@ -175,7 +195,7 @@ python scripts\run_wikipedia_infobox_recipe.py `
   --append-run-label topup_01
 ```
 
-Top-up is permitted only after prior segments are complete and protocol-compatible. The immutable run-group allocation ledger is the single exclusion source for both cached archives and fresh discovery. A top-up creates a new segment and allocates only canonical page IDs never allocated anywhere in the run group. It does not move, seed, clear, or otherwise read old rerun/state work, and it does not modify prior segment files. The exact status and ambiguity-resolution CLI flags are added and documented in M8-S8; do not manipulate worker state directly in the meantime.
+Top-up is permitted only after prior segments are complete and protocol-compatible. The immutable run-group allocation ledger is the single exclusion source for both cached archives and fresh discovery. A top-up creates a new segment and allocates only canonical page IDs never allocated anywhere in the run group. It does not move, seed, clear, or otherwise read old rerun/state work, and it does not modify prior segment files. Resume an interrupted top-up with the same append label and add `--resume`; do not manipulate worker state directly.
 
 Inspect the durable-run tests with:
 

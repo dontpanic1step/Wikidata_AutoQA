@@ -101,14 +101,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--page-attempt-count",
         type=int,
-        required=True,
-        help="Number of primary Wikipedia pages to attempt in this segment.",
+        default=None,
+        help="Number of primary Wikipedia pages to attempt; required except with --status.",
     )
     parser.add_argument(
         "--answer-type",
         choices=[*ROUTE3_ANSWER_TYPES, ALL_TYPES_RECIPE_ANSWER_TYPE],
-        required=True,
-        help="One specific answer type for single mode, or AllTypes for all5 mode.",
+        default=None,
+        help="One specific answer type for single mode, or AllTypes for all5 mode; required except with --status.",
     )
     parser.add_argument(
         "--route3-table-source-type",
@@ -215,8 +215,8 @@ def parse_args() -> argparse.Namespace:
         "--append-to-existing-run",
         action="store_true",
         help=(
-            "Top up an existing recipe run without overwriting prior segment artifacts. "
-            "Creates suffixed segment files, appends combined outputs, and seeds page-ID exclusions from prior state."
+            "Top up an existing recipe run with a new segment. "
+            "The run-group allocation ledger excludes every previously allocated page."
         ),
     )
     parser.add_argument(
@@ -225,10 +225,20 @@ def parse_args() -> argparse.Namespace:
         help="Path-safe suffix for --append-to-existing-run segment artifacts. Defaults to a UTC timestamp.",
     )
     parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Resume an existing same-fingerprint segment from durable records.",
+    )
+    parser.add_argument(
+        "--status",
+        action="store_true",
+        help="Print ledger-derived status for --run-id without running a worker.",
+    )
+    parser.add_argument(
         "--resolve-ambiguous",
         choices=("retry", "abandon"),
         default=None,
-        help="Resolve every unresolved ambiguous call in an existing same-fingerprint segment.",
+        help="Resolve every unresolved ambiguous call during --resume.",
     )
     parser.add_argument("--dry-run", action="store_true")
     return parser.parse_args()
@@ -237,6 +247,12 @@ def parse_args() -> argparse.Namespace:
 def main() -> int:
     """Run the recipe segments and combine their artifacts."""
     args = parse_args()
+    _validate_lifecycle_args(args)
+    if args.status:
+        run_id = _safe_artifact_id(args.run_id, fallback="route3_recipe")
+        segment_dir = args.segment_dir or ROOT / "outputs" / "recipe_segments" / run_id
+        print(json.dumps(_recipe_status_payload(run_id, segment_dir), indent=2, ensure_ascii=False))
+        return 0
     _apply_recipe_big_batch_mode(args)
     run_started = perf_counter()
     args.run_date = args.run_date or date.today().isoformat()
@@ -333,10 +349,10 @@ def main() -> int:
                     requested_fingerprint=fingerprint,
                 )
             manifest = load_segment_manifest(paths["manifest"])
-            if manifest is None and args.resolve_ambiguous:
-                raise ValueError(
-                    "--resolve-ambiguous requires an existing same-fingerprint segment resume"
-                )
+            if manifest is None and args.resume:
+                raise ValueError(f"--resume requires an existing segment: {paths['manifest']}")
+            if manifest is not None and not args.resume:
+                raise ValueError(f"Existing segment requires --resume: {paths['manifest']}")
             if manifest is None:
                 manifest = create_segment_manifest(
                     run_group_id=run_id,
@@ -367,31 +383,18 @@ def main() -> int:
                         paths["external_calls"],
                         action=args.resolve_ambiguous,
                     )
-            write_ambiguous_external_call_reports(
-                paths["external_calls"],
-                json_path=paths["ambiguous_json"],
-                markdown_path=paths["ambiguous_markdown"],
-            )
         if not args.dry_run and _segment_complete(paths):
-            segment_ledger = _segment_ledger_index(paths)
-            rebuild_derived_outputs(
-                segment_ledger,
-                accepted_path=paths["accepted"],
-                rejected_path=paths["rejected"],
-            )
-            summary = rebuild_summary_from_ledger(
-                paths["summary"],
-                segment_ledger,
-                base_summary=_segment_summary_base(paths),
-            )
-            _attach_recipe_segment_budget_summary(
-                summary,
+            if manifest is None:
+                raise RuntimeError("Segment manifest was not initialized before projection.")
+            summary, manifest = _project_segment_from_ledger(
+                paths=paths,
+                manifest=manifest,
                 item=item,
                 stream_reuse_cached_page_count=segment_reuse_cached_page_count,
                 stream_fresh_cached_page_count=segment_fresh_cached_page_count,
+                recipe_seed=segment_seed,
+                base_summary=_segment_summary_base(paths),
             )
-            summary["segment_accepted_output"] = str(paths["accepted"])
-            summary["segment_rejected_output"] = str(paths["rejected"])
             segment_summaries.append(summary)
             remaining_reuse_cached_page_count = _decrement_recipe_budget(
                 remaining_reuse_cached_page_count,
@@ -414,59 +417,29 @@ def main() -> int:
             )
             continue
         subprocess.run(command, cwd=ROOT, check=True)
-        summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
-        _attach_recipe_segment_budget_summary(
-            summary,
+        worker_summary = json.loads(paths["summary"].read_text(encoding="utf-8"))
+        if manifest is None:
+            raise RuntimeError("Segment manifest was not initialized before execution.")
+        summary, manifest = _project_segment_from_ledger(
+            paths=paths,
+            manifest=manifest,
             item=item,
             stream_reuse_cached_page_count=segment_reuse_cached_page_count,
             stream_fresh_cached_page_count=segment_fresh_cached_page_count,
+            recipe_seed=segment_seed,
+            base_summary=worker_summary,
         )
-        segment_ledger = _segment_ledger_index(paths)
-        summary = rebuild_summary_from_ledger(
-            paths["summary"],
-            segment_ledger,
-            base_summary=summary,
-        )
-        if manifest is None:
-            raise RuntimeError("Segment manifest was not initialized before execution.")
-        ambiguous_rows = write_ambiguous_external_call_reports(
-            paths["external_calls"],
-            json_path=paths["ambiguous_json"],
-            markdown_path=paths["ambiguous_markdown"],
-        )
-        external_states = [*ambiguous_rows, *_open_circuit_states(summary)]
-        summary["ambiguous_external_calls"] = {
-            "count": len(ambiguous_rows),
-            "json": str(paths["ambiguous_json"]),
-            "markdown": str(paths["ambiguous_markdown"]),
-        }
-        atomic_write_json(paths["summary"], summary)
-        manifest = update_segment_manifest(
-            paths["manifest"],
-            manifest,
-            segment_state=derive_segment_manifest_state(
-                manifest,
-                segment_ledger,
-                external_states,
-            ),
-            ledger_summary=ledger_summary(segment_ledger),
-            pre_review_quantity_prediction=predict_pre_review_quantities(
-                accepted_records,
-                recipe_seed=segment_seed,
-            ),
-            service_circuits=dict(summary.get("service_circuits", {})),
-        )
-        if (
-            not _segment_reached_record_limit(summary)
-            and not manifest.get("blocking_reasons")
-        ):
-            raise RuntimeError(
-                "Recipe segment stopped before using its requested page budget: "
-                f"{summary.get('run_segment_id', paths['summary'].stem)} "
-                f"used={_segment_used_count(summary)} expected_page_count={summary.get('recipe_segment_expected_page_count', 0)}"
-            )
-        summary["segment_accepted_output"] = str(paths["accepted"])
-        summary["segment_rejected_output"] = str(paths["rejected"])
+        if manifest["status"] != "complete":
+            if not manifest.get("blocking_reasons"):
+                ledger = manifest.get("ledger_summary", {})
+                raise RuntimeError(
+                    "Recipe segment stopped before its allocation target was terminal: "
+                    f"{manifest.get('segment_id', '')} "
+                    f"primary_pages={ledger.get('primary_pages', 0)} "
+                    f"terminal_pages={ledger.get('terminal_pages', 0)}"
+                )
+            print(json.dumps(_recipe_status_payload(run_id, segment_dir), indent=2, ensure_ascii=False))
+            return 2
         segment_summaries.append(summary)
         remaining_reuse_cached_page_count = _decrement_recipe_budget(
             remaining_reuse_cached_page_count,
@@ -565,6 +538,8 @@ def _attach_recipe_segment_budget_summary(
 
 def _parse_recipe(args: argparse.Namespace) -> tuple[list[RecipeItem], list[str]]:
     """Build one formal segment and enforce answer-type/mode combinations."""
+    if args.page_attempt_count is None or args.answer_type is None:
+        raise ValueError("--page-attempt-count and --answer-type are required unless --status is used.")
     page_attempt_count = int(args.page_attempt_count)
     if page_attempt_count < 1:
         raise ValueError("--page-attempt-count must be positive.")
@@ -617,6 +592,21 @@ def _recipe_run_id(args: argparse.Namespace, recipe_items: list[RecipeItem], rea
         f"wikipedia_stream_recipe_{count_text}_{reasoning_text}_{date.today().isoformat().replace('-', '_')}",
         fallback="route3_recipe",
     )
+
+
+def _validate_lifecycle_args(args: argparse.Namespace) -> None:
+    """Validate the recipe lifecycle mode before reading or writing artifacts."""
+    if args.status:
+        if not str(args.run_id or "").strip():
+            raise ValueError("--status requires --run-id.")
+        if args.resume or args.append_to_existing_run or args.resolve_ambiguous:
+            raise ValueError("--status cannot be combined with resume, top-up, or ambiguous resolution.")
+    if args.resolve_ambiguous and not args.resume:
+        raise ValueError("--resolve-ambiguous requires --resume.")
+    if args.resolve_ambiguous and args.append_to_existing_run:
+        raise ValueError("--resolve-ambiguous is not valid for a top-up segment.")
+    if args.append_run_label and not args.append_to_existing_run:
+        raise ValueError("--append-run-label requires --append-to-existing-run.")
 
 
 def _recipe_append_label(args: argparse.Namespace) -> str:
@@ -1155,6 +1145,53 @@ def _segment_ledger_index(paths: dict[str, Path]) -> SegmentLedgerIndex:
         run_group_segments_dir=paths["segments_dir"],
     )
 
+
+def _recipe_status_payload(run_id: str, segment_dir: Path) -> dict:
+    """Return read-only ledger-derived status for every segment in one run group."""
+    segments: list[dict] = []
+    for manifest_path in sorted(segment_dir.glob("*/segment_manifest.json")):
+        manifest = load_segment_manifest(manifest_path)
+        if manifest is None:
+            continue
+        if str(manifest.get("run_group_id", "")) != run_id:
+            raise ValueError(f"Unexpected run group in {manifest_path}")
+        segment_id = str(manifest.get("segment_id", ""))
+        index = SegmentLedgerIndex(
+            allocation_dir=manifest_path.parent / "page_allocations",
+            attempt_dir=manifest_path.parent / "page_attempts",
+            run_group_id=run_id,
+            segment_id=segment_id,
+            run_group_segments_dir=segment_dir,
+        )
+        derived = derive_segment_manifest_state(manifest, index)
+        segments.append(
+            {
+                "segment_id": segment_id,
+                "status": derived["status"],
+                "manifest_status": manifest.get("status", "incomplete"),
+                "blocking_reasons": list(manifest.get("blocking_reasons", [])),
+                "ledger": ledger_summary(index),
+                "manifest": str(manifest_path),
+            }
+        )
+    overall_status = "missing"
+    if segments:
+        overall_status = (
+            "complete"
+            if all(
+                row["status"] == "complete" and not row["blocking_reasons"]
+                for row in segments
+            )
+            else "incomplete"
+        )
+    return {
+        "run_group_id": run_id,
+        "status": overall_status,
+        "segment_dir": str(segment_dir),
+        "segments": segments,
+    }
+
+
 def _open_circuit_states(summary: dict) -> list[dict[str, str]]:
     """Return manifest blocking records for invocation circuits that opened."""
     circuits = summary.get("service_circuits", {})
@@ -1171,18 +1208,73 @@ def _open_circuit_states(summary: dict) -> list[dict[str, str]]:
     ]
 
 
+def _project_segment_from_ledger(
+    *,
+    paths: dict[str, Path],
+    manifest: dict,
+    item: RecipeItem,
+    stream_reuse_cached_page_count: int | str,
+    stream_fresh_cached_page_count: int | str,
+    recipe_seed: int,
+    base_summary: dict,
+) -> tuple[dict, dict]:
+    """Rebuild segment projections and manifest state from durable records."""
+    segment_ledger = _segment_ledger_index(paths)
+    accepted_records, _rejected_records, _retry_pending_records = rebuild_derived_outputs(
+        segment_ledger,
+        accepted_path=paths["accepted"],
+        rejected_path=paths["rejected"],
+    )
+    summary = rebuild_summary_from_ledger(
+        paths["summary"],
+        segment_ledger,
+        base_summary=base_summary,
+    )
+    _attach_recipe_segment_budget_summary(
+        summary,
+        item=item,
+        stream_reuse_cached_page_count=stream_reuse_cached_page_count,
+        stream_fresh_cached_page_count=stream_fresh_cached_page_count,
+    )
+    ambiguous_rows = write_ambiguous_external_call_reports(
+        paths["external_calls"],
+        json_path=paths["ambiguous_json"],
+        markdown_path=paths["ambiguous_markdown"],
+    )
+    external_states = [*ambiguous_rows, *_open_circuit_states(summary)]
+    summary["ambiguous_external_calls"] = {
+        "count": len(ambiguous_rows),
+        "json": str(paths["ambiguous_json"]),
+        "markdown": str(paths["ambiguous_markdown"]),
+    }
+    manifest = update_segment_manifest(
+        paths["manifest"],
+        manifest,
+        segment_state=derive_segment_manifest_state(
+            manifest,
+            segment_ledger,
+            external_states,
+        ),
+        ledger_summary=ledger_summary(segment_ledger),
+        pre_review_quantity_prediction=predict_pre_review_quantities(
+            accepted_records,
+            recipe_seed=recipe_seed,
+        ),
+        service_circuits=dict(summary.get("service_circuits", {})),
+    )
+    summary["segment_accepted_output"] = str(paths["accepted"])
+    summary["segment_rejected_output"] = str(paths["rejected"])
+    atomic_write_json(paths["summary"], summary)
+    return summary, manifest
+
+
 def _segment_complete(paths: dict[str, Path]) -> bool:
-    """Return whether a recipe segment has a complete matching ledger."""
+    """Return whether allocation and attempt records prove segment completion."""
     manifest = load_segment_manifest(paths["manifest"])
-    if manifest is None or manifest.get("status") != "complete":
+    if manifest is None or manifest.get("blocking_reasons"):
         return False
-    fingerprint = manifest.get("fingerprint", {})
-    inputs = fingerprint.get("inputs", {}) if isinstance(fingerprint, dict) else {}
-    try:
-        target = int(inputs["page_attempt_count"])
-    except (KeyError, TypeError, ValueError):
-        return False
-    return int(ledger_summary(_segment_ledger_index(paths))["primary_pages"]) >= target
+    state = derive_segment_manifest_state(manifest, _segment_ledger_index(paths))
+    return state["status"] == "complete"
 
 
 def _segment_summary_base(paths: dict[str, Path]) -> dict:
@@ -1212,26 +1304,6 @@ def _segment_summary_base(paths: dict[str, Path]) -> dict:
         "output_path": str(paths["accepted"]),
         "rejected_output_path": str(paths["rejected"]),
     }
-
-
-def _segment_reached_record_limit(summary: dict) -> bool:
-    """Return whether one segment used its expected page budget."""
-    page_target = int(
-        summary.get(
-            "recipe_segment_expected_page_count",
-            summary.get("recipe_target_count", summary.get("recipe_record_limit", summary.get("record_limit", 0))),
-        )
-        or 0
-    )
-    return page_target < 1 or _segment_used_count(summary) >= page_target
-
-
-def _segment_used_count(summary: dict) -> int:
-    """Return the most reliable used page count from a segment summary."""
-    used = max(0, int(summary.get("stream_state_stats", {}).get("used", 0) or 0))
-    if not used:
-        used = int(summary.get("attempted_page_ids_unique", summary.get("attempted_page_ids", 0)) or 0)
-    return used
 
 
 def _combine_segment_records(
