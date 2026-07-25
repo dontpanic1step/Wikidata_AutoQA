@@ -39,6 +39,7 @@ from wikidata_simpleqa.page_id_lists import (
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids, route3_record_id
 from wikidata_simpleqa.route3_run_ledger import (
     SegmentLedgerIndex,
+    atomic_write_json,
     derived_records,
     ledger_summary,
     rebuild_derived_outputs,
@@ -411,6 +412,18 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--run-group-segments-dir",
+        type=Path,
+        required=True,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--external-call-record-dir",
+        type=Path,
+        required=True,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--ddg-verifier-result-dir",
         type=Path,
         required=True,
         help=argparse.SUPPRESS,
@@ -890,12 +903,8 @@ def _unique_manifest_paths(segments: list[dict], key: str) -> list[str]:
 
 
 def _write_json_atomic(path: Path, payload: dict) -> None:
-    """Atomically write one JSON document."""
-    path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = path.with_name(f".{path.name}.tmp")
-    temp_path.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    temp_path.replace(path)
-
+    """Atomically write one JSON document with the shared durable boundary."""
+    atomic_write_json(path, payload)
 
 def _remaining_after_endpoint(record_limit: int | str, final_decision_count: int) -> int:
     """Return how many additional final decisions are needed for a resumed endpoint."""

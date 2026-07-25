@@ -117,9 +117,9 @@ outputs/recipe_segments/<run-id>/
       p<canonical_page_id>_attempt002.json   # only when typed retry is eligible
     external_calls/
       p<canonical_page_id>/
-        generation.json
-        second_stage_answer_<slot>_<model>.json
-        second_stage_grade_<slot>.json
+        c_<logical_call_key_hash>/
+          intent.json
+          response.json | http_error.json
     ddg_verifier_results/
       p<canonical_page_id>_candidate_<slot>.json
   01_person_10_accepted.jsonl

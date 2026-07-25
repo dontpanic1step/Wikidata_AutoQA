@@ -384,6 +384,10 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "ledger",
                 "--run-group-segments-dir",
                 "segments",
+                "--external-call-record-dir",
+                "external_calls",
+                "--ddg-verifier-result-dir",
+                "ddg_results",
             ],
         ):
             args = parse_worker_args()

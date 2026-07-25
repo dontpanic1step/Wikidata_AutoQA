@@ -8,6 +8,7 @@ import os
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Iterable
+from uuid import uuid4
 
 from .wikipedia_streaming import PageIdStreamState
 
@@ -44,7 +45,7 @@ def file_sha256(path: Path) -> str:
 def atomic_write_json(path: Path, payload: Any) -> None:
     """Write one JSON document using a sibling temporary file and os.replace."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temp_path = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
     temp_path.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -55,7 +56,7 @@ def atomic_write_json(path: Path, payload: Any) -> None:
 def atomic_write_jsonl(path: Path, records: Iterable[dict[str, Any]]) -> None:
     """Write one JSONL artifact atomically."""
     path.parent.mkdir(parents=True, exist_ok=True)
-    temp_path = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temp_path = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
     with temp_path.open("w", encoding="utf-8", newline="\n") as handle:
         for record in records:
             handle.write(json.dumps(record, ensure_ascii=False) + "\n")

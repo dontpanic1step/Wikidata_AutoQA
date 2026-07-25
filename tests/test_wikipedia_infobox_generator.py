@@ -8,8 +8,9 @@ import random
 import sys
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from threading import Lock, Semaphore
+from threading import Barrier, Lock, Semaphore
 from types import SimpleNamespace
 from urllib.error import URLError
 from unittest.mock import patch
@@ -1320,6 +1321,42 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 hashlib.sha256(archive_path.read_bytes()).hexdigest(),
             )
             self.assertEqual(list(root.glob(".*.tmp")), [])
+
+            barrier = Barrier(2)
+            temporary_names: list[str] = []
+
+            def capture_publish(source: Path, destination: Path) -> None:
+                barrier.wait(timeout=5)
+                temporary_names.append(Path(source).name)
+                Path(source).unlink()
+
+            with patch(
+                "wikidata_simpleqa.wikipedia_infobox_generator.os.replace",
+                side_effect=capture_publish,
+            ):
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    futures = [
+                        executor.submit(
+                            _write_route3_page_archive,
+                            archive_path,
+                            {"page_id": 123, "writer": writer},
+                        )
+                        for writer in (1, 2)
+                    ]
+                    for future in futures:
+                        future.result()
+
+            self.assertEqual(len(set(temporary_names)), 2)
+            _write_route3_page_archive(
+                archive_path,
+                {"page_id": 123, "writer": 3},
+            )
+            self.assertEqual(
+                json.loads(archive_path.read_text(encoding="utf-8"))["writer"],
+                3,
+            )
+            self.assertEqual(list(root.glob(".*.tmp")), [])
+
     def test_committed_page_ledger_skips_generation(self) -> None:
         class NoGenerationWikipediaClient(FakeWikipediaClient):
             def __init__(self) -> None:

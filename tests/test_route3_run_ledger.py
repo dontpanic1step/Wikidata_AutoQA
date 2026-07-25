@@ -3,6 +3,9 @@ from __future__ import annotations
 import json
 import tempfile
 import unittest
+from concurrent.futures import ThreadPoolExecutor
+from threading import Barrier
+from unittest.mock import patch
 from pathlib import Path
 
 from wikidata_simpleqa.route3_run_ledger import (
@@ -17,6 +20,7 @@ from wikidata_simpleqa.route3_run_ledger import (
     derive_segment_manifest_state,
     ledger_summary,
     require_matching_fingerprint,
+    rebuild_derived_outputs,
     update_segment_manifest,
 )
 
@@ -66,6 +70,87 @@ class Route3RunLedgerTests(unittest.TestCase):
             "error_details": {},
         }
 
+    def test_atomic_json_writers_use_unique_sibling_temporary_files(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            path = Path(temp_dir) / "artifact.json"
+            barrier = Barrier(2)
+            temporary_names: list[str] = []
+
+            def capture_publish(source: Path, destination: Path) -> None:
+                barrier.wait(timeout=5)
+                temporary_names.append(Path(source).name)
+                Path(source).unlink()
+
+            with patch(
+                "wikidata_simpleqa.route3_run_ledger.os.replace",
+                side_effect=capture_publish,
+            ):
+                with ThreadPoolExecutor(max_workers=2) as executor:
+                    futures = [
+                        executor.submit(atomic_write_json, path, {"writer": writer})
+                        for writer in (1, 2)
+                    ]
+                    for future in futures:
+                        future.result()
+
+            self.assertEqual(len(set(temporary_names)), 2)
+            atomic_write_json(path, {"writer": 3})
+            self.assertEqual(json.loads(path.read_text(encoding="utf-8")), {"writer": 3})
+            self.assertEqual(list(path.parent.glob(f".{path.name}.*.tmp")), [])
+
+    def test_terminal_attempt_rebuilds_missing_projections(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            index = self.make_index(root)
+            index.commit_allocation(canonical_page_id=77, page_source="fresh")
+            index.commit_attempt(
+                {
+                    **self.attempt_payload(77, status="accepted"),
+                    "accepted_records": [{"id": "candidate-77", "source_metadata": {}}],
+                }
+            )
+
+            resumed = self.make_index(root)
+            accepted_path = root / "accepted.jsonl"
+            rejected_path = root / "rejected.jsonl"
+            accepted, rejected, rerun = rebuild_derived_outputs(
+                resumed,
+                accepted_path=accepted_path,
+                rejected_path=rejected_path,
+            )
+
+            self.assertEqual([row["id"] for row in accepted], ["candidate-77"])
+            self.assertEqual(rejected, [])
+            self.assertEqual(rerun, [])
+            self.assertTrue(accepted_path.exists())
+            self.assertTrue(rejected_path.exists())
+
+    def test_interrupted_local_work_keeps_attempt001_pending(self) -> None:
+        with tempfile.TemporaryDirectory() as temp_dir:
+            root = Path(temp_dir)
+            index = self.make_index(root)
+            index.commit_allocation(canonical_page_id=88, page_source="fresh")
+
+            invocations = 0
+
+            def deterministic_local_work() -> dict[str, object]:
+                nonlocal invocations
+                invocations += 1
+                if invocations == 1:
+                    raise RuntimeError("injected local interruption")
+                return self.attempt_payload(88, status="rejected")
+
+            with self.assertRaisesRegex(RuntimeError, "injected local interruption"):
+                deterministic_local_work()
+
+            resumed = self.make_index(root)
+            self.assertEqual(resumed.page_state(88), "pending_primary")
+            self.assertEqual(resumed.next_attempt_number(88), 1)
+            self.assertEqual(resumed.attempts, [])
+
+            resumed.commit_attempt(deterministic_local_work())
+            self.assertEqual(resumed.page_state(88), "rejected")
+            self.assertEqual([row["attempt_number"] for row in resumed.attempts], [1])
     def test_same_run_group_page_cannot_have_duplicate_primary_allocation(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
             root = Path(temp_dir)

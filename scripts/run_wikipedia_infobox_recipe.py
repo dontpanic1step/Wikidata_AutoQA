@@ -372,6 +372,8 @@ def main() -> int:
                         "stream_state": str(paths["stream_state"]),
                         "page_allocation_ledger": str(paths["allocations"]),
                         "page_attempt_ledger": str(paths["ledger"]),
+                        "external_call_records": str(paths["external_calls"]),
+                        "ddg_verifier_results": str(paths["ddg_results"]),
                     },
                 )
                 atomic_write_json(paths["manifest"], manifest)
@@ -1128,6 +1130,8 @@ def _segment_command(
     segment_manifest = segment_root / "segment_manifest.json"
     page_allocation_ledger_dir = segment_root / "page_allocations"
     page_attempt_ledger_dir = segment_root / "page_attempts"
+    external_call_record_dir = segment_root / "external_calls"
+    ddg_verifier_result_dir = segment_root / "ddg_verifier_results"
     accepted = segment_dir / f"{segment_id}_accepted.jsonl"
     rejected = segment_dir / f"{segment_id}_rejected.jsonl"
     summary = segment_dir / f"{segment_id}_summary.json"
@@ -1177,6 +1181,10 @@ def _segment_command(
         str(page_attempt_ledger_dir),
         "--run-group-segments-dir",
         str(segment_dir),
+        "--external-call-record-dir",
+        str(external_call_record_dir),
+        "--ddg-verifier-result-dir",
+        str(ddg_verifier_result_dir),
         "--target-time",
         str(args.target_time),
         "--cutoff-year",
@@ -1304,6 +1312,8 @@ def _segment_command(
         "allocations": page_allocation_ledger_dir,
         "ledger": page_attempt_ledger_dir,
         "segments_dir": segment_dir,
+        "external_calls": external_call_record_dir,
+        "ddg_results": ddg_verifier_result_dir,
     }
 
 

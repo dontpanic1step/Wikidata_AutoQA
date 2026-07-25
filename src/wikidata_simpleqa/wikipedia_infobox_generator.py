@@ -14,6 +14,7 @@ from html.parser import HTMLParser
 from pathlib import Path
 from time import perf_counter
 from typing import Any, Iterable
+from uuid import uuid4
 
 from .cheap_model_qa import parse_json_object
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
@@ -2403,7 +2404,7 @@ def _write_route3_page_archive(path: Path | None, payload: dict[str, Any]) -> di
         }
     path.parent.mkdir(parents=True, exist_ok=True)
     text = json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
-    temp_path = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temp_path = path.with_name(f".{path.name}.{os.getpid()}.{uuid4().hex}.tmp")
     temp_path.write_text(text, encoding="utf-8")
     os.replace(temp_path, path)
     return {
