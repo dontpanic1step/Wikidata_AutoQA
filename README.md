@@ -121,7 +121,9 @@ outputs/recipe_segments/<run-id>/
           intent.json
           response.json | http_error.json
     ddg_verifier_results/
-      p<canonical_page_id>_candidate_<slot>.json
+      p<canonical_page_id>/
+        c_<candidate_key_hash>/
+          result.json
   01_person_10_accepted.jsonl
   01_person_10_rejected.jsonl
   01_person_10_summary.json
@@ -134,7 +136,7 @@ outputs/<run-id>_walkthrough.md
 
 The authority order is manifest, immutable allocation, Wikipedia page archive, external-call records, terminal ledger, and then derived endpoints. State stores discovery offsets and telemetry only. It cannot create or release allocations or decide retry. Accepted JSONL, rejected JSONL, summary, and projection are rebuildable. Independently published artifacts use same-directory unique temporary files and `os.replace`; archive hashes remain in provenance.
 
-Resume an interrupted segment by running the exact same command with the same resolved arguments, Git commit, prompt code, run ID, seed, and run date. Pending allocations continue attempt001. Completed OpenRouter calls and completed candidate-level DDG verifier results are reused; page preparation and deterministic validation may be recomputed in the same attempt. A typed exhausted DDG/OpenRouter infrastructure failure may create the single attempt002. Unexpected exceptions keep the segment incomplete and surface to the recipe. A matching complete segment is reused, while a fingerprint mismatch and an incomplete legacy schema are rejected.
+Resume an interrupted segment by running the exact same command with the same resolved arguments, Git commit, prompt code, run ID, seed, and run date. Pending allocations continue attempt001. Completed OpenRouter calls and completed candidate-level DDG verifier results are reused; DDG candidate keys include the allocation, candidate slot, segment fingerprint, and human revision number when present; page preparation and deterministic validation may be recomputed in the same attempt. A typed exhausted DDG/OpenRouter infrastructure failure may create the single attempt002. Unexpected exceptions keep the segment incomplete and surface to the recipe. A matching complete segment is reused, while a fingerprint mismatch and an incomplete legacy schema are rejected.
 
 An OpenRouter intent without a persisted response is ambiguous. The default is quarantine: no automatic retry and no attempt003. The M8 lifecycle CLI adds same-fingerprint batch resolution as `retry` or `abandon`, with possible duplicate billing recorded for retry. OpenRouter and DuckDuckGo circuits use a fixed threshold of three and stop new calls and allocations without switching model, endpoint, proxy, or fallback. The segment remains `incomplete` and records `external_service` and/or `ambiguous` in `blocking_reasons` until an explicit recipe resume.
 

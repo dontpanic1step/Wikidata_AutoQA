@@ -32,6 +32,7 @@ from wikidata_simpleqa.page_id_lists import (
     page_ids_excluded_for_context,
     read_page_id_entries,
 )
+from wikidata_simpleqa.route3_ddg import Route3DDGVerifierResultStore
 from wikidata_simpleqa.route3_ids import assign_unique_route3_record_ids, route3_record_id
 from wikidata_simpleqa.route3_openrouter import (
     Route3OpenRouterClientFactory,
@@ -43,6 +44,7 @@ from wikidata_simpleqa.route3_run_ledger import (
     atomic_write_json,
     derived_records,
     ledger_summary,
+    load_segment_manifest,
     rebuild_derived_outputs,
     recover_stream_state_from_ledger,
 )
@@ -1297,6 +1299,7 @@ def _run_streaming_page_id_pipeline(
         )
     second_stage_model_clients = _build_streaming_second_stage_model_panel(settings, concurrency)
     grading_grader_client = _build_streaming_second_stage_grader_client(settings, concurrency)
+    ddg_verifier_result_store = _build_ddg_verifier_result_store(args)
     if args.reset_stream_state:
         state = PageIdStreamState(path=args.stream_state)
         state.save()
@@ -1403,6 +1406,7 @@ def _run_streaming_page_id_pipeline(
                             concurrency=concurrency,
                             second_stage_model_clients=second_stage_model_clients,
                             grading_grader_client=grading_grader_client,
+                            ddg_verifier_result_store=ddg_verifier_result_store,
                             ledger_index=ledger_index,
                             source_url=entry.source_url,
                             stream_page_source="cached_page_archive",
@@ -1478,6 +1482,7 @@ def _run_streaming_page_id_pipeline(
                         concurrency=concurrency,
                         second_stage_model_clients=second_stage_model_clients,
                         grading_grader_client=grading_grader_client,
+                        ddg_verifier_result_store=ddg_verifier_result_store,
                         ledger_index=ledger_index,
                     )
                 ] = index
@@ -1544,6 +1549,7 @@ def _run_streaming_page_id_pipeline(
                             concurrency=concurrency,
                             second_stage_model_clients=second_stage_model_clients,
                             grading_grader_client=grading_grader_client,
+                            ddg_verifier_result_store=ddg_verifier_result_store,
                             ledger_index=ledger_index,
                         )
                     ] = index
@@ -2045,6 +2051,25 @@ def _page_ids_from_payload(payload: object) -> set[int]:
     return page_ids
 
 
+def _build_ddg_verifier_result_store(
+    args: argparse.Namespace,
+) -> Route3DDGVerifierResultStore:
+    """Build the candidate-level DDG result store for one formal segment."""
+    manifest_path = (
+        args.run_group_segments_dir
+        / _run_segment_id(args)
+        / "segment_manifest.json"
+    )
+    manifest = load_segment_manifest(manifest_path)
+    if manifest is None:
+        raise ValueError(f"Missing formal segment manifest: {manifest_path}")
+    fingerprint = str(manifest["fingerprint"]["sha256"]).strip()
+    return Route3DDGVerifierResultStore(
+        root=args.ddg_verifier_result_dir,
+        segment_fingerprint=fingerprint,
+    )
+
+
 def _build_streaming_second_stage_model_panel(
     settings: Settings,
     concurrency: StreamingConcurrencyContext,
@@ -2114,6 +2139,7 @@ def _process_one_stream_page_id(
     concurrency: StreamingConcurrencyContext,
     second_stage_model_clients,
     grading_grader_client,
+    ddg_verifier_result_store: Route3DDGVerifierResultStore,
     ledger_index: SegmentLedgerIndex,
     source_url: str | None = None,
     stream_page_source: str | None = None,
@@ -2251,6 +2277,7 @@ def _process_one_stream_page_id(
             generated_candidates,
             settings=settings,
             search_client=search_client,
+            ddg_verifier_result_store=ddg_verifier_result_store,
             rewrite_client=rewrite_client,
             second_stage_model_clients=page_second_stage_model_clients,
             grading_grader_client=page_grading_grader_client,

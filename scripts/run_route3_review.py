@@ -122,6 +122,13 @@ def _apply_state(args: argparse.Namespace) -> dict:
                     external_call_record_root=(
                         Path(state["segment_artifact_roots"][segment_id]) / "external_calls"
                     ),
+                    ddg_verifier_result_root=(
+                        Path(state["segment_artifact_roots"][segment_id])
+                        / "ddg_verifier_results"
+                    ),
+                    segment_fingerprint=str(
+                        state["segment_fingerprints"][segment_id]["sha256"]
+                    ),
                 )
                 processors[segment_id] = segment_processor
             return segment_processor(candidate)

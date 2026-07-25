@@ -239,6 +239,7 @@ def process_generated_candidates(
     *,
     settings: Settings,
     search_client,
+    ddg_verifier_result_store=None,
     rewrite_client=None,
     second_stage_model_clients: list[ModelPanelMember] | None = None,
     grading_grader_client=None,
@@ -441,7 +442,12 @@ def process_generated_candidates(
 
         search_start = perf_counter()
         try:
-            search_passed, search_features = run_search_based_longtail_verifier(
+            verifier = (
+                ddg_verifier_result_store.verify
+                if ddg_verifier_result_store is not None
+                else run_search_based_longtail_verifier
+            )
+            search_passed, search_features = verifier(
                 candidate,
                 search_client=search_client,
                 top_k=settings.duckduckgo_top_k,
@@ -451,7 +457,10 @@ def process_generated_candidates(
                 max_parallel_queries=settings.duckduckgo_parallel_queries,
             )
             candidate_timings["duckduckgo_search_seconds"] = _elapsed(search_start)
-            search_features["duration_seconds"] = candidate_timings["duckduckgo_search_seconds"]
+            search_features.setdefault(
+                "duration_seconds",
+                candidate_timings["duckduckgo_search_seconds"],
+            )
         except Exception as exc:  # noqa: BLE001
             candidate_timings["duckduckgo_search_seconds"] = _elapsed(search_start)
             candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)

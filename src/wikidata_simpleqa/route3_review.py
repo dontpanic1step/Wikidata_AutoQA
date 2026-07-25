@@ -18,6 +18,7 @@ from .route3_artifacts import (
     create_route3_candidate_artifact,
     revise_route3_candidate_artifact,
 )
+from .route3_ddg import Route3DDGVerifierResultStore
 from .route3_ids import route3_record_identity
 from .route3_openrouter import bind_route3_allocation_client, bind_route3_allocation_panel
 from .route3_run_ledger import atomic_write_json
@@ -325,9 +326,16 @@ def post_generation_processor(
     second_stage_model_clients,
     grading_grader_client,
     external_call_record_root: Path,
+    ddg_verifier_result_root: Path,
+    segment_fingerprint: str,
 ) -> Callable[[GeneratedCandidate], tuple[str, dict[str, Any]]]:
     """Build a processor that executes the formal post-generation pipeline."""
     from .generation_pipeline import process_generated_candidates
+
+    ddg_verifier_result_store = Route3DDGVerifierResultStore(
+        root=ddg_verifier_result_root,
+        segment_fingerprint=segment_fingerprint,
+    )
 
     def process(candidate: GeneratedCandidate) -> tuple[str, dict[str, Any]]:
         canonical_page_id = int(candidate.source_metadata["canonical_page_id"])
@@ -350,6 +358,7 @@ def post_generation_processor(
             [candidate],
             settings=settings,
             search_client=search_client,
+            ddg_verifier_result_store=ddg_verifier_result_store,
             rewrite_client=None,
             second_stage_model_clients=bound_panel,
             grading_grader_client=bound_grader,

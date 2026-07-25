@@ -19,6 +19,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.generation_pipeline import process_generated_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
+from wikidata_simpleqa.route3_ddg import Route3DDGVerifierResultStore
 from wikidata_simpleqa.route3_run_ledger import SegmentLedgerIndex, load_page_attempts
 from wikidata_simpleqa.route3_openrouter import (
     OpenRouterRawResponse,
@@ -1237,6 +1238,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 ),
                 second_stage_model_clients=None,
                 grading_grader_client=None,
+                ddg_verifier_result_store=Route3DDGVerifierResultStore(
+                    root / "ddg_verifier_results",
+                    segment_fingerprint="fingerprint",
+                ),
                 ledger_index=ledger_index,
                 source_url=source_url,
                 stream_page_source="cached_page_archive",
@@ -1319,6 +1324,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 concurrency=concurrency,
                 second_stage_model_clients=None,
                 grading_grader_client=None,
+                ddg_verifier_result_store=Route3DDGVerifierResultStore(
+                    root / "ddg_verifier_results",
+                    segment_fingerprint="fingerprint",
+                ),
                 ledger_index=ledger_index,
             )
             attempts = load_page_attempts(ledger_dir)
@@ -1334,6 +1343,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 concurrency=concurrency,
                 second_stage_model_clients=None,
                 grading_grader_client=None,
+                ddg_verifier_result_store=Route3DDGVerifierResultStore(
+                    root / "ddg_verifier_results",
+                    segment_fingerprint="fingerprint",
+                ),
                 ledger_index=ledger_index,
             )
 
@@ -1482,6 +1495,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 ),
                 second_stage_model_clients=None,
                 grading_grader_client=None,
+                ddg_verifier_result_store=Route3DDGVerifierResultStore(
+                    root / "ddg_verifier_results",
+                    segment_fingerprint="fingerprint",
+                ),
                 ledger_index=ledger_index,
             )
 
