@@ -951,8 +951,10 @@ Route 3 durable executor 负责：
 generation
 second_stage_answer/<slot>/<model>
 second_stage_grade/<slot>/<answer-model>
+revision/<revision-number>/second_stage_answer/<slot>/<model>
+revision/<revision-number>/second_stage_grade/<slot>/<answer-model>
 ```
-call key 属于 allocation 下的 logical call，不包含 attempt number，使 `attempt002` 可以复用 `attempt001` 已完成的相同请求。
+call key 属于 allocation 下的 logical call，不包含 attempt number，使 `attempt002` 可以复用 `attempt001` 已完成的相同请求。原始 candidate 使用前三种 key；人工编辑产生的新 revision 使用 revision namespace，避免改变后的 request 与原始 request 发生 hash 冲突。
 
 调用顺序：
 
@@ -1003,7 +1005,7 @@ feat(route3): journal OpenRouter calls durably
 
 以 candidate 为边界持久化 long-tail verifier 结果：
 
-- key 由 allocation、candidate slot 和 segment fingerprint 构造；
+- key 由 allocation、candidate slot 和 segment fingerprint 构造；人工编辑后的结果额外包含 revision number；
 - verifier 完成后一次保存最终 decision，以及完整 query strings、titles/snippets/URLs 和 request audit；
 - resume 复用已完成的 candidate-verifier result；
 - verifier 中途被打断时只重跑当前 candidate 的有限 query 集合；
