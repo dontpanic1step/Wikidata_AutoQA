@@ -948,7 +948,7 @@ Route 3 durable executor 负责：
 ```text
 generation
 second_stage_answer/<slot>/<model>
-second_stage_grade/<slot>
+second_stage_grade/<slot>/<answer-model>
 ```
 call key 属于 allocation 下的 logical call，不包含 attempt number，使 `attempt002` 可以复用 `attempt001` 已完成的相同请求。
 
