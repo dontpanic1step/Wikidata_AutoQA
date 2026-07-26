@@ -17,6 +17,7 @@ backup/
 docs/human_notes/
 docs/inspect/
 paper/
+tmp/
 
 node_modules/
 
