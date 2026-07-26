@@ -13,6 +13,11 @@ import pytest
 from openpyxl import load_workbook
 
 from test_support import ROOT  # noqa: F401
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
+from run_route3_review import main as review_main  # noqa: E402
 from wikidata_simpleqa.route3_artifacts import Route3CandidateArtifact
 from wikidata_simpleqa.route3_ids import route3_record_id
 from wikidata_simpleqa.route3_review import (
@@ -20,12 +25,14 @@ from wikidata_simpleqa.route3_review import (
     REVIEW_TOPICS,
     accepted_review_bundles,
     apply_review_rows,
-    create_review_state,
+    classify_review_topics,
+    create_review_state as _create_review_state,
     read_review_workbook,
     render_review_markdown,
     rerun_review_candidates,
     validate_review_rows,
     write_review_workbook,
+    write_review_markdown_shards,
 )
 
 
@@ -124,6 +131,7 @@ def review_row(candidate_id: str, **overrides: str) -> dict[str, str]:
         "question": "Who founded the archive?",
         "reference_answer": "Ada Example",
         "wikipedia_url": "https://en.wikipedia.org/wiki/Archive",
+        "human_edited": "No",
         "topic": "History",
         "delete": "No",
         "edited_question": "",
@@ -132,6 +140,31 @@ def review_row(candidate_id: str, **overrides: str) -> dict[str, str]:
     }
     row.update(overrides)
     return row
+
+
+def fake_topic_classifier(_artifact, prompt: str) -> dict:
+    """Return one complete deterministic topic-classification audit."""
+    return {
+        "text": "History",
+        "raw_text": "History",
+        "request_payload": {
+            "model": "openai/gpt-4.1-mini",
+            "max_tokens": 256,
+            "messages": [{"role": "user", "content": prompt}],
+        },
+        "response_body": {"id": "topic-response", "choices": []},
+        "raw_response_body_text": '{"id":"topic-response","choices":[]}',
+    }
+
+
+def create_review_state(*args, **kwargs) -> dict:
+    """Create a deterministically topic-classified test review state."""
+    state = _create_review_state(*args, **kwargs)
+    return classify_review_topics(
+        state,
+        classifier=fake_topic_classifier,
+        concurrency_limit=2,
+    )
 
 
 def test_review_state_requires_each_top_up_segment_fingerprint() -> None:
@@ -184,10 +217,8 @@ def test_export_cli_writes_review_state_markdown_and_xlsx() -> None:
         )
         manifest_path.write_text(json.dumps({"segment_id": "01_alltypes_10", "fingerprint": {"sha256": "test"}}), encoding="utf-8")
 
-        completed = subprocess.run(
+        assert review_main(
             [
-                sys.executable,
-                str(ROOT / "scripts" / "run_route3_review.py"),
                 "export",
                 "--accepted-input",
                 str(accepted_path),
@@ -202,26 +233,26 @@ def test_export_cli_writes_review_state_markdown_and_xlsx() -> None:
                 "--run-id",
                 "review-run",
             ],
-            cwd=ROOT,
-            check=True,
-            capture_output=True,
-            text=True,
-        )
+            topic_classifier=fake_topic_classifier,
+        ) == 0
 
         assert state_path.exists()
         exported_state = json.loads(state_path.read_text(encoding="utf-8"))
-        assert exported_state["review_state_version"] == 2
+        assert exported_state["review_state_version"] == 3
         assert exported_state["segment_artifact_roots"] == {
             "01_alltypes_10": str(root.resolve())
         }
         artifact = Route3CandidateArtifact.from_dict(exported_state["candidates"][0]["artifact"])
-        assert artifact.current_revision.topic == ""
-        assert markdown_path.exists()
+        assert artifact.current_revision.topic == "History"
+        assert exported_state["candidates"][0]["topic_classifications"][0][
+            "raw_response_body_text"
+        ] == '{"id":"topic-response","choices":[]}'
+        assert (root / "review_1-50.md").exists()
         assert workbook_path.exists()
-        assert json.loads(completed.stdout)["accepted"] == 1
         exported_workbook = load_workbook(workbook_path)
-        assert exported_workbook["review"]["E2"].value is None
+        assert exported_workbook["review"]["E2"].value == "History"
         assert exported_workbook["review"]["F2"].value == "No"
+        assert exported_workbook["review"]["G2"].value == "No"
         exported_workbook.close()
         workbook = load_workbook(workbook_path)
         workbook["review"]["E2"] = "History"
@@ -275,6 +306,9 @@ def test_markdown_and_workbook_show_only_formal_review_fields() -> None:
     assert "| Founder | Ada Example |" in markdown
     assert "openai/gpt-4.1-mini" in markdown
     assert "google/gemini-3-flash-preview" in markdown
+    assert "Human edited: `No`" in markdown
+    assert "> Ada Example" in markdown
+    assert "Judge result: `CORRECT`" in markdown
 
     with tempfile.TemporaryDirectory() as tmpdir:
         path = Path(tmpdir) / "review.xlsx"
@@ -283,10 +317,11 @@ def test_markdown_and_workbook_show_only_formal_review_fields() -> None:
         worksheet = workbook["review"]
         assert tuple(cell.value for cell in worksheet[1]) == REVIEW_COLUMNS
         assert worksheet["F2"].value == "No"
-        assert len(worksheet.data_validations.dataValidation) == 2
+        assert worksheet["G2"].value == "No"
+        assert len(worksheet.data_validations.dataValidation) == 1
         formulas = {validation.formula1 for validation in worksheet.data_validations.dataValidation}
-        assert '"' + ",".join(REVIEW_TOPICS) + '"' in formulas
         assert read_review_workbook(path)[0]["id"] == candidate_id
+        assert formulas == {'"Yes,No"'}
 
 
 def test_workbook_rejects_noncanonical_header() -> None:
@@ -417,6 +452,11 @@ def test_rerun_uses_fresh_checks_and_only_latest_accepted_is_exported() -> None:
         return "accepted", record
 
     rerun = rerun_review_candidates(edited, processor=processor)
+    rerun = classify_review_topics(
+        rerun,
+        classifier=fake_topic_classifier,
+        concurrency_limit=2,
+    )
     artifact = Route3CandidateArtifact.from_dict(rerun["candidates"][0]["artifact"])
 
     assert len(seen_candidates) == 1
@@ -427,4 +467,87 @@ def test_rerun_uses_fresh_checks_and_only_latest_accepted_is_exported() -> None:
     assert artifact.current_revision.second_stage["fresh"] is True
     assert artifact.current_revision.status == "accepted"
     assert len(accepted_review_bundles(rerun)) == 1
-    assert "Who established the archive?" in render_review_markdown(rerun, run_id="review-run")
+    markdown = render_review_markdown(rerun, run_id="review-run")
+    assert "Who established the archive?" in markdown
+    assert "Human edited: `Yes`" in markdown
+
+
+def test_invalid_topic_response_is_rejected_with_raw_response_retained() -> None:
+    state = _create_review_state(
+        [accepted_record()],
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
+
+    def invalid_classifier(_artifact, prompt):
+        return {
+            "text": "History.",
+            "raw_text": "History.",
+            "request_payload": {
+                "model": "openai/gpt-4.1-mini",
+                "max_tokens": 256,
+            },
+            "response_body": {"id": "raw-invalid", "choices": [{"message": {"content": "History."}}]},
+            "raw_response_body_text": '{"id":"raw-invalid"}',
+        }
+
+    classified = classify_review_topics(
+        state,
+        classifier=invalid_classifier,
+        concurrency_limit=1,
+    )
+
+    assert accepted_review_bundles(classified) == []
+    bundle = classified["candidates"][0]
+    revision = bundle["artifact"]["revisions"][-1]
+    audit = bundle["topic_classifications"][0]
+    assert revision["status"] == "rejected"
+    assert revision["topic"] == ""
+    assert audit["raw_response"]["id"] == "raw-invalid"
+    assert audit["raw_response_body_text"] == '{"id":"raw-invalid"}'
+    assert audit["raw_text"] == "History."
+    assert audit["rejection_reason"] == "invalid_topic_classification_response"
+    assert "Who founded the archive?" in audit["prompt"]
+    assert "Reference answer: Ada Example" in audit["prompt"]
+    assert all(topic in audit["prompt"] for topic in REVIEW_TOPICS)
+
+
+def test_topic_and_human_edited_are_read_only() -> None:
+    state = create_review_state(
+        [accepted_record()],
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
+    candidate_id = state["candidates"][0]["artifact"]["id"]
+
+    with pytest.raises(ValueError, match="topic is read-only"):
+        apply_review_rows(state, [review_row(candidate_id, topic="Other")])
+    with pytest.raises(ValueError, match="human_edited is read-only"):
+        apply_review_rows(state, [review_row(candidate_id, human_edited="Yes")])
+
+
+def test_markdown_is_sharded_by_fifty_and_model_markdown_is_quoted() -> None:
+    records = [accepted_record(page_id=index) for index in range(1, 52)]
+    records[0]["panel_grading_features"]["models"][0]["predicted_answer"] = (
+        "# Embedded heading\n\n| A | B |\n| --- | --- |"
+    )
+    state = create_review_state(
+        records,
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        base_path = Path(tmpdir) / "review.md"
+        paths = write_review_markdown_shards(base_path, state, run_id="review-run")
+
+        assert [path.name for path in paths] == [
+            "review_1-50.md",
+            "review_51-100.md",
+        ]
+        first = paths[0].read_text(encoding="utf-8")
+        second = paths[1].read_text(encoding="utf-8")
+        assert "> # Embedded heading" in first
+        assert "> | A | B |" in first
+        assert "\n# Embedded heading\n" not in first
+        assert "## 51." in second

@@ -18,21 +18,24 @@ from wikidata_simpleqa.route3_circuit import ServiceCircuit
 from wikidata_simpleqa.route3_openrouter import Route3OpenRouterClientFactory
 from wikidata_simpleqa.route3_run_ledger import load_segment_manifest
 from wikidata_simpleqa.route3_review import (
+    TOPIC_CLASSIFICATION_MAX_TOKENS,
+    TOPIC_CLASSIFICATION_MODEL,
     accepted_review_bundles,
     apply_review_rows,
+    classify_review_topics,
     create_review_state,
     load_review_state,
     post_generation_processor,
     read_review_workbook,
-    render_review_markdown,
     rerun_review_candidates,
     write_review_state,
+    write_review_markdown_shards,
     write_review_workbook,
 )
 from wikidata_simpleqa.search_client import DuckDuckGoSearchClient
 
 
-def parse_args() -> argparse.Namespace:
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     """Parse review export or apply arguments."""
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -42,6 +45,7 @@ def parse_args() -> argparse.Namespace:
     export.add_argument("--segment-manifest", type=Path, action="append", required=True)
     export.add_argument("--state-output", type=Path, required=True)
     export.add_argument("--markdown-output", type=Path, required=True)
+    export.add_argument("--topic-concurrency-limit", type=int, default=2)
     export.add_argument("--xlsx-output", type=Path, required=True)
     export.add_argument("--run-id", required=True)
 
@@ -52,27 +56,37 @@ def parse_args() -> argparse.Namespace:
     apply.add_argument("--markdown-output", type=Path, required=True)
     apply.add_argument("--xlsx-output", type=Path, required=True)
     apply.add_argument("--run-id", required=True)
-    return parser.parse_args()
+    apply.add_argument("--topic-concurrency-limit", type=int, default=2)
+    return parser.parse_args(argv)
 
 
-def main() -> int:
+def main(
+    argv: list[str] | None = None,
+    *,
+    topic_classifier=None,
+) -> int:
     """Run the selected review operation."""
-    args = parse_args()
+    args = parse_args(argv)
     if args.command == "export":
         state = _export_state(args)
     else:
         state = _apply_state(args)
+    state = _classify_pending_topics(
+        state,
+        classifier=topic_classifier,
+        concurrency_limit=args.topic_concurrency_limit,
+    )
     write_review_state(args.state_output, state)
-    args.markdown_output.parent.mkdir(parents=True, exist_ok=True)
-    args.markdown_output.write_text(
-        render_review_markdown(state, run_id=args.run_id),
-        encoding="utf-8",
+    markdown_paths = write_review_markdown_shards(
+        args.markdown_output,
+        state,
+        run_id=args.run_id,
     )
     write_review_workbook(args.xlsx_output, state)
     summary = {
         "run_id": args.run_id,
         "review_state": str(args.state_output),
-        "markdown": str(args.markdown_output),
+        "markdown": [str(path) for path in markdown_paths],
         "xlsx": str(args.xlsx_output),
         "accepted": len(accepted_review_bundles(state)),
         "rerun": _status_count(state, "rerun"),
@@ -95,11 +109,15 @@ def _export_state(args: argparse.Namespace) -> dict:
             raise ValueError(f"Duplicate segment manifest: {segment_id}")
         segment_fingerprints[segment_id] = manifest["fingerprint"]
         segment_artifact_roots[segment_id] = str(path.parent.resolve())
-    return create_review_state(
+    state = create_review_state(
         records,
         segment_fingerprints=segment_fingerprints,
         segment_artifact_roots=segment_artifact_roots,
     )
+    state["topic_classification_call_root"] = str(
+        (args.state_output.parent / "topic_classification_calls").resolve()
+    )
+    return state
 
 
 def _apply_state(args: argparse.Namespace) -> dict:
@@ -139,6 +157,80 @@ def _apply_state(args: argparse.Namespace) -> dict:
 
         state = rerun_review_candidates(state, processor=processor)
     return state
+
+
+def _classify_pending_topics(
+    state: dict,
+    *,
+    classifier,
+    concurrency_limit: int,
+) -> dict:
+    """Classify accepted revisions that do not yet have an automatic topic."""
+    pending = []
+    for bundle in state["candidates"]:
+        artifact = bundle["artifact"]
+        revision = artifact["revisions"][-1]
+        if revision["status"] == "accepted" and not revision["delete"] and not revision["topic"]:
+            pending.append(bundle)
+    if not pending:
+        return state
+    active_classifier = classifier or _build_topic_classifier(state)
+    return classify_review_topics(
+        state,
+        classifier=active_classifier,
+        concurrency_limit=concurrency_limit,
+    )
+
+
+def _build_topic_classifier(state: dict):
+    """Build the durable GPT-4.1-mini topic classifier for one review state."""
+    circuit = ServiceCircuit("openrouter")
+    record_root = Path(state["topic_classification_call_root"])
+    segment_ids = {
+        str(bundle["artifact"]["identity"]["segment_id"])
+        for bundle in state["candidates"]
+    }
+    factories: dict[str, Route3OpenRouterClientFactory] = {}
+    for segment_id in sorted(segment_ids):
+        resolved = state["segment_fingerprints"][segment_id]["inputs"][
+            "resolved_result_affecting_config"
+        ]
+        config = LLMConfig(
+            provider="openrouter",
+            model=TOPIC_CLASSIFICATION_MODEL,
+            api_key_env="OPENROUTER_API_KEY",
+            base_url="https://openrouter.ai/api/v1",
+            proxy=resolved["proxy"],
+            temperature=0.0,
+            max_tokens=TOPIC_CLASSIFICATION_MAX_TOKENS,
+        )
+        factories[segment_id] = Route3OpenRouterClientFactory.from_config(
+            config,
+            timeout_seconds=float(resolved["timeout_seconds"]),
+            circuit=circuit,
+        )
+
+    def classify(artifact, prompt):
+        segment_id = artifact.identity.segment_id
+        factory = factories[segment_id]
+        call_key = (
+            f"review_topic_r{artifact.current_revision.revision_number}_"
+            f"{artifact.candidate_id}"
+        )
+        client = factory.for_allocation(
+            record_root=record_root,
+            canonical_page_id=artifact.identity.canonical_page_id,
+            call_key=call_key,
+        )
+        audit = client.complete_text_with_audit(prompt)
+        response_record = client.executor.store.load(
+            call_key=call_key,
+            record_kind="response",
+        )
+        audit["raw_response_body_text"] = str(response_record["payload"]["body_text"])
+        return audit
+
+    return classify
 
 
 def _build_route3_model_panel(settings: Settings, circuit: ServiceCircuit) -> list[ModelPanelMember] | None:

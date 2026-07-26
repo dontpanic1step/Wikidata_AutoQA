@@ -550,7 +550,31 @@ immutable allocation
 - answer type；
 - Wikipedia URL/page ID；
 - Markdown selected table；
-- Markdown two-model answers。
+- Markdown two-model answers；
+-自动 topic；
+-自动 `human_edited`。
+
+每 50 个 QA 写一个 Markdown 文件，使用固定范围后缀：
+
+```text
+review_1-50.md
+review_51-100.md
+```
+
+两个小模型分别使用独立标题；model response 和 judge reason 分别转为 blockquote，不能让回复自身的 Markdown 与 review 文档结构混合。
+
+### 自动 topic 分类
+
+在生成 Markdown/XLSX 前，用 `openai/gpt-4.1-mini` 根据 question 和 reference answer 选择一个正式 topic：
+
+- temperature `0`；
+- max tokens `256`；
+- bounded concurrency；
+- prompt 要求只返回十项枚举中的一个精确标签；
+-调用 Route 3 durable OpenRouter executor；
+- review state 保留 request、完整原始 response、raw text 和 parsed topic；
+- durable response record 保留原始 HTTP body；
+-非法回复直接把 candidate 标为 rejected，不重试、不 fallback、不进入 review MD/XLSX。
 
 ### XLSX 规范英文列名
 
@@ -562,6 +586,7 @@ question
 reference_answer
 wikipedia_url
 topic
+human_edited
 delete
 edited_question
 edited_reference_answer
@@ -574,7 +599,8 @@ edit_reason
 
 - `delete` 默认 `No`；
 -可选 `Yes/No`；
-- `topic` 使用十项下拉列表；
+- `topic` 由 GPT-4.1-mini 自动填写，XLSX 只读展示，不提供下拉；
+- `human_edited` 由 revision history 自动填写，默认 `No`，人工修改 Q/A 后为 `Yes`，不得人工修改；
 -进入 finalization 前 topic 必须完整合法。
 
 Topic 枚举：
@@ -599,6 +625,8 @@ Video games
 -重复/未知 ID；
 -非法 topic；
 -finalization 时空 topic；
+-人工修改 topic；
+-人工修改 `human_edited`；
 -非法 delete 值；
 - `delete=Yes` 同时存在 edited Q/A。
 
@@ -614,6 +642,7 @@ Video games
 -编辑行创建 revision；
 -按 M1 字段规则重建 active candidate；
 -重新执行 generation 后 checks、DDG 和 second-stage；
+-对最新 accepted revision 重新执行 topic 分类；
 -生成新 MD/XLSX；
 -直到没有 Q/A 编辑。
 
@@ -622,6 +651,12 @@ Video games
 -列名和顺序精确匹配；
 - delete 默认 No；
 - round-trip 不改变 ID；
+- topic 没有下拉且人工修改会被拒绝；
+- `human_edited` 初始为 No，Q/A 编辑后为 Yes；
+-每个 Markdown shard 最多 50 题且后缀范围正确；
+-两个模型的 response/reason 不会污染 Markdown 结构；
+- topic 原始 OpenRouter response 可审计；
+-非法 topic response 不进入 review；
 - answer 编辑清空 aliases；
 -旧 DDG/grading 不复用；
 - revision history 完整；
@@ -632,6 +667,8 @@ Video games
 -仍生成中文列；
 -列名被自动本地化；
 -修改后未重跑完整 post-generation pipeline；
+- topic 或 `human_edited` 可由人工改写；
+- topic raw response 未持久化；
 -原始 generation 数据被覆盖。
 
 ---

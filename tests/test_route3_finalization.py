@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 
 from test_support import ROOT  # noqa: F401
-from test_route3_review import accepted_record, review_row
+from test_route3_review import accepted_record, create_review_state, review_row
 from wikidata_simpleqa.route3_finalization import (
     FINAL_CSV_COLUMNS,
     finalize_review_state,
@@ -21,7 +21,6 @@ from wikidata_simpleqa.route3_finalization import (
 )
 from wikidata_simpleqa.route3_review import (
     apply_review_rows,
-    create_review_state,
     write_review_state,
     write_review_workbook,
 )

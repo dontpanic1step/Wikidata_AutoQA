@@ -2,12 +2,16 @@
 
 from __future__ import annotations
 
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 import json
 from pathlib import Path
+import re
 from typing import Any, Callable, Iterable
 
 from openpyxl import Workbook, load_workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
@@ -15,6 +19,7 @@ from .route3_artifacts import (
     Route3CandidateArtifact,
     Route3CandidateProvenance,
     complete_route3_candidate_rerun,
+    complete_route3_topic_classification,
     create_route3_candidate_artifact,
     revise_route3_candidate_artifact,
 )
@@ -25,13 +30,14 @@ from .route3_openrouter import bind_route3_allocation_client, bind_route3_alloca
 from .route3_run_ledger import atomic_write_json
 
 
-REVIEW_STATE_VERSION = 2
+REVIEW_STATE_VERSION = 3
 REVIEW_COLUMNS = (
     "id",
     "question",
     "reference_answer",
     "wikipedia_url",
     "topic",
+    "human_edited",
     "delete",
     "edited_question",
     "edited_reference_answer",
@@ -54,6 +60,9 @@ RERUN_REJECTION_REASONS = {
     "search_longtail_verifier_error",
     "second_stage_grading_error",
 }
+TOPIC_CLASSIFICATION_MODEL = "openai/gpt-4.1-mini"
+TOPIC_CLASSIFICATION_MAX_TOKENS = 256
+REVIEW_MARKDOWN_CHUNK_SIZE = 50
 
 
 def create_review_state(
@@ -82,6 +91,86 @@ def create_review_state(
     }
 
 
+def topic_classification_prompt(question: str, reference_answer: str) -> str:
+    """Build the fixed ten-label topic-classification prompt."""
+    labels = "\n".join(f"- {topic}" for topic in REVIEW_TOPICS)
+    return (
+        "Classify this factual question into exactly one allowed topic.\n"
+        "Return only the topic label exactly as written, with no punctuation or explanation.\n\n"
+        f"Allowed topics:\n{labels}\n\n"
+        f"Question: {question}\n"
+        f"Reference answer: {reference_answer}\n"
+    )
+
+
+def classify_review_topics(
+    state: dict[str, Any],
+    *,
+    classifier: Callable[[Route3CandidateArtifact, str], dict[str, Any]],
+    concurrency_limit: int,
+) -> dict[str, Any]:
+    """Classify pending accepted revisions and retain complete call audits."""
+    if concurrency_limit < 1:
+        raise ValueError("topic classification concurrency_limit must be positive")
+    updated = deepcopy(state)
+    pending: list[tuple[int, Route3CandidateArtifact, str]] = []
+    for index, bundle in enumerate(updated["candidates"]):
+        artifact = Route3CandidateArtifact.from_dict(bundle["artifact"])
+        revision = artifact.current_revision
+        if revision.status == "accepted" and not revision.delete and not revision.topic:
+            prompt = topic_classification_prompt(
+                revision.authoritative_question,
+                revision.reference_answer,
+            )
+            pending.append((index, artifact, prompt))
+
+    audits: dict[int, dict[str, Any]] = {}
+    with ThreadPoolExecutor(max_workers=concurrency_limit) as executor:
+        future_indexes = {
+            executor.submit(classifier, artifact, prompt): index
+            for index, artifact, prompt in pending
+        }
+        for future in as_completed(future_indexes):
+            audits[future_indexes[future]] = future.result()
+
+    pending_by_index = {
+        index: (artifact, prompt)
+        for index, artifact, prompt in pending
+    }
+    for index in sorted(audits):
+        artifact, prompt = pending_by_index[index]
+        response = audits[index]
+        raw_text = str(response["raw_text"])
+        parsed_topic = str(response["text"]).strip()
+        valid = parsed_topic in REVIEW_TOPICS
+        topic = parsed_topic if valid else ""
+        status = "accepted" if valid else "rejected"
+        artifact = complete_route3_topic_classification(
+            artifact,
+            topic=topic,
+            status=status,
+        )
+        bundle = updated["candidates"][index]
+        bundle["artifact"] = artifact.to_dict()
+        bundle["active_record"]["topic"] = topic
+        bundle["topic_classifications"].append(
+            {
+                "revision_number": artifact.current_revision.revision_number,
+                "model": TOPIC_CLASSIFICATION_MODEL,
+                "max_tokens": TOPIC_CLASSIFICATION_MAX_TOKENS,
+                "prompt": prompt,
+                "request_payload": deepcopy(response["request_payload"]),
+                "raw_response": deepcopy(response["response_body"]),
+                "raw_response_body_text": str(response.get("raw_response_body_text", "")),
+                "raw_text": raw_text,
+                "parsed_topic": topic,
+                "status": status,
+                "rejection_reason": "" if valid else "invalid_topic_classification_response",
+            }
+        )
+    return updated
+
+
 def load_review_state(path: Path) -> dict[str, Any]:
     """Load and validate one review-state JSON document."""
     state = json.loads(path.read_text(encoding="utf-8"))
@@ -104,20 +193,30 @@ def accepted_review_bundles(state: dict[str, Any]) -> list[dict[str, Any]]:
         artifact = Route3CandidateArtifact.from_dict(bundle["artifact"])
         revision = artifact.current_revision
         if revision.status == "accepted" and not revision.delete:
+            if revision.topic not in REVIEW_TOPICS:
+                raise ValueError(
+                    f"topic classification is incomplete: {artifact.candidate_id}"
+                )
             rows.append(bundle)
     return sorted(rows, key=lambda bundle: str(bundle["artifact"]["id"]))
 
 
-def render_review_markdown(state: dict[str, Any], *, run_id: str) -> str:
-    """Render accepted candidates with source tables and two-model answers."""
-    bundles = accepted_review_bundles(state)
+def render_review_markdown(
+    state: dict[str, Any],
+    *,
+    run_id: str,
+    bundles: list[dict[str, Any]] | None = None,
+    start_index: int = 1,
+) -> str:
+    """Render accepted candidates with source tables and isolated model responses."""
+    selected = accepted_review_bundles(state) if bundles is None else bundles
     lines = [
         f"# Route 3 Review: `{run_id}`",
         "",
-        f"Accepted candidates: {len(bundles)}",
+        f"Candidates in this file: {len(selected)}",
         "",
     ]
-    for index, bundle in enumerate(bundles, start=1):
+    for index, bundle in enumerate(selected, start=start_index):
         artifact = Route3CandidateArtifact.from_dict(bundle["artifact"])
         revision = artifact.current_revision
         provenance = artifact.provenance
@@ -128,6 +227,10 @@ def render_review_markdown(state: dict[str, Any], *, run_id: str) -> str:
                 f"Question: {revision.authoritative_question}",
                 "",
                 f"Reference answer: **{revision.reference_answer}**",
+                "",
+                f"Topic: `{revision.topic}`",
+                "",
+                f"Human edited: `{_human_edited(artifact)}`",
                 "",
                 f"Answer type: `{provenance.answer_type}`",
                 "",
@@ -146,14 +249,78 @@ def render_review_markdown(state: dict[str, Any], *, run_id: str) -> str:
         for model in revision.second_stage["models"]:
             lines.extend(
                 [
-                    f"- `{model['model']}`: {model['predicted_answer']}",
-                    f"  - Grade: `{model['grade']}`",
-                    f"  - Reason: {model['reason']}",
+                    f"**{model['model']}**",
+                    "",
+                    "Model response:",
+                    "",
+                    _blockquote(str(model["predicted_answer"])),
+                    "",
+                    f"Judge result: `{model['grade']}`",
+                    "",
+                    "Judge reason:",
+                    "",
+                    _blockquote(str(model["reason"])),
+                    "",
                 ]
             )
-        lines.append("")
     return "\n".join(lines).rstrip() + "\n"
 
+
+
+def write_review_markdown_shards(
+    base_path: Path,
+    state: dict[str, Any],
+    *,
+    run_id: str,
+) -> list[Path]:
+    """Write fixed 50-candidate Markdown shards and return their paths."""
+    base_path.parent.mkdir(parents=True, exist_ok=True)
+    base_path.unlink(missing_ok=True)
+    shard_name = re.compile(
+        rf"{re.escape(base_path.stem)}_\d+-\d+{re.escape(base_path.suffix)}"
+    )
+    for stale_path in base_path.parent.iterdir():
+        if shard_name.fullmatch(stale_path.name):
+            stale_path.unlink()
+    bundles = accepted_review_bundles(state)
+    chunks = [
+        bundles[index:index + REVIEW_MARKDOWN_CHUNK_SIZE]
+        for index in range(0, len(bundles), REVIEW_MARKDOWN_CHUNK_SIZE)
+    ] or [[]]
+    paths: list[Path] = []
+    for chunk_index, chunk in enumerate(chunks):
+        start = chunk_index * REVIEW_MARKDOWN_CHUNK_SIZE + 1
+        end = start + REVIEW_MARKDOWN_CHUNK_SIZE - 1
+        path = base_path.with_name(f"{base_path.stem}_{start}-{end}{base_path.suffix}")
+        path.write_text(
+            render_review_markdown(
+                state,
+                run_id=run_id,
+                bundles=chunk,
+                start_index=start,
+            ),
+            encoding="utf-8",
+        )
+        paths.append(path)
+    return paths
+
+
+def _blockquote(value: str) -> str:
+    """Render every response line as Markdown blockquote content."""
+    return "\n".join(f"> {line}" if line else ">" for line in value.splitlines() or [""])
+
+
+def _human_edited(artifact: Route3CandidateArtifact) -> str:
+    """Return whether any authoritative Q/A revision changed from its predecessor."""
+    previous = artifact.revisions[0]
+    for revision in artifact.revisions[1:]:
+        if (
+            revision.authoritative_question != previous.authoritative_question
+            or revision.reference_answer != previous.reference_answer
+        ):
+            return "Yes"
+        previous = revision
+    return "No"
 
 def write_review_workbook(path: Path, state: dict[str, Any]) -> None:
     """Write the formal English-column review workbook."""
@@ -172,22 +339,29 @@ def write_review_workbook(path: Path, state: dict[str, Any]) -> None:
                 artifact.provenance.canonical_page_url,
                 revision.topic,
                 "No",
+                "No",
                 "",
                 "",
                 "",
             ]
         )
     last_row = max(2, worksheet.max_row)
-    topic_validation = DataValidation(
-        type="list",
-        formula1='"' + ",".join(REVIEW_TOPICS) + '"',
-        allow_blank=True,
-    )
     delete_validation = DataValidation(type="list", formula1='"Yes,No"', allow_blank=False)
-    worksheet.add_data_validation(topic_validation)
     worksheet.add_data_validation(delete_validation)
-    topic_validation.add(f"E2:E{last_row}")
-    delete_validation.add(f"F2:F{last_row}")
+    delete_validation.add(f"G2:G{last_row}")
+    worksheet.freeze_panes = "A2"
+    worksheet.auto_filter.ref = worksheet.dimensions
+    header_fill = PatternFill("solid", fgColor="1F4E78")
+    for cell in worksheet[1]:
+        cell.fill = header_fill
+        cell.font = Font(color="FFFFFF", bold=True)
+        cell.alignment = Alignment(horizontal="center", vertical="center")
+    widths = (42, 58, 28, 48, 24, 15, 12, 58, 30, 42)
+    for column_index, width in enumerate(widths, start=1):
+        worksheet.column_dimensions[get_column_letter(column_index)].width = width
+    for row in worksheet.iter_rows(min_row=2):
+        for cell in row:
+            cell.alignment = Alignment(vertical="top", wrap_text=True)
     path.parent.mkdir(parents=True, exist_ok=True)
     workbook.save(path)
     workbook.close()
@@ -236,6 +410,8 @@ def validate_review_rows(
         if finalization and not topic:
             raise ValueError(f"topic is required for finalization: {candidate_id}")
         delete_value = row["delete"]
+        if row["human_edited"] not in DELETE_VALUES:
+            raise ValueError(f"invalid human_edited value for {candidate_id}: {row['human_edited']}")
         if delete_value not in DELETE_VALUES:
             raise ValueError(f"invalid delete value for {candidate_id}: {delete_value}")
         if delete_value == "Yes" and (row["edited_question"] or row["edited_reference_answer"]):
@@ -256,29 +432,42 @@ def apply_review_rows(state: dict[str, Any], rows: Iterable[dict[str, str]]) -> 
         if row is None:
             continue
         current = artifact.current_revision
+        if row["question"] != current.authoritative_question:
+            raise ValueError(f"XLSX question does not match candidate revision: {artifact.candidate_id}")
+        if row["reference_answer"] != current.reference_answer:
+            raise ValueError(f"XLSX answer does not match candidate revision: {artifact.candidate_id}")
+        if row["wikipedia_url"] != artifact.provenance.canonical_page_url:
+            raise ValueError(f"XLSX URL does not match candidate provenance: {artifact.candidate_id}")
+        if row["topic"] != current.topic:
+            raise ValueError(f"XLSX topic is read-only: {artifact.candidate_id}")
+        if row["human_edited"] != _human_edited(artifact):
+            raise ValueError(f"XLSX human_edited is read-only: {artifact.candidate_id}")
         edited_question = row["edited_question"] or None
         edited_answer = row["edited_reference_answer"] or None
+        question_changed = (
+            edited_question is not None
+            and edited_question != current.authoritative_question
+        )
+        answer_changed = (
+            edited_answer is not None
+            and edited_answer != current.reference_answer
+        )
+        qa_changed = question_changed or answer_changed
         delete = row["delete"] == "Yes"
-        topic = row["topic"]
-        if (
-            edited_question is None
-            and edited_answer is None
-            and delete == current.delete
-            and topic == current.topic
-        ):
+        if not qa_changed and delete == current.delete:
             continue
         artifact = revise_route3_candidate_artifact(
             artifact,
-            edited_question=edited_question,
-            edited_reference_answer=edited_answer,
-            topic=topic,
+            edited_question=edited_question if question_changed else None,
+            edited_reference_answer=edited_answer if answer_changed else None,
+            topic="" if qa_changed else None,
             delete=delete,
             edit_reason=row["edit_reason"],
         )
         bundle["artifact"] = artifact.to_dict()
         active_record = bundle["active_record"]
         active_record["topic"] = artifact.current_revision.topic
-        if edited_question is not None or edited_answer is not None:
+        if qa_changed:
             active_record["question"] = artifact.current_revision.authoritative_question
             active_record["canonical_question"] = artifact.current_revision.authoritative_question
             active_record["answer"] = artifact.current_revision.reference_answer
@@ -415,7 +604,11 @@ def _review_bundle(record: dict[str, Any]) -> dict[str, Any]:
         second_stage=record["panel_grading_features"],
         status="accepted",
     )
-    return {"artifact": artifact.to_dict(), "active_record": deepcopy(record)}
+    return {
+        "artifact": artifact.to_dict(),
+        "active_record": deepcopy(record),
+        "topic_classifications": [],
+    }
 
 
 def _generated_candidate(record: dict[str, Any], artifact: Route3CandidateArtifact) -> GeneratedCandidate:

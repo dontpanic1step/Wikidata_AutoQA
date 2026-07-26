@@ -234,10 +234,11 @@ python scripts\run_route3_review.py export `
   --state-output outputs\reviews\<run-id>\review_state.json `
   --markdown-output outputs\reviews\<run-id>\review.md `
   --xlsx-output outputs\reviews\<run-id>\review.xlsx `
+  --topic-concurrency-limit 2 `
   --run-id <run-id>
 ```
 
-Repeat `--segment-manifest` for every top-up segment represented in the accepted JSONL. The Markdown contains accepted candidates only, with stable ID, Q/A, answer type, Wikipedia page, selected table, and two-model answers.
+Repeat `--segment-manifest` for every top-up segment represented in the accepted JSONL. Before writing review artifacts, GPT-4.1-mini classifies each Q/A into one of the ten formal topics with temperature `0`, `max_tokens=256`, and bounded concurrency. Calls use the durable Route 3 OpenRouter executor under `topic_classification_calls`; review state retains the complete raw response. Invalid labels reject the candidate without retry or fallback. `--markdown-output` is a base path: the command writes 50-candidate shards such as `review_1-50.md` and `review_51-100.md`. Each shard contains accepted candidates only, with stable ID, Q/A, answer type, Wikipedia page, selected table, automatic topic, automatic human-edit status, and separately quoted two-model answers.
 
 The XLSX columns are exactly:
 
@@ -247,13 +248,14 @@ question
 reference_answer
 wikipedia_url
 topic
+human_edited
 delete
 edited_question
 edited_reference_answer
 edit_reason
 ```
 
-`delete` defaults to `No` and has a `Yes/No` dropdown. `topic` has the formal ten-topic dropdown. Empty topics are allowed during review but are rejected by finalization.
+`topic` is assigned automatically and has no dropdown. Changing it in the workbook is rejected. `human_edited` is generated from Q/A revision history, defaults to `No`, becomes `Yes` after a human Q/A edit, and is also read-only. `delete` defaults to `No` and has the only `Yes/No` dropdown.
 
 After editing the workbook, apply it and produce the next review round:
 
@@ -264,10 +266,11 @@ python scripts\run_route3_review.py apply `
   --state-output outputs\reviews\<run-id>\review_state.json `
   --markdown-output outputs\reviews\<run-id>\review.md `
   --xlsx-output outputs\reviews\<run-id>\review.xlsx `
+  --topic-concurrency-limit 2 `
   --run-id <run-id>
 ```
 
-Deleted rows skip validation. Q/A edits preserve the stable ID and immutable generation provenance, append a revision, clear stale checks, and rerun the formal post-generation checks, DuckDuckGo filter, and two-model second stage. This apply command makes network calls only when the state contains Q/A edits or pending reruns. The next Markdown/XLSX contains only latest accepted revisions.
+Deleted rows skip validation. Q/A edits preserve the stable ID and immutable generation provenance, append a revision, clear stale checks and the old topic, and rerun the formal post-generation checks, DuckDuckGo filter, two-model second stage, and GPT-4.1-mini topic classification. This apply command makes network calls only when the state contains Q/A edits or pending reruns. The next Markdown shards/XLSX contain only latest accepted revisions.
 
 ## Formal finalization
 

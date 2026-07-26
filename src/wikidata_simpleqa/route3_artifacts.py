@@ -371,3 +371,19 @@ def complete_route3_candidate_rerun(
         status=status,
     )
     return replace(artifact, revisions=(*artifact.revisions[:-1], completed))
+
+
+def complete_route3_topic_classification(
+    artifact: Route3CandidateArtifact,
+    *,
+    topic: str,
+    status: str,
+) -> Route3CandidateArtifact:
+    """Complete topic classification on the latest accepted revision."""
+    current = artifact.current_revision
+    if current.status != "accepted" or current.topic:
+        raise ValueError("Topic classification requires an accepted revision without a topic")
+    if status not in {"accepted", "rejected"}:
+        raise ValueError(f"invalid topic classification status: {status!r}")
+    completed = replace(current, topic=topic, status=status)
+    return replace(artifact, revisions=(*artifact.revisions[:-1], completed))

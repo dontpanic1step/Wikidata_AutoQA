@@ -14,7 +14,7 @@ from test_openrouter_batch_scripts import load_script_module
 from test_route3_ddg import RecordingSearchClient, candidate as ddg_candidate, verify as verify_ddg
 from test_route3_external_control import FailingSearchClient, SequenceTransport
 from test_route3_openrouter import FakeTransport, RESPONSE_BODY
-from test_route3_review import accepted_record
+from test_route3_review import accepted_record, create_review_state, fake_topic_classifier
 from wikidata_simpleqa.generator_validators import SearchLongtailVerifierError
 from wikidata_simpleqa.route3_artifacts import Route3CandidateArtifact
 from wikidata_simpleqa.route3_circuit import CircuitOpenError, ServiceCircuit
@@ -34,8 +34,8 @@ from wikidata_simpleqa.route3_openrouter import (
 from wikidata_simpleqa.route3_review import (
     REVIEW_COLUMNS,
     accepted_review_bundles,
+    classify_review_topics,
     apply_review_rows,
-    create_review_state,
     read_review_workbook,
     render_review_markdown,
     rerun_review_candidates,
@@ -352,13 +352,12 @@ def test_crash_safe_rehearsal_lifecycle(tmp_path: Path) -> None:
     extra_date_id = extra_date["id"]
     place_id = place["id"]
     for row_number in range(2, worksheet.max_row + 1):
-        worksheet.cell(row=row_number, column=5).value = "History"
         candidate_id = str(worksheet.cell(row=row_number, column=1).value)
         if candidate_id == extra_date_id:
-            worksheet.cell(row=row_number, column=6).value = "Yes"
+            worksheet.cell(row=row_number, column=7).value = "Yes"
         if candidate_id == place_id:
-            worksheet.cell(row=row_number, column=7).value = "Who established the archive?"
-            worksheet.cell(row=row_number, column=9).value = "Clarity"
+            worksheet.cell(row=row_number, column=8).value = "Who established the archive?"
+            worksheet.cell(row=row_number, column=10).value = "Clarity"
     workbook.save(review_xlsx)
     workbook.close()
 
@@ -383,6 +382,11 @@ def test_crash_safe_rehearsal_lifecycle(tmp_path: Path) -> None:
         return "accepted", record
 
     revalidated = rerun_review_candidates(applied, processor=processor)
+    revalidated = classify_review_topics(
+        revalidated,
+        classifier=fake_topic_classifier,
+        concurrency_limit=2,
+    )
     assert len(revalidation_calls) == 1
     assert revalidation_calls[0].final_question == "Who established the archive?"
     active_ids = {str(bundle["artifact"]["id"]) for bundle in accepted_review_bundles(revalidated)}
