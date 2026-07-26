@@ -322,7 +322,7 @@ urls
 
 The evaluation scripts run after finalization. They do not generate candidates, filter Route 3 output, perform manual review, or finalize a dataset. Do not use the historical `run_openrouter_night_batch.py` orchestrator.
 
-Create model predictions from a directory of final CSV-converted or other evaluation JSONL inputs. Each input row must include `id`, `question`, and `answer`:
+Create model predictions directly from a directory of CSV inputs. Route 3 final CSV rows use `id`, `problem`, and `answer`; Google SimpleQA Verified rows use `original_index`, `problem`, and `answer`, with any additional columns accepted. The prediction output uses `id`, mapping it from `original_index` when necessary:
 
 ```powershell
 python scripts\run_openrouter_batch_predictions.py inputs\evaluation `

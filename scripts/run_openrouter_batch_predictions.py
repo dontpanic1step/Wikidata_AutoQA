@@ -1,7 +1,7 @@
-"""Run batched OpenRouter predictions over a directory of JSONL files.
+"""Run batched OpenRouter predictions over a directory of CSV files.
 
-Inputs are JSONL records with at least:
-    {"id": ..., "question": ..., "answer": ...}
+Inputs are final Route 3 or SimpleQA Verified CSV rows with:
+    id/original_index, problem, answer
 
 Outputs are per input file and per model JSONL records with:
     {"id": ..., "question": ..., "answer": ..., "predictions": [...]}
@@ -10,6 +10,7 @@ Outputs are per input file and per model JSONL records with:
 from __future__ import annotations
 
 import argparse
+import csv
 import concurrent.futures
 from dataclasses import dataclass
 import json
@@ -108,7 +109,7 @@ def main() -> None:
     input_dir = Path(args.input_dir)
     input_files = discover_input_files(input_dir, args.glob, recursive=args.recursive)
     if not input_files:
-        raise SystemExit(f"No JSONL files matched {args.glob!r} under {input_dir}")
+        raise SystemExit(f"No CSV files matched {args.glob!r} under {input_dir}")
 
     output_dir = Path(args.output_dir)
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -136,16 +137,16 @@ def main() -> None:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Batch OpenRouter chat completions for SimpleQA-style JSONL files."
+        description="Batch OpenRouter chat completions for SimpleQA-style CSV files."
     )
-    parser.add_argument("input_dir", nargs="?", help="Directory containing JSONL input files.")
+    parser.add_argument("input_dir", nargs="?", help="Directory containing CSV input files.")
     parser.add_argument(
         "--output-dir",
         type=Path,
         default=ROOT / "outputs" / "openrouter_batch_predictions",
         help="Output directory. Default: outputs/openrouter_batch_predictions",
     )
-    parser.add_argument("--glob", default="*.jsonl", help="Input glob under input_dir.")
+    parser.add_argument("--glob", default="*.csv", help="Input glob under input_dir.")
     parser.add_argument("--recursive", action="store_true", help="Search input_dir recursively.")
     parser.add_argument(
         "--models",
@@ -271,22 +272,14 @@ def discover_input_files(input_dir: Path, pattern: str, *, recursive: bool) -> l
     return sorted(path for path in iterator if path.is_file())
 
 
-def load_jsonl(path: Path) -> list[dict[str, Any]]:
+def load_csv(path: Path) -> list[dict[str, Any]]:
     records: list[dict[str, Any]] = []
-    with path.open("r", encoding="utf-8") as handle:
-        for line_number, line in enumerate(handle, start=1):
-            stripped = line.strip()
-            if not stripped:
-                continue
-            try:
-                obj = json.loads(stripped)
-            except json.JSONDecodeError as exc:
-                print(f"[warn] {path}:{line_number}: skipped malformed JSON: {exc}")
-                continue
-            if not isinstance(obj, dict):
-                print(f"[warn] {path}:{line_number}: skipped non-object JSONL record")
-                continue
-            records.append(obj)
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        for row in csv.DictReader(handle):
+            record = dict(row)
+            record["id"] = record.get("id") or record.get("original_index", "")
+            record["question"] = record.get("problem", "")
+            records.append(record)
     return records
 
 
@@ -353,7 +346,7 @@ def run_global_queue(*, input_files: list[Path], settings: RunSettings) -> None:
     tasks: list[PredictionTask] = []
 
     for input_file in input_files:
-        records = load_jsonl(input_file)
+        records = load_csv(input_file)
         if settings.limit is not None:
             records = records[: settings.limit]
         if not records:

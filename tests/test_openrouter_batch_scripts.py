@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import csv
 import hashlib
 import importlib.util
 from pathlib import Path
@@ -18,6 +19,87 @@ def load_script_module(name: str, relative_path: str) -> ModuleType:
     sys.modules[name] = module
     spec.loader.exec_module(module)
     return module
+
+
+def test_prediction_loader_accepts_route3_final_csv(tmp_path: Path) -> None:
+    module = load_script_module(
+        "run_openrouter_batch_predictions_route3_csv",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+    input_path = tmp_path / "route3.csv"
+    with input_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=["id", "problem", "answer", "topic", "answer_type", "urls"],
+        )
+        writer.writeheader()
+        writer.writerow(
+            {
+                "id": "route3-1",
+                "problem": "Which city hosted the example event?",
+                "answer": "Example City",
+                "topic": "Geography",
+                "answer_type": "Place",
+                "urls": '["https://en.wikipedia.org/wiki/Example_City"]',
+            }
+        )
+
+    records = module.load_csv(input_path)
+
+    assert records == [
+        {
+            "id": "route3-1",
+            "problem": "Which city hosted the example event?",
+            "answer": "Example City",
+            "topic": "Geography",
+            "answer_type": "Place",
+            "urls": '["https://en.wikipedia.org/wiki/Example_City"]',
+            "question": "Which city hosted the example event?",
+        }
+    ]
+
+
+def test_prediction_loader_accepts_simpleqa_verified_csv(tmp_path: Path) -> None:
+    module = load_script_module(
+        "run_openrouter_batch_predictions_verified_csv",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+    input_path = tmp_path / "simpleqa_verified.csv"
+    with input_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(
+            handle,
+            fieldnames=[
+                "original_index",
+                "problem",
+                "answer",
+                "topic",
+                "answer_type",
+                "multi_step",
+                "requires_reasoning",
+                "urls",
+            ],
+        )
+        writer.writeheader()
+        writer.writerow(
+            {
+                "original_index": "5",
+                "problem": "How much money was ordered to be paid?",
+                "answer": "120,000 euros",
+                "topic": "Politics",
+                "answer_type": "Number",
+                "multi_step": "true",
+                "requires_reasoning": "false",
+                "urls": "https://example.com/a,https://example.com/b",
+            }
+        )
+
+    records = module.load_csv(input_path)
+
+    assert records[0]["id"] == "5"
+    assert records[0]["question"] == "How much money was ordered to be paid?"
+    assert records[0]["answer"] == "120,000 euros"
+    assert records[0]["multi_step"] == "true"
+    assert records[0]["requires_reasoning"] == "false"
 
 
 def test_prediction_from_response_preserves_raw_openrouter_response() -> None:
