@@ -280,9 +280,9 @@ def build_route1_rewrite_prompt(payload: dict[str, Any]) -> str:
             "- This is a Route 1 QID-first multi-hop join question. Preserve the required reasoning clues so the question cannot be answered as a simpler single-hop question.\n"
             "- Do not name hidden bridge entities from the reasoning path unless the canonical question already names them.\n"
         )
-    hidden_entity_contracts = {"route4_two_hop", "route1_hidden_entity_two_hop"}
+    hidden_entity_contracts = {"route1_hidden_entity_two_hop"}
     if route_contract in hidden_entity_contracts:
-        route_label = "Route 4" if route_contract == "route4_two_hop" else "Route 1"
+        route_label = "Route 1"
         multi_hop_rule = (
             f"- This is a {route_label} hidden-entity two-hop question. Ask for the answer hop's object while identifying the hidden entity only through the clue hop.\n"
             "- Do not name any hidden entity in the rewritten question or search queries.\n"

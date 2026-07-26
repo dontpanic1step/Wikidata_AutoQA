@@ -12,7 +12,7 @@ from .entity_normalization import normalize_name
 from .text_normalization import build_text_matcher, display_key, text_contains_match
 
 from .config import LLMConfig, Settings
-from .domain_templates import get_all_templates, get_stage1_templates
+from .domain_templates import get_stage1_templates
 from .generation_models import GeneratedCandidate
 from .route3_circuit import CircuitOpenError
 from .route3_openrouter import (
@@ -30,7 +30,6 @@ from .generator_validators import (
 )
 from .grading import ModelPanelMember, evaluate_model_panel, make_grader_client, summarize_panel_runs
 from .generators import (
-    WikidataHiddenEntityTwoHopGenerator,
     WikidataLightGenerator,
     WikidataMultiHopJoinGenerator,
     WikidataWikipediaHybridGenerator,
@@ -41,7 +40,6 @@ from .number_reference import NUMBER_REFERENCE_MARGIN_KEY, build_number_referenc
 from .reasoning import normalize_reasoning_style
 from .route3_quality_rules import award_year_without_month_question_reason
 from .route1_multihop import ROUTE1_MULTIHOP_JOIN_ROUTE, get_route1_multihop_join_templates
-from .route4_two_hop import ROUTE4_TWO_HOP_CONTRACT, ROUTE4_WIKIDATA_TWO_HOP_ROUTE
 from .rule_based_answer_type_gate import (
     attach_rule_based_gate_result,
     evaluate_candidate_answer_type_gate,
@@ -178,8 +176,6 @@ def run_generation_pipeline(
         generators.append(WikidataLightGenerator())
     if ROUTE1_MULTIHOP_JOIN_ROUTE in settings.enabled_routes:
         generators.append(WikidataMultiHopJoinGenerator())
-    if ROUTE4_WIKIDATA_TWO_HOP_ROUTE in settings.enabled_routes:
-        generators.append(WikidataHiddenEntityTwoHopGenerator())
 
     all_generated_candidates: list[GeneratedCandidate] = []
     for generator in generators:
@@ -232,13 +228,6 @@ def _default_templates_for_enabled_routes(settings: Settings) -> list:
         )
     if ROUTE1_MULTIHOP_JOIN_ROUTE in settings.enabled_routes:
         templates.extend(get_route1_multihop_join_templates())
-    if ROUTE4_WIKIDATA_TWO_HOP_ROUTE in settings.enabled_routes:
-        templates.extend(
-            template
-            for template in get_all_templates()
-            if normalize_reasoning_style(template.reasoning_style or template.composition_style) == "single_fact"
-            and template.status != "frozen"
-        )
     return templates
 
 
@@ -891,7 +880,6 @@ def _build_route_rewrite_payload(
     if candidate.generation_route in {
         "route1_wikidata_light",
         ROUTE1_MULTIHOP_JOIN_ROUTE,
-        ROUTE4_WIKIDATA_TWO_HOP_ROUTE,
     } and source_candidate is not None:
         payload.update(
             {
@@ -914,28 +902,6 @@ def _build_route_rewrite_payload(
                         [],
                     ),
                     "route_contract": "route1_qid_first_multihop_join",
-                }
-            )
-        if candidate.generation_route == ROUTE4_WIKIDATA_TWO_HOP_ROUTE:
-            payload.update(
-                {
-                    "required_anchors": [
-                        str(source_candidate.source_metadata.get("visible_clue", {}).get("label", "")).strip()
-                    ],
-                    "wikidata_triplet_text": "See structured answer_hop and clue_hop fields.",
-                    "reasoning_style": source_candidate.reasoning_style,
-                    "hop_count": source_candidate.hop_count,
-                    "reasoning_path": source_candidate.reasoning_path,
-                    "answer_hop": source_candidate.source_metadata.get("answer_hop", {}),
-                    "clue_hop": source_candidate.source_metadata.get("clue_hop", {}),
-                    "clue_orientation": source_candidate.source_metadata.get("clue_orientation", ""),
-                    "hidden_entities": source_candidate.source_metadata.get("hidden_entities", []),
-                    "visible_clue": source_candidate.source_metadata.get("visible_clue", {}),
-                    "required_reasoning_clues": source_candidate.source_metadata.get(
-                        "required_reasoning_clues",
-                        [],
-                    ),
-                    "route_contract": ROUTE4_TWO_HOP_CONTRACT,
                 }
             )
         return payload

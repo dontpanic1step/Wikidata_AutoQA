@@ -88,29 +88,6 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn("Do not ask cumulative-statistic questions", prompt)
         self.assertIn("historically settled and cannot change", prompt)
 
-    def test_route4_two_hop_prompt_includes_hidden_entity_rules(self) -> None:
-        prompt = build_rewrite_prompt(
-            {
-                "task_type": "route1_question_and_queries",
-                "canonical_question": "Who was the director of the film whose based on was Example Book?",
-                "wikidata_triplet_text": "Example Film -- director -- Jane Doe",
-                "route_contract": "route4_two_hop",
-                "answer_hop": {"subject_label": "Example Film", "property_label": "director", "answer_labels": ["Jane Doe"]},
-                "clue_hop": {"subject_label": "Example Film", "property_label": "based on", "answer_labels": ["Example Book"]},
-                "clue_orientation": "hidden_subject",
-                "hidden_entities": [{"qid": "Q1", "label": "Example Film"}],
-                "visible_clue": {"qid": "Q3", "label": "Example Book"},
-                "required_reasoning_clues": ["based on", "Example Book"],
-                "answer_labels": ["Jane Doe"],
-                "forbidden_patterns": ["current", "latest"],
-                "cutoff_year": 2025,
-            }
-        )
-        self.assertIn("hidden-entity two-hop", prompt)
-        self.assertIn("Answer hop", prompt)
-        self.assertIn("Clue hop", prompt)
-        self.assertIn("Hidden entities", prompt)
-        self.assertIn("Do not name any hidden entity", prompt)
 
     def test_route2_prompt_includes_time_and_number_normalization_rules(self) -> None:
         prompt = build_rewrite_prompt(

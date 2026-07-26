@@ -8,7 +8,6 @@ from unittest.mock import patch
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.generators import (
-    WikidataHiddenEntityTwoHopGenerator,
     WikidataLightGenerator,
     WikidataMultiHopJoinGenerator,
     WikidataWikipediaHybridGenerator,
@@ -232,55 +231,6 @@ class GeneratorTests(unittest.TestCase):
         self.assertIn("Example Film -- based on -- Source Work", generated[0].evidence.text)
         self.assertEqual(generated[0].source_candidate.reasoning_style, "multi_hop_join")
 
-    def test_route4_two_hop_emits_composed_candidate(self) -> None:
-        answer_template = make_template()
-        clue_template = DomainTemplate(
-            domain="film_based_on",
-            topic="Arts and Media",
-            answer_type="Other",
-            question_family="what_film_based_on",
-            subject_type_qid="Q11424",
-            subject_type_label="film",
-            date_property_pid="P577",
-            target_property_pid="P144",
-            target_property_label="based on",
-            canonical_question_template="What was {descriptor} based on?",
-        )
-        answer_candidate = make_candidate()
-        clue_candidate = make_candidate()
-        clue_candidate.domain = clue_template.template_key
-        clue_candidate.answer_type = "Other"
-        clue_candidate.target_property_pid = "P144"
-        clue_candidate.target_property_label = "based on"
-        clue_candidate.answer_qids = ["Q3"]
-        clue_candidate.answer_labels = ["Example Book"]
-        clue_candidate.answer_aliases = []
-        clue_candidate.provenance_complete = True
-        resolution = AmbiguityResolution(status="label_unique", descriptor="Example Film")
-
-        def fake_harvest(*, template, **_kwargs):
-            if template.template_key == answer_template.template_key:
-                return [answer_candidate]
-            if template.template_key == clue_template.template_key:
-                return [clue_candidate]
-            return []
-
-        with (
-            patch("wikidata_simpleqa.generators.harvest_candidates", side_effect=fake_harvest),
-            patch("wikidata_simpleqa.generators.validate_route1_candidate", return_value=resolution),
-        ):
-            generated = WikidataHiddenEntityTwoHopGenerator().generate(
-                templates=[answer_template, clue_template],
-                settings=Settings(target_time="2020"),
-                client=FakeClient(),
-            )
-
-        director_candidate = next(item for item in generated if item.relation_or_claim == "director")
-        self.assertEqual(director_candidate.generation_route, "route4_wikidata_two_hop")
-        self.assertEqual(director_candidate.answer, "Jane Doe")
-        self.assertEqual(director_candidate.source_candidate.reasoning_style, "multi_hop_hidden_entity")
-        self.assertIn("Example Book", director_candidate.question)
-        self.assertNotIn("Example Film", director_candidate.question)
 
 
 if __name__ == "__main__":

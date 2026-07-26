@@ -10,11 +10,6 @@ from .candidate_harvester import harvest_candidates
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .models import CandidateFact, DomainTemplate
 from .reasoning import normalize_reasoning_style
-from .route4_two_hop import (
-    ROUTE4_WIKIDATA_TWO_HOP_ROUTE,
-    Route4TwoHopComposer,
-    get_route4_two_hop_single_hop_templates,
-)
 from .route1_validators import validate_route1_candidate
 from .route1_multihop import ROUTE1_MULTIHOP_JOIN_ROUTE, attach_seed_metadata
 from .wikipedia_client import WikipediaClient
@@ -132,50 +127,6 @@ class WikidataMultiHopJoinGenerator(CandidateGenerator):
         return generated
 
 
-@dataclass(slots=True)
-class WikidataHiddenEntityTwoHopGenerator(CandidateGenerator):
-    """Route 4 two-hop generator composed from validated single-hop facts."""
-
-    route_name: str = ROUTE4_WIKIDATA_TWO_HOP_ROUTE
-    source_type: str = "wikidata"
-    composer: Route4TwoHopComposer = field(default_factory=Route4TwoHopComposer)
-
-    def generate(
-        self,
-        *,
-        templates: Iterable[DomainTemplate],
-        settings,
-        client,
-    ) -> list[GeneratedCandidate]:
-        single_hop_templates = get_route4_two_hop_single_hop_templates(templates)
-        template_by_key = {template.template_key: template for template in single_hop_templates}
-        prepared_by_template: dict[str, list[CandidateFact]] = {}
-        for template in single_hop_templates:
-            prepared_by_template[template.template_key] = []
-            for raw_candidate in harvest_candidates(client=client, settings=settings, template=template):
-                raw_candidate.reasoning_style = normalize_reasoning_style(raw_candidate.reasoning_style)
-                if raw_candidate.reasoning_style != "single_fact":
-                    continue
-                prepared = _prepare_candidate_fact(
-                    client=client,
-                    settings=settings,
-                    template=template,
-                    candidate=raw_candidate,
-                )
-                if prepared is not None:
-                    prepared_by_template[template.template_key].append(prepared)
-
-        composed_candidates = self.composer.compose(prepared_by_template, template_by_key)
-        return [
-            _build_generated_candidate(
-                candidate=candidate,
-                template=template_by_key[candidate.source_metadata["answer_hop"]["template_key"]],
-                route_name=self.route_name,
-                source_type=self.source_type,
-                evidence=_build_wikidata_join_evidence(candidate, settings.run_date),
-            )
-            for candidate in composed_candidates
-        ]
 
 
 @dataclass(slots=True, kw_only=True)
