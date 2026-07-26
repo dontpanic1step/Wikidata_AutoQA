@@ -124,6 +124,8 @@ Route 3 final CSV or SimpleQA Verified CSV
 
 The prediction script accepts CSV only: `id/problem/answer` for Route 3 final output or `original_index/problem/answer` for SimpleQA Verified, with `original_index` normalized to prediction `id` and extra columns accepted. Prediction and judge artifacts remain JSONL. These scripts are retained formal tools, but are not generation, second-stage filtering, manual review, revision, or finalization components. Their prediction prompt/message construction, OpenRouter call settings, `GRADER_TEMPLATE`, grading labels, examples, and default unparseable-output mapping are protected behavior.
 
+Before any prediction request, the script resolves reasoning configuration for the complete selected-model list. Unknown models without an audited default, explicit effort, or explicit provider-default opt-in reject the entire batch and are reported together. Explicit effort values are sent unchanged; reasoning cannot be disabled by this tool.
+
 ## Maintenance contract
 
 - Keep `README.md`, `docs/design.md`, `docs/contract.md`, and `docs/default_settings.md` aligned with executable behavior.

@@ -335,6 +335,8 @@ python scripts\run_openrouter_batch_predictions.py inputs\evaluation `
   --limit 10
 ```
 
+The prediction command resolves reasoning for the complete model list before it creates the evaluation queue. Its audited nine-model defaults are recorded in `docs/default_settings.md`. An unknown model without an explicit `--reasoning-effort` causes the entire batch to exit and list every unresolved model before any evaluation request is sent. Explicit effort values are sent unchanged, including `max`; `--use-provider-reasoning-defaults` explicitly opts unknown models into an omitted reasoning field. There is no option to disable reasoning.
+
 Grade one prediction JSONL file or every matching JSONL file in a directory with the protected SimpleQA Verified prompt. The default judge is `openai/gpt-4.1-mini`:
 
 ```powershell

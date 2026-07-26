@@ -5,7 +5,9 @@ import hashlib
 import importlib.util
 from pathlib import Path
 import sys
-from types import ModuleType
+from types import ModuleType, SimpleNamespace
+
+import pytest
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -100,6 +102,144 @@ def test_prediction_loader_accepts_simpleqa_verified_csv(tmp_path: Path) -> None
     assert records[0]["answer"] == "120,000 euros"
     assert records[0]["multi_step"] == "true"
     assert records[0]["requires_reasoning"] == "false"
+
+
+def test_prediction_model_reasoning_defaults_are_exact() -> None:
+    module = load_script_module(
+        "run_openrouter_batch_predictions_reasoning_defaults",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+    expected = {
+        "openai/gpt-5.6-sol": {"effort": "max", "exclude": False},
+        "google/gemini-3.1-pro-preview": {"effort": "high", "exclude": False},
+        "anthropic/claude-sonnet-5": {"effort": "max", "exclude": False},
+        "deepseek/deepseek-v4-pro": {"effort": "xhigh", "exclude": False},
+        "qwen/qwen3.7-max": {"enabled": True, "exclude": False},
+        "z-ai/glm-5.2": {"effort": "xhigh", "exclude": False},
+        "moonshotai/kimi-k3": {"effort": "max", "exclude": False},
+        "minimax/minimax-m3": {"enabled": True, "exclude": False},
+        "xiaomi/mimo-v2.5-pro": {"enabled": True, "exclude": False},
+    }
+
+    assert module.MODELS == list(expected)
+    for model, reasoning in expected.items():
+        payload: dict[str, object] = {}
+        module.apply_reasoning_settings(payload, model=model, reasoning_effort="auto")
+        assert payload == {"reasoning": reasoning}
+        assert "verbosity" not in payload
+
+
+def test_explicit_max_reasoning_effort_is_not_rewritten() -> None:
+    module = load_script_module(
+        "run_openrouter_batch_predictions_explicit_max",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+    payload: dict[str, object] = {}
+
+    module.apply_reasoning_settings(
+        payload,
+        model="vendor/model",
+        reasoning_effort="max",
+    )
+
+    assert payload == {"reasoning": {"effort": "max", "exclude": False}}
+
+
+def test_reasoning_preflight_reports_every_unknown_model() -> None:
+    module = load_script_module(
+        "run_openrouter_batch_predictions_reasoning_preflight",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+
+    with pytest.raises(SystemExit) as exc_info:
+        module.validate_reasoning_configuration(
+            models=[
+                "vendor/model-a",
+                "openai/gpt-5.6-sol",
+                "vendor/model-b",
+                "vendor/model-a",
+                "vendor/model-c",
+            ],
+            reasoning_effort="auto",
+            use_provider_reasoning_defaults=False,
+        )
+
+    assert str(exc_info.value) == (
+        "Cannot start evaluation: 3 models have no audited reasoning defaults\n"
+        "and no explicit reasoning configuration:\n\n"
+        "- vendor/model-a\n"
+        "- vendor/model-b\n"
+        "- vendor/model-c\n\n"
+        "No evaluation requests were sent.\n\n"
+        "Add these models to MODEL_REASONING_SETTINGS, explicitly specify their\n"
+        "reasoning configuration, or opt into provider defaults with\n"
+        "--use-provider-reasoning-defaults."
+    )
+
+
+def test_main_rejects_unknown_models_before_any_request(monkeypatch) -> None:
+    module = load_script_module(
+        "run_openrouter_batch_predictions_preflight_order",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+    monkeypatch.setattr(
+        module,
+        "parse_args",
+        lambda: SimpleNamespace(
+            models="vendor/model-a,vendor/model-b",
+            input_dir="inputs",
+            reasoning_effort="auto",
+            use_provider_reasoning_defaults=False,
+        ),
+    )
+    requests_sent: list[str] = []
+
+    def record_request(*args, **kwargs):
+        requests_sent.append("sent")
+        raise AssertionError("request should not be sent")
+
+    monkeypatch.setattr(module.requests, "get", record_request)
+    monkeypatch.setattr(module.requests, "post", record_request)
+
+    with pytest.raises(SystemExit) as exc_info:
+        module.main()
+
+    assert "vendor/model-a" in str(exc_info.value)
+    assert "vendor/model-b" in str(exc_info.value)
+    assert requests_sent == []
+
+
+def test_unknown_model_accepts_explicit_effort_or_provider_defaults() -> None:
+    module = load_script_module(
+        "run_openrouter_batch_predictions_reasoning_opt_in",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+    module.validate_reasoning_configuration(
+        models=["vendor/model"],
+        reasoning_effort="high",
+        use_provider_reasoning_defaults=False,
+    )
+    explicit_payload: dict[str, object] = {}
+    module.apply_reasoning_settings(
+        explicit_payload,
+        model="vendor/model",
+        reasoning_effort="high",
+    )
+    assert explicit_payload == {"reasoning": {"effort": "high", "exclude": False}}
+
+    module.validate_reasoning_configuration(
+        models=["vendor/model"],
+        reasoning_effort="auto",
+        use_provider_reasoning_defaults=True,
+    )
+    provider_payload: dict[str, object] = {}
+    module.apply_reasoning_settings(
+        provider_payload,
+        model="vendor/model",
+        reasoning_effort="auto",
+        use_provider_reasoning_defaults=True,
+    )
+    assert provider_payload == {}
 
 
 def test_prediction_from_response_preserves_raw_openrouter_response() -> None:
@@ -284,7 +424,8 @@ def test_prediction_runner_user_message_and_mocked_response(monkeypatch, tmp_pat
         backoff_cap_seconds=0.0,
         max_tokens=None,
         temperature=0.0,
-        reasoning_effort=None,
+        reasoning_effort="auto",
+        use_provider_reasoning_defaults=True,
         proxy=None,
         blob_mode="ignore",
         limit=None,

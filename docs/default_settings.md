@@ -160,6 +160,24 @@ The exact CSV columns are `id`, `problem`, `answer`, `topic`, `answer_type`, and
 | Prediction output | per-input, per-model JSONL |
 | Judge input glob | `*.jsonl` |
 
+The audited prediction-model defaults are:
+
+| Model | Default `reasoning.effort` | Model-specific extra settings |
+| --- | --- | --- |
+| `openai/gpt-5.6-sol` | `max` | — |
+| `google/gemini-3.1-pro-preview` | `high` | — |
+| `anthropic/claude-sonnet-5` | `max` | — |
+| `deepseek/deepseek-v4-pro` | `xhigh` | — |
+| `qwen/qwen3.7-max` | not set | — |
+| `z-ai/glm-5.2` | `xhigh` | — |
+| `moonshotai/kimi-k3` | `max` | — |
+| `minimax/minimax-m3` | not set | — |
+| `xiaomi/mimo-v2.5-pro` | not set | — |
+
+In automatic mode, rows with an effort send that fixed effort. Rows marked `not set` send `reasoning.enabled=true` without an effort. Claude has no verbosity or other model-specific extra setting. A legal explicit `--reasoning-effort` overrides automatic selection and is sent unchanged, including `max`.
+
+Before any evaluation request, the script resolves every selected model. Unknown models without explicit reasoning configuration terminate the whole batch in one error listing all unresolved model IDs. `--use-provider-reasoning-defaults` is the explicit opt-in for unknown models and omits their reasoning field.
+
 The prediction prompt, model defaults, reasoning settings, request construction, retry/concurrency behavior, judge prompt, grading labels, and unparseable-output behavior are protected and are not cleanup settings.
 
 ## Cleanup preservation baseline

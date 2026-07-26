@@ -36,54 +36,44 @@ OPENROUTER_TITLE = "batch-openrouter-predictions"
 OPENROUTER_USER_AGENT = "wikidata-simpleqa-openrouter-batch/0.1"
 
 MODELS = [
-    "openai/gpt-5.5",
-    "anthropic/claude-sonnet-4.6",
+    "openai/gpt-5.6-sol",
     "google/gemini-3.1-pro-preview",
+    "anthropic/claude-sonnet-5",
     "deepseek/deepseek-v4-pro",
-    "qwen/qwen3.5-397b-a17b",
-    "z-ai/glm-5.1",
-    "moonshotai/kimi-k2.6",
-    "minimax/minimax-m2.7",
+    "qwen/qwen3.7-max",
+    "z-ai/glm-5.2",
+    "moonshotai/kimi-k3",
+    "minimax/minimax-m3",
     "xiaomi/mimo-v2.5-pro",
 ]
 
 MODEL_REASONING_SETTINGS: dict[str, dict[str, Any]] = {
-    "openai/gpt-5.5": {
-        "reasoning_effort": "xhigh",
-        "native_effort": "xhigh",
-    },
-    "anthropic/claude-sonnet-4.6": {
-        "reasoning_effort": "xhigh",
-        "verbosity": "max",
-        "native_effort": "max",
+    "openai/gpt-5.6-sol": {
+        "reasoning_effort": "max",
     },
     "google/gemini-3.1-pro-preview": {
         "reasoning_effort": "high",
-        "native_effort": "high",
+    },
+    "anthropic/claude-sonnet-5": {
+        "reasoning_effort": "max",
     },
     "deepseek/deepseek-v4-pro": {
         "reasoning_effort": "xhigh",
-        "native_effort": "xhigh",
     },
-    "qwen/qwen3.5-397b-a17b": {
-        "reasoning_effort": "xhigh",
-        "native_effort": "xhigh",
+    "qwen/qwen3.7-max": {
+        "reasoning_effort": None,
     },
-    "z-ai/glm-5.1": {
+    "z-ai/glm-5.2": {
         "reasoning_effort": "xhigh",
-        "native_effort": "xhigh",
     },
-    "moonshotai/kimi-k2.6": {
-        "reasoning_effort": "xhigh",
-        "native_effort": "xhigh",
+    "moonshotai/kimi-k3": {
+        "reasoning_effort": "max",
     },
-    "minimax/minimax-m2.7": {
-        "reasoning_effort": "xhigh",
-        "native_effort": "xhigh",
+    "minimax/minimax-m3": {
+        "reasoning_effort": None,
     },
     "xiaomi/mimo-v2.5-pro": {
-        "reasoning_effort": "xhigh",
-        "native_effort": "xhigh",
+        "reasoning_effort": None,
     },
 }
 
@@ -92,13 +82,20 @@ RETRY_STATUS_CODES = {408, 409, 425, 429, 500, 502, 503, 504}
 
 def main() -> None:
     args = parse_args()
+    models = parse_models(args.models)
+    if args.input_dir:
+        validate_reasoning_configuration(
+            models=models,
+            reasoning_effort=args.reasoning_effort,
+            use_provider_reasoning_defaults=args.use_provider_reasoning_defaults,
+        )
     api_key = os.environ.get(args.api_key_env)
     if not api_key and not args.print_model_defaults:
         raise SystemExit(f"Missing API key in environment variable {args.api_key_env}")
 
     if args.print_model_defaults:
         rows = fetch_model_defaults(
-            models=parse_models(args.models),
+            models=models,
             timeout_seconds=args.timeout_seconds,
             proxy=optional_proxy(args.proxy),
         )
@@ -116,7 +113,7 @@ def main() -> None:
 
     settings = RunSettings(
         api_key=api_key or "",
-        models=parse_models(args.models),
+        models=models,
         output_dir=output_dir,
         rounds=args.rounds,
         concurrency=args.concurrency,
@@ -126,7 +123,8 @@ def main() -> None:
         backoff_cap_seconds=args.backoff_cap_seconds,
         max_tokens=args.max_tokens,
         temperature=args.temperature,
-        reasoning_effort=None if args.disable_reasoning else args.reasoning_effort,
+        reasoning_effort=args.reasoning_effort,
+        use_provider_reasoning_defaults=args.use_provider_reasoning_defaults,
         proxy=optional_proxy(args.proxy),
         blob_mode=args.blob_mode,
         limit=args.limit,
@@ -173,14 +171,17 @@ def parse_args() -> argparse.Namespace:
         default="auto",
         choices=["auto", "minimal", "low", "medium", "high", "xhigh", "max"],
         help=(
-            "Reasoning effort override. Default auto uses per-model highest documented settings "
-            "from MODEL_REASONING_SETTINGS."
+            "Reasoning effort override. Default auto uses audited per-model settings from "
+            "MODEL_REASONING_SETTINGS and rejects models absent from that table."
         ),
     )
     parser.add_argument(
-        "--disable-reasoning",
+        "--use-provider-reasoning-defaults",
         action="store_true",
-        help="Do not send the reasoning field.",
+        help=(
+            "For models absent from MODEL_REASONING_SETTINGS, omit the reasoning field and use "
+            "the provider default instead of rejecting the batch."
+        ),
     )
     parser.add_argument(
         "--blob-mode",
@@ -215,7 +216,8 @@ class RunSettings:
         backoff_cap_seconds: float,
         max_tokens: int | None,
         temperature: float,
-        reasoning_effort: str | None,
+        reasoning_effort: str,
+        use_provider_reasoning_defaults: bool,
         proxy: str | None,
         blob_mode: str,
         limit: int | None,
@@ -232,6 +234,7 @@ class RunSettings:
         self.max_tokens = max_tokens
         self.temperature = temperature
         self.reasoning_effort = reasoning_effort
+        self.use_provider_reasoning_defaults = use_provider_reasoning_defaults
         self.proxy = proxy
         self.blob_mode = blob_mode
         self.limit = limit
@@ -261,6 +264,33 @@ def parse_models(value: str) -> list[str]:
     if not models:
         raise SystemExit("At least one model is required.")
     return models
+
+
+def validate_reasoning_configuration(
+    *,
+    models: list[str],
+    reasoning_effort: str,
+    use_provider_reasoning_defaults: bool,
+) -> None:
+    if reasoning_effort != "auto" or use_provider_reasoning_defaults:
+        return
+    missing = list(
+        dict.fromkeys(model for model in models if model not in MODEL_REASONING_SETTINGS)
+    )
+    if not missing:
+        return
+    count = len(missing)
+    noun = "model" if count == 1 else "models"
+    model_lines = "\n".join(f"- {model}" for model in missing)
+    raise SystemExit(
+        f"Cannot start evaluation: {count} {noun} have no audited reasoning defaults\n"
+        "and no explicit reasoning configuration:\n\n"
+        f"{model_lines}\n\n"
+        "No evaluation requests were sent.\n\n"
+        "Add these models to MODEL_REASONING_SETTINGS, explicitly specify their\n"
+        "reasoning configuration, or opt into provider defaults with\n"
+        "--use-provider-reasoning-defaults."
+    )
 
 
 def discover_input_files(input_dir: Path, pattern: str, *, recursive: bool) -> list[Path]:
@@ -531,7 +561,12 @@ def call_openrouter(*, model: str, user_content: str, settings: RunSettings) -> 
     }
     if settings.max_tokens is not None:
         payload["max_tokens"] = settings.max_tokens
-    apply_reasoning_settings(payload, model=model, reasoning_effort=settings.reasoning_effort)
+    apply_reasoning_settings(
+        payload,
+        model=model,
+        reasoning_effort=settings.reasoning_effort,
+        use_provider_reasoning_defaults=settings.use_provider_reasoning_defaults,
+    )
 
     headers = {
         "Authorization": f"Bearer {settings.api_key}",
@@ -583,32 +618,34 @@ def apply_reasoning_settings(
     payload: dict[str, Any],
     *,
     model: str,
-    reasoning_effort: str | None,
+    reasoning_effort: str,
+    use_provider_reasoning_defaults: bool = False,
 ) -> None:
-    """Apply per-model maximum reasoning settings."""
-    if reasoning_effort is None:
+    """Apply audited defaults or an explicit reasoning configuration."""
+    if reasoning_effort == "auto":
+        model_settings = MODEL_REASONING_SETTINGS.get(model)
+        if model_settings is None:
+            if use_provider_reasoning_defaults:
+                return
+            raise ValueError(f"No audited reasoning default for model: {model}")
+        effort = model_settings.get("reasoning_effort")
+        if effort:
+            payload["reasoning"] = {"effort": str(effort), "exclude": False}
+        else:
+            payload["reasoning"] = {"enabled": True, "exclude": False}
         return
-    model_settings = MODEL_REASONING_SETTINGS.get(model, {})
-    if reasoning_effort == "auto":
-        effort = str(model_settings.get("reasoning_effort") or "xhigh")
-    elif reasoning_effort == "max":
-        effort = "xhigh"
-    else:
-        effort = reasoning_effort
-    payload["reasoning"] = {
-        "effort": effort,
-        "exclude": False,
-    }
-    if reasoning_effort == "auto":
-        verbosity = model_settings.get("verbosity")
-        if verbosity:
-            payload["verbosity"] = verbosity
+    payload["reasoning"] = {"effort": reasoning_effort, "exclude": False}
 
 
 def request_settings_for_output(*, model: str, settings: RunSettings) -> dict[str, Any]:
     """Return request settings used for the OpenRouter call."""
     payload: dict[str, Any] = {}
-    apply_reasoning_settings(payload, model=model, reasoning_effort=settings.reasoning_effort)
+    apply_reasoning_settings(
+        payload,
+        model=model,
+        reasoning_effort=settings.reasoning_effort,
+        use_provider_reasoning_defaults=settings.use_provider_reasoning_defaults,
+    )
     return {
         "temperature": settings.temperature,
         "max_tokens": settings.max_tokens,
