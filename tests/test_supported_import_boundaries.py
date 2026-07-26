@@ -79,3 +79,25 @@ def test_protected_evaluation_help_does_not_import_historical_package_modules() 
         completed, modules = _probe_help(script_name)
         assert completed.returncode == 0
         assert not any(part in module for module in modules for part in HISTORICAL_MODULE_PARTS)
+
+
+def test_package_initialization_exports_only_supported_settings() -> None:
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(ROOT / "src")
+    completed = subprocess.run(
+        [
+            sys.executable,
+            "-c",
+            "import json, sys, wikidata_simpleqa; "
+            "print(json.dumps({'exports': wikidata_simpleqa.__all__, "
+            "'modules': sorted(name for name in sys.modules "
+            "if name.startswith('wikidata_simpleqa'))}))",
+        ],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=True,
+    )
+    payload = json.loads(completed.stdout)
+    assert payload["exports"] == ["Settings"]
