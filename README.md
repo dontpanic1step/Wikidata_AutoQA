@@ -240,6 +240,9 @@ python scripts\run_route3_review.py export `
 
 Repeat `--segment-manifest` for every top-up segment represented in the accepted JSONL. Before writing review artifacts, GPT-4.1-mini classifies each Q/A into one of the ten formal topics with temperature `0`, `max_tokens=256`, and bounded concurrency. Calls use the durable Route 3 OpenRouter executor under `topic_classification_calls`; review state retains the complete raw response. Invalid labels reject the candidate without retry or fallback. `--markdown-output` is a base path: the command writes shards of at most 50 candidates, and the final suffix uses the actual last candidate number. For 68 candidates, the files are `review_1-50.md` and `review_51-68.md`. Each shard contains accepted candidates only, with stable ID, Q/A, answer type, Wikipedia page, selected table, automatic topic, automatic human-edit status, and separately quoted two-model answers.
 
+The export also writes `statistics.json` beside the XLSX. It records the original pre-human-review total, per-type counts and two-decimal percentages, plus predicted final totals. If any original answer type is absent, prediction is skipped and the JSON and CLI summary identify the missing types and risk.
+
+
 The XLSX columns are exactly:
 
 ```text
@@ -284,6 +287,9 @@ python scripts\finalize_route3_review.py `
 ```
 
 Finalization selects at most one candidate per canonical page with the M4 allocation algorithm, applies the formal answer-type ratios, and removes excess candidates iteratively from the largest eligible global topic with the recorded recipe seed. It does not call the historical similarity deduplication, subject-URL deduplication, domain round-robin, or `final_selection.py` paths.
+
+If any answer type is absent after canonical-page allocation, finalization skips rebalancing and writes every page-allocated candidate, preventing an empty CSV.
+
 
 The final CSV columns are exactly:
 

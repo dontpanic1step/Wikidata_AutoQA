@@ -49,13 +49,21 @@ def finalize_review_state(
     answer_type_counts = Counter({answer_type: 0 for answer_type in ANSWER_TYPES})
     for artifact in selected_artifacts.values():
         answer_type_counts[artifact.provenance.answer_type] += 1
-    rebalance_n, targets = rebalance_targets(answer_type_counts)
-    final_ids = _remove_topic_excess(
-        selected_artifacts,
-        answer_type_counts=answer_type_counts,
-        targets=targets,
-        recipe_seed=recipe_seed,
-    )
+    zero_answer_types = [
+        answer_type for answer_type in ANSWER_TYPES if answer_type_counts[answer_type] == 0
+    ]
+    if zero_answer_types:
+        rebalance_n = None
+        targets = dict(answer_type_counts)
+        final_ids = set(selected_artifacts)
+    else:
+        rebalance_n, targets = rebalance_targets(answer_type_counts)
+        final_ids = _remove_topic_excess(
+            selected_artifacts,
+            answer_type_counts=answer_type_counts,
+            targets=targets,
+            recipe_seed=recipe_seed,
+        )
     final_records = [_final_csv_record(selected_artifacts[candidate_id]) for candidate_id in sorted(final_ids)]
     final_counts = Counter(record["answer_type"] for record in final_records)
     return {
@@ -64,6 +72,8 @@ def finalize_review_state(
             "recipe_seed": recipe_seed,
             "accepted_before_page_dedup": len(bundles),
             "canonical_pages_after_dedup": len(assignments),
+            "rebalance_skipped": bool(zero_answer_types),
+            "zero_answer_types": zero_answer_types,
             "rebalance_n": rebalance_n,
             "answer_type_targets": targets,
             "final_answer_type_counts": {

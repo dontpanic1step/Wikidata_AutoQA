@@ -95,6 +95,40 @@ def test_finalization_is_seeded_and_independent_of_input_order() -> None:
     assert forward["summary"]["recipe_seed"] == 42
 
 
+def test_finalization_skips_rebalance_when_an_answer_type_is_missing() -> None:
+    records = [
+        accepted_record(page_id=1, answer_type="Place"),
+        accepted_record(page_id=2, answer_type="Number"),
+        accepted_record(page_id=3, answer_type="Date"),
+        accepted_record(page_id=4, answer_type="Other"),
+    ]
+    state = create_review_state(
+        records,
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
+    rows = [review_row(record["id"], topic="History") for record in records]
+    state = apply_review_rows(state, rows)
+
+    result = finalize_review_state(state, review_rows=rows)
+
+    summary = result["summary"]
+    assert summary["rebalance_skipped"] is True
+    assert summary["zero_answer_types"] == ["Person"]
+    assert summary["rebalance_n"] is None
+    assert summary["answer_type_targets"] == {
+        "Person": 0,
+        "Place": 1,
+        "Number": 1,
+        "Date": 1,
+        "Other": 1,
+    }
+    assert summary["final_total"] == 4
+    assert {record["id"] for record in result["records"]} == {
+        record["id"] for record in records
+    }
+
+
 def test_finalization_rejects_unready_review_state() -> None:
     record = accepted_record()
     state = create_review_state(

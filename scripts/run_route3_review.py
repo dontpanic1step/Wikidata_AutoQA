@@ -22,6 +22,7 @@ from wikidata_simpleqa.route3_review import (
     TOPIC_CLASSIFICATION_MODEL,
     accepted_review_bundles,
     apply_review_rows,
+    build_review_statistics,
     classify_review_topics,
     create_review_state,
     load_review_state,
@@ -30,6 +31,7 @@ from wikidata_simpleqa.route3_review import (
     rerun_review_candidates,
     write_review_state,
     write_review_markdown_shards,
+    write_review_statistics,
     write_review_workbook,
 )
 from wikidata_simpleqa.search_client import DuckDuckGoSearchClient
@@ -76,6 +78,10 @@ def main(
         classifier=topic_classifier,
         concurrency_limit=args.topic_concurrency_limit,
     )
+    statistics = state.get("pre_human_review_statistics")
+    if statistics is None:
+        statistics = build_review_statistics(state)
+        state["pre_human_review_statistics"] = statistics
     write_review_state(args.state_output, state)
     markdown_paths = write_review_markdown_shards(
         args.markdown_output,
@@ -83,15 +89,20 @@ def main(
         run_id=args.run_id,
     )
     write_review_workbook(args.xlsx_output, state)
+    statistics_path = args.xlsx_output.with_name("statistics.json")
+    write_review_statistics(statistics_path, statistics)
     summary = {
         "run_id": args.run_id,
         "review_state": str(args.state_output),
         "markdown": [str(path) for path in markdown_paths],
         "xlsx": str(args.xlsx_output),
+        "statistics": str(statistics_path),
         "accepted": len(accepted_review_bundles(state)),
         "rerun": _status_count(state, "rerun"),
         "rejected": _status_count(state, "rejected"),
     }
+    if statistics["prediction_skipped"]:
+        summary["risk"] = statistics["risk"]
     print(json.dumps(summary, indent=2, ensure_ascii=False))
     return 0
 

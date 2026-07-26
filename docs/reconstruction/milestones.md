@@ -576,6 +576,17 @@ review_51-68.md
 - durable response record 保留原始 HTTP body；
 -非法回复直接把 candidate 标为 rejected，不重试、不 fallback、不进入 review MD/XLSX。
 
+### Statistics JSON
+
+生成 Markdown/XLSX 时，在 XLSX 同目录写入 `statistics.json`：
+
+-人工审核前原始 QA 总数；
+-各 answer type 原始数量和百分比，百分数保留两位小数；
+-预计最终 QA 总数和各 answer type 数量。
+
+如果原始 QA 中至少一个 answer type 数量为 0，则跳过预测，并在 JSON 和 CLI 输出中列出缺失类型及风险。
+
+
 ### XLSX 规范英文列名
 
 列严格改为：
@@ -714,6 +725,8 @@ target_i = min(n_i, ceil(N * p_i))
 ```
 
 最终总数允许不等于 `N`。
+
+如果页面去重后至少一个 answer type 数量为 0，则跳过 answer-type rebalance，直接输出页面去重后的全部 candidates，避免空 CSV。
 
 ### Topic 多样性
 

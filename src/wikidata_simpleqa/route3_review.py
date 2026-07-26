@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from copy import deepcopy
 import json
@@ -27,6 +28,7 @@ from .route3_circuit import ServiceCircuit
 from .route3_ddg import Route3DDGVerifierResultStore
 from .route3_ids import route3_record_identity
 from .route3_openrouter import bind_route3_allocation_client, bind_route3_allocation_panel
+from .route3_quantity_prediction import ANSWER_TYPES, predict_pre_review_quantities
 from .route3_run_ledger import atomic_write_json
 
 
@@ -184,6 +186,59 @@ def load_review_state(path: Path) -> dict[str, Any]:
 def write_review_state(path: Path, state: dict[str, Any]) -> None:
     """Atomically write one review state."""
     atomic_write_json(path, state)
+
+
+def build_review_statistics(state: dict[str, Any]) -> dict[str, Any]:
+    """Summarize the original pre-human-review QAs and projected final quantities."""
+    records = [bundle["active_record"] for bundle in state["candidates"]]
+    counts = Counter({answer_type: 0 for answer_type in ANSWER_TYPES})
+    for record in records:
+        counts[str(record["answer_type"])] += 1
+    total = len(records)
+    percentages = {
+        answer_type: f"{(counts[answer_type] * 100 / total) if total else 0.0:.2f}%"
+        for answer_type in ANSWER_TYPES
+    }
+    zero_answer_types = [
+        answer_type for answer_type in ANSWER_TYPES if counts[answer_type] == 0
+    ]
+    statistics = {
+        "original_qa_total": total,
+        "original_answer_type_counts": dict(counts),
+        "original_answer_type_percentages": percentages,
+        "prediction_skipped": bool(zero_answer_types),
+        "zero_answer_types": zero_answer_types,
+        "risk": "",
+        "predicted_qa_total": None,
+        "predicted_answer_type_counts": None,
+    }
+    if zero_answer_types:
+        statistics["risk"] = (
+            "Prediction skipped because these answer types have zero original QAs: "
+            f"{', '.join(zero_answer_types)}. Rebalancing could be unsafe."
+        )
+        return statistics
+
+    recipe_seeds = {
+        int(record["source_metadata"]["recipe_seed"])
+        for record in records
+    }
+    if len(recipe_seeds) != 1:
+        raise ValueError("review statistics require one recipe seed")
+    prediction = predict_pre_review_quantities(
+        records,
+        recipe_seed=recipe_seeds.pop(),
+    )
+    statistics["predicted_qa_total"] = prediction["projected_final_total"]
+    statistics["predicted_answer_type_counts"] = prediction[
+        "projected_answer_type_targets"
+    ]
+    return statistics
+
+
+def write_review_statistics(path: Path, statistics: dict[str, Any]) -> None:
+    """Atomically write the pre-human-review statistics artifact."""
+    atomic_write_json(path, statistics)
 
 
 def accepted_review_bundles(state: dict[str, Any]) -> list[dict[str, Any]]:

@@ -25,6 +25,7 @@ from wikidata_simpleqa.route3_review import (
     REVIEW_TOPICS,
     accepted_review_bundles,
     apply_review_rows,
+    build_review_statistics,
     classify_review_topics,
     create_review_state as _create_review_state,
     read_review_workbook,
@@ -249,6 +250,15 @@ def test_export_cli_writes_review_state_markdown_and_xlsx() -> None:
         ] == '{"id":"topic-response","choices":[]}'
         assert (root / "review_1-1.md").exists()
         assert workbook_path.exists()
+        statistics = json.loads(
+            (root / "statistics.json").read_text(encoding="utf-8")
+        )
+        assert statistics["original_qa_total"] == 1
+        assert statistics["original_answer_type_percentages"]["Person"] == "100.00%"
+        assert statistics["prediction_skipped"] is True
+        assert statistics["zero_answer_types"] == ["Place", "Number", "Date", "Other"]
+        assert statistics["predicted_qa_total"] is None
+        assert exported_state["pre_human_review_statistics"] == statistics
         exported_workbook = load_workbook(workbook_path)
         assert exported_workbook["review"]["E2"].value == "History"
         assert exported_workbook["review"]["F2"].value == "No"
@@ -288,6 +298,53 @@ def test_export_cli_writes_review_state_markdown_and_xlsx() -> None:
         assert next_revision["topic"] == "History"
         assert next_revision["status"] == "accepted"
         assert load_workbook(next_workbook_path)["review"]["E2"].value == "History"
+
+
+def test_review_statistics_predicts_when_every_answer_type_is_present() -> None:
+    records = [
+        accepted_record(page_id=index, answer_type=answer_type)
+        for index, answer_type in enumerate(
+            ("Person", "Place", "Number", "Date", "Other"),
+            start=1,
+        )
+    ]
+    state = create_review_state(
+        records,
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
+
+    statistics = build_review_statistics(state)
+
+    assert statistics == {
+        "original_qa_total": 5,
+        "original_answer_type_counts": {
+            "Person": 1,
+            "Place": 1,
+            "Number": 1,
+            "Date": 1,
+            "Other": 1,
+        },
+        "original_answer_type_percentages": {
+            "Person": "20.00%",
+            "Place": "20.00%",
+            "Number": "20.00%",
+            "Date": "20.00%",
+            "Other": "20.00%",
+        },
+        "prediction_skipped": False,
+        "zero_answer_types": [],
+        "risk": "",
+        "predicted_qa_total": 5,
+        "predicted_answer_type_counts": {
+            "Person": 1,
+            "Place": 1,
+            "Number": 1,
+            "Date": 1,
+            "Other": 1,
+        },
+    }
+
 
 def test_markdown_and_workbook_show_only_formal_review_fields() -> None:
     state = create_review_state(
