@@ -1,0 +1,81 @@
+from __future__ import annotations
+
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+
+
+ROOT = Path(__file__).resolve().parents[1]
+SUPPORTED_SCRIPTS = (
+    "run_wikipedia_infobox_recipe.py",
+    "run_wikipedia_infobox_pipeline.py",
+    "run_route3_review.py",
+    "finalize_route3_review.py",
+    "run_openrouter_batch_predictions.py",
+    "judge_openrouter_batch_predictions.py",
+)
+PROTECTED_EVALUATION_SCRIPTS = {
+    "run_openrouter_batch_predictions.py",
+    "judge_openrouter_batch_predictions.py",
+}
+HISTORICAL_MODULE_PARTS = (
+    "generation_pipeline",
+    "kelm_generator",
+    "pipeline",
+    "route1_",
+    "route4_",
+)
+MODULE_MARKER = "__WIKIDATA_SIMPLEQA_MODULES__="
+IMPORT_PROBE = """
+import json
+import runpy
+import sys
+
+script = sys.argv[1]
+sys.argv = [script, "--help"]
+try:
+    runpy.run_path(script, run_name="__main__")
+except SystemExit as exc:
+    if exc.code not in (None, 0):
+        raise
+modules = sorted(name for name in sys.modules if name.startswith("wikidata_simpleqa"))
+print("__WIKIDATA_SIMPLEQA_MODULES__=" + json.dumps(modules))
+"""
+
+
+def _probe_help(script_name: str) -> tuple[subprocess.CompletedProcess[str], list[str]]:
+    script = ROOT / "scripts" / script_name
+    env = os.environ.copy()
+    env["PYTHONPATH"] = os.pathsep.join((str(ROOT / "src"), str(ROOT / "scripts")))
+    completed = subprocess.run(
+        [sys.executable, "-c", IMPORT_PROBE, str(script)],
+        cwd=ROOT,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    marker_lines = [line for line in completed.stdout.splitlines() if line.startswith(MODULE_MARKER)]
+    modules = json.loads(marker_lines[-1][len(MODULE_MARKER) :]) if marker_lines else []
+    return completed, modules
+
+
+def test_supported_script_set_is_explicit() -> None:
+    assert all((ROOT / "scripts" / name).is_file() for name in SUPPORTED_SCRIPTS)
+
+
+def test_supported_scripts_expose_clean_process_help() -> None:
+    for script_name in SUPPORTED_SCRIPTS:
+        completed, _ = _probe_help(script_name)
+        assert completed.returncode == 0, (
+            f"{script_name} --help failed\nstdout:\n{completed.stdout}\nstderr:\n{completed.stderr}"
+        )
+
+
+def test_protected_evaluation_help_does_not_import_historical_package_modules() -> None:
+    for script_name in PROTECTED_EVALUATION_SCRIPTS:
+        completed, modules = _probe_help(script_name)
+        assert completed.returncode == 0
+        assert not any(part in module for module in modules for part in HISTORICAL_MODULE_PARTS)
