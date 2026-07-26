@@ -12,6 +12,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from wikidata_simpleqa.cli_output import print_json_summary
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.grading import ModelPanelMember
 from wikidata_simpleqa.route3_circuit import ServiceCircuit
@@ -103,7 +104,7 @@ def main(
     }
     if statistics["prediction_skipped"]:
         summary["risk"] = statistics["risk"]
-    print(json.dumps(summary, indent=2, ensure_ascii=False))
+    print_json_summary(summary)
     return 0
 
 

@@ -19,6 +19,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from wikidata_simpleqa.cli_output import print_json_summary
 from wikidata_simpleqa.io import append_jsonl, write_jsonl
 from wikidata_simpleqa.page_id_lists import (
     PageIdListEntry,
@@ -257,7 +258,7 @@ def _main(segment_writer_locks: ExitStack) -> int:
     if args.status:
         run_id = safe_artifact_id(args.run_id, fallback="route3_recipe")
         segment_dir = args.segment_dir or ROOT / "outputs" / "recipe_segments" / run_id
-        print(json.dumps(_recipe_status_payload(run_id, segment_dir), indent=2, ensure_ascii=False))
+        print_json_summary(_recipe_status_payload(run_id, segment_dir))
         return 0
     _apply_recipe_big_batch_mode(args)
     run_started = perf_counter()
@@ -446,7 +447,7 @@ def _main(segment_writer_locks: ExitStack) -> int:
                     f"primary_pages={ledger.get('primary_pages', 0)} "
                     f"terminal_pages={ledger.get('terminal_pages', 0)}"
                 )
-            print(json.dumps(_recipe_status_payload(run_id, segment_dir), indent=2, ensure_ascii=False))
+            print_json_summary(_recipe_status_payload(run_id, segment_dir))
             return 2
         segment_summaries.append(summary)
         remaining_reuse_cached_page_count = _decrement_recipe_budget(
@@ -505,7 +506,7 @@ def _main(segment_writer_locks: ExitStack) -> int:
         existing_accepted_records=[],
         existing_rejected_records=[],
     )
-    print(json.dumps(summary, indent=2, ensure_ascii=False))
+    print_json_summary(summary)
     return 0
 
 

@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import json
 import sys
 from pathlib import Path
 
@@ -12,6 +11,7 @@ SRC = ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
+from wikidata_simpleqa.cli_output import print_json_summary
 from wikidata_simpleqa.public_ids import (
     load_public_id_registry,
     public_id_registry_lock,
@@ -47,7 +47,7 @@ def main() -> int:
         "output": str(args.output),
         "id_registry": str(args.id_registry),
     }
-    print(json.dumps(summary, indent=2, ensure_ascii=False))
+    print_json_summary(summary)
     return 0
 
 

@@ -50,6 +50,7 @@ Temporal audit uses `run_date`, evidence `retrieved_at`, and the effective `cuto
 ## Durable execution contract
 
 - Formal non-dry runs require a clean Git worktree.
+- The generation worker, recipe summary/status, review, and finalization JSON summaries configure stdout as UTF-8 before printing, independently of the inherited Windows console encoding.
 - A segment fingerprint fixes the Git SHA, prompt hash, resolved result-affecting configuration, model parameters, answer/source modes, primary allocation target, seed, cache policy, table method, DuckDuckGo settings, and second-stage settings.
 - Only an identical fingerprint may resume or reuse a segment. Complete segments reuse; incomplete segments resume; incompatible or legacy incomplete schemas are rejected. Top-ups use new segment IDs.
 - The authority order is manifest, immutable page allocations, Wikipedia page archives, external-call records, terminal attempt ledgers, then rebuildable accepted/rejected/summary outputs. State is discovery telemetry only.
