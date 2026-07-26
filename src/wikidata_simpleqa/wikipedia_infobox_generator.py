@@ -22,6 +22,7 @@ from .route3_openrouter import (
     AbandonedExternalCallError,
     AmbiguousExternalCallError,
     DefiniteOpenRouterHTTPError,
+    DefiniteOpenRouterResponseError,
 )
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .date_reference import normalize_date_answer, normalize_gate_date_answer
@@ -614,11 +615,11 @@ class WikipediaInfoboxTableGenerator:
                 DefiniteOpenRouterHTTPError,
             ):
                 raise
-            except Exception as exc:  # noqa: BLE001
+            except DefiniteOpenRouterResponseError as exc:
                 timings["total_generation_seconds"] = _elapsed(candidate_start)
                 page_candidates = [_rejected_placeholder(
                     url=url,
-                    reason=f"wikipedia_infobox_generation_error:{type(exc).__name__}",
+                    reason="openrouter_unparseable_response",
                     run_date=run_date,
                     timings=timings,
                     content_domain=self._domain_for_url(url, url, normalize_wikipedia_title(url)),

@@ -8,6 +8,8 @@ import sys
 import tempfile
 from copy import deepcopy
 from pathlib import Path
+from types import SimpleNamespace
+from unittest.mock import patch
 
 import pytest
 from openpyxl import load_workbook
@@ -20,6 +22,7 @@ if str(SCRIPTS) not in sys.path:
 from run_route3_review import main as review_main  # noqa: E402
 from wikidata_simpleqa.route3_artifacts import Route3CandidateArtifact
 from wikidata_simpleqa.route3_ids import route3_record_id
+from wikidata_simpleqa.route3_circuit import ServiceCircuit
 from wikidata_simpleqa.route3_review import (
     REVIEW_COLUMNS,
     REVIEW_TOPICS,
@@ -27,6 +30,8 @@ from wikidata_simpleqa.route3_review import (
     apply_review_rows,
     build_review_statistics,
     classify_review_topics,
+    _generated_candidate,
+    post_generation_processor,
     create_review_state as _create_review_state,
     read_review_workbook,
     render_review_markdown,
@@ -474,6 +479,63 @@ def test_answer_edit_clears_aliases_and_delete_skips_rerun() -> None:
     )
     assert calls == []
     assert accepted_review_bundles(rerun) == []
+
+
+def test_post_generation_processor_returns_terminal_rejection(tmp_path: Path) -> None:
+    original = accepted_record()
+    state = create_review_state(
+        [original],
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
+    bundle = state["candidates"][0]
+    artifact = Route3CandidateArtifact.from_dict(bundle["artifact"])
+    candidate = _generated_candidate(bundle["active_record"], artifact)
+    rejected_record = candidate.to_rejected_record(
+        reason="second_stage_unparseable_response",
+        notes={"error_type": "RuntimeError"},
+    )
+    with patch(
+        "wikidata_simpleqa.generation_pipeline.process_generated_candidates",
+        return_value=SimpleNamespace(accepted=[], rejected=[rejected_record]),
+    ):
+        processor = post_generation_processor(
+            settings=object(),
+            search_client=object(),
+            second_stage_model_clients=None,
+            grading_grader_client=None,
+            external_call_record_root=tmp_path / "external_calls",
+            ddg_verifier_result_root=tmp_path / "ddg",
+            segment_fingerprint="fingerprint",
+            duckduckgo_circuit=ServiceCircuit(service="duckduckgo"),
+        )
+        status, returned_record = processor(candidate)
+
+    assert status == "rejected"
+    assert returned_record is rejected_record
+
+
+def test_rerun_unexpected_exception_leaves_input_state_unchanged() -> None:
+    original = accepted_record()
+    state = create_review_state(
+        [original],
+        segment_fingerprints={"01_alltypes_10": {}},
+        segment_artifact_roots={"01_alltypes_10": "C:/artifacts/01_alltypes_10"},
+    )
+    candidate_id = original["id"]
+    edited = apply_review_rows(
+        state,
+        [review_row(candidate_id, edited_question="Who established the archive?")],
+    )
+    before = deepcopy(edited)
+
+    def fail(candidate):
+        raise RuntimeError("unexpected review bug")
+
+    with pytest.raises(RuntimeError, match="unexpected review bug"):
+        rerun_review_candidates(edited, processor=fail)
+
+    assert edited == before
 
 
 def test_rerun_uses_fresh_checks_and_only_latest_accepted_is_exported() -> None:

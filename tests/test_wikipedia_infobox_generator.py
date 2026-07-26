@@ -27,6 +27,7 @@ from wikidata_simpleqa.route3_openrouter import (
     OpenRouterRawResponse,
     bind_route3_allocation_client,
     Route3OpenRouterClientFactory,
+    DefiniteOpenRouterResponseError,
 )
 from wikidata_simpleqa.page_id_lists import PageIdListEntry
 from wikidata_simpleqa.route3_artifacts import Route3CandidateIdentity
@@ -80,6 +81,7 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _load_urls,
     _phase_timing_stats,
     _process_one_stream_page_id,
+    _process_stream_candidate_slots,
     _remaining_after_endpoint,
     _record_reasoning_type,
     _rejected_output_records,
@@ -429,6 +431,51 @@ class FakeOneRequestTransport:
 
 class WikipediaInfoboxGeneratorTests(unittest.TestCase):
     """Check URL normalization, table extraction, generation, and shared processing."""
+
+    def test_generate_propagates_unexpected_candidate_bug(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Example"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=FakeLLMClient(),
+            record_limit=1,
+        )
+
+        with (
+            patch.object(WikipediaInfoboxTableGenerator, "_fetch_and_parse_page", return_value=object()),
+            patch.object(
+                WikipediaInfoboxTableGenerator,
+                "_candidate_from_page",
+                side_effect=RuntimeError("unexpected candidate bug"),
+            ),
+        ):
+            with self.assertRaisesRegex(RuntimeError, "unexpected candidate bug"):
+                generator.generate(run_date="2026-07-26", cutoff_year=2025)
+
+    def test_generate_rejects_persisted_unparseable_response_explicitly(self) -> None:
+        generator = WikipediaInfoboxTableGenerator(
+            urls=["https://en.wikipedia.org/wiki/Example"],
+            wikipedia_client=FakeWikipediaClient(),
+            llm_client=FakeLLMClient(),
+            record_limit=1,
+        )
+        error = DefiniteOpenRouterResponseError(
+            call_key="p123/generation",
+            request_hash="request-hash",
+            error=ValueError("invalid JSON"),
+        )
+
+        with (
+            patch.object(WikipediaInfoboxTableGenerator, "_fetch_and_parse_page", return_value=object()),
+            patch.object(WikipediaInfoboxTableGenerator, "_candidate_from_page", side_effect=error),
+        ):
+            candidates = generator.generate(run_date="2026-07-26", cutoff_year=2025)
+
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0].notes, ["openrouter_unparseable_response"])
+        self.assertEqual(
+            candidates[0].source_metadata["error_message"],
+            str(error),
+        )
 
     def test_worker_binds_generation_to_allocation_external_call_store(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -4979,6 +5026,82 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "error_message": "timed out while searching",
             },
         )
+
+    def test_all5_attempt002_rejects_only_exhausted_slot(self) -> None:
+        def candidate(slot: str) -> GeneratedCandidate:
+            return GeneratedCandidate(
+                source_type="wikipedia_tables",
+                generation_route="route3_wikipedia_infobox",
+                question=f"What is the {slot} fact?",
+                canonical_question=f"What is the {slot} fact?",
+                answer=f"{slot} answer",
+                answer_aliases=[],
+                subject_entity=EntityReference(
+                    name="Example page",
+                    url="https://en.wikipedia.org/wiki/Example_page",
+                ),
+                answer_entity=EntityReference(name=f"{slot} answer"),
+                relation_or_claim="single_fact",
+                evidence=EvidenceRecord(text=f"{slot} answer"),
+                answer_type=slot,
+                source_metadata={"route3_slot_id": slot},
+            )
+
+        candidates = [candidate("Person"), candidate("Place"), candidate("Number")]
+        typed_error = SearchLongtailVerifierError(
+            "DDG unavailable",
+            features={"query": "place query"},
+            original_error=URLError("timed out"),
+        )
+        calls: list[str] = []
+
+        def process_one(rows, **kwargs):
+            slot = rows[0].source_metadata["route3_slot_id"]
+            calls.append(slot)
+            if slot == "Place":
+                raise typed_error
+            return SimpleNamespace(
+                accepted=[rows[0].to_output_record("")],
+                rejected=[],
+            )
+
+        with patch(
+            "run_wikipedia_infobox_pipeline.process_generated_candidates",
+            side_effect=process_one,
+        ):
+            with self.assertRaises(SearchLongtailVerifierError):
+                _process_stream_candidate_slots(
+                    candidates,
+                    attempt_number=1,
+                    settings=Settings(target_time="2024"),
+                    search_client=FakeSearchClient(),
+                    ddg_verifier_result_store=object(),
+                    rewrite_client=None,
+                    second_stage_model_clients=None,
+                    grading_grader_client=None,
+                )
+            self.assertEqual(calls, ["Person", "Place"])
+
+            calls.clear()
+            accepted, rejected = _process_stream_candidate_slots(
+                candidates,
+                attempt_number=2,
+                settings=Settings(target_time="2024"),
+                search_client=FakeSearchClient(),
+                ddg_verifier_result_store=object(),
+                rewrite_client=None,
+                second_stage_model_clients=None,
+                grading_grader_client=None,
+            )
+
+        self.assertEqual(calls, ["Person", "Place", "Number"])
+        self.assertEqual(
+            [record["source_metadata"]["route3_slot_id"] for record in accepted],
+            ["Person", "Number"],
+        )
+        self.assertEqual(len(rejected), 1)
+        self.assertEqual(rejected[0]["source_metadata"]["route3_slot_id"], "Place")
+        self.assertEqual(rejected[0]["rejection_reason"], "retry_exhausted:duckduckgo")
 
     def test_page_attempt_lifecycle_has_one_typed_retry_and_propagates_bugs(self) -> None:
         with tempfile.TemporaryDirectory() as temp_dir:

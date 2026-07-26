@@ -39,6 +39,7 @@ from wikidata_simpleqa.route3_openrouter import (
     AbandonedExternalCallError,
     AmbiguousExternalCallError,
     DefiniteOpenRouterHTTPError,
+    DefiniteOpenRouterResponseError,
     Route3OpenRouterClientFactory,
     openrouter_http_failure_is_retryable,
     bind_route3_allocation_client,
@@ -1928,6 +1929,100 @@ def _resolve_route3_openrouter_config(config: LLMConfig, settings: Settings) -> 
     return replace(config, proxy=settings.proxy)
 
 
+def _process_stream_candidate_slots(
+    generated_candidates: list[GeneratedCandidate],
+    *,
+    attempt_number: int,
+    settings: Settings,
+    search_client: DuckDuckGoSearchClient,
+    ddg_verifier_result_store: Route3DDGVerifierResultStore,
+    rewrite_client,
+    second_stage_model_clients,
+    grading_grader_client,
+) -> tuple[list[dict], list[dict]]:
+    """Process all5 slots without publishing partial page outcomes."""
+    accepted_records: list[dict] = []
+    rejected_records: list[dict] = []
+
+    for candidate in generated_candidates:
+        try:
+            result = process_generated_candidates(
+                [candidate],
+                settings=settings,
+                search_client=search_client,
+                ddg_verifier_result_store=ddg_verifier_result_store,
+                rewrite_client=rewrite_client,
+                second_stage_model_clients=second_stage_model_clients,
+                grading_grader_client=grading_grader_client,
+            )
+        except SearchLongtailVerifierError as exc:
+            if int(attempt_number) == 1:
+                raise
+            features = dict(exc.features)
+            candidate.search_verification_features = features
+            original_error = exc.original_error or exc
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason="retry_exhausted:duckduckgo",
+                    notes={
+                        "error_type": type(original_error).__name__,
+                        "error_message": str(original_error),
+                        "search_verification_features": features,
+                    },
+                )
+            )
+            continue
+        except DefiniteOpenRouterHTTPError as exc:
+            retryable = openrouter_http_failure_is_retryable(exc.status_code)
+            if retryable and int(attempt_number) == 1:
+                raise
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason=(
+                        "retry_exhausted:openrouter"
+                        if retryable
+                        else f"openrouter_http_error:{exc.status_code}"
+                    ),
+                    notes={
+                        "call_key": exc.call_key,
+                        "request_hash": exc.request_hash,
+                        "status_code": exc.status_code,
+                    },
+                )
+            )
+            continue
+        except DefiniteOpenRouterResponseError as exc:
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason="openrouter_unparseable_response",
+                    notes={
+                        "call_key": exc.call_key,
+                        "request_hash": exc.request_hash,
+                        "error_type": exc.error_type,
+                        "error_message": exc.error_message,
+                    },
+                )
+            )
+            continue
+        except AbandonedExternalCallError as exc:
+            rejected_records.append(
+                candidate.to_rejected_record(
+                    reason="abandoned_ambiguous_external_call",
+                    notes={
+                        "call_key": exc.call_key,
+                        "request_hash": exc.request_hash,
+                        "call_attempt": exc.call_attempt,
+                    },
+                )
+            )
+            continue
+
+        accepted_records.extend(result.accepted)
+        rejected_records.extend(result.rejected)
+
+    return accepted_records, rejected_records
+
+
 
 def _process_one_stream_page_id(
     page_id: int,
@@ -2078,8 +2173,9 @@ def _process_one_stream_page_id(
                 generation_raw_audit=_generation_raw_audit(generated_candidates),
                 page_level_failure=True,
             )
-        result = process_generated_candidates(
+        accepted_records, rejected_records = _process_stream_candidate_slots(
             generated_candidates,
+            attempt_number=attempt_number,
             settings=settings,
             search_client=search_client,
             ddg_verifier_result_store=ddg_verifier_result_store,
@@ -2087,7 +2183,7 @@ def _process_one_stream_page_id(
             second_stage_model_clients=page_second_stage_model_clients,
             grading_grader_client=page_grading_grader_client,
         )
-        for record in [*result.accepted, *result.rejected]:
+        for record in [*accepted_records, *rejected_records]:
             _attach_stream_record_metadata(
                 record,
                 page_id=page_id,
@@ -2098,7 +2194,7 @@ def _process_one_stream_page_id(
             )
             _ensure_page_id_list_entry_metadata(record)
             record["id"] = _wikipedia_stream_record_id(record)
-        if result.accepted:
+        if accepted_records:
             return _commit_stream_page_attempt(
                 page_id=page_id,
                 url=url,
@@ -2107,15 +2203,15 @@ def _process_one_stream_page_id(
                 status="accepted",
                 reason="accepted",
                 generated_candidates=generated_candidates,
-                accepted_records=_accepted_output_records(result.accepted, args),
-                rejected_records=_rejected_output_records(result.rejected, args),
+                accepted_records=_accepted_output_records(accepted_records, args),
+                rejected_records=_rejected_output_records(rejected_records, args),
                 error_details={},
                 args=args,
                 state=state,
                 concurrency=concurrency,
             )
-        if result.rejected:
-            reason = _exact_failure_reason(result.rejected[0])
+        if rejected_records:
+            reason = _exact_failure_reason(rejected_records[0])
             return _commit_stream_page_attempt(
                 page_id=page_id,
                 url=url,
@@ -2125,7 +2221,7 @@ def _process_one_stream_page_id(
                 reason=reason,
                 generated_candidates=generated_candidates,
                 accepted_records=[],
-                rejected_records=_rejected_output_records(result.rejected, args),
+                rejected_records=_rejected_output_records(rejected_records, args),
                 error_details={},
                 args=args,
                 state=state,

@@ -58,10 +58,6 @@ REVIEW_TOPICS = (
     "Video games",
 )
 DELETE_VALUES = ("Yes", "No")
-RERUN_REJECTION_REASONS = {
-    "search_longtail_verifier_error",
-    "second_stage_grading_error",
-}
 TOPIC_CLASSIFICATION_MODEL = "openai/gpt-4.1-mini"
 TOPIC_CLASSIFICATION_MAX_TOKENS = 256
 REVIEW_MARKDOWN_CHUNK_SIZE = 50
@@ -613,8 +609,7 @@ def post_generation_processor(
         if result.accepted:
             return "accepted", result.accepted[0]
         record = result.rejected[0]
-        status = "rerun" if str(record["rejection_reason"]) in RERUN_REJECTION_REASONS else "rejected"
-        return status, record
+        return "rejected", record
 
     return process
 

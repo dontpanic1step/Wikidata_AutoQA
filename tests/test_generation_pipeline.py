@@ -21,6 +21,10 @@ from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord,
 from wikidata_simpleqa.generator_validators import run_search_based_longtail_verifier
 from wikidata_simpleqa.grading import ModelPanelMember, evaluate_model_panel
 from wikidata_simpleqa.models import AmbiguityResolution, CandidateFact, DomainTemplate
+from wikidata_simpleqa.route3_openrouter import (
+    DefiniteOpenRouterHTTPError,
+    DefiniteOpenRouterResponseError,
+)
 from wikidata_simpleqa.rule_based_answer_type_gate import RuleBasedAnswerTypeGateResult
 
 
@@ -1318,6 +1322,177 @@ class GenerationPipelineTests(unittest.TestCase):
                 "second_stage",
             ],
         )
+
+    def test_route3_unexpected_search_exception_propagates(self) -> None:
+        candidate = make_route3_candidate(answer="Archive Guild")
+
+        class UnexpectedVerifierStore:
+            def verify(self, *args, **kwargs):
+                raise ValueError("corrupt verifier state")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+            )
+            with (
+                patch("wikidata_simpleqa.generation_pipeline.validate_question_surface", return_value=None),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.evaluate_candidate_answer_type_gate",
+                    return_value=RuleBasedAnswerTypeGateResult(
+                        matched=True,
+                        answer_type="Other",
+                        details={"rule": "no_rule_for_answer_type"},
+                    ),
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.validate_generated_candidate",
+                    return_value=(True, {"answer_in_evidence": True}),
+                ),
+            ):
+                with self.assertRaisesRegex(ValueError, "corrupt verifier state"):
+                    process_generated_candidates(
+                        [candidate],
+                        settings=settings,
+                        search_client=FakeSearchClient({}),
+                        ddg_verifier_result_store=UnexpectedVerifierStore(),
+                    )
+
+    def test_route3_unexpected_second_stage_exception_propagates(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                second_stage_grading_enabled=True,
+            )
+            candidate = make_route3_candidate(answer="Archive Guild")
+            with (
+                patch("wikidata_simpleqa.generation_pipeline.validate_question_surface", return_value=None),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.evaluate_candidate_answer_type_gate",
+                    return_value=RuleBasedAnswerTypeGateResult(
+                        matched=True,
+                        answer_type="Other",
+                        details={"rule": "no_rule_for_answer_type"},
+                    ),
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.validate_generated_candidate",
+                    return_value=(True, {"answer_in_evidence": True}),
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.run_search_based_longtail_verifier",
+                    return_value=(True, {"queries": []}),
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.evaluate_model_panel",
+                    side_effect=RuntimeError("panel implementation bug"),
+                ),
+            ):
+                with self.assertRaisesRegex(RuntimeError, "panel implementation bug"):
+                    process_generated_candidates(
+                        [candidate],
+                        settings=settings,
+                        search_client=FakeSearchClient({}),
+                        second_stage_model_clients=[object()],
+                        grading_grader_client=object(),
+                    )
+
+    def test_route3_persisted_unparseable_second_stage_response_rejects_slot(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                second_stage_grading_enabled=True,
+            )
+            candidate = make_route3_candidate(answer="Archive Guild")
+            error = DefiniteOpenRouterResponseError(
+                call_key="slot/second-stage",
+                request_hash="request-hash",
+                error=ValueError("invalid JSON"),
+            )
+            with (
+                patch("wikidata_simpleqa.generation_pipeline.validate_question_surface", return_value=None),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.evaluate_candidate_answer_type_gate",
+                    return_value=RuleBasedAnswerTypeGateResult(
+                        matched=True,
+                        answer_type="Other",
+                        details={"rule": "no_rule_for_answer_type"},
+                    ),
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.validate_generated_candidate",
+                    return_value=(True, {"answer_in_evidence": True}),
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.run_search_based_longtail_verifier",
+                    return_value=(True, {"queries": []}),
+                ),
+                patch("wikidata_simpleqa.generation_pipeline.evaluate_model_panel", side_effect=error),
+            ):
+                result = process_generated_candidates(
+                    [candidate],
+                    settings=settings,
+                    search_client=FakeSearchClient({}),
+                    second_stage_model_clients=[object()],
+                    grading_grader_client=object(),
+                )
+
+        self.assertEqual(result.accepted, [])
+        self.assertEqual(result.rejected[0]["rejection_reason"], "second_stage_unparseable_response")
+        self.assertEqual(result.rejected[0]["rejection_notes"]["call_key"], "slot/second-stage")
+
+    def test_route3_nonretryable_second_stage_http_error_rejects_slot(self) -> None:
+        error = DefiniteOpenRouterHTTPError(
+            call_key="slot/second-stage",
+            request_hash="request-hash",
+            status_code=403,
+            body_text="forbidden",
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            settings = Settings(
+                target_time="2020",
+                pilot_total=1,
+                output_path=Path(tmpdir) / "accepted.jsonl",
+                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
+                second_stage_grading_enabled=True,
+            )
+            with (
+                patch("wikidata_simpleqa.generation_pipeline.validate_question_surface", return_value=None),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.evaluate_candidate_answer_type_gate",
+                    return_value=RuleBasedAnswerTypeGateResult(
+                        matched=True,
+                        answer_type="Other",
+                        details={},
+                    ),
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.validate_generated_candidate",
+                    return_value=(True, {"answer_in_evidence": True}),
+                ),
+                patch(
+                    "wikidata_simpleqa.generation_pipeline.run_search_based_longtail_verifier",
+                    return_value=(True, {"queries": []}),
+                ),
+                patch("wikidata_simpleqa.generation_pipeline.evaluate_model_panel", side_effect=error),
+            ):
+                result = process_generated_candidates(
+                    [make_route3_candidate(answer="Archive Guild")],
+                    settings=settings,
+                    search_client=FakeSearchClient({}),
+                    second_stage_model_clients=[object()],
+                    grading_grader_client=object(),
+                )
+
+        self.assertEqual(result.rejected[0]["rejection_reason"], "openrouter_http_error:403")
 
     def test_process_generated_candidates_rejects_when_search_verifier_errors(self) -> None:
         source_candidate = make_candidate()

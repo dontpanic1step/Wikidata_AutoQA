@@ -19,6 +19,8 @@ from .route3_openrouter import (
     AbandonedExternalCallError,
     AmbiguousExternalCallError,
     DefiniteOpenRouterHTTPError,
+    DefiniteOpenRouterResponseError,
+    openrouter_http_failure_is_retryable,
 )
 from .generator_validators import (
     SearchLongtailVerifierError,
@@ -470,10 +472,7 @@ def process_generated_candidates(
         except CircuitOpenError:
             raise
         except Exception as exc:  # noqa: BLE001
-            if (
-                isinstance(exc, SearchLongtailVerifierError)
-                and candidate.generation_route == "route3_wikipedia_infobox"
-            ):
+            if candidate.generation_route == "route3_wikipedia_infobox":
                 raise
             candidate_timings["duckduckgo_search_seconds"] = _elapsed(search_start)
             candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
@@ -532,14 +531,59 @@ def process_generated_candidates(
                 )
                 candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
                 panel_features["duration_seconds"] = candidate_timings["second_stage_grading_seconds"]
-            except (
-                AbandonedExternalCallError,
-                AmbiguousExternalCallError,
-                CircuitOpenError,
-                DefiniteOpenRouterHTTPError,
-            ):
+            except (AmbiguousExternalCallError, CircuitOpenError):
                 raise
+            except DefiniteOpenRouterHTTPError as exc:
+                if openrouter_http_failure_is_retryable(exc.status_code):
+                    raise
+                candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
+                candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+                _record_candidate_timings(candidate, candidate_timings)
+                rejected_records.append(
+                    candidate.to_rejected_record(
+                        reason=f"openrouter_http_error:{exc.status_code}",
+                        notes={
+                            "call_key": exc.call_key,
+                            "request_hash": exc.request_hash,
+                            "status_code": exc.status_code,
+                        },
+                    )
+                )
+                continue
+            except DefiniteOpenRouterResponseError as exc:
+                candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
+                candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+                _record_candidate_timings(candidate, candidate_timings)
+                rejected_records.append(
+                    candidate.to_rejected_record(
+                        reason="second_stage_unparseable_response",
+                        notes={
+                            "call_key": exc.call_key,
+                            "request_hash": exc.request_hash,
+                            "error_type": exc.error_type,
+                            "error_message": exc.error_message,
+                        },
+                    )
+                )
+                continue
+            except AbandonedExternalCallError as exc:
+                candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
+                candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
+                _record_candidate_timings(candidate, candidate_timings)
+                rejected_records.append(
+                    candidate.to_rejected_record(
+                        reason="abandoned_ambiguous_external_call",
+                        notes={
+                            "call_key": exc.call_key,
+                            "request_hash": exc.request_hash,
+                            "call_attempt": exc.call_attempt,
+                        },
+                    )
+                )
+                continue
             except Exception as exc:  # noqa: BLE001
+                if candidate.generation_route == "route3_wikipedia_infobox":
+                    raise
                 candidate_timings["second_stage_grading_seconds"] = _elapsed(grading_start)
                 candidate_timings["total_processing_seconds"] = _elapsed(candidate_start)
                 _record_candidate_timings(candidate, candidate_timings)
