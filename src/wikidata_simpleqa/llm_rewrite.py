@@ -182,7 +182,7 @@ def build_rewrite_payload(candidate: CandidateFact) -> dict[str, Any]:
     if candidate.subject_label:
         required_anchors.append(candidate.subject_label)
     return {
-        "task_type": "route1_question_and_queries",
+        "task_type": "generic_question_and_queries",
         "canonical_question": candidate.canonical_question,
         "wikidata_triplet_text": (
             f"{candidate.subject_label} -- {candidate.target_property_label} -- "
@@ -209,8 +209,6 @@ def build_rewrite_payload(candidate: CandidateFact) -> dict[str, Any]:
 
 def build_rewrite_prompt(payload: dict[str, Any]) -> str:
     """Build the one-shot prompt for question rewriting."""
-    if payload.get("task_type") == "route1_question_and_queries":
-        return build_route1_rewrite_prompt(payload)
     serialized = json.dumps(payload, ensure_ascii=False, indent=2)
     forbidden_patterns = payload.get(
         "forbidden_patterns",
@@ -261,84 +259,6 @@ def build_rewrite_prompt(payload: dict[str, Any]) -> str:
     )
 
 
-def build_route1_rewrite_prompt(payload: dict[str, Any]) -> str:
-    """Build the Wikidata-route rewrite-and-query prompt."""
-    forbidden_patterns = payload.get("forbidden_patterns", [])
-    forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
-    query_count = _query_count(payload)
-    extra_prompt = _extra_prompt_text(payload)
-    required_anchors = ", ".join(str(anchor) for anchor in payload.get("required_anchors", []))
-    required_reasoning_clues = ", ".join(
-        str(clue) for clue in payload.get("required_reasoning_clues", [])
-    )
-    route_contract = str(payload.get("route_contract", "")).strip()
-    multi_hop_rule = ""
-    if route_contract == "route1_qid_first_multihop_join":
-        multi_hop_rule = (
-            "- This is a Route 1 QID-first multi-hop join question. Preserve the required reasoning clues so the question cannot be answered as a simpler single-hop question.\n"
-            "- Do not name hidden bridge entities from the reasoning path unless the canonical question already names them.\n"
-        )
-    hidden_entity_contracts = {"route1_hidden_entity_two_hop"}
-    if route_contract in hidden_entity_contracts:
-        route_label = "Route 1"
-        multi_hop_rule = (
-            f"- This is a {route_label} hidden-entity two-hop question. Ask for the answer hop's object while identifying the hidden entity only through the clue hop.\n"
-            "- Do not name any hidden entity in the rewritten question or search queries.\n"
-            "- Preserve the clue relation and visible clue so the question cannot be answered as a simple one-hop fact about a named subject.\n"
-        )
-    route_specific_context = ""
-    if route_contract in hidden_entity_contracts:
-        route_specific_context = (
-            f"- Answer hop: {json.dumps(payload.get('answer_hop', {}), ensure_ascii=False)}\n"
-            f"- Clue hop: {json.dumps(payload.get('clue_hop', {}), ensure_ascii=False)}\n"
-            f"- Clue orientation: {payload.get('clue_orientation', '')}\n"
-            f"- Hidden entities: {json.dumps(payload.get('hidden_entities', []), ensure_ascii=False)}\n"
-            f"- Visible clue: {json.dumps(payload.get('visible_clue', {}), ensure_ascii=False)}\n"
-        )
-    return (
-        "You are generating a SimpleQA-style factual question and answer-blind search queries for a Wikidata-backed route.\n\n"
-        "Input:\n"
-        f"- Canonical question: {payload.get('canonical_question', '')}\n"
-        f"- Wikidata triplet text: {payload.get('wikidata_triplet_text', '')}\n"
-        f"{route_specific_context}"
-        f"- Required anchors: {required_anchors}\n"
-        f"- Required reasoning clues: {required_reasoning_clues}\n"
-        f"- Answer type: {payload.get('answer_type', '')}\n"
-        f"- Route contract: {route_contract}\n"
-        f"- Forbidden text: {forbidden_text}\n"
-        f"- Cutoff year: {payload.get('cutoff_year', '')}\n\n"
-        "Task:\n"
-        "1. Rewrite the canonical question into a natural factual question.\n"
-        "2. Preserve the fact expressed by the Wikidata triplet text.\n"
-        "3. Do not add, remove, narrow, broaden, or change any information from the canonical question; only rephrase it so it sounds natural.\n"
-        "4. Keep all required anchors and disambiguating cues.\n"
-        "5. The rewritten_question must not contain the answer or any answer alias.\n"
-        f"6. Generate exactly {query_count} answer-blind search queries for long-tail verification.\n"
-        "7. Return extra answer aliases or abbreviations that may appear in snippets, using [] if none.\n\n"
-        "Important constraints:\n"
-        "- The search queries must not contain the answer or any answer alias.\n"
-        "- The queries should use only non-answer context from the canonical question or triplet text.\n"
-        "- Preserve the same answer relation as the canonical question. Do not narrow or specialize it.\n"
-        "- Preserve the configured answer type; do not rewrite the question so it asks for a different type of answer.\n"
-        "- If the canonical question says `first degree`, do not rewrite it as a named degree such as `Doctor of Medicine`.\n"
-        "- Do not add any degree name, date, title, role, or other factual detail that is absent from the canonical question unless it is already required for disambiguation.\n"
-        f"{multi_hop_rule}"
-        f"{_answer_precision_prompt_rules(payload)}"
-        f"{SOURCE_TABLE_WORDING_RULE}"
-        f"{CUMULATIVE_FACT_PROMPT_RULE}"
-        f"{HISTORICALLY_SETTLED_PROMPT_RULE}"
-        f"{extra_prompt}"
-        f"- Avoid these forbidden patterns: {forbidden_text}.\n"
-        f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
-        "- The first query will be the rewritten question itself and will be added by code. Do not repeat it in search_queries.\n\n"
-        "Output valid JSON only:\n"
-        "{\n"
-        '  "rewritten_question": string,\n'
-        '  "search_queries": string[],\n'
-        '  "answer_aliases": string[],\n'
-        '  "discard_reason": string | null\n'
-        "}\n"
-    )
 
 
 

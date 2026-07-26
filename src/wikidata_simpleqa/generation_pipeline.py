@@ -29,16 +29,11 @@ from .generator_validators import (
     validate_question_surface,
 )
 from .grading import ModelPanelMember, evaluate_model_panel, make_grader_client, summarize_panel_runs
-from .generators import (
-    WikidataLightGenerator,
-    WikidataMultiHopJoinGenerator,
-)
 from .io import write_jsonl
 from .llm_rewrite import make_rewrite_client
 from .number_reference import NUMBER_REFERENCE_MARGIN_KEY, build_number_reference_margin
 from .reasoning import normalize_reasoning_style
 from .route3_quality_rules import award_year_without_month_question_reason
-from .route1_multihop import ROUTE1_MULTIHOP_JOIN_ROUTE, get_route1_multihop_join_templates
 from .rule_based_answer_type_gate import (
     attach_rule_based_gate_result,
     evaluate_candidate_answer_type_gate,
@@ -130,100 +125,6 @@ class GenerationResult:
     telemetry: dict = field(default_factory=dict)
 
 
-def run_generation_pipeline(
-    settings: Settings,
-    *,
-    templates=None,
-    wikidata_client: WikidataClient | None = None,
-    wikipedia_client: WikipediaClient | None = None,
-    search_client: DuckDuckGoSearchClient | None = None,
-    second_stage_model_clients: list[ModelPanelMember] | None = None,
-    grading_grader_client=None,
-) -> GenerationResult:
-    """Run the staged multi-generator pipeline and write accepted/rejected outputs."""
-    pipeline_start = perf_counter()
-    phase_timings: dict[str, float] = {}
-    if templates is None:
-        templates = _default_templates_for_enabled_routes(settings)
-    if wikidata_client is None:
-        wikidata_client = WikidataClient(
-            user_agent=settings.user_agent,
-            proxy=settings.proxy,
-            timeout_seconds=settings.timeout_seconds,
-            max_entity_ids_per_request=settings.wikidata_max_entity_ids_per_request,
-            log_checkpoints=settings.wikidata_log_checkpoints,
-            cache_dir=settings.cache_dir,
-        )
-    if wikipedia_client is None:
-        wikipedia_client = WikipediaClient(
-            user_agent=settings.user_agent,
-            proxy=settings.proxy,
-            timeout_seconds=settings.timeout_seconds,
-            cache_dir=settings.cache_dir,
-        )
-    if search_client is None:
-        search_client = DuckDuckGoSearchClient(**settings.duckduckgo_client_kwargs())
-    rewrite_client = None
-    if settings.rewrite_enabled:
-        rewrite_client = make_rewrite_client(settings.rewrite_llm, settings.timeout_seconds)
-
-    generation_start = perf_counter()
-    generators = []
-    if "route1_wikidata_light" in settings.enabled_routes:
-        generators.append(WikidataLightGenerator())
-    if ROUTE1_MULTIHOP_JOIN_ROUTE in settings.enabled_routes:
-        generators.append(WikidataMultiHopJoinGenerator())
-
-    all_generated_candidates: list[GeneratedCandidate] = []
-    for generator in generators:
-        all_generated_candidates.extend(generator.generate(
-            templates=templates,
-            settings=settings,
-            client=wikidata_client,
-        ))
-    phase_timings["candidate_generation_seconds"] = _elapsed(generation_start)
-    processing_start = perf_counter()
-    result = process_generated_candidates(
-        all_generated_candidates,
-        settings=settings,
-        search_client=search_client,
-        rewrite_client=rewrite_client,
-        second_stage_model_clients=second_stage_model_clients,
-        grading_grader_client=grading_grader_client,
-    )
-    phase_timings["candidate_processing_seconds"] = _elapsed(processing_start)
-    write_start = perf_counter()
-    write_jsonl(settings.output_path, result.accepted)
-    write_jsonl(settings.rejected_output_path, result.rejected)
-    phase_timings["output_write_seconds"] = _elapsed(write_start)
-    phase_timings["total_seconds"] = _elapsed(pipeline_start)
-    process_telemetry = result.telemetry.copy()
-    telemetry = {
-        "wikidata": wikidata_client.stats_snapshot(),
-        "wikipedia": wikipedia_client.request_events.copy(),
-        "search": search_client.request_events.copy(),
-        "enabled_routes": list(settings.enabled_routes),
-        "phase_timings_seconds": phase_timings,
-        "bottlenecks": _summarize_bottlenecks(phase_timings),
-    }
-    telemetry.update(process_telemetry.get("process_generated_candidates", {}))
-    result.telemetry = telemetry
-    return result
-
-
-def _default_templates_for_enabled_routes(settings: Settings) -> list:
-    """Return default templates compatible with the configured route set."""
-    templates = []
-    if (
-    ):
-        templates.extend(
-            template
-            for template in get_stage1_templates()
-            if normalize_reasoning_style(template.reasoning_style or template.composition_style) == "single_fact"
-        )
-    if ROUTE1_MULTIHOP_JOIN_ROUTE in settings.enabled_routes:
-        templates.extend(get_route1_multihop_join_templates())
-    return templates
 
 
 def process_generated_candidates(
@@ -871,35 +772,6 @@ def _build_route_rewrite_payload(
     extra_prompts = candidate.source_metadata.get("extra_prompts", [])
     if isinstance(extra_prompts, list) and extra_prompts:
         payload["extra_prompts"] = [str(value) for value in extra_prompts if str(value).strip()]
-    source_candidate = candidate.source_candidate
-    if candidate.generation_route in {
-        "route1_wikidata_light",
-        ROUTE1_MULTIHOP_JOIN_ROUTE,
-    } and source_candidate is not None:
-        payload.update(
-            {
-                "task_type": "route1_question_and_queries",
-                "wikidata_triplet_text": (
-                    f"{source_candidate.subject_label} -- {source_candidate.target_property_label} -- "
-                    f"{source_candidate.answer_labels[0] if source_candidate.answer_labels else ''}"
-                ).strip(),
-            }
-        )
-        if candidate.generation_route == ROUTE1_MULTIHOP_JOIN_ROUTE:
-            payload.update(
-                {
-                    "reasoning_style": source_candidate.reasoning_style,
-                    "hop_count": source_candidate.hop_count,
-                    "reasoning_path": source_candidate.reasoning_path,
-                    "bridge_entities": source_candidate.bridge_entities,
-                    "required_reasoning_clues": source_candidate.source_metadata.get(
-                        "required_reasoning_clues",
-                        [],
-                    ),
-                    "route_contract": "route1_qid_first_multihop_join",
-                }
-            )
-        return payload
     payload["task_type"] = "generic_question_and_queries"
     return payload
 

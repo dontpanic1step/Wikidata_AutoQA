@@ -78,9 +78,7 @@ class Settings:
     pilot_total: int = 20
     harvest_limit_per_template: int = 100
     cutoff_year: int = 2025
-    enabled_routes: tuple[str, ...] = (
-        "route1_wikidata_light",
-    )
+    enabled_routes: tuple[str, ...] = ()
     duckduckgo_top_k: int = 10
     duckduckgo_parallel_queries: int = 3
     duckduckgo_prefer_ddgs: bool = True

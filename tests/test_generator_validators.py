@@ -63,7 +63,7 @@ def make_generated_candidate() -> GeneratedCandidate:
     )
     return GeneratedCandidate(
         source_type="hybrid",
-        generation_route="route1_wikidata_light",
+        generation_route="route3_wikipedia_infobox",
         question="Who directed Example Film?",
         canonical_question="Who directed Example Film?",
         answer="Jane Doe",
@@ -700,7 +700,7 @@ class GeneratorValidatorTests(unittest.TestCase):
         candidate.answer = "1200"
         candidate.answer_aliases = []
         candidate.answer_type = "Number"
-        from wikidata_simpleqa.generation_pipeline import _apply_number_reference_margin
+        from wikidata_simpleqa.route3_post_generation import _apply_number_reference_margin
 
         _apply_number_reference_margin(candidate)
         client = FakeSearchClient(
@@ -732,7 +732,7 @@ class GeneratorValidatorTests(unittest.TestCase):
         candidate.answer = "1200"
         candidate.answer_aliases = []
         candidate.answer_type = "Number"
-        from wikidata_simpleqa.generation_pipeline import _apply_number_reference_margin
+        from wikidata_simpleqa.route3_post_generation import _apply_number_reference_margin
 
         _apply_number_reference_margin(candidate)
         client = FakeSearchClient(
@@ -767,7 +767,7 @@ class GeneratorValidatorTests(unittest.TestCase):
         candidate.answer = "13000"
         candidate.answer_aliases = []
         candidate.answer_type = "Number"
-        from wikidata_simpleqa.generation_pipeline import _apply_number_reference_margin
+        from wikidata_simpleqa.route3_post_generation import _apply_number_reference_margin
 
         _apply_number_reference_margin(candidate)
         client = FakeSearchClient(
@@ -802,7 +802,7 @@ class GeneratorValidatorTests(unittest.TestCase):
         candidate.answer = "30"
         candidate.answer_aliases = []
         candidate.answer_type = "Number"
-        from wikidata_simpleqa.generation_pipeline import _apply_number_reference_margin
+        from wikidata_simpleqa.route3_post_generation import _apply_number_reference_margin
 
         _apply_number_reference_margin(candidate)
         client = FakeSearchClient(
