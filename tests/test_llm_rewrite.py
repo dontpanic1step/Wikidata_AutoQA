@@ -148,33 +148,6 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertNotIn("May 20, 2024", prompt)
         self.assertNotIn("May 2024", prompt)
 
-    def test_kelm_prompt_requests_queries_and_discard_reason(self) -> None:
-        prompt = build_rewrite_prompt(
-            {
-                "task_type": "kelm_question_and_queries",
-                "serialized_triple": "Shiels Jewellers inception 01 January 1945",
-                "kelm_sentence": "Shiels Jewellers is an Australian jewellery retailer and was founded by Jack Shiels in Adelaide in 1945.",
-                "answer": "1945",
-                "forbidden_patterns": ["current", "latest"],
-                "cutoff_year": 2025,
-            }
-        )
-        self.assertIn("KELM sentence", prompt)
-        self.assertIn('"search_queries"', prompt)
-        self.assertIn('"answer_aliases"', prompt)
-        self.assertIn('"discard_reason"', prompt)
-        self.assertIn("casing variant", prompt)
-        self.assertIn("capitalization variant", prompt)
-        self.assertIn("Do not add, remove, narrow, broaden, or change information", prompt)
-        self.assertIn("The rewritten_question must not contain the answer or any alias", prompt)
-        self.assertIn("generate exactly 3 answer-blind search queries", prompt)
-        self.assertIn("May 20, 2024", prompt)
-        self.assertIn("May 2024", prompt)
-        self.assertIn("Only ask for temporal precision that is actually supported by the source", prompt)
-        self.assertIn("Do not add units to the reference answer", prompt)
-        self.assertIn("Do not phrase questions as `according to the table`", prompt)
-        self.assertIn("Do not ask cumulative-statistic questions", prompt)
-        self.assertIn("historically settled and cannot change", prompt)
 
     def test_openrouter_request_constants_are_defined(self) -> None:
         self.assertTrue(OPENROUTER_REFERER.startswith("https://"))

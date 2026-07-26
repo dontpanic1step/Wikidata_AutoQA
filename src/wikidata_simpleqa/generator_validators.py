@@ -688,8 +688,6 @@ def _build_longtail_queries(candidate: GeneratedCandidate) -> list[tuple[str, st
         for index, query in enumerate(candidate.search_queries):
             queries.append((f"keyword_query_{index + 1}", query, "keyword_queries"))
         return queries
-    if candidate.generation_route == "kelm_bootstrap_half_pipeline":
-        return queries
     queries.extend(
         [
             ("subject_relation", f"{candidate.subject_entity.name} {candidate.relation_or_claim}", "keyword_queries"),

@@ -209,8 +209,6 @@ def build_rewrite_payload(candidate: CandidateFact) -> dict[str, Any]:
 
 def build_rewrite_prompt(payload: dict[str, Any]) -> str:
     """Build the one-shot prompt for question rewriting."""
-    if payload.get("task_type") == "kelm_question_and_queries":
-        return build_kelm_rewrite_prompt(payload)
     if payload.get("task_type") == "route1_question_and_queries":
         return build_route1_rewrite_prompt(payload)
     if payload.get("task_type") == "route2_question_and_queries":
@@ -390,55 +388,6 @@ def build_route2_rewrite_prompt(payload: dict[str, Any]) -> str:
     )
 
 
-def build_kelm_rewrite_prompt(payload: dict[str, Any]) -> str:
-    """Build the KELM-specific rewrite-and-query prompt."""
-    forbidden_patterns = payload.get("forbidden_patterns", [])
-    forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
-    query_count = _query_count(payload)
-    extra_prompt = _extra_prompt_text(payload)
-    return (
-        "You are generating a SimpleQA-style factual question and answer-blind search queries for long-tail verification.\n\n"
-        "Input:\n"
-        f"- Serialized triple: {payload.get('serialized_triple', '')}\n"
-        f"- KELM sentence: {payload.get('kelm_sentence', '')}\n"
-        f"- Answer: {payload.get('answer', '')}\n"
-        f"- Answer type: {payload.get('answer_type', '')}\n"
-        f"- Forbidden text: {forbidden_text}\n"
-        f"- Cutoff year: {payload.get('cutoff_year', '')}\n\n"
-        "Task:\n"
-        "1. Rewrite the KELM sentence and triple into a natural factual question whose answer is exactly the provided answer.\n"
-        "2. Preserve as much non-answer contextual information from the KELM sentence as possible in the question, including descriptors, locations, roles, and names, as long as they do not leak the answer.\n"
-        "3. Do not add, remove, narrow, broaden, or change information from the source sentence or triple; only rephrase supported source information into a question.\n"
-        "4. Do not use rigid templates. Write naturally.\n"
-        "5. The rewritten_question must not contain the answer or any alias, casing variant, capitalization variant, or normalized form of the answer.\n"
-        f"6. Then generate exactly {query_count} answer-blind search queries that a user might try before knowing the answer.\n\n"
-        "Important constraints:\n"
-        "- The search queries must not contain the answer or any alias, casing variant, capitalization variant, or normalized form of the answer.\n"
-        "- The queries should use only information available in the question, KELM sentence, or non-answer parts of the triple.\n"
-        "- Preserve the same answer relation and information scope as the source.\n"
-        "- Preserve the configured answer type; do not rewrite the question so it asks for a different type of answer.\n"
-        "- Do not add a more specific degree, award, role, date, or other factual detail that is not explicit in the source.\n"
-        f"{SOURCE_TABLE_WORDING_RULE}"
-        f"{CUMULATIVE_FACT_PROMPT_RULE}"
-        f"{HISTORICALLY_SETTLED_PROMPT_RULE}"
-        f"{extra_prompt}"
-        f"- Avoid these forbidden patterns: {forbidden_text}.\n"
-        f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
-        "- The first query will be the rewritten question itself and will be added by code. Do not include the whole rewritten question in search_queries.\n"
-        "- Prefer queries combining the subject with relation words, descriptors, locations, or other non-answer context.\n"
-        "- Use quotation marks around rare names or exact entity names when helpful.\n\n"
-        "Date and number constraints:\n"
-        f"{_answer_precision_prompt_rules(payload)}"
-        "- Only ask for temporal precision that is actually supported by the source. If the source only states a year, ask for the year, not the day/month/year.\n"
-        "- Do not create false precision from serialized dates such as \"01 January YYYY\" unless the KELM sentence or source explicitly supports the full date.\n\n"
-        "Output valid JSON only:\n"
-        "{\n"
-        '  "rewritten_question": string,\n'
-        '  "search_queries": string[],\n'
-        '  "answer_aliases": string[],\n'
-        '  "discard_reason": string | null\n'
-        "}\n"
-    )
 
 
 def parse_json_object(text: str) -> dict[str, Any]:

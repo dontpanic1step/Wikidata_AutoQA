@@ -785,17 +785,6 @@ def _apply_rewrite_if_enabled(candidate: GeneratedCandidate, rewrite_client, set
         forbidden_patterns,
         search_query_count=settings.generated_search_query_count,
     )
-    if candidate.generation_route == "kelm_bootstrap_half_pipeline":
-        payload = {
-            "task_type": "kelm_question_and_queries",
-            "serialized_triple": candidate.source_metadata.get("kelm_serialized_triples", ""),
-            "kelm_sentence": candidate.source_metadata.get("kelm_sentence", ""),
-            "answer": candidate.answer,
-            "answer_aliases": candidate.answer_aliases,
-            "forbidden_patterns": forbidden_patterns,
-            "cutoff_year": settings.cutoff_year,
-            "search_query_count": settings.generated_search_query_count,
-        }
     try:
         if hasattr(rewrite_client, "rewrite_question_with_audit"):
             rewrite_audit = rewrite_client.rewrite_question_with_audit(payload)
