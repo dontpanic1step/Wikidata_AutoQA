@@ -2,6 +2,8 @@
 
 This file records defaults used by the supported scripts on the current branch. Values were verified against `scripts/run_wikipedia_infobox_recipe.py`, the internal worker, and the Route 3 modules on 2026-07-26. Historical Route 1, Route 2, Route 4, KELM, direct-worker, night-orchestrator, and old-finalization defaults are intentionally omitted.
 
+The required project environment for this workspace is the dedicated Python 3.11 conda environment `simpleqa_synth`. Activate it before every command; the base Python 3.10 environment is outside the project contract and must not be modified.
+
 ## Ownership
 
 - Generation entry point: `scripts/run_wikipedia_infobox_recipe.py`.
@@ -119,6 +121,10 @@ The Person common-word/common-name rejection heuristic is absent. Place and Date
 - Service circuits are separate for OpenRouter and DuckDuckGo and use a threshold of three consecutive infrastructure failures.
 - Ambiguous OpenRouter calls default to quarantine; `retry` and `abandon` require explicit same-fingerprint resume.
 - Attempt001 is primary, attempt002 is the only retry, and attempt003 is invalid.
+- All5 slot outcomes are committed atomically in one page attempt.
+- A typed slot-level infrastructure failure in attempt001 creates page-level attempt002 eligibility without publishing partial outcomes.
+- During attempt002, retry exhaustion rejects only the failing slot and remaining slots continue.
+- Unexpected Python or persistence exceptions propagate and leave the attempt uncommitted; they have no rejection default.
 - Cached and fresh allocations share the run-group exclusion ledger. Top-up creates a new segment and never modifies an older segment.
 
 ## Review defaults
@@ -134,10 +140,28 @@ The Person common-word/common-name rejection heuristic is absent. Place and Date
 | Delete value | `No` |
 | Editable XLSX fields | `delete`, `edited_question`, `edited_reference_answer`, `edit_reason` |
 
-Review export writes `review_state.json`, Markdown shards, `review.xlsx`, durable topic-call records, and `statistics.json`. If any original answer type count is zero, statistics prediction is skipped and the missing types and risk are reported.
+Review export writes `review_state.json`, Markdown shards, `review.xlsx`, durable topic-call records, and `statistics.json`. If any original answer type count is zero, statistics prediction is skipped and the missing types and risk are reported. A deterministic rerun rejection completes the revision as `rejected`; an unexpected exception leaves persisted review state unchanged and the revision pending rerun.
 
 ## Finalization defaults
 
 The fixed answer-type proportions are Person `19.8%`, Place `14.6%`, Number `18.5%`, Date `22.2%`, and Other `24.9%`. Rebalancing runs only when all five types remain after canonical-page allocation. If any type is absent, every page-allocated candidate is emitted without rebalancing.
 
 The exact CSV columns are `id`, `problem`, `answer`, `topic`, `answer_type`, and `urls`. `urls` is a JSON array string inside the CSV field.
+
+## Independent evaluation defaults
+
+| Setting | Default or contract |
+| --- | --- |
+| Prediction input type | CSV only |
+| Prediction input glob | `*.csv` |
+| Route 3 input identity/question | `id` / `problem` |
+| SimpleQA Verified input identity/question | `original_index` / `problem`; identity is normalized to `id` |
+| Extra SimpleQA Verified columns | accepted and not used by prediction calls |
+| Prediction output | per-input, per-model JSONL |
+| Judge input glob | `*.jsonl` |
+
+The prediction prompt, model defaults, reasoning settings, request construction, retry/concurrency behavior, judge prompt, grading labels, and unparseable-output behavior are protected and are not cleanup settings.
+
+## Cleanup preservation baseline
+
+Historical Route 1, Route 2, Route 4, and KELM defaults remain intentionally absent. Their code may be deleted only after package initialization and the Route 3 post-generation path are isolated. The extracted Route 3 path must retain the durable lifecycle and review semantics above. After isolation, remove one historical family at a time and rerun the focused matrix in the reconstruction roadmap plus the complete `tests/` suite.

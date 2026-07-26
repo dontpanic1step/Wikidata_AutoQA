@@ -109,7 +109,7 @@ Each run exports accepted candidates only to Markdown shards of at most 50 candi
 
 The review export also writes `statistics.json` beside the XLSX with the original pre-human-review total, per-answer-type counts and two-decimal percentages, and projected final total and per-type counts. If any original answer type has zero QAs, prediction is skipped and the artifact records the missing types and risk.
 
-Review state maps every candidate to its stable artifact and current full processing record, maps each segment identity to its own fingerprint, and stores the topic-classification audit for every classified revision. Top-up candidates therefore rerun with their own segment configuration. A deletion appends a rejected revision and skips validation. A Q/A edit appends a rerun revision, preserves immutable generation provenance and stable ID, applies the artifact alias rules, clears the old topic and checks, and reruns all post-generation checks, DuckDuckGo, second-stage grading, and topic classification. Revision DDG results and OpenRouter calls include the revision number in their stable keys, so changed requests cannot collide with the original candidate or an earlier revision. Each new Markdown/XLSX contains only latest accepted revisions.
+Review state maps every candidate to its stable artifact and current full processing record, maps each segment identity to its own fingerprint, and stores the topic-classification audit for every classified revision. Top-up candidates therefore rerun with their own segment configuration. A deletion appends a rejected revision and skips validation. A Q/A edit appends a rerun revision, preserves immutable generation provenance and stable ID, applies the artifact alias rules, clears the old topic and checks, and reruns all post-generation checks, DuckDuckGo, second-stage grading, and topic classification. A returned deterministic rejection completes the revision as rejected. An unexpected exception propagates before state replacement and leaves the persisted revision pending rerun. Revision DDG results and OpenRouter calls include the revision number in their stable keys, so changed requests cannot collide with the original candidate or an earlier revision. Each new Markdown/XLSX contains only latest accepted revisions.
 
 ## Formal finalization
 
@@ -150,15 +150,19 @@ The following scripts are retained, independent SimpleQA Verified-style evaluati
 Their flow is separate from generation:
 
 ```text
-final CSV or evaluation input
+Route 3 final CSV or SimpleQA Verified CSV
 -> run_openrouter_batch_predictions.py
 -> model predictions
 -> judge_openrouter_batch_predictions.py
 -> SimpleQA Verified-style grading
 ```
 
-Generation, manual review, revision, and finalization must not call these scripts. Their prediction prompt/message construction, `GRADER_TEMPLATE`, grading labels, examples, and default handling of unparseable grader output are protected behavior.
+The prediction tool accepts CSV only. Route 3 final CSV uses `id/problem/answer`; SimpleQA Verified CSV uses `original_index/problem/answer`, and `original_index` is normalized to prediction `id`. Additional Verified columns are accepted. Prediction and judge artifacts remain JSONL. Generation, manual review, revision, and finalization must not call these scripts. Their prediction prompt/message construction, OpenRouter call settings, `GRADER_TEMPLATE`, grading labels, examples, and default handling of unparseable grader output are protected behavior.
 
 ## Maintenance boundary
 
-Future cleanup may delete historical Route 1, Route 2, Route 4, KELM, old finalization, and experimental code only after the current import closure is isolated. Cleanup must preserve the entry points, artifact schemas, prompts, lifecycle rules, review behavior, final CSV contract, and protected evaluation tools described above.
+Historical deletion is blocked until `wikidata_simpleqa/__init__.py` stops importing the old pipelines and the formal Route 3 post-generation operation is extracted from `generation_pipeline.py`. That extraction must include the current per-slot all5 aggregation boundary and must preserve the exception taxonomy exactly: deterministic failures become the documented slot/page rejection, typed attempt001 infrastructure failures alone create attempt002 eligibility, attempt002 exhaustion rejects only its slot, and unexpected exceptions never become terminal records.
+
+After both the worker and edited-Q/A review reruns use the extracted Route 3-owned operation, recompute the import closure and remove one historical family at a time. Route 1, Route 2, Route 4, KELM, old finalization, and experimental code must be separate reviewable commits because their branches are interleaved in `generation_pipeline.py`, `generators.py`, `generator_validators.py`, and `llm_rewrite.py`.
+
+Cleanup must preserve the user-facing Route 3 entry point, internal worker contract, artifact schemas, prompts, durable lifecycle, review behavior, final CSV, CSV-only prediction input, prediction/judge JSONL artifacts, and the protected evaluation tools. It must not add fallback behavior, replacement heuristics, defensive exception conversion, schema redesign, or unrelated fixes.

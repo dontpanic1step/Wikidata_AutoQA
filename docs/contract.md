@@ -86,7 +86,7 @@ Accepted, rejected, and rerun outcomes remain traceable to their source page, se
 - XLSX headers and order are fixed in English; delete defaults to `No`, delete values are `Yes/No`, and topic values use the formal ten-topic enumeration.
 - Duplicate or unknown IDs, invalid topics, invalid delete values, and deleted rows with Q/A edits are rejected. Finalization additionally rejects empty topics.
 - Question-only, answer-only, and combined Q/A edits are allowed and never change stable identity or immutable generation provenance.
-- Deleted rows skip validation. Q/A edits clear old checks and rerun the complete post-generation validation, DuckDuckGo, and second-stage sequence using that candidate's segment fingerprint.
+- Deleted rows skip validation. Q/A edits clear old checks and rerun the complete post-generation validation, DuckDuckGo, and second-stage sequence using that candidate's segment fingerprint. A returned rejection is terminal for that revision; an unexpected exception propagates before persisted review state is replaced and leaves the revision pending rerun.
 - Answer edits clear active aliases; revision history retains all original and prior values.
 
 ## Finalization contract
@@ -115,20 +115,24 @@ Accepted, rejected, and rerun outcomes remain traceable to their source page, se
 The independent evaluation flow is:
 
 ```text
-final CSV or evaluation input
+Route 3 final CSV or SimpleQA Verified CSV
 -> scripts/run_openrouter_batch_predictions.py
 -> model predictions
 -> scripts/judge_openrouter_batch_predictions.py
 -> SimpleQA Verified-style grading
 ```
 
-These scripts are retained formal tools, but are not generation, second-stage filtering, manual review, revision, or finalization components. Their prediction prompt/message construction, `GRADER_TEMPLATE`, grading labels, examples, and default unparseable-output mapping are protected behavior.
+The prediction script accepts CSV only: `id/problem/answer` for Route 3 final output or `original_index/problem/answer` for SimpleQA Verified, with `original_index` normalized to prediction `id` and extra columns accepted. Prediction and judge artifacts remain JSONL. These scripts are retained formal tools, but are not generation, second-stage filtering, manual review, revision, or finalization components. Their prediction prompt/message construction, OpenRouter call settings, `GRADER_TEMPLATE`, grading labels, examples, and default unparseable-output mapping are protected behavior.
 
 ## Maintenance contract
 
 - Keep `README.md`, `docs/design.md`, `docs/contract.md`, and `docs/default_settings.md` aligned with executable behavior.
-- Use the current-branch roadmap under `docs/reconstruction/` to isolate supported imports before deleting historical modules.
-- Make cleanup changes in reviewable steps and run the Route 3 and protected-evaluation tests after each dependency cut.
+- Activate the dedicated Python 3.11 `simpleqa_synth` conda environment for every cleanup and verification command; do not modify the base Python 3.10 environment.
+- Before deleting Route 1, Route 2, Route 4, or KELM, narrow `wikidata_simpleqa/__init__.py` and extract the Route 3 post-generation operation from `generation_pipeline.py`.
+- The extracted operation must preserve stage order, all5 atomic slot aggregation, typed attempt002 eligibility, attempt002 slot-only exhaustion, explicit deterministic rejection classes, and propagation of unexpected exceptions.
+- Recompute the supported import closure after extraction, then remove one historical family per reviewable commit.
+- Run the focused Route 3 and protected-evaluation tests after each dependency cut and the complete `tests/` suite before declaring a family removed.
+- Preserve the CSV-only prediction input mapping and the JSONL prediction/judge artifact contract.
 - Do not add unspecified fallback behavior or defensive programming.
 - Stop and report any newly discovered high-risk design flaw.
 - Preserve stable artifact formats and completed-run resume semantics unless an explicit design change authorizes migration.

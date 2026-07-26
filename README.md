@@ -13,6 +13,7 @@ This runbook describes the supported workflow on the current branch. Historical 
 ## Environment
 
 - Python 3.11 or newer.
+- In this workspace, activate the dedicated `simpleqa_synth` conda environment before every project or cleanup command. Do not upgrade or modify the base Python 3.10 environment.
 - Run commands from the repository root.
 - Network generation reads the OpenRouter key from `OPENROUTER_API_KEY`.
 - Do not place API keys in commands, config files, logs, or committed artifacts.
@@ -187,7 +188,9 @@ outputs/<run-id>_walkthrough.md
 
 The authority order is manifest, immutable allocation, Wikipedia page archive, external-call records, terminal ledger, and then derived endpoints. State stores discovery offsets and telemetry only. It cannot create or release allocations or decide retry. Accepted JSONL, rejected JSONL, summary, and projection are rebuildable. Independently published artifacts use same-directory unique temporary files and `os.replace`; archive hashes remain in provenance.
 
-Resume an interrupted segment by running the exact same command with the same resolved arguments, Git commit, prompt code, run ID, seed, and run date. Pending allocations continue attempt001. Completed OpenRouter calls and completed candidate-level DDG verifier results are reused; DDG candidate keys include the allocation, candidate slot, segment fingerprint, and human revision number when present; page preparation and deterministic validation may be recomputed in the same attempt. A typed exhausted DDG/OpenRouter infrastructure failure may create the single attempt002. Unexpected exceptions keep the segment incomplete and surface to the recipe. A matching complete segment is reused, while a fingerprint mismatch and an incomplete legacy schema are rejected.
+Resume an interrupted segment by rerunning with the same resolved generation arguments plus explicit `--resume`. Pending allocations continue attempt001. Completed OpenRouter calls and completed candidate-level DDG verifier results are reused; DDG candidate keys include the allocation, candidate slot, segment fingerprint, and human revision number when present; page preparation and deterministic validation may be recomputed in the same attempt. A matching complete segment is reused, while a fingerprint mismatch and an incomplete legacy schema are rejected.
+
+All5 publishes one atomic page attempt. A typed slot-level DDG or OpenRouter infrastructure failure during attempt001 discards all in-memory partial slot outcomes and makes the page eligible for its single attempt002. During attempt002, retry exhaustion rejects only the failing slot and processing continues for the remaining slots before the atomic commit. Deterministic candidate failures after slot creation also reject only their slot. A persisted unparsable response from shared page generation rejects the page; an equivalent candidate-level response rejects only that candidate. Any other unexpected Python or persistence exception propagates with its traceback and leaves the attempt uncommitted and the segment incomplete.
 
 The worker uses bounded batches in a fixed order: unfinished attempt001 work, missing primary allocations, the remaining primary work, then ledger-authorized attempt002 work. There is no rerun-pool, rerun-seed, or caller-selected primary/secondary CLI in the formal workflow; retry eligibility comes only from immutable attempt history.
 
@@ -290,7 +293,7 @@ python scripts\run_route3_review.py apply `
   --run-id <run-id>
 ```
 
-Deleted rows skip validation. Q/A edits preserve the stable ID and immutable generation provenance, append a revision, clear stale checks and the old topic, and rerun the formal post-generation checks, DuckDuckGo filter, two-model second stage, and GPT-4.1-mini topic classification. This apply command makes network calls only when the state contains Q/A edits or pending reruns. The next Markdown shards/XLSX contain only latest accepted revisions.
+Deleted rows skip validation. Q/A edits preserve the stable ID and immutable generation provenance, append a revision, clear stale checks and the old topic, and rerun the formal post-generation checks, DuckDuckGo filter, two-model second stage, and GPT-4.1-mini topic classification. A returned deterministic rejection makes that revision `rejected`; it is not converted back to `rerun`. An unexpected exception propagates before replacement of review state, so the persisted revision remains pending rerun. This apply command makes network calls only when the state contains Q/A edits or pending reruns. The next Markdown shards/XLSX contain only latest accepted revisions.
 
 ## Formal finalization
 
@@ -322,7 +325,7 @@ urls
 
 The evaluation scripts run after finalization. They do not generate candidates, filter Route 3 output, perform manual review, or finalize a dataset. Do not use the historical `run_openrouter_night_batch.py` orchestrator.
 
-Create model predictions directly from a directory of CSV inputs. Route 3 final CSV rows use `id`, `problem`, and `answer`; Google SimpleQA Verified rows use `original_index`, `problem`, and `answer`, with any additional columns accepted. The prediction output uses `id`, mapping it from `original_index` when necessary:
+Create model predictions directly from a directory of CSV inputs. JSON and JSONL are not prediction inputs. Route 3 final CSV rows use `id`, `problem`, and `answer`; Google SimpleQA Verified rows use `original_index`, `problem`, and `answer`, with any additional columns accepted. The prediction output remains JSONL and uses `id`, mapping it from `original_index` when necessary:
 
 ```powershell
 python scripts\run_openrouter_batch_predictions.py inputs\evaluation `
@@ -342,6 +345,25 @@ python scripts\judge_openrouter_batch_predictions.py `
 ```
 
 Both commands read the OpenRouter key from `OPENROUTER_API_KEY` by default. Use each command's `--help` output for the retained batch-evaluation options.
+
+## Historical-code cleanup preparation
+
+Later cleanup may remove Route 1, Route 2, Route 4, KELM, old finalization, and other historical entry points only after the supported import closure is narrowed. Current Route 3 startup still reaches historical code through two main couplings:
+
+- `wikidata_simpleqa/__init__.py` eagerly imports `generation_pipeline` and the old `pipeline`;
+- both the internal worker and edited-Q/A review reruns call `generation_pipeline.process_generated_candidates`, whose module still imports and branches for Route 1, Route 2, Route 4, and KELM.
+
+Use the detailed sequence in `docs/reconstruction/codex_reconstruction-stabilization_roadmap.md`. In summary:
+
+1. add clean-process import-boundary tests;
+2. narrow `wikidata_simpleqa/__init__.py`;
+3. extract the exact Route 3 post-generation operation, including the exception and all5 slot semantics documented above;
+4. point both the worker and review reruns at that Route 3-owned operation;
+5. recompute the import closure, then remove one historical family per test-backed commit;
+6. keep `run_openrouter_batch_predictions.py`, `judge_openrouter_batch_predictions.py`, their prompts, and the CSV-to-prediction contract protected.
+
+Do not combine historical deletion with prompt edits, output-schema changes, fallback changes, new heuristics, or unrelated bug fixes.
+
 ## Safe dry-run examples
 
 Inspect a 10-page Person segment without making generation calls:
@@ -398,5 +420,5 @@ python -m pytest tests\test_wikipedia_infobox_recipe.py -q
 Run the complete offline suite:
 
 ```powershell
-python -m pytest -q
+python -m pytest tests -q -p no:cacheprovider --basetemp=tmp\pytest-readme
 ```

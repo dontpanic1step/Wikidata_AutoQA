@@ -15,7 +15,25 @@ The branch slash is normalized to an underscore in this filename because `/` can
 | Independent prediction | `scripts/run_openrouter_batch_predictions.py` | Runs evaluation-model predictions | OpenRouter |
 | Independent judging | `scripts/judge_openrouter_batch_predictions.py` | Applies the protected SimpleQA Verified-style grader | OpenRouter |
 
-Route 1, Route 2, Route 4, KELM, the old finalization workflow, and `scripts/run_openrouter_night_batch.py` are historical. The night orchestrator is unused. The two protected evaluation scripts remain supported but are deliberately outside generation, review, and finalization.
+Route 1, Route 2, Route 4, KELM, the old finalization workflow, and `scripts/run_openrouter_night_batch.py` are historical. The night orchestrator is unused. The two protected evaluation scripts remain supported but are deliberately outside generation, review, and finalization. Prediction input is CSV only; prediction and judge artifacts remain JSONL.
+
+### Current stabilization baseline
+
+Two committed changes define the cleanup baseline:
+
+- `2d5a696 fix(route3): preserve slot failure semantics` made Route 3 unexpected DDG, grading, generation, and persistence exceptions propagate instead of becoming terminal content rejection; made deterministic persisted-response and non-retryable HTTP failures explicit; made review rerun rejection terminal; and made all5 attempt002 exhaustion slot-local.
+- `f9ea86d feat(evaluation): read batch inputs from csv` changed the independent prediction input to CSV only while preserving prediction/judge prompts, OpenRouter call behavior, parameters, and JSONL artifacts.
+
+The Route 3 change was verified with `191 passed, 31 subtests passed` for the directly affected files and `696 passed, 76 subtests passed` for the complete `tests/` suite at that commit. The subsequent protected evaluation change was verified with `13 passed` in `tests/test_openrouter_batch_scripts.py`. These are evidence records, not permanent expected test counts.
+
+Cleanup must treat the following behaviors as fixed:
+
+- attempt001 slot infrastructure failure publishes no partial all5 result and is the only slot path to attempt002;
+- attempt002 exhaustion rejects only the failing slot and continues the remaining slots;
+- deterministic failures after slot creation reject only that slot, while an unparsable shared generation response rejects the page;
+- unexpected Python or persistence exceptions keep the attempt uncommitted and propagate with traceback;
+- review reruns convert returned rejection to `rejected`, while exceptions leave persisted review state pending rerun;
+- prediction input is CSV only, mapping Route 3 `id/problem/answer` or SimpleQA Verified `original_index/problem/answer` into the unchanged prediction call path.
 
 ## 2. End-to-end call chain
 
@@ -29,10 +47,12 @@ scripts/run_wikipedia_infobox_recipe.py
        -> wikipedia_streaming.py / wikipedia_client.py
        -> wikipedia_infobox_generator.py
        -> route3_openrouter.py (durable generation calls)
-       -> generation_pipeline.process_generated_candidates(...)
-            -> deterministic validators and integrated answer-type gate
-            -> route3_ddg.py -> search_client.py -> ddgs
-            -> grading.py through route3_openrouter.py
+       -> _process_stream_candidate_slots(...) (one candidate slot at a time)
+            -> generation_pipeline.process_generated_candidates([candidate], ...)
+                 -> deterministic validators and integrated answer-type gate
+                 -> route3_ddg.py -> search_client.py -> ddgs
+                 -> grading.py through route3_openrouter.py
+            -> aggregate all5 slot outcomes under the attempt001/attempt002 contract
        -> route3_run_ledger.py (terminal allocation/attempt state)
   -> rebuild run-level accepted/rejected/summary projections
   -> write walkthrough and pre-review quantity prediction
@@ -50,10 +70,12 @@ scripts/run_route3_review.py apply
   -> read review_state.json and review.xlsx
   -> append delete/edit revisions
   -> for edited Q/A only:
-       generation_pipeline.process_generated_candidates(...)
+       generation_pipeline.process_generated_candidates([edited candidate], ...)
        -> deterministic checks -> DuckDuckGo -> second-stage grading
        -> durable topic reclassification
+  -> returned rejection completes the revision as rejected
   -> replace review state, Markdown shards, XLSX, and statistics
+  -> unexpected exception propagates before review-state replacement
 
 scripts/finalize_route3_review.py
   -> load review state and XLSX
@@ -63,11 +85,11 @@ scripts/finalize_route3_review.py
   -> topic-diversity removal within over-target answer types
   -> final CSV
 
-final CSV or another evaluation input
-  -> scripts/run_openrouter_batch_predictions.py
-  -> prediction artifacts
+Route 3 final CSV or SimpleQA Verified CSV
+  -> scripts/run_openrouter_batch_predictions.py (CSV-only identity normalization)
+  -> prediction JSONL
   -> scripts/judge_openrouter_batch_predictions.py
-  -> judged evaluation artifacts
+  -> judged JSONL
 ```
 
 The recipe also imports private reporting helpers directly from the internal worker. It imports `_aggregate_phase_timings`, `_effective_stream_random_seed`, `_failure_reason_counts`, `_ensure_page_id_list_entry_metadata`, `_load_endpoint_jsonl`, `_phase_timing_stats`, `_llm_generation_table_yield_summary`, `_normalize_stream_fresh_cached_page_count`, `_normalize_stream_reuse_cached_page_count`, `_safe_artifact_id`, `_stream_budget_numeric_count`, `_survival_by_layer`, and `_write_stream_walkthrough`. The worker therefore cannot be deleted or freely rewritten merely because it is not user-facing.
@@ -86,6 +108,8 @@ The recipe also imports private reporting helpers directly from the internal wor
 | `review_state.json` | `route3_review.py` | Stable candidate artifacts, revisions, segment fingerprints, and topic audits |
 | Review Markdown/XLSX/statistics | `route3_review.py` | Human-facing projections of review state; XLSX is validated on apply/finalize |
 | Final CSV | `route3_finalization.py` | Validated output projection with exact public columns |
+| Prediction JSONL | `run_openrouter_batch_predictions.py` | Independent model answers derived from CSV input |
+| Judged JSONL | `judge_openrouter_batch_predictions.py` | Independent SimpleQA Verified-style grading artifact |
 
 Deletion work must preserve the authority order: manifest, allocation, page archive, external-call record, terminal attempt ledger, then rebuildable projections. The `*_state.json` generation file stores discovery telemetry and is not allocation or retry authority.
 
@@ -99,7 +123,7 @@ Deletion work must preserve the authority order: manifest, allocation, page arch
 | Review | `generation_models`, `route3_artifacts`, `route3_ddg`, `route3_ids`, `route3_openrouter`, `route3_quantity_prediction`, `route3_run_ledger`, plus a local import of `generation_pipeline` for edited Q/A | Export and no-edit apply are narrower than edited-Q/A apply |
 | Finalization | `route3_artifacts`, `route3_quantity_prediction`, `route3_review` | No network dependency; imports XLSX review code because workbook parsing lives in `route3_review.py` |
 | Search | `search_client`, `search_cli`, `network` | `ddgs` is preferred; urllib HTML/Lite behavior remains part of the current bounded search implementation |
-| Protected evaluation | self-contained scripts plus `requests` | Keep independent from Route 3 durable execution and do not reorganize protected prompts or grading semantics |
+| Protected evaluation | self-contained scripts plus standard-library `csv` and `requests` | Input is CSV and prediction/judge artifacts are JSONL; keep independent from Route 3 durable execution and do not reorganize protected prompts, calls, or grading semantics |
 
 ## 5. Third-party and environment dependencies
 
@@ -139,9 +163,11 @@ The package initializer also pulls the older `pipeline.py` graph, including cand
 
 ### 6.2 Shared `generation_pipeline.py` mixes formal and historical routes
 
-The internal Route 3 worker calls `process_generated_candidates` from `generation_pipeline.py`. That module imports Route 1 and Route 4 code at module scope and also imports generic generator, Wikidata, rewrite, and old route configuration machinery. The formal Route 3 post-generation slice is therefore coupled to inactive generation routes.
+The internal Route 3 worker calls `process_generated_candidates` from `generation_pipeline.py`. That module imports Route 1 and Route 4 code at module scope and imports `generators.py`, whose module scope also imports Route 1 and Route 4 implementations. Route 2 lives as classes and branches inside `generators.py`, `generation_pipeline.py`, and `llm_rewrite.py`, rather than in one self-contained Route 2 module. KELM branches remain in `generation_pipeline.py`, `generator_validators.py`, and `llm_rewrite.py`. The formal Route 3 post-generation slice is therefore coupled to every inactive generation family.
 
-Review apply repeats the coupling when a human changes a question or answer because `route3_review.post_generation_processor` imports `process_generated_candidates`. Any extraction must keep the exact formal order and rejection semantics used by both the worker and review reruns.
+The all5 page-level wrapper `_process_stream_candidate_slots` currently lives in the worker and is formal semantic code: it invokes the shared processor one slot at a time and enforces attempt001 rollback and attempt002 slot-local exhaustion.
+
+Review apply repeats the coupling when a human changes a question or answer because `route3_review.post_generation_processor` imports `process_generated_candidates`. Any extraction must keep the exact formal order and exception/rejection semantics used by both the worker and review reruns.
 
 ### 6.3 Script-to-script private imports
 
@@ -173,11 +199,12 @@ Future deletion should be based on import/call evidence and tests, not filename 
 
 ### Isolate before any historical deletion
 
-1. Narrow `wikidata_simpleqa/__init__.py` so importing a submodule does not import old pipelines.
-2. Extract the Route 3 post-generation operation from `generation_pipeline.py` into a Route 3-owned module, and make both the worker and review reruns call it.
-3. Move recipe-needed worker reporting helpers into a package module with a public internal API, or keep the worker intact until that extraction is complete.
-4. Separate review-state/workbook I/O only if it materially simplifies finalization imports; do not change workbook or CSV contracts during the split.
-5. Declare the chosen runtime/test dependency groups only after the supported installation contract is decided.
+1. Add clean-process import-boundary tests, then narrow `wikidata_simpleqa/__init__.py` so importing a submodule does not import old pipelines.
+2. Extract the Route 3 post-generation operation from `generation_pipeline.py` into a Route 3-owned module. Move or explicitly preserve the worker's per-slot all5 aggregation boundary with it.
+3. Point both the worker and review reruns at that operation and prove identical records, stage order, attempt eligibility, and exception propagation on fixed fixtures.
+4. Move recipe-needed worker reporting helpers into a package module with a public internal API, or keep the worker intact until that extraction is complete.
+5. Separate review-state/workbook I/O only if it materially simplifies finalization imports; do not change workbook or CSV contracts during the split.
+6. Declare the chosen runtime/test dependency groups only after the supported installation contract is decided.
 
 ### Candidate historical entry points after isolation
 
@@ -197,25 +224,28 @@ The following are candidates for later removal because project policy marks thei
 
 Related package modules, fixtures, tests, and documentation can be removed only after the production import closure is narrowed and repository references are audited. `scripts/build_wikipedia_accepted_qa_review.py` is also historical as an entry point, but its presentation behavior informed the current Route 3 review implementation; compare outputs before deleting it.
 
+Package-side removal candidates include the `route1_*` and `route4_*` modules, `kelm_generator.py`, and route-specific classes or branches in `generators.py`, `generation_pipeline.py`, `generator_validators.py`, and `llm_rewrite.py`. Shared files must remain until every historical branch has been removed and a fresh supported import-closure check proves the remainder unreachable. Older `pipeline.py`, Wikidata clients/templates, validators, harvesting, and final-selection helpers are later candidates only on the same evidence; their names alone do not authorize deletion.
+
 ### Explicitly protected from cleanup-by-association
 
 - `scripts/run_openrouter_batch_predictions.py`
 - `scripts/judge_openrouter_batch_predictions.py`
-- Their protected prompts, examples, grading labels, unparseable-output behavior, and tests
+- Their CSV input mapping, JSONL artifacts, protected prompts and calls, examples, grading labels, unparseable-output behavior, and tests
 
 ## 8. Recommended deletion sequence
 
 Each numbered item should be one small reviewable change with its own test-backed commit.
 
 1. Add import-boundary tests for the four Route 3 scripts and two protected evaluation scripts. Record which local modules are allowed to load on `--help` or import.
-2. Narrow package initialization without changing public behavior still used by tests. Confirm Route 3 entry points no longer import Route 1/4 merely by starting.
-3. Extract only the Route 3 post-generation slice. Preserve deterministic validation, integrated answer-type gate, DuckDuckGo, and second-stage order byte-for-byte where feasible.
-4. Point the internal worker and edited-Q/A review reruns to the extracted slice. Verify identical accepted/rejected records on fixed offline fixtures.
+2. Narrow package initialization without changing public behavior still used by tests. Confirm Route 3 entry points no longer import historical modules merely by starting.
+3. Extract only the Route 3 post-generation slice and its per-slot all5 aggregation boundary. Preserve deterministic validation, the integrated answer-type gate, DuckDuckGo, second-stage order, attempt semantics, and exception taxonomy.
+4. Point the internal worker and edited-Q/A review reruns to the extracted slice. Verify identical accepted/rejected records and exception outcomes on fixed offline fixtures.
 5. Extract the recipe reporting/helper API from the worker, leaving the worker as the internal executable boundary.
-6. Recompute the supported import closure. Remove one historical route family at a time, including its now-unreferenced scripts, modules, tests, and non-authoritative docs.
-7. Remove the unused night orchestrator independently; do not touch the two protected evaluation tools in the same commit.
-8. Tighten packaging metadata and repeat installation in a clean Python 3.11 environment.
-9. Run the complete offline suite and a bounded Route 3 rehearsal before declaring cleanup complete.
+6. Recompute and record the supported import closure.
+7. Remove one historical family per commit, including only its now-unreferenced scripts, modules, tests, and non-authoritative docs. A conservative order is KELM, Route 4, Route 2, then Route 1, but recompute the closure after every family and keep shared `generators.py` until its last live branch is gone.
+8. Remove old finalization and the unused night orchestrator in separate commits; do not touch the two protected evaluation tools in either commit.
+9. Tighten packaging metadata only after the supported dependency contract is decided, and verify it in `simpleqa_synth` or another clean Python 3.11 environment without modifying base Python 3.10.
+10. Run the complete offline suite and a bounded Route 3 rehearsal before declaring cleanup complete.
 
 Do not combine route deletion with output-schema redesign, fallback changes, prompt changes, retry changes, or new heuristics. Those are separate design decisions.
 
@@ -229,20 +259,23 @@ Do not combine route deletion with output-schema redesign, fallback changes, pro
 | DDG/search | `tests/test_search_client.py`, `tests/test_route3_ddg.py`, `tests/test_route3_external_control.py` |
 | Durable OpenRouter | `tests/test_route3_openrouter.py`, `tests/test_route3_external_calls.py`, `tests/test_route3_external_control.py` |
 | Stable artifacts and IDs | `tests/test_route3_artifacts.py`, `tests/test_route3_ids.py`, `tests/test_route3_run_ledger.py` |
-| Review and prediction | `tests/test_route3_review.py`, `tests/test_route3_quantity_prediction.py` |
+| Review and quantity prediction | `tests/test_route3_review.py`, `tests/test_route3_quantity_prediction.py` |
 | Finalization | `tests/test_route3_finalization.py` |
 | Protected evaluation | `tests/test_openrouter_batch_scripts.py` |
-| Any historical deletion | All focused tests above, then `python -m pytest -q` |
+| Any historical deletion | All focused tests above, then `python -m pytest tests -q -p no:cacheprovider --basetemp=tmp\pytest-cleanup` |
 
-The last documentation change was verified with the focused set of 79 tests plus 42 subtests. Future cleanup must rerun tests in the correct project environment; failures caused only by Windows temporary-directory ACLs should be rerun with an explicit writable base temp rather than treated as product failures.
+Run every Python and test command after activating `simpleqa_synth`. The counts in section 1 record the current stabilization evidence; future cleanup must not hard-code them as a pass condition. Scope the complete suite to `tests/` because output directories may contain inaccessible run artifacts, and use a unique writable `--basetemp` for each concurrent or repeated run.
 
 ## 10. Invariants that cleanup must preserve
 
 - One writer per segment from manifest read/create through worker and projection completion.
 - Same-fingerprint resume and complete-segment reuse; top-up always creates a new segment.
 - Immutable page allocations and at most attempt001 plus one typed attempt002.
+- All5 attempt001 publishes no partial slot outcomes; attempt002 exhaustion rejects only the failing slot and continues the rest.
 - Durable OpenRouter intent-before-send and raw response/error persistence.
 - Candidate-level durable DDG decisions and fixed service circuit behavior.
+- A persisted unparsable shared generation response is page-level; deterministic post-generation candidate failures are slot-level.
+- Unexpected Python and persistence exceptions propagate without creating terminal rejection, including during edited-Q/A review reruns.
 - Stable candidate IDs, immutable provenance, append-only human revisions, and revision-scoped external-call keys.
 - Review shard names use the actual inclusive range, for example `_1-50.md` and `_51-68.md`.
 - Topic remains automatically assigned and read-only in XLSX; `human_edited` remains automatically derived.
@@ -250,22 +283,26 @@ The last documentation change was verified with the focused set of 79 tests plus
 - Final CSV columns remain exactly `id`, `problem`, `answer`, `topic`, `answer_type`, and `urls`; `urls` remains a JSON array string encoded as one CSV field.
 - No historical similarity, subject-URL, domain round-robin, or `final_selection.py` behavior re-enters formal finalization.
 - No new fallback, heuristic gate, or defensive recovery path is introduced during cleanup.
-- Protected evaluation prompts and grader semantics remain independent and unchanged.
+- Protected prediction input remains CSV only with `id` or `original_index` normalized to output `id`; prediction and judge artifacts remain JSONL.
+- Protected evaluation prompts, OpenRouter call behavior, and grader semantics remain independent and unchanged.
 
 ## 11. Evidence commands for the next cleanup session
 
 Run these read-only checks before deleting a family of files:
 
 ```powershell
+& 'D:\miniconda3\shell\condabin\conda-hook.ps1'
+conda activate simpleqa_synth
 git status --short
 rg -n "^(from|import) " scripts\run_wikipedia_infobox_recipe.py scripts\run_wikipedia_infobox_pipeline.py scripts\run_route3_review.py scripts\finalize_route3_review.py
 rg -n "route1|route2|route4|kelm|final_selection" scripts src tests README.md docs
+rg -n "process_generated_candidates|_process_stream_candidate_slots" scripts src tests
 python scripts\run_wikipedia_infobox_recipe.py --help
 python scripts\run_route3_review.py --help
 python scripts\finalize_route3_review.py --help
 python scripts\run_openrouter_batch_predictions.py --help
 python scripts\judge_openrouter_batch_predictions.py --help
-python -m pytest -q
+python -m pytest tests -q -p no:cacheprovider --basetemp=tmp\pytest-cleanup-route3
 ```
 
 An import search is necessary but not sufficient: local imports inside review rerun functions and subprocess construction are reachable dependencies even when they do not appear in a simple import-time module list.
