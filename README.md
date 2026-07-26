@@ -1,6 +1,6 @@
 # Wikidata Framework Route 3 Runbook
 
-This repository is stabilized milestone by milestone according to `docs/reconstruction/milestones.md`. The commands below describe the current formal Route 3 workflow.
+This runbook describes the supported workflow on the current branch. Historical generation routes may still exist in the tree, but they are not supported entry points.
 
 ## Formal workflow boundary
 
@@ -16,6 +16,29 @@ This repository is stabilized milestone by milestone according to `docs/reconstr
 - Run commands from the repository root.
 - Network generation reads the OpenRouter key from `OPENROUTER_API_KEY`.
 - Do not place API keys in commands, config files, logs, or committed artifacts.
+
+Install the package and the two runtime packages that are not currently declared by `pyproject.toml`:
+
+```powershell
+python -m pip install -e .
+python -m pip install ddgs requests
+# Required only when a SOCKS proxy is configured:
+python -m pip install PySocks
+```
+
+The supported surfaces use these packages:
+
+| Package | Status | Used by |
+| --- | --- | --- |
+| `openpyxl>=3.1,<4` | direct dependency declared in `pyproject.toml` | Route 3 XLSX export, import, and validation |
+| `et-xmlfile` | transitive dependency installed by `openpyxl` | XLSX XML serialization; project code does not import it directly |
+| `ddgs` | direct runtime dependency not yet declared | Preferred DuckDuckGo search transport for Route 3 generation and review reruns |
+| `requests` | direct runtime dependency not yet declared | Independent batch prediction and judge scripts |
+| `PySocks` | conditional runtime dependency not yet declared | SOCKS proxy support used by the shared network helper and by `requests` when a SOCKS proxy is configured |
+| `pytest` | development/test dependency not declared by project metadata | Offline test suite |
+
+`ddgs` currently brings `click`, `fake-useragent`, `httpx`, `lxml`, and `primp`; `requests` brings `certifi`, `charset-normalizer`, `idna`, and `urllib3`. These are transitive dependencies, not direct imports in the supported project code. Apart from the packages listed above, the supported runtime code uses the Python standard library. The metadata gaps are recorded in the branch roadmap for later cleanup.
+
 
 ## Define one formal segment
 
@@ -73,7 +96,7 @@ The formal worker uses these fixed method settings; they are not CLI options:
 
 The recipe passes the selected answer type, answer-type mode, and table source type to the internal worker. The worker does not accept URL lists or an old validation-stage candidate input. Use the recipe entry point for both dry runs and network runs.
 
-The DuckDuckGo thresholds retain their existing formal values during reconstruction.
+The DuckDuckGo thresholds use the current values listed in `docs/default_settings.md`.
 
 The formal candidate checks run in this order:
 
@@ -215,15 +238,9 @@ After a segment finishes automated processing, its `segment_manifest.json` conta
 - the recorded recipe seed;
 - rebalance `N`, projected per-type targets, and projected final total.
 
-The prediction uses the formal canonical-page allocation and answer-type ratios. It does not select or delete topics; topic review starts in the later review milestones.
+The manifest prediction uses canonical-page allocation and the formal answer-type formula. It does not select or delete topics. Review export performs topic classification and writes its own pre-human-review statistics.
 
 ## Manual review loop
-
-Install the project dependency before creating review workbooks:
-
-```powershell
-python -m pip install -e .
-```
 
 Export accepted candidates to durable review state, Markdown, and XLSX:
 
@@ -286,10 +303,7 @@ python scripts\finalize_route3_review.py `
   --output outputs\reviews\<run-id>\final.csv
 ```
 
-Finalization selects at most one candidate per canonical page with the M4 allocation algorithm, applies the formal answer-type ratios, and removes excess candidates iteratively from the largest eligible global topic with the recorded recipe seed. It does not call the historical similarity deduplication, subject-URL deduplication, domain round-robin, or `final_selection.py` paths.
-
-If any answer type is absent after canonical-page allocation, finalization skips rebalancing and writes every page-allocated candidate, preventing an empty CSV.
-
+Finalization first selects at most one candidate per canonical page with the deterministic allocation algorithm. When all five answer types remain, it applies the formal ratios and removes excess candidates iteratively from the largest eligible global topic with the recorded recipe seed. If any type is absent, it skips rebalancing and writes every page-allocated candidate. It never calls the historical similarity deduplication, subject-URL deduplication, domain round-robin, or `final_selection.py` paths.
 
 The final CSV columns are exactly:
 
@@ -302,7 +316,7 @@ answer_type
 urls
 ```
 
-`urls` is a JSON array string. The command prints the seed, page-dedup count, rebalance `N`, targets, final counts, final total, and selected IDs as a JSON summary.
+`urls` is a JSON array string. In raw CSV text, its inner JSON quotes are doubled by standard CSV escaping; a CSV parser restores the value before JSON parsing. The command prints the seed, page-dedup count, whether rebalancing was skipped, missing types, rebalance `N`, targets, final counts, final total, and selected IDs as a JSON summary.
 
 ## Independent batch evaluation
 
@@ -386,5 +400,3 @@ Run the complete offline suite:
 ```powershell
 python -m pytest -q
 ```
-
-The runbook will be extended only when later milestone commands are implemented and tested.
