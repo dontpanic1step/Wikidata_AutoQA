@@ -25,7 +25,7 @@ if str(SRC) not in sys.path:
 from wikidata_simpleqa.config import LLMConfig, Settings
 from wikidata_simpleqa.generation_models import GeneratedCandidate
 from wikidata_simpleqa.generator_validators import SearchLongtailVerifierError
-from wikidata_simpleqa.generation_pipeline import process_generated_candidates
+from wikidata_simpleqa.route3_post_generation import process_route3_candidates
 from wikidata_simpleqa.grading import ModelPanelMember
 from wikidata_simpleqa.page_id_lists import (
     PageIdListEntry,
@@ -671,14 +671,12 @@ def main() -> int:
         timeout_seconds=settings.timeout_seconds,
         circuit=openrouter_circuit,
     )
-    rewrite_client = None
     summary = _run_streaming_page_id_pipeline(
         args=args,
         settings=settings,
         wikipedia_client=wikipedia_client,
         search_client=search_client,
         llm_client=llm_client,
-        rewrite_client=rewrite_client,
         endpoint_resume=endpoint_resume,
         openrouter_circuit=openrouter_circuit,
         duckduckgo_circuit=duckduckgo_circuit,
@@ -1204,7 +1202,6 @@ def _run_streaming_page_id_pipeline(
     wikipedia_client: WikipediaClient,
     search_client: DuckDuckGoSearchClient,
     llm_client,
-    rewrite_client,
     endpoint_resume: EndpointResumeState,
     openrouter_circuit: ServiceCircuit,
     duckduckgo_circuit: ServiceCircuit,
@@ -1235,12 +1232,6 @@ def _run_streaming_page_id_pipeline(
             llm_client,
             concurrency.generation_rewrite_semaphore,
             {"complete_text", "complete_text_with_audit"},
-        )
-    if rewrite_client is not None:
-        rewrite_client = SemaphoreWrappedClient(
-            rewrite_client,
-            concurrency.generation_rewrite_semaphore,
-            {"rewrite_question", "rewrite_question_with_audit"},
         )
     second_stage_model_clients = _build_streaming_second_stage_model_panel(
         settings,
@@ -1328,7 +1319,6 @@ def _run_streaming_page_id_pipeline(
                         wikipedia_client=wikipedia_client,
                         search_client=search_client,
                         llm_client=llm_client,
-                        rewrite_client=rewrite_client,
                         concurrency=concurrency,
                         second_stage_model_clients=second_stage_model_clients,
                         grading_grader_client=grading_grader_client,
@@ -1936,7 +1926,6 @@ def _process_stream_candidate_slots(
     settings: Settings,
     search_client: DuckDuckGoSearchClient,
     ddg_verifier_result_store: Route3DDGVerifierResultStore,
-    rewrite_client,
     second_stage_model_clients,
     grading_grader_client,
 ) -> tuple[list[dict], list[dict]]:
@@ -1946,12 +1935,11 @@ def _process_stream_candidate_slots(
 
     for candidate in generated_candidates:
         try:
-            result = process_generated_candidates(
+            result = process_route3_candidates(
                 [candidate],
                 settings=settings,
                 search_client=search_client,
                 ddg_verifier_result_store=ddg_verifier_result_store,
-                rewrite_client=rewrite_client,
                 second_stage_model_clients=second_stage_model_clients,
                 grading_grader_client=grading_grader_client,
             )
@@ -2033,7 +2021,6 @@ def _process_one_stream_page_id(
     wikipedia_client: WikipediaClient,
     search_client: DuckDuckGoSearchClient,
     llm_client,
-    rewrite_client,
     concurrency: StreamingConcurrencyContext,
     second_stage_model_clients,
     grading_grader_client,
@@ -2179,7 +2166,6 @@ def _process_one_stream_page_id(
             settings=settings,
             search_client=search_client,
             ddg_verifier_result_store=ddg_verifier_result_store,
-            rewrite_client=rewrite_client,
             second_stage_model_clients=page_second_stage_model_clients,
             grading_grader_client=page_grading_grader_client,
         )

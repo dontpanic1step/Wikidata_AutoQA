@@ -17,7 +17,7 @@ from unittest.mock import patch
 
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import LLMConfig, Settings
-from wikidata_simpleqa.generation_pipeline import process_generated_candidates
+from wikidata_simpleqa.route3_post_generation import process_route3_candidates
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generator_validators import SearchLongtailVerifierError
 from wikidata_simpleqa.route3_circuit import CircuitOpenError
@@ -1321,7 +1321,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 wikipedia_client=client,
                 search_client=FakeSearchClient(),
                 llm_client=FakeLLMClient(),
-                rewrite_client=None,
                 concurrency=StreamingConcurrencyContext(
                     commit_lock=Lock(),
                     wikipedia_semaphore=Semaphore(1),
@@ -1413,7 +1412,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 wikipedia_client=FakeWikipediaClient(),
                 search_client=FakeSearchClient(),
                 llm_client=llm_client,
-                rewrite_client=None,
                 concurrency=concurrency,
                 second_stage_model_clients=None,
                 grading_grader_client=None,
@@ -1432,7 +1430,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 wikipedia_client=FakeWikipediaClient(),
                 search_client=FakeSearchClient(),
                 llm_client=llm_client,
-                rewrite_client=None,
                 concurrency=concurrency,
                 second_stage_model_clients=None,
                 grading_grader_client=None,
@@ -1578,7 +1575,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 wikipedia_client=client,
                 search_client=FakeSearchClient(),
                 llm_client=FakeLLMClient(),
-                rewrite_client=None,
                 concurrency=StreamingConcurrencyContext(
                     commit_lock=Lock(),
                     wikipedia_semaphore=Semaphore(1),
@@ -1639,7 +1635,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
 
-        result = process_generated_candidates(
+        result = process_route3_candidates(
             [candidate],
             settings=Settings(
                 target_time="2024",
@@ -3595,7 +3591,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         )
         candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
 
-        result = process_generated_candidates(
+        result = process_route3_candidates(
             candidates,
             settings=Settings(
                 target_time="2024",
@@ -4934,11 +4930,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 rejected_output_path=Path(tmpdir) / "rejected.jsonl",
                 enabled_routes=("route3_wikipedia_infobox",),
             )
-            result = process_generated_candidates(
+            result = process_route3_candidates(
                 [candidate],
                 settings=settings,
                 search_client=FakeSearchClient(),
-                rewrite_client=None,
             )
         self.assertEqual(len(result.accepted), 1)
         self.assertEqual(result.accepted[0]["answer"], "AT&T Stadium")
@@ -4981,11 +4976,10 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 rejected_output_path=Path(tmpdir) / "rejected.jsonl",
                 enabled_routes=("route3_wikipedia_infobox",),
             )
-            result = process_generated_candidates(
+            result = process_route3_candidates(
                 [candidate],
                 settings=settings,
                 search_client=FakeSearchClient(),
-                rewrite_client=None,
             )
         self.assertEqual(result.accepted, [])
         self.assertEqual(result.rejected[0]["rejection_reason"], "rewrite_guard_rejected")
@@ -5066,7 +5060,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             )
 
         with patch(
-            "run_wikipedia_infobox_pipeline.process_generated_candidates",
+            "run_wikipedia_infobox_pipeline.process_route3_candidates",
             side_effect=process_one,
         ):
             with self.assertRaises(SearchLongtailVerifierError):
@@ -5076,7 +5070,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     settings=Settings(target_time="2024"),
                     search_client=FakeSearchClient(),
                     ddg_verifier_result_store=object(),
-                    rewrite_client=None,
                     second_stage_model_clients=None,
                     grading_grader_client=None,
                 )
@@ -5089,7 +5082,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 settings=Settings(target_time="2024"),
                 search_client=FakeSearchClient(),
                 ddg_verifier_result_store=object(),
-                rewrite_client=None,
                 second_stage_model_clients=None,
                 grading_grader_client=None,
             )
@@ -5149,7 +5141,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     wikipedia_client=FakeWikipediaClient(),
                     search_client=FakeSearchClient(),
                     llm_client=FakeLLMClient(),
-                    rewrite_client=None,
                     concurrency=StreamingConcurrencyContext(
                         commit_lock=Lock(),
                         wikipedia_semaphore=Semaphore(1),
@@ -5179,7 +5170,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     wikipedia_client=FakeWikipediaClient(),
                     search_client=FakeSearchClient(),
                     llm_client=FakeLLMClient(),
-                    rewrite_client=None,
                     concurrency=StreamingConcurrencyContext(
                         commit_lock=Lock(),
                         wikipedia_semaphore=Semaphore(1),

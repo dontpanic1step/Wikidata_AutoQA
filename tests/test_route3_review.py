@@ -496,7 +496,7 @@ def test_post_generation_processor_returns_terminal_rejection(tmp_path: Path) ->
         notes={"error_type": "RuntimeError"},
     )
     with patch(
-        "wikidata_simpleqa.generation_pipeline.process_generated_candidates",
+        "wikidata_simpleqa.route3_post_generation.process_route3_candidates",
         return_value=SimpleNamespace(accepted=[], rejected=[rejected_record]),
     ):
         processor = post_generation_processor(

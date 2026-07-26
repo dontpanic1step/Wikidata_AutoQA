@@ -16,10 +16,6 @@ SUPPORTED_SCRIPTS = (
     "run_openrouter_batch_predictions.py",
     "judge_openrouter_batch_predictions.py",
 )
-PROTECTED_EVALUATION_SCRIPTS = {
-    "run_openrouter_batch_predictions.py",
-    "judge_openrouter_batch_predictions.py",
-}
 HISTORICAL_MODULE_PARTS = (
     "generation_pipeline",
     "kelm_generator",
@@ -74,8 +70,8 @@ def test_supported_scripts_expose_clean_process_help() -> None:
         )
 
 
-def test_protected_evaluation_help_does_not_import_historical_package_modules() -> None:
-    for script_name in PROTECTED_EVALUATION_SCRIPTS:
+def test_supported_help_does_not_import_historical_package_modules() -> None:
+    for script_name in SUPPORTED_SCRIPTS:
         completed, modules = _probe_help(script_name)
         assert completed.returncode == 0
         assert not any(part in module for module in modules for part in HISTORICAL_MODULE_PARTS)

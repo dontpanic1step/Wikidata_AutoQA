@@ -572,7 +572,7 @@ def post_generation_processor(
     duckduckgo_circuit: ServiceCircuit,
 ) -> Callable[[GeneratedCandidate], tuple[str, dict[str, Any]]]:
     """Build a processor that executes the formal post-generation pipeline."""
-    from .generation_pipeline import process_generated_candidates
+    from .route3_post_generation import process_route3_candidates
 
     ddg_verifier_result_store = Route3DDGVerifierResultStore(
         root=ddg_verifier_result_root,
@@ -597,12 +597,11 @@ def post_generation_processor(
             if grading_grader_client is not None
             else None
         )
-        result = process_generated_candidates(
+        result = process_route3_candidates(
             [candidate],
             settings=settings,
             search_client=search_client,
             ddg_verifier_result_store=ddg_verifier_result_store,
-            rewrite_client=None,
             second_stage_model_clients=bound_panel,
             grading_grader_client=bound_grader,
         )
