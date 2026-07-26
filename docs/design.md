@@ -117,7 +117,10 @@ Finalization requires no unprocessed Q/A edits, no rerun revisions, valid topics
 
 Excess answer-type rows are removed globally and iteratively. Only over-target types are eligible; candidates in the currently largest eligible global topic are removed first, and seed-based selection resolves ties after stable ID ordering. Topic totals update after each removal. The method does not fit answer-type by topic cells and does not invoke historical similarity, subject-URL, or domain-round-robin selection.
 
-The final CSV columns are exactly `id`, `problem`, `answer`, `topic`, `answer_type`, and `urls`, with `urls` encoded as a JSON array string.
+The final CSV columns are exactly `id`, `problem`, `answer`, `topic`, `answer_type`, and `urls`, with `urls` encoded as a JSON array string. Candidate lifecycle identity and public benchmark identity are separate. Review state, workbooks, external-call records, deduplication, and final selection use the internal candidate ID. Finalization resolves each selected candidate through one shared, durable public-ID registry and writes only the public ID to CSV.
+
+The public registry assigns `simpleqa_synth_000001`, `simpleqa_synth_000002`, and so on. New assignments are allocated in deterministic internal-candidate-ID order, persisted before CSV publication, and never renumbered or reused. A candidate already present in the registry keeps its public ID regardless of later CSV ordering, additions, removals, or corrections. Removed candidates may therefore leave gaps. Dataset release version belongs in release metadata rather than the public ID, so the same retained question can keep one ID across releases.
+
 
 ## Candidate artifact schema
 
@@ -130,7 +133,7 @@ run_group_id
 + original_candidate_slot
 ```
 
-Single mode uses the fixed `single` slot. All5 mode uses the original answer-type slot. Top-up work uses a new segment ID. Human edits never change the candidate ID.
+The four fields are serialized canonically and hashed with SHA-256. The internal ID is rendered as `page{canonical_page_id}_{slot}_{digest}`. Single mode uses the fixed `single` slot. All5 mode uses the lower-cased original answer-type slot. Top-up work uses a new segment ID. Human edits never change the candidate ID. Page and slot remain visible only for internal audit; the public final CSV receives its opaque sequential ID from the registry.
 
 The artifact keeps immutable run/segment/page-attempt data, canonical page and selected-table evidence, page archive hash, generation prompt/request/raw response, original Q/A/aliases/search queries, answer type, model parameters, and recipe seed.
 

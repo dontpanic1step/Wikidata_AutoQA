@@ -10,6 +10,7 @@ from pathlib import Path
 from typing import Any, Iterable
 
 from .route3_artifacts import Route3CandidateArtifact
+from .public_ids import assign_public_ids
 from .route3_quantity_prediction import (
     ANSWER_TYPES,
     assign_canonical_pages,
@@ -25,8 +26,9 @@ def finalize_review_state(
     state: dict[str, Any],
     *,
     review_rows: Iterable[dict[str, str]],
+    public_id_registry: dict[str, Any],
 ) -> dict[str, Any]:
-    """Validate reviewed candidates and return the reproducible final selection."""
+    """Validate, select, and assign durable public IDs to reviewed candidates."""
     rows = list(review_rows)
     bundles = accepted_review_bundles(state)
     _validate_finalization(state, bundles=bundles, rows=rows)
@@ -64,10 +66,17 @@ def finalize_review_state(
             targets=targets,
             recipe_seed=recipe_seed,
         )
-    final_records = [_final_csv_record(selected_artifacts[candidate_id]) for candidate_id in sorted(final_ids)]
+    internal_records = [
+        _final_csv_record(selected_artifacts[candidate_id])
+        for candidate_id in sorted(final_ids)
+    ]
+    final_records, updated_public_id_registry = assign_public_ids(
+        internal_records, public_id_registry
+    )
     final_counts = Counter(record["answer_type"] for record in final_records)
     return {
         "records": final_records,
+        "public_id_registry": updated_public_id_registry,
         "summary": {
             "recipe_seed": recipe_seed,
             "accepted_before_page_dedup": len(bundles),
@@ -81,7 +90,8 @@ def finalize_review_state(
                 for answer_type in ANSWER_TYPES
             },
             "final_total": len(final_records),
-            "selected_candidate_ids": [record["id"] for record in final_records],
+            "selected_candidate_ids": sorted(final_ids),
+            "selected_public_ids": [record["id"] for record in final_records],
         },
     }
 

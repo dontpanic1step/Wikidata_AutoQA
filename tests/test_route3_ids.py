@@ -33,6 +33,8 @@ def test_route3_record_id_uses_four_immutable_identity_fields() -> None:
     )
 
     assert route3_record_id(_record()) == identity.candidate_id
+    assert identity.candidate_id.startswith("page123_single_")
+    assert "route3" not in identity.candidate_id
 
 
 def test_route3_record_id_does_not_change_with_question_edit() -> None:

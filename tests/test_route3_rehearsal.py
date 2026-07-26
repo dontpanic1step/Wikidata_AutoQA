@@ -16,6 +16,7 @@ from test_route3_external_control import FailingSearchClient, SequenceTransport
 from test_route3_openrouter import FakeTransport, RESPONSE_BODY
 from test_route3_review import accepted_record, create_review_state, fake_topic_classifier
 from wikidata_simpleqa.generator_validators import SearchLongtailVerifierError
+from wikidata_simpleqa.public_ids import new_public_id_registry
 from wikidata_simpleqa.route3_artifacts import Route3CandidateArtifact
 from wikidata_simpleqa.route3_circuit import CircuitOpenError, ServiceCircuit
 from wikidata_simpleqa.route3_ddg import Route3DDGVerifierResultStore
@@ -396,7 +397,11 @@ def test_crash_safe_rehearsal_lifecycle(tmp_path: Path) -> None:
     final_xlsx = tmp_path / "review_revalidated.xlsx"
     write_review_workbook(final_xlsx, revalidated)
     final_rows = read_review_workbook(final_xlsx)
-    final_result = finalize_review_state(revalidated, review_rows=final_rows)
+    final_result = finalize_review_state(
+        revalidated,
+        review_rows=final_rows,
+        public_id_registry=new_public_id_registry(),
+    )
     final_csv = tmp_path / "final.csv"
     write_final_csv(final_csv, final_result["records"])
     with final_csv.open(encoding="utf-8", newline="") as handle:

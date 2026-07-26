@@ -148,6 +148,8 @@ The fixed answer-type proportions are Person `19.8%`, Place `14.6%`, Number `18.
 
 The exact CSV columns are `id`, `problem`, `answer`, `topic`, `answer_type`, and `urls`. `urls` is a JSON array string inside the CSV field.
 
+`--id-registry` has no default and is required. Use one shared, versioned registry for related releases. Internal candidate IDs use `page{canonical_page_id}_{slot}_{digest}`; public CSV IDs use the registry prefix `simpleqa_synth` and a minimum six-digit sequence, starting at `simpleqa_synth_000001`. Existing assignments are immutable, sequences are never reused, and output rows are ordered by public sequence.
+
 ## Independent evaluation defaults
 
 | Setting | Default or contract |

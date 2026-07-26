@@ -13,10 +13,11 @@ from pathlib import Path
 import pytest
 
 from test_support import ROOT  # noqa: F401
+from wikidata_simpleqa.public_ids import new_public_id_registry
 from test_route3_review import accepted_record, create_review_state, review_row
 from wikidata_simpleqa.route3_finalization import (
     FINAL_CSV_COLUMNS,
-    finalize_review_state,
+    finalize_review_state as _finalize_review_state,
     write_final_csv,
 )
 from wikidata_simpleqa.route3_review import (
@@ -24,6 +25,20 @@ from wikidata_simpleqa.route3_review import (
     write_review_state,
     write_review_workbook,
 )
+
+
+def finalize_review_state(
+    state: dict,
+    *,
+    review_rows: list[dict[str, str]],
+    public_id_registry: dict | None = None,
+) -> dict:
+    """Finalize tests through a fresh registry unless one is supplied."""
+    return _finalize_review_state(
+        state,
+        review_rows=review_rows,
+        public_id_registry=public_id_registry or new_public_id_registry(),
+    )
 
 
 def finalized_inputs() -> tuple[dict, list[dict[str, str]], set[str]]:
@@ -72,11 +87,15 @@ def test_finalization_deduplicates_pages_and_hits_answer_type_targets() -> None:
     assert summary["final_answer_type_counts"] == summary["answer_type_targets"]
     assert summary["final_total"] == 23
     assert set(summary["selected_candidate_ids"]) <= source_ids
+    candidate_by_public_id = {
+        assignment["public_id"]: assignment["candidate_id"]
+        for assignment in result["public_id_registry"]["assignments"]
+    }
     page_ids = {
         next(
             bundle["artifact"]["identity"]["canonical_page_id"]
             for bundle in state["candidates"]
-            if bundle["artifact"]["id"] == record["id"]
+            if bundle["artifact"]["id"] == candidate_by_public_id[record["id"]]
         )
         for record in result["records"]
     }
@@ -124,9 +143,10 @@ def test_finalization_skips_rebalance_when_an_answer_type_is_missing() -> None:
         "Other": 1,
     }
     assert summary["final_total"] == 4
-    assert {record["id"] for record in result["records"]} == {
-        record["id"] for record in records
-    }
+    assert [record["id"] for record in result["records"]] == [
+        f"simpleqa_synth_{index:06d}" for index in range(1, 5)
+    ]
+    assert set(summary["selected_candidate_ids"]) == {record["id"] for record in records}
 
 
 def test_finalization_rejects_unready_review_state() -> None:
@@ -199,6 +219,8 @@ def test_finalization_cli_writes_traceable_csv() -> None:
                 str(workbook_path),
                 "--output",
                 str(output_path),
+                "--id-registry",
+                str(root / "public_id_registry.json"),
             ],
             cwd=ROOT,
             check=True,
@@ -210,4 +232,8 @@ def test_finalization_cli_writes_traceable_csv() -> None:
         assert summary["final_total"] == 23
         with output_path.open("r", encoding="utf-8", newline="") as handle:
             output_ids = {row["id"] for row in csv.DictReader(handle)}
-        assert output_ids <= source_ids
+        assert output_ids == {
+            f"simpleqa_synth_{index:06d}" for index in range(1, 24)
+        }
+        registry = json.loads((root / "public_id_registry.json").read_text(encoding="utf-8"))
+        assert {row["candidate_id"] for row in registry["assignments"]} <= source_ids

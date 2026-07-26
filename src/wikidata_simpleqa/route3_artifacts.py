@@ -50,7 +50,7 @@ class Route3CandidateIdentity:
         )
         digest = hashlib.sha256(payload.encode("utf-8")).hexdigest()
         slot = self.original_candidate_slot.lower()
-        return f"route3_p{self.canonical_page_id}_{slot}_{digest}"
+        return f"page{self.canonical_page_id}_{slot}_{digest}"
 
     def to_dict(self) -> dict[str, Any]:
         """Serialize the identity."""

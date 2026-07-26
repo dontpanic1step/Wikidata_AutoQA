@@ -303,10 +303,13 @@ Finalization requires no pending Q/A edits, no rerun revisions, a valid topic on
 python scripts\finalize_route3_review.py `
   --state-input outputs\reviews\<run-id>\review_state.json `
   --xlsx-input outputs\reviews\<run-id>\review.xlsx `
+  --id-registry outputs\public_ids\simpleqa_synth.json `
   --output outputs\reviews\<run-id>\final.csv
 ```
 
 Finalization first selects at most one candidate per canonical page with the deterministic allocation algorithm. When all five answer types remain, it applies the formal ratios and removes excess candidates iteratively from the largest eligible global topic with the recorded recipe seed. If any type is absent, it skips rebalancing and writes every page-allocated candidate. It never calls the historical similarity deduplication, subject-URL deduplication, domain round-robin, or `final_selection.py` paths.
+
+Candidate IDs such as `page123_person_<hash>` remain internal to generation, review, deduplication, and audit artifacts. `--id-registry` is a shared durable registry for public benchmark identity: finalization assigns new selected candidates `simpleqa_synth_000001`, `simpleqa_synth_000002`, and so on, while retaining every existing assignment. Always reuse and version the same registry for related releases; never recreate it from CSV row order or delete old assignments. The command locks and atomically persists the registry before publishing the CSV, so removed questions may leave intentional gaps and retained questions keep their public IDs.
 
 The final CSV columns are exactly:
 
@@ -319,7 +322,7 @@ answer_type
 urls
 ```
 
-`urls` is a JSON array string. In raw CSV text, its inner JSON quotes are doubled by standard CSV escaping; a CSV parser restores the value before JSON parsing. The command prints the seed, page-dedup count, whether rebalancing was skipped, missing types, rebalance `N`, targets, final counts, final total, and selected IDs as a JSON summary.
+`id` contains the public benchmark ID; the candidate-to-public mapping remains in the registry. `urls` is a JSON array string. In raw CSV text, its inner JSON quotes are doubled by standard CSV escaping; a CSV parser restores the value before JSON parsing. The command prints the seed, page-dedup count, whether rebalancing was skipped, missing types, rebalance `N`, targets, final counts, final total, selected internal candidate IDs, selected public IDs, output path, and registry path as a JSON summary.
 
 ## Independent batch evaluation
 
@@ -448,7 +451,7 @@ Use `python scripts\run_wikipedia_infobox_recipe.py --help` for the current form
 - `create_route3_candidate_artifact(...)`
 - `revise_route3_candidate_artifact(...)`
 
-Candidate IDs are derived only from run group ID, segment ID, canonical page ID, and original candidate slot. Question or answer edits append a revision and do not change the ID or immutable provenance.
+Candidate IDs are derived only from run group ID, segment ID, canonical page ID, and original candidate slot, and are rendered as `page{canonical_page_id}_{slot}_{digest}`. Question or answer edits append a revision and do not change the ID or immutable provenance. These IDs are internal; finalization replaces them in the public CSV through the durable public-ID registry.
 
 Run the schema and ID tests with:
 

@@ -11,7 +11,7 @@ The branch slash is normalized to an underscore in this filename because `/` can
 | Route 3 generation | `scripts/run_wikipedia_infobox_recipe.py` | Only user-facing generation entry point | Wikipedia, DuckDuckGo, OpenRouter |
 | Route 3 segment worker | `scripts/run_wikipedia_infobox_pipeline.py` | Internal subprocess and helper provider for the recipe | Wikipedia, DuckDuckGo, OpenRouter |
 | Manual review export/apply | `scripts/run_route3_review.py` | Creates review artifacts and applies human edits | OpenRouter topic calls; edited Q/A also reruns DuckDuckGo and grading |
-| Finalization | `scripts/finalize_route3_review.py` | Validates current review state and emits final CSV | None |
+| Finalization | `scripts/finalize_route3_review.py` | Validates current review state, assigns durable public IDs, and emits final CSV | None |
 | Independent prediction | `scripts/run_openrouter_batch_predictions.py` | Runs evaluation-model predictions | OpenRouter |
 | Independent judging | `scripts/judge_openrouter_batch_predictions.py` | Applies the protected SimpleQA Verified-style grader | OpenRouter |
 | Verification-agent handoff | `scripts/convert_batch_evaluation_for_verification_agent.py` | Batch-converts conforming top-level evaluation JSONL into a new agent-input directory | None |
@@ -85,7 +85,9 @@ scripts/finalize_route3_review.py
   -> canonical-page allocation
   -> rebalance only when all five answer types remain
   -> topic-diversity removal within over-target answer types
-  -> final CSV
+  -> lock/load durable public-ID registry
+  -> retain or allocate `simpleqa_synth_NNNNNN` IDs
+  -> persist registry, then final CSV
 
 Route 3 final CSV or SimpleQA Verified CSV
   -> scripts/run_openrouter_batch_predictions.py (CSV-only identity normalization)
@@ -132,7 +134,7 @@ Deletion work must preserve the authority order: manifest, allocation, page arch
 | Internal worker | `config`, `generation_models`, `generator_validators`, `generation_pipeline`, `grading`, `page_id_lists`, Route 3 durable modules, search modules, Wikipedia modules | `generation_pipeline` is the main historical coupling |
 | Wikipedia generator | `cheap_model_qa.parse_json_object`, `route3_openrouter`, `generation_models`, date/number/text normalizers, `route3_quality_rules`, Wikipedia client | The `cheap_model_qa` module name is historical-looking, but its JSON parser is currently used and cannot simply be deleted |
 | Review | `generation_models`, `route3_artifacts`, `route3_ddg`, `route3_ids`, `route3_openrouter`, `route3_quantity_prediction`, `route3_run_ledger`, plus a local import of `generation_pipeline` for edited Q/A | Export and no-edit apply are narrower than edited-Q/A apply |
-| Finalization | `route3_artifacts`, `route3_quantity_prediction`, `route3_review` | No network dependency; imports XLSX review code because workbook parsing lives in `route3_review.py` |
+| Finalization | `public_ids`, `route3_artifacts`, `route3_quantity_prediction`, `route3_review` | No network dependency; the durable registry decouples internal candidate identity from public CSV identity, and XLSX parsing remains in `route3_review.py` |
 | Search | `search_client`, `search_cli`, `network` | `ddgs` is preferred; urllib HTML/Lite behavior remains part of the current bounded search implementation |
 | Protected evaluation | self-contained scripts plus standard-library `csv` and `requests` | Input is CSV and prediction/judge artifacts are JSONL; keep independent from Route 3 durable execution and do not reorganize protected prompts, calls, or grading semantics |
 | Verification-agent handoff | self-contained standard-library adapter | Selects and converts files offline without recursion; keep it downstream of protected evaluation and independent from Route 3 and the external agent implementation |

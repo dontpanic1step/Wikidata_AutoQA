@@ -97,10 +97,13 @@ Accepted, rejected, and rerun outcomes remain traceable to their source page, se
 - Topic diversity removes rows only from over-target answer types, prioritizes the largest eligible global topic, uses the recipe seed for ties, and updates counts after every removal.
 - Historical similarity deduplication, subject-URL deduplication, domain round-robin, and `final_selection.py` are not part of formal finalization.
 - Final CSV columns are exactly `id`, `problem`, `answer`, `topic`, `answer_type`, and `urls`; `urls` is a JSON array string.
+- Candidate identity remains internal through selection. Its visible form is `page{canonical_page_id}_{slot}_{digest}`, while its digest continues to bind the immutable run-group, segment, page, and slot identity.
+- Finalization requires a durable public-ID registry. New candidates receive monotonic `simpleqa_synth_000001`-style IDs in deterministic candidate-ID order; existing mappings are immutable, removed IDs are not reused, and final CSV row order follows public-ID sequence.
+- The registry is locked for one writer and atomically persisted before the CSV. Related releases must reuse and version the same registry rather than regenerate IDs from page metadata or current row order.
 
 ## Candidate artifact contract
 
-- Candidate IDs use only run group ID, segment ID, canonical page ID, and original candidate slot.
+- Candidate IDs use only run group ID, segment ID, canonical page ID, and original candidate slot, and render as `page{canonical_page_id}_{slot}_{digest}`.
 - Single uses the fixed `single` slot; all5 uses the original answer-type slot; top-up uses a new segment ID.
 - Question/answer edits never change IDs or immutable generation provenance.
 - Immutable provenance includes run/segment/page attempt, canonical page URL/ID, selected table/type, page archive hash, generation prompt/request/raw response, original Q/A/aliases/search queries, answer type, generation model/parameters, and recipe seed.
