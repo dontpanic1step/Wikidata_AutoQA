@@ -283,7 +283,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "time.sleep(60)"
             )
             holder = subprocess.Popen(
-                [sys.executable, "-c", child_code],
+                [sys._base_executable, "-c", child_code],
                 cwd=ROOT,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,

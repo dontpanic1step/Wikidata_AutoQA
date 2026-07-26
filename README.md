@@ -238,7 +238,7 @@ python scripts\run_route3_review.py export `
   --run-id <run-id>
 ```
 
-Repeat `--segment-manifest` for every top-up segment represented in the accepted JSONL. Before writing review artifacts, GPT-4.1-mini classifies each Q/A into one of the ten formal topics with temperature `0`, `max_tokens=256`, and bounded concurrency. Calls use the durable Route 3 OpenRouter executor under `topic_classification_calls`; review state retains the complete raw response. Invalid labels reject the candidate without retry or fallback. `--markdown-output` is a base path: the command writes 50-candidate shards such as `review_1-50.md` and `review_51-100.md`. Each shard contains accepted candidates only, with stable ID, Q/A, answer type, Wikipedia page, selected table, automatic topic, automatic human-edit status, and separately quoted two-model answers.
+Repeat `--segment-manifest` for every top-up segment represented in the accepted JSONL. Before writing review artifacts, GPT-4.1-mini classifies each Q/A into one of the ten formal topics with temperature `0`, `max_tokens=256`, and bounded concurrency. Calls use the durable Route 3 OpenRouter executor under `topic_classification_calls`; review state retains the complete raw response. Invalid labels reject the candidate without retry or fallback. `--markdown-output` is a base path: the command writes shards of at most 50 candidates, and the final suffix uses the actual last candidate number. For 68 candidates, the files are `review_1-50.md` and `review_51-68.md`. Each shard contains accepted candidates only, with stable ID, Q/A, answer type, Wikipedia page, selected table, automatic topic, automatic human-edit status, and separately quoted two-model answers.
 
 The XLSX columns are exactly:
 

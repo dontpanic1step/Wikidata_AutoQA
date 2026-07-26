@@ -273,7 +273,7 @@ def write_review_markdown_shards(
     *,
     run_id: str,
 ) -> list[Path]:
-    """Write fixed 50-candidate Markdown shards and return their paths."""
+    """Write Markdown shards of at most 50 candidates and return their paths."""
     base_path.parent.mkdir(parents=True, exist_ok=True)
     base_path.unlink(missing_ok=True)
     shard_name = re.compile(
@@ -290,7 +290,7 @@ def write_review_markdown_shards(
     paths: list[Path] = []
     for chunk_index, chunk in enumerate(chunks):
         start = chunk_index * REVIEW_MARKDOWN_CHUNK_SIZE + 1
-        end = start + REVIEW_MARKDOWN_CHUNK_SIZE - 1
+        end = start + len(chunk) - 1
         path = base_path.with_name(f"{base_path.stem}_{start}-{end}{base_path.suffix}")
         path.write_text(
             render_review_markdown(

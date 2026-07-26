@@ -554,11 +554,11 @@ immutable allocation
 -自动 topic；
 -自动 `human_edited`。
 
-每 50 个 QA 写一个 Markdown 文件，使用固定范围后缀：
+每个 Markdown 文件最多写 50 个 QA，后缀使用实际的首尾编号。例如 68 个 QA：
 
 ```text
 review_1-50.md
-review_51-100.md
+review_51-68.md
 ```
 
 两个小模型分别使用独立标题；model response 和 judge reason 分别转为 blockquote，不能让回复自身的 Markdown 与 review 文档结构混合。

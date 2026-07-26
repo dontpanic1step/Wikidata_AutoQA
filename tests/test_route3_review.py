@@ -247,7 +247,7 @@ def test_export_cli_writes_review_state_markdown_and_xlsx() -> None:
         assert exported_state["candidates"][0]["topic_classifications"][0][
             "raw_response_body_text"
         ] == '{"id":"topic-response","choices":[]}'
-        assert (root / "review_1-50.md").exists()
+        assert (root / "review_1-1.md").exists()
         assert workbook_path.exists()
         exported_workbook = load_workbook(workbook_path)
         assert exported_workbook["review"]["E2"].value == "History"
@@ -527,7 +527,7 @@ def test_topic_and_human_edited_are_read_only() -> None:
 
 
 def test_markdown_is_sharded_by_fifty_and_model_markdown_is_quoted() -> None:
-    records = [accepted_record(page_id=index) for index in range(1, 52)]
+    records = [accepted_record(page_id=index) for index in range(1, 69)]
     records[0]["panel_grading_features"]["models"][0]["predicted_answer"] = (
         "# Embedded heading\n\n| A | B |\n| --- | --- |"
     )
@@ -543,7 +543,7 @@ def test_markdown_is_sharded_by_fifty_and_model_markdown_is_quoted() -> None:
 
         assert [path.name for path in paths] == [
             "review_1-50.md",
-            "review_51-100.md",
+            "review_51-68.md",
         ]
         first = paths[0].read_text(encoding="utf-8")
         second = paths[1].read_text(encoding="utf-8")
@@ -551,3 +551,4 @@ def test_markdown_is_sharded_by_fifty_and_model_markdown_is_quoted() -> None:
         assert "> | A | B |" in first
         assert "\n# Embedded heading\n" not in first
         assert "## 51." in second
+        assert "## 68." in second
