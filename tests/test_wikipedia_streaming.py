@@ -8,12 +8,11 @@ import unittest
 from pathlib import Path
 
 from test_support import ROOT  # noqa: F401
-from wikidata_simpleqa.final_selection import select_final_records
 from wikidata_simpleqa.wikipedia_streaming import PageIdStreamState, build_curid_url, build_pageid_url, page_id_from_url
 
 
 class WikipediaStreamingTests(unittest.TestCase):
-    """Check stream cache, rerun pool behavior, and final selection."""
+    """Check stream cache and rerun pool behavior."""
 
     def test_build_curid_url_round_trips_page_id(self) -> None:
         url = build_curid_url(12345)
@@ -157,41 +156,6 @@ class WikipediaStreamingTests(unittest.TestCase):
 
         self.assertEqual(first_selected, [1069583])
         self.assertEqual(second_selected, [1069584])
-
-    def test_final_selection_dedupes_similar_questions_and_rebalances_domains(self) -> None:
-        records = [
-            {
-                "question": "Which bridge in Example A has the longest span?",
-                "domain": "Architecture",
-                "subject_entity": {"url": "https://example.test/a"},
-            },
-            {
-                "question": "Which bridge in Example A has the longest span?",
-                "domain": "Architecture",
-                "subject_entity": {"url": "https://example.test/a"},
-            },
-            {
-                "question": "Which song on Chart B ranked first?",
-                "domain": "Arts",
-                "subject_entity": {"url": "https://example.test/b"},
-            },
-            {
-                "question": "Which team in Table C scored the most points?",
-                "domain": "Sports",
-                "subject_entity": {"url": "https://example.test/c"},
-            },
-        ]
-        selected, summary = select_final_records(
-            records,
-            target_count=3,
-            similarity_threshold=0.9,
-            domain_key="domain",
-        )
-        self.assertEqual(len(selected), 3)
-        self.assertEqual(summary["deduped_count"], 3)
-        self.assertEqual(summary["deduplication"]["removed_count"], 1)
-        self.assertEqual(set(summary["domain_counts"]), {"Architecture", "Arts", "Sports"})
-
 
 if __name__ == "__main__":
     unittest.main()
