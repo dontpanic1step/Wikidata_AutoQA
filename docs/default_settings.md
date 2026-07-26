@@ -25,12 +25,16 @@ These values have no operational default and are required except for `--status`:
 
 The page-attempt count is not an accepted-QA target. Attempt002 does not consume another primary allocation.
 
+There is no target-time setting or candidate field. Temporal provenance uses `run_date` and evidence `retrieved_at`; the effective question-surface threshold is `cutoff_year`.
+
 ## Model and validation defaults
 
 | Setting | Default |
 | --- | --- |
-| Target time | `2024` |
++
+
 | Question cutoff year | `2025` |
+| Run date | current local date when omitted; set `--run-date` explicitly for stable long-running fingerprints |
 | Request timeout | `30` seconds |
 | Proxy | direct (`none`) |
 | Provider | `openrouter` |

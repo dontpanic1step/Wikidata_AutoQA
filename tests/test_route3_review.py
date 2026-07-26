@@ -82,7 +82,6 @@ def accepted_record(
         "answer_type": answer_type,
         "template_key": "wikipedia_infobox_table",
         "topic": "",
-        "target_time": "2024",
         "search_queries": ["archive founder"],
         "search_verification_features": {
             "passed": True,
@@ -558,6 +557,7 @@ def test_rerun_uses_fresh_checks_and_only_latest_accepted_is_exported() -> None:
         assert candidate.panel_grading_features == {}
         assert candidate.source_metadata["route3_revision_number"] == 2
         record = candidate.to_output_record("")
+        assert "target_time" not in record
         record["validation"] = {"fresh": True}
         record["source_metadata"]["rule_based_qa_gate"] = {"fresh": True}
         record["search_verification_features"] = {

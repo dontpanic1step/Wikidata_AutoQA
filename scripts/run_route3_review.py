@@ -287,7 +287,6 @@ def _settings_from_fingerprint(fingerprint: dict) -> Settings:
     duckduckgo = inputs["duckduckgo"]
     second_stage = inputs["second_stage"]
     settings = Settings(
-        target_time=str(resolved["target_time"]),
         run_date=str(resolved["run_date"]),
         cutoff_year=int(resolved["cutoff_year"]),
         timeout_seconds=float(resolved["timeout_seconds"]),

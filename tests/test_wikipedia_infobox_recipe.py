@@ -74,7 +74,6 @@ def _recipe_args(**overrides):
         "page_attempt_count": 10,
         "answer_type": "Person",
         "run_date": None,
-        "target_time": "2024",
         "cutoff_year": 2025,
         "timeout_seconds": 30.0,
         "proxy": "none",
@@ -598,9 +597,9 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertIn("table_ranking_and_filters", inputs)
         self.assertIn("duckduckgo", inputs)
         self.assertIn("second_stage", inputs)
+        self.assertNotIn("target_time", inputs["resolved_result_affecting_config"])
 
         settings = _settings_from_fingerprint(fingerprint)
-        self.assertEqual(settings.target_time, args.target_time)
         self.assertEqual(settings.run_date, "2026-07-24")
         self.assertEqual(settings.duckduckgo_top_k, args.duckduckgo_top_k)
         self.assertEqual(settings.second_stage_grading_accuracy_threshold, 0.1)
@@ -632,6 +631,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(_command_value(command, "--route3-answer-type-mode"), "all5")
         self.assertNotIn("--route3-answer-type", command)
         self.assertNotIn("--route3-pageview-prefilter", command)
+        self.assertNotIn("--target-time", command)
         self.assertTrue(str(paths["accepted"]).endswith("01_alltypes_200_accepted.jsonl"))
 
     def test_formal_specific_answer_type_uses_single_mode_and_page_budget(self) -> None:
@@ -677,6 +677,22 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 "Person",
                 "--recipe",
                 "10 Person",
+            ],
+        ):
+            with self.assertRaises(SystemExit):
+                parse_recipe_args()
+
+    def test_target_time_cli_is_not_accepted(self) -> None:
+        with patch(
+            "sys.argv",
+            [
+                "run_wikipedia_infobox_recipe.py",
+                "--page-attempt-count",
+                "10",
+                "--answer-type",
+                "Person",
+                "--target-time",
+                "2024",
             ],
         ):
             with self.assertRaises(SystemExit):

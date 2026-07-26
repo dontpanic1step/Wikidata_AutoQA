@@ -146,7 +146,6 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--run-id", default="", help="Path-safe batch ID. Defaults to a dated recipe ID.")
     parser.add_argument("--run-date", default=None)
-    parser.add_argument("--target-time", default="2024")
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
     parser.add_argument("--proxy", default="none")
@@ -774,7 +773,6 @@ def _segment_fingerprint(
 ) -> dict:
     """Build the complete resolved fingerprint for one formal segment."""
     resolved_config = {
-        "target_time": args.target_time,
         "run_date": args.run_date,
         "cutoff_year": args.cutoff_year,
         "timeout_seconds": args.timeout_seconds,
@@ -1048,8 +1046,6 @@ def _segment_command(
         str(external_call_record_dir),
         "--ddg-verifier-result-dir",
         str(ddg_verifier_result_dir),
-        "--target-time",
-        str(args.target_time),
         "--cutoff-year",
         str(args.cutoff_year),
         "--timeout-seconds",

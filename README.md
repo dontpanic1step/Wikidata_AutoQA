@@ -115,7 +115,7 @@ The automated flow does not remove candidates solely because they share a subjec
 
 ## Durable runs, resume, and top-up
 
-A non-dry formal run requires a clean Git worktree. Commit code and configuration changes before starting it. For a run that may cross midnight, set `--run-date` explicitly so the resolved fingerprint remains stable. The recipe holds an OS-managed exclusive writer lock from before the segment manifest is read or created until the worker and projections finish. A second recipe process for the same segment fails immediately; the lock is released automatically when the holder exits or is killed, so recovery still uses the normal `--resume` command and durable artifacts.
+A non-dry formal run requires a clean Git worktree. Commit code and configuration changes before starting it. For a run that may cross midnight, set `--run-date` explicitly so the resolved fingerprint remains stable. Temporal state consists of `run_date`, evidence `retrieved_at`, and `cutoff_year`; there is no target-time CLI option or candidate field. The recipe holds an OS-managed exclusive writer lock from before the segment manifest is read or created until the worker and projections finish. A second recipe process for the same segment fails immediately; the lock is released automatically when the holder exits or is killed, so recovery still uses the normal `--resume` command and durable artifacts.
 
 Run a bounded 10-page Person segment:
 

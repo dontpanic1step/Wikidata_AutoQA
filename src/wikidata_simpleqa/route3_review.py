@@ -680,7 +680,6 @@ def _generated_candidate(record: dict[str, Any], artifact: Route3CandidateArtifa
         question_family=str(record["question_family"]),
         answer_type=artifact.provenance.answer_type,
         topic=revision.topic,
-        target_time=str(record["target_time"]),
         source_template_domain=str(record["template_key"]),
         search_queries=list(revision.active_search_queries),
         source_metadata=source_metadata,

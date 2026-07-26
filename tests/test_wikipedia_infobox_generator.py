@@ -1065,7 +1065,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 2468,
                 args=args,
                 settings=Settings(
-                    target_time="2024",
                     run_date="2026-07-24",
                     cutoff_year=2025,
                     enabled_routes=("route3_wikipedia_infobox",),
@@ -1087,7 +1086,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             resumed = _process_one_stream_page_id(
                 2468,
                 args=args,
-                settings=Settings(target_time="2024"),
+                settings=Settings(),
                 state=state,
                 wikipedia_client=FakeWikipediaClient(),
                 search_client=FakeSearchClient(),
@@ -1232,7 +1231,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             decision = _process_one_stream_page_id(
                 2468,
                 args=args,
-                settings=Settings(target_time="2024"),
+                settings=Settings(),
                 state=PageIdStreamState.load(root / "state.json"),
                 wikipedia_client=client,
                 search_client=FakeSearchClient(),
@@ -3027,7 +3026,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         result = process_route3_candidates(
             candidates,
             settings=Settings(
-                target_time="2024",
                 pilot_total=5,
                 cutoff_year=2025,
                 duckduckgo_top_k=5,
@@ -4268,7 +4266,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         with tempfile.TemporaryDirectory() as tmpdir:
             settings = Settings(
-                target_time="2024",
                 pilot_total=1,
                 enabled_routes=("route3_wikipedia_infobox",),
             )
@@ -4312,7 +4309,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         )
         with tempfile.TemporaryDirectory() as tmpdir:
             settings = Settings(
-                target_time="2024",
                 pilot_total=1,
                 enabled_routes=("route3_wikipedia_infobox",),
             )
@@ -4407,7 +4403,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 _process_stream_candidate_slots(
                     candidates,
                     attempt_number=1,
-                    settings=Settings(target_time="2024"),
+                    settings=Settings(),
                     search_client=FakeSearchClient(),
                     ddg_verifier_result_store=object(),
                     second_stage_model_clients=None,
@@ -4419,7 +4415,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             accepted, rejected = _process_stream_candidate_slots(
                 candidates,
                 attempt_number=2,
-                settings=Settings(target_time="2024"),
+                settings=Settings(),
                 search_client=FakeSearchClient(),
                 ddg_verifier_result_store=object(),
                 second_stage_model_clients=None,
@@ -4475,7 +4471,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 decision = _process_one_stream_page_id(
                     2468,
                     args=args,
-                    settings=Settings(target_time="2024"),
+                    settings=Settings(),
                     state=state,
                     wikipedia_client=FakeWikipediaClient(),
                     search_client=FakeSearchClient(),
@@ -4504,7 +4500,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 return _process_one_stream_page_id(
                     page_id,
                     args=args,
-                    settings=Settings(target_time="2024"),
+                    settings=Settings(),
                     state=state,
                     wikipedia_client=FakeWikipediaClient(),
                     search_client=FakeSearchClient(),

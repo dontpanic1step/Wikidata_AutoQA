@@ -377,7 +377,6 @@ def parse_args() -> argparse.Namespace:
         help="Existing segment summary JSON to include in the run-group artifact manifest. Can be repeated.",
     )
     parser.add_argument("--record-limit", type=int, default=10)
-    parser.add_argument("--target-time", type=str, default="2024")
     parser.add_argument("--run-date", type=str, default=None)
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
@@ -571,8 +570,7 @@ def main() -> int:
         max_tokens=args.small_model_max_tokens,
     )
     settings = Settings(
-        target_time=args.target_time,
-        run_date=args.run_date or Settings(target_time=args.target_time).run_date,
+        run_date=args.run_date or Settings().run_date,
         pilot_total=effective_record_limit,
         cutoff_year=args.cutoff_year,
         timeout_seconds=args.timeout_seconds,

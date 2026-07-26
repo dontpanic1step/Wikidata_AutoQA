@@ -9,34 +9,20 @@ from wikidata_simpleqa.config import LLMConfig, Settings
 
 
 class ConfigTests(unittest.TestCase):
-    """Check target-time parsing and validation."""
-
-    def test_year_target_time_maps_to_first_day(self) -> None:
-        self.assertEqual(Settings(target_time="2026").target_start_date, "2026-01-01")
-
-    def test_month_target_time_maps_to_first_day_of_month(self) -> None:
-        self.assertEqual(Settings(target_time="2026-05").target_start_date, "2026-05-01")
-
-    def test_date_target_time_is_preserved(self) -> None:
-        self.assertEqual(Settings(target_time="2026-05-09").target_start_date, "2026-05-09")
-
-    def test_invalid_target_time_raises(self) -> None:
-        with self.assertRaises(ValueError):
-            Settings(target_time="2026-99")
+    """Check formal Route 3 runtime configuration."""
 
     def test_invalid_second_stage_grading_threshold_raises(self) -> None:
         with self.assertRaises(ValueError):
-            Settings(target_time="2026", second_stage_grading_accuracy_threshold=1.5)
+            Settings(second_stage_grading_accuracy_threshold=1.5)
 
     def test_invalid_query_settings_raise(self) -> None:
         with self.assertRaises(ValueError):
-            Settings(target_time="2026", duckduckgo_parallel_queries=0)
+            Settings(duckduckgo_parallel_queries=0)
         with self.assertRaises(ValueError):
-            Settings(target_time="2026", generated_search_query_count=-1)
+            Settings(generated_search_query_count=-1)
 
     def test_duckduckgo_client_kwargs_include_transport_settings(self) -> None:
         settings = Settings(
-            target_time="2026",
             proxy="socks5://127.0.0.1:7890",
             duckduckgo_ddgs_backend="duckduckgo",
             duckduckgo_ddgs_max_attempts=3,
@@ -57,28 +43,28 @@ class ConfigTests(unittest.TestCase):
 
     def test_invalid_duckduckgo_transport_settings_raise(self) -> None:
         with self.assertRaises(ValueError):
-            Settings(target_time="2026", duckduckgo_ddgs_max_attempts=0)
+            Settings(duckduckgo_ddgs_max_attempts=0)
         with self.assertRaises(ValueError):
-            Settings(target_time="2026", duckduckgo_cooldown_failure_threshold=0)
+            Settings(duckduckgo_cooldown_failure_threshold=0)
         with self.assertRaises(ValueError):
-            Settings(target_time="2026", duckduckgo_cooldown_initial_seconds=-1.0)
+            Settings(duckduckgo_cooldown_initial_seconds=-1.0)
         with self.assertRaises(ValueError):
             Settings(
-                target_time="2026",
                 duckduckgo_cooldown_initial_seconds=120.0,
                 duckduckgo_cooldown_max_seconds=60.0,
             )
 
     def test_default_search_hit_rate_thresholds_are_uniform_point_three(self) -> None:
-        settings = Settings(target_time="2026")
+        settings = Settings()
         self.assertEqual(settings.search_longtail_max_full_question_hit_rate, 0.3)
         self.assertEqual(settings.search_longtail_max_keyword_hit_rate, 0.3)
         self.assertEqual(settings.search_longtail_max_overall_hit_rate, 0.3)
 
     def test_default_proxy_is_none(self) -> None:
-        self.assertIsNone(Settings(target_time="2026").proxy)
+        self.assertIsNone(Settings().proxy)
+
     def test_default_second_stage_panel_matches_formal_route3_models(self) -> None:
-        settings = Settings(target_time="2026")
+        settings = Settings()
 
         self.assertEqual(
             [config.model for config in settings.second_stage_grading_models],
@@ -87,10 +73,8 @@ class ConfigTests(unittest.TestCase):
         self.assertIsNotNone(settings.second_stage_grading_grader_llm)
         self.assertEqual(settings.second_stage_grading_grader_llm.model, "openai/gpt-4.1-mini")
 
-
-
     def test_none_proxy_values_normalize_to_none(self) -> None:
-        settings = Settings(target_time="2026", proxy="none")
+        settings = Settings(proxy="none")
         llm_config = LLMConfig(
             provider="openrouter",
             model="openai/gpt-4.1-mini",

@@ -39,7 +39,6 @@ def candidate() -> GeneratedCandidate:
 
 def settings(*, second_stage: bool = False) -> Settings:
     return Settings(
-        target_time="2024",
         pilot_total=1,
         cutoff_year=2024,
         second_stage_grading_enabled=second_stage,

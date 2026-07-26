@@ -110,7 +110,7 @@ The recipe also imports private reporting helpers directly from the internal wor
 
 | Artifact or state | Owning code | Authority |
 | --- | --- | --- |
-| `segment_manifest.json` | recipe and `route3_run_ledger.py` | Segment identity, fingerprint, lifecycle status, and prediction summary |
+| `segment_manifest.json` | recipe and `route3_run_ledger.py` | Segment identity, fingerprint including `run_date` and effective `cutoff_year`, lifecycle status, and prediction summary; no target-time field |
 | `page_allocations/*.json` | `route3_run_ledger.py` | Immutable page allocation and primary-budget consumption |
 | `cache/route3_pages` | `wikipedia_streaming.py` and `wikipedia_client.py` | Archived page content; archive hash is retained in provenance |
 | `external_calls/**` | `route3_external_calls.py`, `route3_external_lifecycle.py`, `route3_openrouter.py` | Durable OpenRouter intent, response/error, and ambiguity resolution |

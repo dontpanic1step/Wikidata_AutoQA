@@ -1165,7 +1165,6 @@ class WikipediaInfoboxTableGenerator:
             question_family="wikipedia_infobox_table_fact",
             answer_type=answer_type,
             topic="Wikipedia semi-structured data",
-            target_time=run_date[:4],
             source_template_domain="wikipedia_infobox_table",
             search_queries=search_queries,
             source_metadata=_source_metadata(
@@ -1430,7 +1429,6 @@ class WikipediaInfoboxTableGenerator:
             question_family="wikipedia_infobox_table_fact",
             answer_type=answer_type,
             topic="Wikipedia semi-structured data",
-            target_time=run_date[:4],
             source_template_domain="wikipedia_infobox_table",
             search_queries=search_queries,
             source_metadata=_source_metadata(

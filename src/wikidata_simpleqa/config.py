@@ -72,7 +72,6 @@ class LLMConfig:
 class Settings:
     """Configuration shared by the supported Route 3 entry points."""
 
-    target_time: str
     run_date: str = field(default_factory=lambda: date.today().isoformat())
     pilot_total: int = 20
     cutoff_year: int = 2025
@@ -106,8 +105,6 @@ class Settings:
 
     def __post_init__(self) -> None:
         self.proxy = normalize_proxy(self.proxy)
-        self.target_time = self.target_time.strip()
-        self._validate_target_time()
         if not 0.0 <= self.second_stage_grading_accuracy_threshold <= 1.0:
             raise ValueError("second_stage_grading_accuracy_threshold must be between 0.0 and 1.0")
         if self.duckduckgo_parallel_queries < 1:
@@ -131,16 +128,6 @@ class Settings:
         if self.generated_search_query_count < 0:
             raise ValueError("generated_search_query_count must be non-negative")
 
-    @property
-    def target_start_date(self) -> str:
-        """Return the lower date bound in ISO format."""
-        parts = self.target_time.split("-")
-        if len(parts) == 1:
-            return f"{parts[0]}-01-01"
-        if len(parts) == 2:
-            return f"{parts[0]}-{parts[1]}-01"
-        return self.target_time
-
     def duckduckgo_client_kwargs(self) -> dict[str, object]:
         """Return keyword arguments for the shared DuckDuckGo search client."""
         return {
@@ -158,14 +145,6 @@ class Settings:
             "cooldown_max_seconds": self.duckduckgo_cooldown_max_seconds,
         }
 
-    def _validate_target_time(self) -> None:
-        """Validate the accepted target-time formats."""
-        pattern = r"^\d{4}(-\d{2}){0,2}$"
-        if not re.fullmatch(pattern, self.target_time):
-            raise ValueError(
-                "target_time must use one of these formats: YYYY, YYYY-MM, or YYYY-MM-DD"
-            )
-        _ = date.fromisoformat(self.target_start_date)
 
 
 def _normalize_sequence(value: str | tuple[str, ...] | list[str] | set[str] | None) -> tuple[str, ...]:

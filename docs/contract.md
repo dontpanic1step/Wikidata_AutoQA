@@ -45,6 +45,8 @@ Only typed exhausted DuckDuckGo or OpenRouter infrastructure failures may create
 
 Accepted, rejected, and rerun outcomes remain traceable to their source page, selected table, generation exchange, validation results, search evidence, grading evidence, and exact decision reason. Stable IDs, immutable provenance, revisions, ledgers, review sheets, and final CSV fields are required parts of the current implementation.
 
+Temporal audit uses `run_date`, evidence `retrieved_at`, and the effective `cutoff_year` only. The formal CLI, runtime settings, candidate schema, accepted/rejected JSONL, review reconstruction, and segment fingerprint have no `target_time` field. No target-time compatibility path is part of the current contract.
+
 ## Durable execution contract
 
 - Formal non-dry runs require a clean Git worktree.

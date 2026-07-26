@@ -44,7 +44,9 @@ Formal Route 3 validation keeps effective surface and temporal checks, selected-
 
 ## Formal configuration surface
 
-The supported recipe surface includes primary page-attempt count; answer type and single/all5 mode; infobox/wikitable/both source mode; generation model and maximum tokens; cache reuse and fresh-page budgets; run identity and seed; lifecycle controls; output paths; and bounded concurrency/network parameters. The exact current defaults are listed in `docs/default_settings.md`.
+The supported recipe surface includes primary page-attempt count; answer type and single/all5 mode; infobox/wikitable/both source mode; generation model and maximum tokens; cache reuse and fresh-page budgets; run identity, run date, and seed; lifecycle controls; output paths; and bounded concurrency/network parameters. The exact current defaults are listed in `docs/default_settings.md`.
+
+Temporal state uses only `run_date`, evidence `retrieved_at`, and the effective `cutoff_year`. Candidate records do not carry a separate target-time field, and the recipe and worker expose no target-time CLI option. `run_date` fixes execution and retrieval metadata; `retrieved_at` records source acquisition; `cutoff_year` controls the conservative question-surface policy. None of these fields asserts that the source fact occurred in the run year.
 
 The formal segment selectors are `--page-attempt-count`, `--answer-type`, and `--route3-answer-type-mode`. The legacy free-form recipe and per-answer-type input syntaxes are not supported.
 

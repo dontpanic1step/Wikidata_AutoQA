@@ -47,7 +47,6 @@ class GeneratedCandidate:
     question_family: str = ""
     answer_type: str = ""
     topic: str = ""
-    target_time: str = ""
     source_template_domain: str = ""
     search_queries: list[str] = field(default_factory=list)
     search_verification_features: dict[str, Any] = field(default_factory=dict)
@@ -125,7 +124,6 @@ class GeneratedCandidate:
             "domain": self.topic,
             "legacy_domain": self.source_template_domain,
             "topic": self.topic,
-            "target_time": self.target_time,
             "subject_resource_url": self.subject_entity.url,
             "subject_resource_key": self.subject_resource_key,
             "search_queries": self.search_queries,
