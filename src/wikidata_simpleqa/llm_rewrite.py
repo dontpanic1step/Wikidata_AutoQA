@@ -211,8 +211,6 @@ def build_rewrite_prompt(payload: dict[str, Any]) -> str:
     """Build the one-shot prompt for question rewriting."""
     if payload.get("task_type") == "route1_question_and_queries":
         return build_route1_rewrite_prompt(payload)
-    if payload.get("task_type") == "route2_question_and_queries":
-        return build_route2_rewrite_prompt(payload)
     serialized = json.dumps(payload, ensure_ascii=False, indent=2)
     forbidden_patterns = payload.get(
         "forbidden_patterns",
@@ -343,49 +341,6 @@ def build_route1_rewrite_prompt(payload: dict[str, Any]) -> str:
     )
 
 
-def build_route2_rewrite_prompt(payload: dict[str, Any]) -> str:
-    """Build the Route 2 rewrite-and-query prompt."""
-    forbidden_patterns = payload.get("forbidden_patterns", [])
-    forbidden_text = ", ".join(str(pattern) for pattern in forbidden_patterns)
-    query_count = _query_count(payload)
-    extra_prompt = _extra_prompt_text(payload)
-    return (
-        "You are generating a SimpleQA-style factual question and answer-blind search queries for Route 2.\n\n"
-        "Input:\n"
-        f"- Canonical question: {payload.get('canonical_question', '')}\n"
-        f"- Evidence text: {payload.get('evidence_text', '')}\n"
-        f"- Answer type: {payload.get('answer_type', '')}\n"
-        f"- Forbidden text: {forbidden_text}\n"
-        f"- Cutoff year: {payload.get('cutoff_year', '')}\n\n"
-        "Task:\n"
-        "1. Rewrite the canonical question into a natural factual question.\n"
-        "2. Preserve the fact supported by the evidence text.\n"
-        "3. Do not add, remove, narrow, broaden, or change any information from the canonical question; only rephrase it so it sounds natural.\n"
-        "4. Keep all required anchors.\n"
-        "5. The rewritten_question must not contain the answer or any answer alias.\n"
-        f"6. Generate exactly {query_count} answer-blind search queries for long-tail verification.\n"
-        "7. Return extra answer aliases or abbreviations that may appear in snippets, using [] if none.\n\n"
-        "Important constraints:\n"
-        "- The search queries must not contain the answer or any answer alias.\n"
-        "- Preserve the same answer relation as the canonical question. Do not narrow or specialize it.\n"
-        "- Preserve the configured answer type; do not rewrite the question so it asks for a different type of answer.\n"
-        "- Do not add a more specific degree, award, role, date, or other factual detail that is absent from the canonical question unless it is already required for disambiguation.\n"
-        f"{_answer_precision_prompt_rules(payload)}"
-        f"{SOURCE_TABLE_WORDING_RULE}"
-        f"{CUMULATIVE_FACT_PROMPT_RULE}"
-        f"{HISTORICALLY_SETTLED_PROMPT_RULE}"
-        f"{extra_prompt}"
-        f"- Avoid these forbidden patterns: {forbidden_text}.\n"
-        f"- Avoid question wording that depends on events in {payload.get('cutoff_year', '')} or later.\n"
-        "- The first query will be the rewritten question itself and will be added by code. Do not repeat it in search_queries.\n\n"
-        "Output valid JSON only:\n"
-        "{\n"
-        '  "rewritten_question": string,\n'
-        '  "search_queries": string[],\n'
-        '  "answer_aliases": string[],\n'
-        '  "discard_reason": string | null\n'
-        "}\n"
-    )
 
 
 

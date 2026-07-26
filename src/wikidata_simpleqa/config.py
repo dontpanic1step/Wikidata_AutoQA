@@ -79,7 +79,6 @@ class Settings:
     harvest_limit_per_template: int = 100
     cutoff_year: int = 2025
     enabled_routes: tuple[str, ...] = (
-        "route2_wikidata_wikipedia_hybrid",
         "route1_wikidata_light",
     )
     duckduckgo_top_k: int = 10

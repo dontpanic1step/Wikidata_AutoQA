@@ -1,4 +1,4 @@
-"""Tests for Route 1 and Route 2 candidate generators."""
+"""Tests for historical Route 1 candidate generators."""
 
 from __future__ import annotations
 
@@ -10,7 +10,6 @@ from wikidata_simpleqa.config import Settings
 from wikidata_simpleqa.generators import (
     WikidataLightGenerator,
     WikidataMultiHopJoinGenerator,
-    WikidataWikipediaHybridGenerator,
 )
 from wikidata_simpleqa.models import AmbiguityResolution, CandidateFact, DomainTemplate
 
@@ -185,28 +184,6 @@ class GeneratorTests(unittest.TestCase):
         self.assertEqual(generated[0].answer, "Jane Doe")
         self.assertIn("Example Film", generated[0].evidence.text)
 
-    def test_route2_uses_wikipedia_evidence_and_subject_kind_override(self) -> None:
-        template = make_template()
-        candidate = make_candidate()
-        resolution = AmbiguityResolution(
-            status="label_unique",
-            descriptor="Example Film",
-        )
-        with (
-            patch("wikidata_simpleqa.generators.harvest_candidates", return_value=[candidate]),
-            patch("wikidata_simpleqa.generators.validate_route1_candidate", return_value=resolution),
-        ):
-            generated = WikidataWikipediaHybridGenerator(
-                wikipedia_client=FakeWikipediaClient()
-            ).generate(
-                templates=[template],
-                settings=Settings(target_time="2020"),
-                client=FakeClient(),
-            )
-        self.assertEqual(len(generated), 1)
-        self.assertEqual(generated[0].generation_route, "route2_wikidata_wikipedia_hybrid")
-        self.assertIn("directed by Jane Doe", generated[0].evidence.text)
-        self.assertIn("drama film", generated[0].question)
 
     def test_route1_multihop_join_emits_qid_seeded_shared_candidate(self) -> None:
         template = make_multihop_template()

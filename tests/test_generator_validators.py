@@ -63,7 +63,7 @@ def make_generated_candidate() -> GeneratedCandidate:
     )
     return GeneratedCandidate(
         source_type="hybrid",
-        generation_route="route2_wikidata_wikipedia_hybrid",
+        generation_route="route1_wikidata_light",
         question="Who directed Example Film?",
         canonical_question="Who directed Example Film?",
         answer="Jane Doe",

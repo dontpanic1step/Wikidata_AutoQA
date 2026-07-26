@@ -221,42 +221,6 @@ def make_route3_candidate(
 class GenerationPipelineTests(unittest.TestCase):
     """Check acceptance and rejection in the shared pipeline."""
 
-    def test_pipeline_keeps_valid_candidates_from_the_same_subject(self) -> None:
-        template = make_template()
-        candidate = make_candidate()
-        resolution = AmbiguityResolution(status="label_unique", descriptor="Example Film")
-        search_client = FakeSearchClient(
-            {
-                "Who directed the drama film Example Film?": [],
-                "Example Film director": [],
-                "Example Film director Jane Doe": [],
-                "Who directed the film Example Film?": [],
-            }
-        )
-        with tempfile.TemporaryDirectory() as tmpdir:
-            settings = Settings(
-                target_time="2020",
-                pilot_total=2,
-                output_path=Path(tmpdir) / "accepted.jsonl",
-                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
-            )
-            with (
-                patch("wikidata_simpleqa.generators.harvest_candidates", return_value=[candidate]),
-                patch("wikidata_simpleqa.generators.validate_route1_candidate", return_value=resolution),
-            ):
-                result = run_generation_pipeline(
-                    settings,
-                    templates=[template],
-                    wikidata_client=FakeWikidataClient(),
-                    wikipedia_client=FakeWikipediaClient(),
-                    search_client=search_client,
-                )
-        self.assertEqual(len(result.accepted), 2)
-        self.assertEqual(result.rejected, [])
-        self.assertEqual(
-            {record["generation_route"] for record in result.accepted},
-            {"route1_wikidata_light", "route2_wikidata_wikipedia_hybrid"},
-        )
 
     def test_shared_pipeline_keeps_same_subject_and_exact_question(self) -> None:
         first = make_route3_candidate(answer="Archive Guild")
@@ -330,7 +294,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="Who directed the film Example Film?",
             canonical_question="Who directed the film Example Film?",
             answer="Jane Doe",
@@ -408,7 +372,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="Who directed the film Harbor Lights?",
             canonical_question="Who directed the film Harbor Lights?",
             answer="Jane Doe",
@@ -479,7 +443,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="Who directed the film Harbor Lights?",
             canonical_question="Who directed the film Harbor Lights?",
             answer="Jane Doe",
@@ -638,7 +602,7 @@ class GenerationPipelineTests(unittest.TestCase):
                 source_candidate.source_metadata["stable_answer_override"] = True
                 candidate = GeneratedCandidate(
                     source_type="test",
-                    generation_route="route2_wikidata_wikipedia_hybrid",
+                    generation_route="route1_wikidata_light",
                     question="Who directed the film Harbor Lights?",
                     canonical_question="Who directed the film Harbor Lights?",
                     answer="Jane Doe",
@@ -694,7 +658,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="Who directed the film Harbor Lights?",
             canonical_question="Who directed the film Harbor Lights?",
             answer="Jane Doe",
@@ -1041,7 +1005,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["required_reasoning_clues"] = ["first degree"]
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="From which university did Naomi C Futhey receive a first degree?",
             canonical_question="From which university did Naomi C Futhey receive a first degree?",
             answer="University of British Columbia",
@@ -1363,7 +1327,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="Who directed the film Example Film?",
             canonical_question="Who directed the film Example Film?",
             answer="Jane Doe",
@@ -1424,7 +1388,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="Who directed the film Example Film?",
             canonical_question="Who directed the film Example Film?",
             answer="Jane Doe",
@@ -1588,7 +1552,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="Who directed the film Example Film?",
             canonical_question="Who directed the film Example Film?",
             answer="Jane Doe",
@@ -1652,7 +1616,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="What is the chapter count of Example Film?",
             canonical_question="What is the chapter count of Example Film?",
             answer="100",
@@ -1820,7 +1784,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="Who directed the film Example Film?",
             canonical_question="Who directed the film Example Film?",
             answer="Jane Doe",
@@ -1906,7 +1870,7 @@ class GenerationPipelineTests(unittest.TestCase):
         source_candidate.source_metadata["stable_answer_override"] = True
         candidate = GeneratedCandidate(
             source_type="test",
-            generation_route="route2_wikidata_wikipedia_hybrid",
+            generation_route="route1_wikidata_light",
             question="Who directed the film Example Film?",
             canonical_question="Who directed the film Example Film?",
             answer="Jane Doe",

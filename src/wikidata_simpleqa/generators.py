@@ -129,63 +129,6 @@ class WikidataMultiHopJoinGenerator(CandidateGenerator):
 
 
 
-@dataclass(slots=True, kw_only=True)
-class WikidataWikipediaHybridGenerator(CandidateGenerator):
-    """Primary Route 2 generator with Wikipedia-backed evidence."""
-
-    wikipedia_client: WikipediaClient
-    route_name: str = "route2_wikidata_wikipedia_hybrid"
-    source_type: str = "hybrid"
-
-    def generate(
-        self,
-        *,
-        templates: Iterable[DomainTemplate],
-        settings,
-        client,
-    ) -> list[GeneratedCandidate]:
-        generated: list[GeneratedCandidate] = []
-        for template in templates:
-            for raw_candidate in harvest_candidates(client=client, settings=settings, template=template):
-                prepared = _prepare_candidate_fact(
-                    client=client,
-                    settings=settings,
-                    template=template,
-                    candidate=raw_candidate,
-                )
-                if prepared is None:
-                    continue
-                title = str(prepared.source_metadata.get("subject_wikipedia_title", "")).strip()
-                if not title:
-                    continue
-                summary = self.wikipedia_client.fetch_summary(title)
-                evidence = _build_wikipedia_evidence(summary, settings.run_date)
-                if not evidence.text:
-                    continue
-                subject_kind_override = _extract_subject_kind_from_summary(
-                    title=title,
-                    summary_text=evidence.text,
-                )
-                if subject_kind_override:
-                    prepared.source_metadata.setdefault("question_format_args", {})["subject_kind"] = subject_kind_override
-                    descriptor = prepared.source_metadata.get("question_format_args", {}).get(
-                        "descriptor",
-                        prepared.subject_label,
-                    )
-                    prepared.canonical_question = template.canonical_question_template.format(
-                        descriptor=descriptor,
-                        subject_kind=subject_kind_override,
-                    )
-                generated.append(
-                    _build_generated_candidate(
-                        candidate=prepared,
-                        template=template,
-                        route_name=self.route_name,
-                        source_type=self.source_type,
-                        evidence=evidence,
-                    )
-                )
-        return generated
 
 
 def _prepare_candidate_fact(

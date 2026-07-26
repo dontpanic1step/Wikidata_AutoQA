@@ -32,7 +32,6 @@ from .grading import ModelPanelMember, evaluate_model_panel, make_grader_client,
 from .generators import (
     WikidataLightGenerator,
     WikidataMultiHopJoinGenerator,
-    WikidataWikipediaHybridGenerator,
 )
 from .io import write_jsonl
 from .llm_rewrite import make_rewrite_client
@@ -170,8 +169,6 @@ def run_generation_pipeline(
 
     generation_start = perf_counter()
     generators = []
-    if "route2_wikidata_wikipedia_hybrid" in settings.enabled_routes:
-        generators.append(WikidataWikipediaHybridGenerator(wikipedia_client=wikipedia_client))
     if "route1_wikidata_light" in settings.enabled_routes:
         generators.append(WikidataLightGenerator())
     if ROUTE1_MULTIHOP_JOIN_ROUTE in settings.enabled_routes:
@@ -218,8 +215,6 @@ def _default_templates_for_enabled_routes(settings: Settings) -> list:
     """Return default templates compatible with the configured route set."""
     templates = []
     if (
-        "route1_wikidata_light" in settings.enabled_routes
-        or "route2_wikidata_wikipedia_hybrid" in settings.enabled_routes
     ):
         templates.extend(
             template
@@ -904,14 +899,6 @@ def _build_route_rewrite_payload(
                     "route_contract": "route1_qid_first_multihop_join",
                 }
             )
-        return payload
-    if candidate.generation_route == "route2_wikidata_wikipedia_hybrid":
-        payload.update(
-            {
-                "task_type": "route2_question_and_queries",
-                "evidence_text": candidate.evidence.text,
-            }
-        )
         return payload
     payload["task_type"] = "generic_question_and_queries"
     return payload

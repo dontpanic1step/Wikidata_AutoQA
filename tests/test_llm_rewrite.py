@@ -89,25 +89,6 @@ class LLMRewriteTests(unittest.TestCase):
         self.assertIn("historically settled and cannot change", prompt)
 
 
-    def test_route2_prompt_includes_time_and_number_normalization_rules(self) -> None:
-        prompt = build_rewrite_prompt(
-            {
-                "task_type": "route2_question_and_queries",
-                "canonical_question": "How much fuel did Example carry?",
-                "evidence_text": "Example carried 5,000 gallons of fuel.",
-                "forbidden_patterns": ["current", "latest"],
-                "cutoff_year": 2025,
-            }
-        )
-        self.assertIn("Evidence text", prompt)
-        self.assertIn("May 20, 2024", prompt)
-        self.assertIn("May 2024", prompt)
-        self.assertIn("how many months", prompt)
-        self.assertIn("specify the counted quantity or unit", prompt)
-        self.assertIn("Do not add units to the reference answer", prompt)
-        self.assertIn("Billboard chart or UNESCO list", prompt)
-        self.assertIn("completed event, completed season, or fixed table/list", prompt)
-        self.assertIn("historically settled and cannot change", prompt)
 
     def test_other_rewrite_prompt_omits_number_and_date_precision_rules(self) -> None:
         prompt = build_rewrite_prompt(
