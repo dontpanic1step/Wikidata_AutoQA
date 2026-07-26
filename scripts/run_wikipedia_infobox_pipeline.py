@@ -65,11 +65,7 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
     DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE,
     DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS,
-    DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
-    DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
     DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
-    DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
-    DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS,
     DEFAULT_ROUTE3_REASONING_TYPES,
     DEFAULT_ROUTE3_TABLE_FILTER_MODES,
     DEFAULT_ROUTE3_TABLE_SOURCE_TYPES,
@@ -78,11 +74,9 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     _answer_items,
     _normalize_answer_type,
     _normalize_generated_answer,
-    _reasoning_type,
     _sanitize_answer_blind_queries,
     normalize_route3_answer_types,
     normalize_route3_answer_type_mode,
-    normalize_route3_reasoning_types,
     normalize_route3_table_source_types,
 )
 from wikidata_simpleqa.wikipedia_streaming import (
@@ -422,7 +416,7 @@ def parse_args() -> argparse.Namespace:
         "--route3-page-archive-dir",
         type=Path,
         default=ROOT / DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR,
-        help="Directory for unified Route 3 page archives containing parse HTML and pageview metadata.",
+        help="Directory for unified Route 3 page archives containing parse HTML and table metadata.",
     )
     parser.add_argument(
         "--route3-infobox-max-removed-row-rate",
@@ -507,7 +501,6 @@ def parse_args() -> argparse.Namespace:
     )
     args = parser.parse_args()
     args.stream_page_source = "table-search"
-    args.route3_reasoning_type = list(DEFAULT_ROUTE3_REASONING_TYPES)
     args.route3_table_filter_mode = list(DEFAULT_ROUTE3_TABLE_FILTER_MODES)
     args.route3_prose_leakage_scoring = True
     return args
@@ -698,7 +691,7 @@ def _manifest_segment(summary: dict) -> dict[str, object]:
         "stream_reused_cached_page_count": summary.get("stream_reused_cached_page_count", 0),
         "route3_reasoning_types": summary.get("route3_reasoning_types", []),
         "route3_answer_types": summary.get("route3_answer_types", []),
-        "route3_extra_prompts": summary.get("route3_extra_prompts", []),
+        "route3_extra_prompts": [],
         "route3_table_filter_modes": summary.get("route3_table_filter_modes", []),
         "route3_table_source_types": summary.get("route3_table_source_types", []),
         "route3_prose_leakage_scoring_enabled": bool(summary.get("route3_prose_leakage_scoring_enabled", True)),
@@ -1033,7 +1026,7 @@ def _run_streaming_page_id_pipeline(
     wikipedia_client = SemaphoreWrappedClient(
         wikipedia_client,
         concurrency.wikipedia_semaphore,
-        {"fetch_summary", "fetch_parse", "fetch_pageviews", "search_page_ids"},
+        {"fetch_summary", "fetch_parse", "search_page_ids"},
     )
     search_client = SemaphoreWrappedClient(
         search_client,
@@ -1344,7 +1337,7 @@ def _run_streaming_page_id_pipeline(
         **duckduckgo_summary_fields(settings),
         "generated_search_query_count": settings.generated_search_query_count,
         "min_table_score": 0.0,
-        "route3_reasoning_types": args.route3_reasoning_type,
+        "route3_reasoning_types": list(DEFAULT_ROUTE3_REASONING_TYPES),
         "route3_answer_types": args.route3_answer_type,
         "route3_table_filter_modes": args.route3_table_filter_mode,
         "route3_table_source_types": args.route3_table_source_type,
@@ -1900,20 +1893,12 @@ def _process_one_stream_page_id(
             search_query_count=args.generated_search_query_count,
             enable_rest_summary_fallback=False,
             min_table_score=0.0,
-            allowed_reasoning_types=DEFAULT_ROUTE3_REASONING_TYPES,
             allowed_answer_types=tuple(args.route3_answer_type),
-            extra_prompts=(),
             table_filter_modes=DEFAULT_ROUTE3_TABLE_FILTER_MODES,
             table_source_types=tuple(args.route3_table_source_type),
             prose_leakage_scoring_enabled=True,
-            llm_choose_table=False,
             answer_type_mode=args.route3_answer_type_mode,
             page_archive_dir=args.route3_page_archive_dir,
-            pageview_prefilter_enabled=False,
-            pageview_window_months=DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS,
-            max_monthly_average_pageviews=DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS,
-            max_underfilled_monthly_pageviews=DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS,
-            pageview_unavailable_policy=DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY,
             infobox_max_removed_row_rate=args.route3_infobox_max_removed_row_rate,
             infobox_min_remaining_rows=args.route3_infobox_min_remaining_rows,
             page_archive_paths_by_url={url: cached_archive_path} if cached_archive_path is not None else None,

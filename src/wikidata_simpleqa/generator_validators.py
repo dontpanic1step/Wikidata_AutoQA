@@ -105,13 +105,6 @@ def evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
 
 def _route3_evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
     """Return whether Route 3 selected table evidence supports the answer."""
-    if _route3_count_answer_is_supported(candidate):
-        _record_answer_evidence_match(
-            candidate,
-            matched=True,
-            source="count_reasoning_how_many_small_integer",
-        )
-        return True
     texts = _route3_selected_table_texts(candidate)
     if not texts:
         texts = [("evidence.text", candidate.evidence.text)]
@@ -143,17 +136,6 @@ def _route3_evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
     )
     _record_answer_evidence_match(candidate, matched=bool(source), source=source or "selected_source_table")
     return bool(source)
-
-
-def _route3_count_answer_is_supported(candidate: GeneratedCandidate) -> bool:
-    """Return whether a small how-many count answer is self-supported by reasoning type."""
-    reasoning_type = str(candidate.source_metadata.get("reasoning_type") or "").strip()
-    if reasoning_type != "count" or not re.search(r"\bhow\s+many\b", candidate.final_question, flags=re.IGNORECASE):
-        return False
-    value = parse_number_token(candidate.answer)
-    if value is None or value != value.to_integral_value():
-        return False
-    return 0 <= int(value) <= 10
 
 
 def _route3_selected_table_texts(candidate: GeneratedCandidate) -> list[tuple[str, str]]:

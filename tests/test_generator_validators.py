@@ -261,29 +261,6 @@ class GeneratorValidatorTests(unittest.TestCase):
         }
         self.assertTrue(evidence_supports_answer(candidate))
 
-    def test_route3_count_how_many_small_integer_passes_without_literal_number(self) -> None:
-        candidate = make_generated_candidate()
-        candidate.generation_route = "route3_wikipedia_infobox"
-        candidate.source_type = "wikipedia_tables"
-        candidate.question = "How many films in Example Series won the award?"
-        candidate.answer = "2"
-        candidate.answer_aliases = []
-        candidate.answer_type = "Number"
-        candidate.subject_entity.url = "https://en.wikipedia.org/wiki/Example"
-        candidate.evidence.text = ""
-        candidate.source_metadata = {
-            "reasoning_type": "count",
-            "selected_source_table": {
-                "headers": ["Film", "Award"],
-                "rows": [["Alpha", "Won"], ["Beta", "Won"]],
-            },
-        }
-        self.assertTrue(evidence_supports_answer(candidate))
-        self.assertEqual(
-            candidate.source_metadata["answer_in_evidence_match"]["source"],
-            "count_reasoning_how_many_small_integer",
-        )
-
     def test_route3_number_evidence_matches_comma_number(self) -> None:
         candidate = make_generated_candidate()
         candidate.generation_route = "route3_wikipedia_infobox"
@@ -496,34 +473,6 @@ class GeneratorValidatorTests(unittest.TestCase):
         )
         self.assertTrue(passed)
         self.assertEqual(features["category_hit_rates"]["keyword_queries"]["answer_hit_rate"], 0.3)
-
-    def test_search_verifier_matches_explicit_country_aliases_in_snippets(self) -> None:
-        candidate = make_generated_candidate()
-        candidate.answer = "United States of America"
-        candidate.answer_aliases = ["USA"]
-        candidate.answer_type = "Place"
-        client = FakeSearchClient(
-            {
-                "Who directed Example Film?": [],
-                "Example Film director": [
-                    {
-                        "title": "Archived record",
-                        "snippet": "The work originated in the USA.",
-                        "url": "https://example.test/4",
-                    }
-                ],
-            }
-        )
-        passed, features = run_search_based_longtail_verifier(
-            candidate,
-            search_client=client,
-            top_k=5,
-            max_full_question_hit_rate=0.0,
-            max_keyword_hit_rate=0.1,
-            max_overall_hit_rate=0.1,
-        )
-        self.assertFalse(passed)
-        self.assertEqual(features["triggered_rule"], "keyword_queries:hit_rate_exceeded")
 
     def test_search_verifier_matches_date_variants_in_snippets(self) -> None:
         candidate = make_generated_candidate()

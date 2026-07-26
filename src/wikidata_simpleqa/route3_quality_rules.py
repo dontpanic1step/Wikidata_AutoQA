@@ -8,10 +8,6 @@ from .entity_normalization import normalize_name
 
 EXTERNAL_LINKS_TABLE_FILTER_REASON = "no_external_links_tables:external_links_section"
 AWARD_YEAR_WITHOUT_MONTH_REASON = "post_rewrite_award_year_without_month"
-NO_SOCIAL_SCIENCE_RESEARCH_PROMPT = (
-    "Ask factual questions, not questions about the findings or conclusions of social science research, "
-    "such as results derived from census studies."
-)
 
 _AWARD_PATTERN = re.compile(r"\bawards?\b", flags=re.IGNORECASE)
 _WHAT_OR_WHICH_YEAR_PATTERN = re.compile(

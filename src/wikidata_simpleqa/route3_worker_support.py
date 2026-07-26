@@ -14,7 +14,6 @@ import re
 from .wikipedia_client import normalize_wikipedia_page_id
 from .wikipedia_infobox_generator import (
     normalize_route3_answer_types,
-    normalize_route3_reasoning_types,
     normalize_route3_table_source_types,
 )
 
@@ -23,7 +22,6 @@ DEFAULT_STREAM_RANDOM_SEED = 42
 PAGE_LEVEL_TIMING_PHASES = {
     "page_fetch_seconds",
     "table_parse_seconds",
-    "pageview_prefilter_seconds",
     "first_paragraph_extract_seconds",
     "first_paragraph_fetch_seconds",
     "total_generation_seconds",
@@ -292,7 +290,7 @@ def survival_by_layer(
     _append_survival_row(
         rows,
         stage="route_generation_pre_llm",
-        layer="Source, pageview, and table filters before generation LLM",
+        layer="Source and table filters before generation LLM",
         unit="page IDs",
         entered=page_after_unresolved,
         failed=pre_llm_failed,
@@ -491,7 +489,7 @@ def _record_llm_input_table_keys(record: dict, *, record_index: int = 0) -> list
         metadata = {}
     page_key = _record_page_key(record, record_index=record_index)
     table_selection = metadata.get("table_selection", [])
-    table_limit = 3 if bool(metadata.get("llm_choose_table")) else 1
+    table_limit = 1
     keys: list[tuple[object, ...]] = []
     if isinstance(table_selection, list):
         for row in table_selection:
@@ -567,7 +565,7 @@ def _rerun_stage(record: dict) -> str:
         return "search_longtail"
     if reason.startswith("second_stage_grading_error"):
         return "second_stage_grading"
-    if reason.startswith("wikipedia_infobox_") or reason.startswith("wikipedia_pageview_") or reason.startswith("pipeline_exception"):
+    if reason.startswith("wikipedia_infobox_") or reason.startswith("pipeline_exception"):
         return "route_generation"
     return "unresolved_rerun"
 
@@ -595,13 +593,6 @@ def _phase_timing_explanation_rows() -> list[dict[str, str]]:
             "kind": "child of total_generation_seconds",
             "additive": "Yes, within generation only",
             "meaning": "Local table/prose parsing and table-ranking inputs for one page.",
-        },
-        {
-            "order": "3",
-            "phase": "pageview_prefilter_seconds",
-            "kind": "child of total_generation_seconds",
-            "additive": "Yes, within generation only",
-            "meaning": "Optional pageview popularity prefilter before table selection and generation LLM calls.",
         },
         {
             "order": "4",
@@ -725,7 +716,7 @@ def _rejection_stage(record: dict) -> str:
     source_failure = _source_stage_failure(record)
     if source_failure is not None:
         return source_failure[0]
-    if reason.startswith("wikipedia_infobox_") or reason.startswith("wikipedia_pageview_"):
+    if reason.startswith("wikipedia_infobox_"):
         return "route_generation"
     if reason in {"llm_rewrite_discarded", "rewrite_guard_rejected", "rule_based_answer_type_gate_rejected"}:
         return "rewrite_surface"
@@ -819,7 +810,7 @@ def _is_source_stage_rejection_reason(reason: str) -> bool:
     """Return whether one reason represents a blocking Route 3 source-stage rejection."""
     if not reason:
         return False
-    return reason.startswith("wikipedia_infobox_") or reason.startswith("wikipedia_pageview_")
+    return reason.startswith("wikipedia_infobox_")
 
 
 def _source_metadata_failure_detail(record: dict) -> str:
@@ -955,8 +946,6 @@ def write_stream_walkthrough(
         lines.append(f"- Route 3 reasoning_type constraint: `{', '.join(summary.get('route3_reasoning_types', []))}`")
     if summary.get("route3_answer_types"):
         lines.append(f"- Route 3 answer_type constraint: `{', '.join(summary.get('route3_answer_types', []))}`")
-    if summary.get("route3_extra_prompts"):
-        lines.append(f"- Route 3 extra prompt rules: `{'; '.join(summary.get('route3_extra_prompts', []))}`")
     if summary.get("route3_table_filter_modes"):
         lines.append(f"- Route 3 table filter modes: `{', '.join(summary.get('route3_table_filter_modes', []))}`")
     if summary.get("route3_table_source_types"):
@@ -964,11 +953,6 @@ def write_stream_walkthrough(
     if "route3_prose_leakage_scoring_enabled" in summary:
         state = "enabled" if summary.get("route3_prose_leakage_scoring_enabled") else "disabled"
         lines.append(f"- Route 3 prose-leakage scoring: `{state}`")
-    if "route3_llm_choose_table" in summary:
-        lines.append(
-            "- Route 3 LLM table choice: "
-            f"`{'enabled' if summary.get('route3_llm_choose_table') else 'disabled'}`"
-        )
     if summary.get("stream_page_workers") is not None:
         lines.append(f"- Stream page workers: {summary.get('stream_page_workers', '')}")
         lines.append(f"- Wikipedia concurrency limit: {summary.get('wikipedia_concurrency_limit', '')}")
@@ -1282,7 +1266,7 @@ def _append_phase_timings_section(
     lines.append("")
     lines.append(
         "Timing nesting: `wall_clock_seconds` is the whole run. "
-        "`total_generation_seconds` contains page fetch/cache reuse, table parse, optional pageview prefilter, "
+        "`total_generation_seconds` contains page fetch/cache reuse, table parse, "
         "first-paragraph extraction, and generation LLM work for one page. "
         "`total_processing_seconds` contains rewrite/surface checks, number margin, shared validation, "
         "DuckDuckGo search, second-stage grading when enabled, and dedup checks for one generated candidate. "
@@ -1640,28 +1624,8 @@ def record_answer_type(record: dict) -> str:
 
 
 def record_reasoning_type(record: dict) -> str:
-    """Return the Route 3 reasoning type for a JSONL record."""
-    source_metadata = record.get("source_metadata", {})
-    if not isinstance(source_metadata, dict):
-        source_metadata = {}
-    value = (
-        source_metadata.get("reasoning_type")
-        or record.get("relation_or_claim")
-        or source_metadata.get("legacy_composition_type")
-        or source_metadata.get("composition_type")
-    )
-    if str(value or "").strip() in {"", "wikipedia_table_fact"}:
-        allowed_reasoning_types = source_metadata.get("allowed_reasoning_types")
-        if isinstance(allowed_reasoning_types, list) and len(allowed_reasoning_types) == 1:
-            value = allowed_reasoning_types[0]
-    try:
-        normalized = normalize_route3_reasoning_types([str(value or "")])
-    except ValueError:
-        normalized = ()
-    if normalized:
-        return normalized[0]
-    return str(value or "unknown").strip() or "unknown"
-
+    """Return the fixed Route 3 reasoning type for a JSONL record."""
+    return "single_fact"
 
 def _walkthrough_record_groups(
     *,

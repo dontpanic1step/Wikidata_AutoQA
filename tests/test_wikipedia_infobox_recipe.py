@@ -1199,7 +1199,7 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
         self.assertEqual(offsets, [0, 50, 100, 250])
 
     def test_recipe_summary_uses_segment_wall_time_and_aggregates_states(self) -> None:
-        args = _recipe_args(route3_extra_prompt=[], duckduckgo_parallel_queries=3)
+        args = _recipe_args(duckduckgo_parallel_queries=3)
         segment_summaries = [
             {
                 "run_segment_id": "01_person_40",

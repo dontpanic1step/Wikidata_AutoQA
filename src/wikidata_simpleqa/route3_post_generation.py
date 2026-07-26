@@ -35,7 +35,7 @@ EARLY_REJECTION_REASONS = {
     "unsupported_relation_record",
     "entity_grounding_failed",
 }
-SOURCE_STAGE_REJECTION_PREFIXES = ("wikipedia_infobox_", "wikipedia_pageview_")
+SOURCE_STAGE_REJECTION_PREFIXES = ("wikipedia_infobox_",)
 POST_REWRITE_SELF_CONTAIN_FORBIDDEN_PATTERNS = (
     ("list", re.compile(r"\blist\b", flags=re.IGNORECASE)),
     ("listed", re.compile(r"\blisted\b", flags=re.IGNORECASE)),

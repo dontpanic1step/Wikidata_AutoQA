@@ -12,8 +12,8 @@ from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Barrier, Lock, Semaphore
 from types import SimpleNamespace
-from urllib.error import URLError
 from unittest.mock import patch
+from urllib.error import URLError
 
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.config import LLMConfig, Settings
@@ -398,16 +398,6 @@ class FakeSearchClient:
         return [type("SearchResult", (), row)() for row in rows]
 
 
-def _pageview_payload(views: int, *, months: int = 12) -> dict:
-    """Return a simple monthly pageview payload."""
-    return {
-        "items": [
-            {"timestamp": f"2025{month:02d}0100", "views": views}
-            for month in range(1, months + 1)
-        ]
-    }
-
-
 class FakeOneRequestTransport:
     """Return one valid OpenRouter response while recording physical calls."""
 
@@ -774,7 +764,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertIn("| Existing Endpoint Records | `Person` | 1 | 0 | 1 | 100.0% |", text)
         self.assertIn("| Incremental Records | `Person` | 1 | 1 | 2 | 50.0% |", text)
         self.assertIn("### Reasoning Type Stats", text)
-        self.assertIn("| Existing Endpoint Records | `single_fact` | 1 | 0 | 1 | 100.0% |", text)
+        self.assertIn("| Existing Endpoint Records | `single_fact` | 1 | 1 | 2 | 50.0% |", text)
         self.assertIn("| Incremental Records | `single_fact` | 1 | 1 | 2 | 50.0% |", text)
         self.assertIn("#### Time Stats By Scope", text)
         self.assertIn("| Incremental run | 12.5000 | 2 | 2 | 12.0000 | 6.0000 | 14.0000 | 7.0000 | 4.0000 | 2.0000 |", text)
@@ -856,7 +846,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             llm_client=FakeLLMClient(),
             record_limit=1,
             enable_rest_summary_fallback=True,
-            allowed_reasoning_types=("max",),
             table_filter_modes=(),
         )
 
@@ -865,60 +854,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(candidates[0].final_question, "Which stadium hosting the 23rd FIFA World Cup has the largest capacity?")
         self.assertEqual(candidates[0].source_metadata["first_paragraph"], "")
         self.assertIn("URLError", candidates[0].source_metadata["first_paragraph_fetch_error"])
-
-    def test_route3_page_archive_reuses_parse_and_pageview_payloads(self) -> None:
-        class ArchiveWikipediaClient(FakeWikipediaClient):
-            def __init__(self) -> None:
-                self.parse_calls = 0
-                self.pageview_calls = 0
-                self.request_events = []
-
-            def fetch_parse(self, title_or_url: str) -> dict:
-                self.parse_calls += 1
-                return super().fetch_parse(title_or_url)
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                self.pageview_calls += 1
-                return _pageview_payload(10)
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            first_client = ArchiveWikipediaClient()
-            first_generator = WikipediaInfoboxTableGenerator(
-                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-                wikipedia_client=first_client,
-                llm_client=FakeLLMClient(),
-                record_limit=1,
-                table_filter_modes=(),
-                page_archive_dir=Path(tmpdir),
-                pageview_prefilter_enabled=True,
-            )
-            first = first_generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-
-            second_client = ArchiveWikipediaClient()
-            second_generator = WikipediaInfoboxTableGenerator(
-                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-                wikipedia_client=second_client,
-                llm_client=FakeLLMClient(),
-                record_limit=1,
-                table_filter_modes=(),
-                page_archive_dir=Path(tmpdir),
-                pageview_prefilter_enabled=True,
-            )
-            second = second_generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-            archive_path = Path(second.source_metadata["route3_page_archive"]["archive_path"])
-            archive_payload = json.loads(archive_path.read_text(encoding="utf-8"))
-
-        self.assertEqual(first_client.parse_calls, 1)
-        self.assertEqual(first_client.pageview_calls, 1)
-        self.assertEqual(second_client.parse_calls, 0)
-        self.assertEqual(second_client.pageview_calls, 0)
-        self.assertEqual(first.source_metadata["pageview_prefilter"]["decision"], "allow")
-        self.assertTrue(second.source_metadata["route3_page_archive"]["cache_hit"])
-        self.assertEqual(second.source_metadata["route3_page_archive"]["parse_fetch_status"], "archive_hit")
-        self.assertEqual(second.source_metadata["route3_page_archive"]["pageview_fetch_status"], "archive_hit")
-        self.assertIn("parsed_html", archive_payload)
-        self.assertIn("pageview", archive_payload)
-        self.assertEqual(archive_payload["pageview_prefilter"]["monthly_average"], 10.0)
 
     def test_route3_page_archive_can_reuse_parsed_html_without_parse_payload(self) -> None:
         class NoFetchWikipediaClient(FakeWikipediaClient):
@@ -1059,95 +994,12 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
 
         self.assertEqual([entry.page_id for entry in cached], [101])
         self.assertEqual(fresh, [102])
-    def test_pageview_prefilter_disabled_by_default_records_disabled_metadata(self) -> None:
-        class NoPageviewWikipediaClient(FakeWikipediaClient):
-            def __init__(self) -> None:
-                self.pageview_calls = 0
-                self.request_events = []
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                self.pageview_calls += 1
-                raise AssertionError("disabled pageview prefilter must not fetch pageviews")
-
-        llm_client = FakeLLMClient()
-        wikipedia_client = NoPageviewWikipediaClient()
-        with tempfile.TemporaryDirectory() as tmpdir:
-            generator = WikipediaInfoboxTableGenerator(
-                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-                wikipedia_client=wikipedia_client,
-                llm_client=llm_client,
-                record_limit=1,
-                table_filter_modes=(),
-                page_archive_dir=Path(tmpdir),
-            )
-            candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-            archive_path = Path(candidate.source_metadata["route3_page_archive"]["archive_path"])
-            archive_payload = json.loads(archive_path.read_text(encoding="utf-8"))
-
-        pageview = candidate.source_metadata["pageview_prefilter"]
-        self.assertEqual(wikipedia_client.pageview_calls, 0)
-        self.assertEqual(len(llm_client.prompts), 1)
-        self.assertEqual(pageview["enabled"], False)
-        self.assertEqual(pageview["status"], "disabled")
-        self.assertEqual(pageview["decision"], "allow")
-        self.assertEqual(pageview["reason"], "pageview_prefilter_disabled")
-        self.assertEqual(candidate.source_metadata["route3_page_archive"]["pageview_status"], "disabled")
-        self.assertEqual(archive_payload["pageview_prefilter"]["status"], "disabled")
-        self.assertNotIn("wikipedia_pageview_prefilter_rejected", candidate.notes)
-        self.assertNotIn("wikipedia_pageview_prefilter_unavailable", candidate.notes)
-
-    def test_disabled_pageview_prefilter_preserves_cached_pageview_payload(self) -> None:
-        class CachedPageviewWikipediaClient(FakeWikipediaClient):
-            def __init__(self, views: int) -> None:
-                self.views = views
-                self.pageview_calls = 0
-                self.request_events = []
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                self.pageview_calls += 1
-                return _pageview_payload(self.views)
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            enabled_client = CachedPageviewWikipediaClient(views=10)
-            enabled_generator = WikipediaInfoboxTableGenerator(
-                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-                wikipedia_client=enabled_client,
-                llm_client=FakeLLMClient(),
-                record_limit=1,
-                table_filter_modes=(),
-                page_archive_dir=Path(tmpdir),
-                pageview_prefilter_enabled=True,
-            )
-            enabled_generator.generate(run_date="2026-05-16", cutoff_year=2025)
-
-            disabled_client = CachedPageviewWikipediaClient(views=99)
-            disabled_generator = WikipediaInfoboxTableGenerator(
-                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-                wikipedia_client=disabled_client,
-                llm_client=FakeLLMClient(),
-                record_limit=1,
-                table_filter_modes=(),
-                page_archive_dir=Path(tmpdir),
-            )
-            candidate = disabled_generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-            archive_path = Path(candidate.source_metadata["route3_page_archive"]["archive_path"])
-            archive_payload = json.loads(archive_path.read_text(encoding="utf-8"))
-
-        self.assertEqual(enabled_client.pageview_calls, 1)
-        self.assertEqual(disabled_client.pageview_calls, 0)
-        self.assertEqual(candidate.source_metadata["pageview_prefilter"]["status"], "disabled")
-        self.assertEqual(archive_payload["pageview_prefilter"]["status"], "disabled")
-        self.assertEqual(archive_payload["pageview"]["response"]["items"][0]["views"], 10)
-
     def test_route3_source_metadata_uses_archive_page_id_for_title_url(self) -> None:
         class PageIdWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:
                 payload = super().fetch_parse(title_or_url)
                 payload["parse"]["pageid"] = 987654
                 return payload
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                return _pageview_payload(10)
 
         with tempfile.TemporaryDirectory() as tmpdir:
             generator = WikipediaInfoboxTableGenerator(
@@ -1167,195 +1019,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(candidate.source_metadata["route3_page_archive"]["page_id"], 987654)
         self.assertEqual(archive_payload["page_id"], 987654)
 
-    def test_read_only_cached_page_archive_fetches_missing_pageview_without_writing_archive(self) -> None:
-        class BackfillWikipediaClient(FakeWikipediaClient):
-            def __init__(self) -> None:
-                self.parse_calls = 0
-                self.pageview_calls = 0
-                self.request_events = []
-
-            def fetch_parse(self, title_or_url: str) -> dict:
-                self.parse_calls += 1
-                return super().fetch_parse(title_or_url)
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                self.pageview_calls += 1
-                return _pageview_payload(20)
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            first_client = BackfillWikipediaClient()
-            generator = WikipediaInfoboxTableGenerator(
-                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-                wikipedia_client=first_client,
-                llm_client=FakeLLMClient(),
-                record_limit=1,
-                table_filter_modes=(),
-                page_archive_dir=Path(tmpdir),
-                pageview_prefilter_enabled=False,
-            )
-            first = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-            archive_path = Path(first.source_metadata["route3_page_archive"]["archive_path"])
-            archive_before = archive_path.read_text(encoding="utf-8")
-
-            second_client = BackfillWikipediaClient()
-            second_generator = WikipediaInfoboxTableGenerator(
-                urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-                wikipedia_client=second_client,
-                llm_client=FakeLLMClient(),
-                record_limit=1,
-                table_filter_modes=(),
-                page_archive_dir=Path(tmpdir),
-                pageview_prefilter_enabled=True,
-                read_only_page_archive_paths=(archive_path,),
-            )
-            second = second_generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-            archive_exists = archive_path.exists()
-            archive_after = archive_path.read_text(encoding="utf-8")
-
-        self.assertTrue(archive_exists)
-        self.assertEqual(archive_after, archive_before)
-        self.assertEqual(second_client.parse_calls, 0)
-        self.assertEqual(second_client.pageview_calls, 1)
-        self.assertEqual(second.source_metadata["pageview_prefilter"]["monthly_average"], 20.0)
-        self.assertTrue(second.source_metadata["route3_page_archive"]["archive_read_only"])
-        self.assertEqual(second.source_metadata["route3_page_archive"]["parse_fetch_status"], "archive_hit")
-        self.assertEqual(second.source_metadata["route3_page_archive"]["pageview_fetch_status"], "fetched")
-
-    def test_stream_cached_page_archive_reuse_keeps_pageview_prefilter_disabled(self) -> None:
-        class CachedArchiveWikipediaClient(FakeWikipediaClient):
-            def __init__(self) -> None:
-                self.parse_calls = 0
-                self.pageview_calls = 0
-                self.request_events = []
-
-            def fetch_parse(self, title_or_url: str) -> dict:
-                self.parse_calls += 1
-                raise AssertionError("cached archive reuse should not fetch parse payload")
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                self.pageview_calls += 1
-                return _pageview_payload(5001)
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
-            archive_path = root / "page_cached.json"
-            source_url = "https://en.wikipedia.org/w/index.php?pageid=2468"
-            archive_path.write_text(
-                json.dumps(
-                    {
-                        "source_url": source_url,
-                        "page_id": 2468,
-                        "title": "2026 FIFA World Cup",
-                        "canonical_url": "https://en.wikipedia.org/wiki/2026_FIFA_World_Cup",
-                        "parse_payload": {
-                            "parse": {
-                                "title": "2026 FIFA World Cup",
-                                "pageid": 2468,
-                                "text": FIXTURE_HTML,
-                            }
-                        },
-                        "parsed_html": FIXTURE_HTML,
-                    },
-                    indent=2,
-                ),
-                encoding="utf-8",
-            )
-            archive_before = archive_path.read_text(encoding="utf-8")
-            args = SimpleNamespace(
-                generated_search_query_count=3,
-                enable_rest_summary_fallback=False,
-                min_table_score=-999.0,
-                route3_reasoning_type=["single_fact"],
-                route3_answer_type=[],
-                route3_extra_prompt=[],
-                route3_table_filter_mode=[],
-                route3_table_source_type=["infobox", "wikitable"],
-                route3_prose_leakage_scoring=True,
-                route3_llm_choose_table=False,
-                route3_answer_type_mode="single",
-                route3_page_archive_dir=root,
-                route3_pageview_prefilter=True,
-                route3_pageview_window_months=12,
-                route3_max_monthly_average_pageviews=5000.0,
-                route3_max_underfilled_monthly_pageviews=10000.0,
-                route3_pageview_unavailable_policy="allow",
-                route3_infobox_max_removed_row_rate=0.6,
-                route3_infobox_min_remaining_rows=5,
-                stream_page_source="table-search",
-                page_attempt_ledger_dir=root / "page_attempts",
-                run_group_id="group",
-                run_segment_id="segment",
-                generation_model="google/gemini-3-flash-preview",
-                small_model_max_tokens=4096,
-                stream_page_id_min=1,
-                stream_page_id_max=999999,
-                stream_random_seed=1,
-                output=root / "accepted.jsonl",
-                rejected_output=root / "rejected.jsonl",
-            )
-            state = PageIdStreamState.load(root / "state.json")
-            client = CachedArchiveWikipediaClient()
-            ledger_index = SegmentLedgerIndex(
-                allocation_dir=root / "page_allocations",
-                attempt_dir=root / "page_attempts",
-                run_group_id="group",
-                segment_id="segment",
-                run_group_segments_dir=root.parent,
-            )
-            ledger_index.commit_allocation(
-                canonical_page_id=2468,
-                page_source="cache",
-                source_url=source_url,
-                cached_archive_path=str(archive_path),
-            )
-
-            decision = _process_one_stream_page_id(
-                2468,
-                args=args,
-                settings=Settings(
-                    target_time="2026-05-16",
-                    run_date="2026-05-16",
-                    cutoff_year=2025,
-                    enabled_routes=("route3_wikipedia_infobox",),
-                ),
-                state=state,
-                wikipedia_client=client,
-                search_client=FakeSearchClient(),
-                llm_client=FakeLLMClient(),
-                concurrency=StreamingConcurrencyContext(
-                    commit_lock=Lock(),
-                    wikipedia_semaphore=Semaphore(1),
-                    duckduckgo_semaphore=Semaphore(1),
-                    generation_rewrite_semaphore=Semaphore(1),
-                    second_stage_semaphore=Semaphore(1),
-                ),
-                second_stage_model_clients=None,
-                grading_grader_client=None,
-                ddg_verifier_result_store=Route3DDGVerifierResultStore(
-                    root / "ddg_verifier_results",
-                    segment_fingerprint="fingerprint",
-                ),
-                ledger_index=ledger_index,
-                source_url=source_url,
-                stream_page_source="cached_page_archive",
-                cached_archive_path=archive_path,
-            )
-            archive_after = archive_path.read_text(encoding="utf-8")
-
-        self.assertEqual(decision["status"], "rejected")
-        self.assertEqual(client.parse_calls, 0)
-        self.assertEqual(client.pageview_calls, 0)
-        self.assertEqual(archive_after, archive_before)
-        record = decision["rejected_records"][0]
-        metadata = record["source_metadata"]
-        self.assertTrue(metadata["route3_page_archive"]["archive_read_only"])
-        self.assertEqual(metadata["streaming_discovery"]["page_source"], "cached_page_archive")
-        self.assertEqual(metadata["streaming_discovery"]["cached_archive_path"], str(archive_path))
-        self.assertEqual(metadata["page_attempt"], 1)
-        self.assertEqual(metadata["generation_model"], "google/gemini-3-flash-preview")
-        self.assertEqual(metadata["generation_parameters"], {"max_tokens": 4096})
-        self.assertEqual(metadata["recipe_seed"], 1)
-
     def test_all5_page_level_generation_failure_commits_zero_candidate_ledger(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -1366,7 +1029,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 route3_table_filter_mode=[],
                 route3_table_source_type=["infobox", "wikitable"],
                 route3_prose_leakage_scoring=True,
-                route3_llm_choose_table=False,
                 route3_answer_type_mode="all5",
                 route3_page_archive_dir=root / "page_archive",
                 route3_infobox_max_removed_row_rate=0.6,
@@ -1594,147 +1256,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertTrue(decision["reused_committed_ledger"])
         self.assertEqual(decision["accepted_records"], [accepted_record])
         self.assertEqual(client.fetch_calls, 0)
-
-    def test_pageview_prefilter_rejects_high_popularity_before_llm(self) -> None:
-        class PopularWikipediaClient(FakeWikipediaClient):
-            request_events: list[dict] = []
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                return _pageview_payload(5001)
-
-        llm_client = FakeLLMClient()
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=PopularWikipediaClient(),
-            llm_client=llm_client,
-            record_limit=1,
-            table_filter_modes=(),
-            pageview_prefilter_enabled=True,
-        )
-        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-
-        self.assertIn("wikipedia_pageview_prefilter_rejected", candidate.notes)
-        self.assertEqual(llm_client.prompts, [])
-        self.assertEqual(candidate.source_metadata["pageview_prefilter"]["decision"], "reject")
-        self.assertEqual(candidate.source_metadata["pageview_prefilter"]["monthly_average"], 5001.0)
-
-    def test_shared_processing_preserves_pageview_prefilter_rejection_reason(self) -> None:
-        class PopularWikipediaClient(FakeWikipediaClient):
-            request_events: list[dict] = []
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                return _pageview_payload(5001)
-
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=PopularWikipediaClient(),
-            llm_client=FakeLLMClient(),
-            record_limit=1,
-            table_filter_modes=(),
-            pageview_prefilter_enabled=True,
-        )
-        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-
-        result = process_route3_candidates(
-            [candidate],
-            settings=Settings(
-                target_time="2024",
-                pilot_total=1,
-                cutoff_year=2025,
-                enabled_routes=("route3_wikipedia_infobox",),
-            ),
-            search_client=FakeSearchClient(),
-        )
-
-        self.assertEqual(result.accepted, [])
-        self.assertEqual(result.rejected[0]["rejection_reason"], "wikipedia_pageview_prefilter_rejected")
-        self.assertEqual(
-            result.rejected[0]["source_metadata"]["discard_reason"],
-            "monthly_average_pageviews>5000.0000",
-        )
-        self.assertNotIn("rewrite_disabled", result.rejected[0]["notes"])
-
-    def test_pageview_prefilter_rejects_underfilled_window_when_single_month_above_threshold(self) -> None:
-        class UnderfilledPopularWikipediaClient(FakeWikipediaClient):
-            request_events: list[dict] = []
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                return _pageview_payload(20000, months=11)
-
-        llm_client = FakeLLMClient()
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=UnderfilledPopularWikipediaClient(),
-            llm_client=llm_client,
-            record_limit=1,
-            table_filter_modes=(),
-            pageview_prefilter_enabled=True,
-        )
-        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-
-        self.assertEqual(llm_client.prompts, [])
-        self.assertIn("wikipedia_pageview_prefilter_rejected", candidate.notes)
-        pageview = candidate.source_metadata["pageview_prefilter"]
-        self.assertEqual(pageview["decision"], "reject")
-        self.assertEqual(pageview["status"], "incomplete_window")
-        self.assertEqual(pageview["reason"], "underfilled_monthly_pageviews>10000.0000")
-        self.assertEqual(pageview["observed_month_count"], 11)
-        self.assertEqual(pageview["required_month_count"], 12)
-        self.assertTrue(pageview["incomplete_window"])
-        self.assertEqual(pageview["max_observed_monthly"], 20000)
-
-    def test_pageview_prefilter_allows_underfilled_window_below_single_month_threshold(self) -> None:
-        class UnderfilledAllowedWikipediaClient(FakeWikipediaClient):
-            request_events: list[dict] = []
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                return _pageview_payload(10000, months=11)
-
-        llm_client = FakeLLMClient()
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=UnderfilledAllowedWikipediaClient(),
-            llm_client=llm_client,
-            record_limit=1,
-            table_filter_modes=(),
-            pageview_prefilter_enabled=True,
-        )
-        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-
-        self.assertEqual(len(llm_client.prompts), 1)
-        pageview = candidate.source_metadata["pageview_prefilter"]
-        self.assertEqual(pageview["decision"], "allow")
-        self.assertEqual(pageview["status"], "incomplete_window")
-        self.assertEqual(pageview["reason"], "underfilled_monthly_pageviews_within_threshold")
-        self.assertEqual(pageview["observed_month_count"], 11)
-        self.assertEqual(pageview["required_month_count"], 12)
-        self.assertTrue(pageview["incomplete_window"])
-        self.assertEqual(pageview["monthly_average"], 10000.0)
-        self.assertEqual(pageview["max_observed_monthly"], 10000)
-
-    def test_pageview_unavailable_allow_records_error_and_continues(self) -> None:
-        class PageviewErrorWikipediaClient(FakeWikipediaClient):
-            request_events: list[dict] = []
-
-            def fetch_pageviews(self, title: str, *, start: str, end: str) -> dict:
-                raise URLError("pageview offline")
-
-        llm_client = FakeLLMClient()
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=PageviewErrorWikipediaClient(),
-            llm_client=llm_client,
-            record_limit=1,
-            table_filter_modes=(),
-            pageview_prefilter_enabled=True,
-        )
-        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-
-        self.assertEqual(len(llm_client.prompts), 1)
-        pageview = candidate.source_metadata["pageview_prefilter"]
-        self.assertEqual(pageview["decision"], "allow")
-        self.assertEqual(pageview["status"], "error")
-        self.assertEqual(pageview["errors"][0]["error_type"], "URLError")
 
     def test_formal_table_search_query_is_fixed(self) -> None:
         self.assertEqual(_stream_search_queries(), ['insource:"wikitable"'])
@@ -2012,12 +1533,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 "rejection_reason": "wikipedia_infobox_llm_discarded",
                 "source_metadata": {"discard_reason": "No date or year information is present."},
             },
-            {
-                "rejection_reason": "shared_validation_failed",
-                "notes": ["wikipedia_pageview_prefilter_rejected"],
-                "rejection_notes": {"validation": {"answer_in_evidence": False}},
-                "source_metadata": {"discard_reason": "monthly_average_pageviews>5000.0000"},
-            },
         ]
 
         counts = {
@@ -2038,36 +1553,9 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             counts[("route_generation", "wikipedia_infobox_llm_discarded:No date or year information is present.")],
             1,
         )
-        self.assertEqual(
-            counts[("route_generation", "wikipedia_pageview_prefilter_rejected:monthly_average_pageviews>5000.0000")],
-            1,
-        )
         self.assertFalse(any("hit_rate_exceeded" in reason for _, reason in counts))
         self.assertFalse(any("accuracy=" in reason or "threshold=" in reason for _, reason in counts))
         self.assertFalse(any("population" in reason or "comma_number_count" in reason for _, reason in counts))
-
-    def test_survival_stats_place_pageview_placeholder_rejections_at_route_generation(self) -> None:
-        records = [
-            {
-                "rejection_reason": "shared_validation_failed",
-                "notes": ["wikipedia_pageview_prefilter_rejected"],
-                "rejection_notes": {"validation": {"answer_in_evidence": False}},
-                "source_metadata": {"discard_reason": "monthly_average_pageviews>5000.0000"},
-            }
-        ]
-
-        rows = {
-            row["stage"]: row
-            for row in _survival_by_layer(
-                attempted_count=1,
-                accepted_records=[],
-                rejected_records=records,
-                rerun_records=[],
-            )
-        }
-
-        self.assertEqual(rows["route_generation_pre_llm"]["failed"], 1)
-        self.assertEqual(rows["shared_validation"]["failed"], 0)
 
     def test_survival_stats_follow_current_route3_flow_units(self) -> None:
         table_row = {
@@ -2211,14 +1699,14 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
     def test_all5_page_level_prerewrite_rejection_writes_page_only_used_entry(self) -> None:
         records = [
             {
-                "rejection_reason": "wikipedia_pageview_prefilter_rejected",
-                "notes": ["wikipedia_pageview_prefilter_rejected"],
+                "rejection_reason": "wikipedia_infobox_no_tables",
+                "notes": ["wikipedia_infobox_no_tables"],
                 "answer_type": "",
                 "source_metadata": {
                     "page_id": 101,
                     "answer_type_mode": "all5",
                     "route3_slot_id": "",
-                    "discard_reason": "monthly_average_pageviews>5000.0000",
+                    "discard_reason": "no_tables",
                     "table_source_types": ["infobox"],
                 },
             }
@@ -2454,32 +1942,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             rejected_records[0]["source_metadata"]["page_id_list_entry"],
             {"page_id": 456, "answer_type": "Person", "table_type": "wikitable"},
         )
-
-    def test_rejection_placeholder_uses_single_allowed_reasoning_type(self) -> None:
-        candidate = _rejected_placeholder(
-            url="https://en.wikipedia.org/wiki/Example",
-            title="Example",
-            canonical_url="https://en.wikipedia.org/wiki/Example",
-            question="Example",
-            answer="",
-            first_paragraph="Example paragraph.",
-            run_date="2026-05-21",
-            timings={},
-            reason="wikipedia_infobox_table_filter_rejected",
-            allowed_reasoning_types=("single_fact",),
-            allowed_answer_types=("Person",),
-        )
-
-        self.assertEqual(candidate.relation_or_claim, "single_fact")
-        self.assertEqual(candidate.source_metadata["reasoning_type"], "single_fact")
-
-    def test_walkthrough_reasoning_type_uses_single_allowed_reasoning_type_for_legacy_placeholder(self) -> None:
-        record = {
-            "relation_or_claim": "wikipedia_table_fact",
-            "source_metadata": {"allowed_reasoning_types": ["single_fact"]},
-        }
-
-        self.assertEqual(_record_reasoning_type(record), "single_fact")
 
     def test_table_extraction_preserves_infobox_and_wikitable_rows(self) -> None:
         tables = extract_wikipedia_tables(FIXTURE_HTML)
@@ -3371,7 +2833,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeLLMClient(),
             record_limit=1,
-            allowed_reasoning_types=("max",),
             table_filter_modes=(),
         )
 
@@ -3394,31 +2855,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertNotIn("wikitable or infobox", prompt)
         self.assertIn("Use the provided top-ranked table as the only structured evidence table", prompt)
         self.assertIn("If the provided table is only a toy", prompt)
-
-    def test_route3_can_let_llm_choose_among_ranked_tables(self) -> None:
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=FakeWikipediaClient(),
-            llm_client=FakeSingleFactLLMClient(),
-            record_limit=1,
-            table_filter_modes=(),
-            min_table_score=-999.0,
-            llm_choose_table=True,
-        )
-
-        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-        prompt = generator.llm_client.prompts[0]
-        payload = prompt.partition("Payload:\n")[2]
-        schema = prompt.partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
-
-        self.assertTrue(candidate.source_metadata["llm_choose_table"])
-        self.assertGreaterEqual(payload.count("- `source_table`:"), 2)
-        self.assertIn("- `table_type`: infobox", payload)
-        self.assertIn("- `table_type`: wikitable", payload)
-        self.assertIn('"source_table": integer', schema)
-        self.assertIn("Choose from the top three ranked tables", prompt)
-        self.assertIn("choose another table", prompt)
-        self.assertIn("wikitable or infobox", prompt)
 
     def test_route3_can_restrict_generation_to_infobox_source_tables(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
@@ -3501,7 +2937,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             table_filter_modes=(),
             table_source_types=("infobox",),
             answer_type_mode="all5",
-            pageview_prefilter_enabled=False,
         )
 
         candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
@@ -3547,7 +2982,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             table_source_types=("infobox",),
             answer_type_mode="all5",
             allowed_answer_types=("Date",),
-            pageview_prefilter_enabled=False,
         )
 
         candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
@@ -3587,7 +3021,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             table_filter_modes=(),
             table_source_types=("infobox",),
             answer_type_mode="all5",
-            pageview_prefilter_enabled=False,
         )
         candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
 
@@ -3663,74 +3096,13 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(normalize_route3_table_source_types("both"), ("infobox", "wikitable"))
         self.assertEqual(normalize_route3_table_source_types(["infoboxes", "article_tables"]), ("infobox", "wikitable"))
 
-    def test_route3_default_single_fact_reasoning_type_is_passed_through(self) -> None:
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=FakeWikipediaClient(),
-            llm_client=FakeLLMClient(),
-            record_limit=1,
-            table_filter_modes=(),
-        )
-        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-        prompt = generator.llm_client.prompts[0]
-        schema = prompt.partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
-        self.assertIn("Use fixed `single_fact` reasoning", prompt)
-        self.assertIn("do not ask a compositional question", prompt)
-        self.assertIn("Do not include a `reasoning_type` field", prompt)
-        self.assertNotIn('"reasoning_type"', schema)
-        self.assertNotIn("wikipedia_infobox_reasoning_type_not_allowed", candidate.notes)
-        self.assertEqual(candidate.source_metadata["reasoning_type"], "single_fact")
-        self.assertEqual(candidate.relation_or_claim, "single_fact")
-        self.assertEqual(candidate.source_metadata["allowed_reasoning_types"], ["single_fact"])
-
-    def test_route3_ordinal_reasoning_type_restriction_prompts_for_temporal_ordinal(self) -> None:
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=FakeWikipediaClient(),
-            llm_client=FakeLLMClient(),
-            record_limit=1,
-            allowed_reasoning_types=("ordinal",),
-            table_filter_modes=(),
-        )
-        generator.generate(run_date="2026-05-16", cutoff_year=2025)
-        prompt = generator.llm_client.prompts[0]
-        schema = prompt.partition("Output schema:\n")[2].partition("\n\nPayload:")[0]
-        self.assertIn("Use fixed `ordinal` reasoning", prompt)
-        self.assertIn("temporal ordinal question", prompt)
-        self.assertIn("first or second by date, time, or order of occurrence", prompt)
-        self.assertIn("do not ask magnitude rankings", prompt)
-        self.assertIn("largest or second largest", prompt)
-        self.assertNotIn('"reasoning_type"', schema)
-
-    def test_route3_multiple_reasoning_type_restriction_accepts_allowed_output(self) -> None:
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=FakeWikipediaClient(),
-            llm_client=FakeLLMClient(),
-            record_limit=1,
-            allowed_reasoning_types=("single_fact", "max"),
-            table_filter_modes=(),
-        )
-        candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
-        self.assertNotIn("wikipedia_infobox_reasoning_type_not_allowed", candidate.notes)
-        self.assertEqual(candidate.source_metadata["reasoning_type"], "max")
-        self.assertEqual(candidate.source_metadata["allowed_reasoning_types"], ["single_fact", "max"])
-        prompt = generator.llm_client.prompts[0]
-        self.assertIn('"reasoning_type": "single_fact|max"', prompt)
-        self.assertIn("Use only these reasoning_type values: `single_fact`, `max`", prompt)
-        self.assertIn("`single_fact`: ask a direct single fact lookup", prompt)
-        self.assertIn("`max`: ask for the row or value with the largest value", prompt)
-        self.assertNotIn("`ordinal`: ask a temporal ordinal question", prompt)
-
     def test_route3_person_answer_type_restriction_prompts_and_accepts_person_output(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
             urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakePersonLLMClient(),
             record_limit=1,
-            allowed_reasoning_types=("single_fact",),
             allowed_answer_types=("Person",),
-            extra_prompts=("no_social_science_research_prompt",),
             table_filter_modes=(),
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
@@ -3742,8 +3114,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         )
         self.assertIn("Use only `Person` answer_type", prompt)
         self.assertIn('"answer_type": "Person"', prompt)
-        self.assertIn("Ask factual questions, not questions about the findings", prompt)
-        self.assertIn("social science research", "\n".join(candidate.source_metadata["extra_prompts"]).lower())
 
     def test_route3_single_date_answer_type_restriction_applies_table_ranking_bonus(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
@@ -3751,7 +3121,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeSingleFactLLMClient(),
             record_limit=1,
-            allowed_reasoning_types=("single_fact",),
             allowed_answer_types=("Date",),
             table_filter_modes=(),
         )
@@ -3771,7 +3140,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeSingleFactLLMClient(),
             record_limit=1,
-            allowed_reasoning_types=("single_fact",),
             allowed_answer_types=("Other",),
             table_filter_modes=(),
         )
@@ -3791,7 +3159,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeSingleFactLLMClient(),
             record_limit=1,
-            allowed_reasoning_types=("single_fact",),
             allowed_answer_types=("Date", "Other"),
             table_filter_modes=(),
         )
@@ -3846,7 +3213,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=PopulationWikipediaClient(),
             llm_client=llm_client,
             record_limit=1,
-            allowed_reasoning_types=("single_fact",),
             allowed_answer_types=("Person",),
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
@@ -4268,7 +3634,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             llm_client=llm_client,
             record_limit=1,
             table_source_types=("infobox",),
-            allowed_reasoning_types=("single_fact",),
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
 
@@ -4700,31 +4065,12 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeSingleFactListLLMClient(),
             record_limit=1,
-            allowed_reasoning_types=("single_fact",),
             allowed_answer_types=("Person",),
             table_filter_modes=(),
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
         self.assertIn("wikipedia_infobox_single_fact_list_answer", candidate.notes)
         self.assertEqual(candidate.source_metadata["discard_reason"], "single_fact_list_answer_not_allowed")
-
-    def test_single_fact_reasoning_type_is_accepted_for_route3(self) -> None:
-        generator = WikipediaInfoboxTableGenerator(
-            urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
-            wikipedia_client=FakeWikipediaClient(),
-            llm_client=FakeSingleFactLLMClient(),
-            record_limit=1,
-            min_table_score=-999.0,
-            table_filter_modes=(),
-            llm_choose_table=True,
-        )
-        candidates = generator.generate(run_date="2026-05-16", cutoff_year=2025)
-        self.assertEqual(len(candidates), 1)
-        candidate = candidates[0]
-        self.assertEqual(candidate.relation_or_claim, "single_fact")
-        self.assertEqual(candidate.question_family, "wikipedia_infobox_table_fact")
-        self.assertEqual(candidate.source_metadata["reasoning_type"], "single_fact")
-        self.assertEqual(candidate.source_metadata["selected_source_table"]["table_type"], "infobox")
 
     def test_generated_answer_normalization_preserves_parenthetical_answer_and_rank_alias(self) -> None:
         answer, aliases = _normalize_generated_answer(
@@ -4904,7 +4250,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=TieWikipediaClient(),
             llm_client=TieLLMClient(),
             record_limit=1,
-            allowed_reasoning_types=("max",),
         )
 
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
@@ -4918,7 +4263,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             wikipedia_client=FakeWikipediaClient(),
             llm_client=FakeLLMClient(),
             record_limit=1,
-            allowed_reasoning_types=("max",),
             table_filter_modes=(),
         )
         candidate = generator.generate(run_date="2026-05-16", cutoff_year=2025)[0]
@@ -5100,7 +4444,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 route3_table_filter_mode=[],
                 route3_table_source_type=["infobox", "wikitable"],
                 route3_prose_leakage_scoring=True,
-                route3_llm_choose_table=False,
                 route3_answer_type_mode="all5",
                 route3_page_archive_dir=root / "page_archive",
                 route3_infobox_max_removed_row_rate=0.6,

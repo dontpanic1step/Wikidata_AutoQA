@@ -27,7 +27,7 @@ from .route3_openrouter import (
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .date_reference import normalize_date_answer, normalize_gate_date_answer
 from .number_reference import parse_number_token
-from .route3_quality_rules import NO_SOCIAL_SCIENCE_RESEARCH_PROMPT, external_links_table_filter_reason
+from .route3_quality_rules import external_links_table_filter_reason
 from .text_normalization import (
     build_text_matcher,
     display_cleanup,
@@ -38,7 +38,6 @@ from .text_normalization import (
 from .wikipedia_client import (
     WikipediaClient,
     build_parse_api_url,
-    build_pageviews_api_url,
     normalize_wikipedia_page_id,
     normalize_wikipedia_title,
 )
@@ -53,17 +52,6 @@ ERA_QUALIFIED_YEAR_PATTERN = re.compile(
     r"^(?:c\.|ca\.|circa)?\s*\d{1,4}\s*(?:B\.?\s*C\.?(?:\s*E\.?)?|A\.?\s*D\.?|C\.?\s*E\.?)$",
     re.IGNORECASE,
 )
-ROUTE3_REASONING_TYPES = (
-    "single_fact",
-    "max",
-    "min",
-    "sum",
-    "count",
-    "comparison",
-    "ordinal",
-    "other",
-)
-ROUTE3_REASONING_TYPE_SET = set(ROUTE3_REASONING_TYPES)
 DEFAULT_ROUTE3_REASONING_TYPES = ("single_fact",)
 ROUTE3_ANSWER_TYPES = ("Person", "Place", "Number", "Date", "Other")
 ROUTE3_ANSWER_TYPE_SET = set(ROUTE3_ANSWER_TYPES)
@@ -73,34 +61,15 @@ ROUTE3_TABLE_SOURCE_TYPES = ("infobox", "wikitable")
 ROUTE3_TABLE_SOURCE_TYPE_SET = set(ROUTE3_TABLE_SOURCE_TYPES)
 DEFAULT_ROUTE3_TABLE_SOURCE_TYPES = ROUTE3_TABLE_SOURCE_TYPES
 DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR = Path("cache") / "route3_pages"
-DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED = False
-DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS = 12
-DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS = 5000.0
-DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS = 10000.0
-ROUTE3_PAGEVIEW_UNAVAILABLE_POLICIES = ("allow", "reject", "rerun")
-DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY = "allow"
 DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE = 0.60
 DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS = 5
 INFOBOX_PAGE_START_MAX_CHAR_OFFSET = 15000
-ROUTE3_REASONING_TYPE_PROMPT_RULES = {
-    "single_fact": "ask a direct single fact lookup from the structured source; do not ask a compositional question such as min, max, count, sum, comparison, or ordinal",
-    "max": "ask for the row or value with the largest value within a fixed historical table scope",
-    "min": "ask for the row or value with the smallest value within a fixed historical table scope",
-    "sum": "ask for a sum over a clearly bounded fixed set of table values",
-    "count": "ask for a count over a clearly bounded fixed set of table rows or values",
-    "comparison": "ask for a comparison between clearly named rows or values in the table",
-    "ordinal": "ask a temporal ordinal question like first or second by date, time, or order of occurrence; do not ask magnitude rankings such as largest or second largest",
-    "other": "ask only if the reasoning is clearly described by the table and does not fit the named reasoning types",
-}
 ROUTE3_ANSWER_TYPE_PROMPT_RULES = {
     "Person": "answer must be a person's name, not a team's name, an official position or a named group of people. Do not ask `Who ...` unless the answer is a person's name",
     "Place": "answer must be a place name, location, or geographic entity on Earth, not a company/award/ceremony/planet/sports club etc.",
     "Number": "answer must be numeric, do not ask `what year`",
     "Date": "answer must be a date, a month, or a year, do not ask `how many years` or ask about a time range",
     "Other": "answer must not be a person, place, number, or date; exclude numeric measurements, percentages, counts, scores, indices, rates, temperatures, durations, ranges, dates, years, people, and places",
-}
-ROUTE3_EXTRA_PROMPTS = {
-    "no_social_science_research_prompt": NO_SOCIAL_SCIENCE_RESEARCH_PROMPT,
 }
 ROUTE3_TABLE_FILTER_MODES = (
     "no_external_links_tables",
@@ -530,7 +499,6 @@ class WikipediaPageTables:
     prose_text: str
     tables: list[WikipediaTable]
     route3_page_archive: dict[str, Any] = field(default_factory=dict)
-    pageview_prefilter: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(slots=True)
@@ -547,39 +515,23 @@ class WikipediaInfoboxTableGenerator:
     search_query_count: int = 3
     enable_rest_summary_fallback: bool = False
     min_table_score: float = 0.0
-    allowed_reasoning_types: tuple[str, ...] = DEFAULT_ROUTE3_REASONING_TYPES
     allowed_answer_types: tuple[str, ...] = ()
-    extra_prompts: tuple[str, ...] = ()
     table_filter_modes: tuple[str, ...] = DEFAULT_ROUTE3_TABLE_FILTER_MODES
     table_source_types: tuple[str, ...] = DEFAULT_ROUTE3_TABLE_SOURCE_TYPES
     prose_leakage_scoring_enabled: bool = DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED
-    llm_choose_table: bool = False
     answer_type_mode: str = DEFAULT_ROUTE3_ANSWER_TYPE_MODE
     page_archive_dir: Path | None = DEFAULT_ROUTE3_PAGE_ARCHIVE_DIR
     page_archive_paths_by_url: dict[str, Path] | None = None
     read_only_page_archive_paths: tuple[Path, ...] = ()
-    pageview_prefilter_enabled: bool = DEFAULT_ROUTE3_PAGEVIEW_PREFILTER_ENABLED
-    pageview_window_months: int = DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS
-    max_monthly_average_pageviews: float = DEFAULT_ROUTE3_MAX_MONTHLY_AVERAGE_PAGEVIEWS
-    max_underfilled_monthly_pageviews: float = DEFAULT_ROUTE3_MAX_UNDERFILLED_MONTHLY_PAGEVIEWS
-    pageview_unavailable_policy: str = DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY
     infobox_max_removed_row_rate: float = DEFAULT_ROUTE3_INFOBOX_MAX_REMOVED_ROW_RATE
     infobox_min_remaining_rows: int = DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS
 
     def __post_init__(self) -> None:
         """Normalize optional Route 3 prompt restrictions."""
-        self.allowed_reasoning_types = normalize_route3_reasoning_types(self.allowed_reasoning_types)
         self.allowed_answer_types = normalize_route3_answer_types(self.allowed_answer_types)
-        self.extra_prompts = normalize_route3_extra_prompts(self.extra_prompts)
         self.table_filter_modes = normalize_route3_table_filter_modes(self.table_filter_modes)
         self.table_source_types = normalize_route3_table_source_types(self.table_source_types)
         self.answer_type_mode = normalize_route3_answer_type_mode(self.answer_type_mode)
-        self.pageview_window_months = max(1, int(self.pageview_window_months or DEFAULT_ROUTE3_PAGEVIEW_WINDOW_MONTHS))
-        self.max_monthly_average_pageviews = float(self.max_monthly_average_pageviews)
-        self.max_underfilled_monthly_pageviews = float(self.max_underfilled_monthly_pageviews)
-        self.pageview_unavailable_policy = normalize_route3_pageview_unavailable_policy(
-            self.pageview_unavailable_policy
-        )
         self.infobox_max_removed_row_rate = max(0.0, min(1.0, float(self.infobox_max_removed_row_rate)))
         self.infobox_min_remaining_rows = max(0, int(self.infobox_min_remaining_rows))
         self.read_only_page_archive_paths = tuple(
@@ -623,16 +575,14 @@ class WikipediaInfoboxTableGenerator:
                     timings=timings,
                     content_domain=self._domain_for_url(url, url, normalize_wikipedia_title(url)),
                     error_message=str(exc),
-                    allowed_reasoning_types=self.allowed_reasoning_types,
-                    allowed_answer_types=self.allowed_answer_types,
-                    extra_prompts=self.extra_prompts,
-                    table_filter_modes=self.table_filter_modes,
+                        allowed_answer_types=self.allowed_answer_types,
+                        table_filter_modes=self.table_filter_modes,
                     answer_type_mode=self.answer_type_mode,
                 )]
             if isinstance(page_candidates, GeneratedCandidate):
                 page_candidates = [page_candidates]
             for candidate in page_candidates:
-                candidate.source_metadata["llm_choose_table"] = bool(self.llm_choose_table)
+                candidate.source_metadata["llm_choose_table"] = False
                 candidate.source_metadata["table_source_types"] = list(self.table_source_types)
                 candidate.source_metadata["prose_leakage_scoring_enabled"] = bool(self.prose_leakage_scoring_enabled)
                 candidate.source_metadata["answer_type_mode"] = self.answer_type_mode
@@ -733,33 +683,6 @@ class WikipediaInfoboxTableGenerator:
             },
         )
 
-    def _apply_pageview_prefilter(
-        self,
-        page: WikipediaPageTables,
-        *,
-        run_date: str,
-        timings: dict[str, float],
-    ) -> None:
-        """Populate pageview prefilter metadata and update the unified page archive."""
-        if page.pageview_prefilter:
-            return
-        pageview_start = perf_counter()
-        page.pageview_prefilter = _route3_pageview_prefilter(
-            page=page,
-            wikipedia_client=self.wikipedia_client,
-            run_date=run_date,
-            enabled=self.pageview_prefilter_enabled,
-            window_months=self.pageview_window_months,
-            max_monthly_average=self.max_monthly_average_pageviews,
-            max_underfilled_monthly=self.max_underfilled_monthly_pageviews,
-            unavailable_policy=self.pageview_unavailable_policy,
-        )
-        timings["pageview_prefilter_seconds"] = _elapsed(pageview_start)
-        archive_updates = {"pageview_prefilter": page.pageview_prefilter}
-        if isinstance(page.pageview_prefilter.get("pageview"), dict):
-            archive_updates["pageview"] = page.pageview_prefilter["pageview"]
-        _merge_route3_page_archive(page, archive_updates)
-
     def _domain_for_url(self, source_url: str, canonical_url: str, title: str) -> str:
         """Return the configured broad content domain for one page."""
         if not self.url_domains:
@@ -805,32 +728,6 @@ class WikipediaInfoboxTableGenerator:
         timings: dict[str, float],
     ) -> GeneratedCandidate | list[GeneratedCandidate]:
         """Ask the small model for one QA candidate and convert it to the shared shape."""
-        self._apply_pageview_prefilter(page, run_date=run_date, timings=timings)
-        pageview_decision = str(page.pageview_prefilter.get("decision") or "").strip()
-        if pageview_decision in {"reject", "rerun"}:
-            return _rejected_placeholder(
-                url=page.source_url,
-                reason="wikipedia_pageview_prefilter_rejected"
-                if pageview_decision == "reject"
-                else "wikipedia_pageview_prefilter_unavailable",
-                run_date=run_date,
-                timings=timings,
-                title=page.title,
-                canonical_url=page.canonical_url,
-                content_domain=page.content_domain,
-                first_paragraph=page.first_paragraph,
-                discard_reason=str(page.pageview_prefilter.get("reason") or pageview_decision),
-                tables=page.tables,
-                min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
-                allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
-                table_filter_modes=self.table_filter_modes,
-                table_source_types=self.table_source_types,
-                page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
-                answer_type_mode=self.answer_type_mode,
-            )
         if not page.tables:
             return _rejected_placeholder(
                 url=page.source_url,
@@ -842,13 +739,10 @@ class WikipediaInfoboxTableGenerator:
                 content_domain=page.content_domain,
                 first_paragraph=page.first_paragraph,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
             )
         source_tables = _tables_matching_source_types(page.tables, self.table_source_types)
@@ -876,13 +770,10 @@ class WikipediaInfoboxTableGenerator:
                 ),
                 tables=page.tables,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
             )
         table_selection: list[dict[str, Any]] = []
@@ -933,7 +824,7 @@ class WikipediaInfoboxTableGenerator:
             and not bool(row.get("below_min_table_score"))
             and not str(row.get("table_filter_rejection_reason", "")).strip()
         ]
-        llm_table_limit = 3 if self.llm_choose_table else 1
+        llm_table_limit = 1
         selected_table_rows = [
             row
             for row in safe_table_selection
@@ -986,14 +877,11 @@ class WikipediaInfoboxTableGenerator:
                     tables=page.tables,
                     table_selection=table_selection,
                     min_table_score=self.min_table_score,
-                    allowed_reasoning_types=self.allowed_reasoning_types,
-                    allowed_answer_types=self.allowed_answer_types,
-                    extra_prompts=self.extra_prompts,
-                    table_filter_modes=self.table_filter_modes,
+                        allowed_answer_types=self.allowed_answer_types,
+                        table_filter_modes=self.table_filter_modes,
                     table_source_types=self.table_source_types,
                     page_archive=page.route3_page_archive,
-                    pageview_prefilter=page.pageview_prefilter,
-                    answer_type_mode=self.answer_type_mode,
+                        answer_type_mode=self.answer_type_mode,
                 )
             if below_min_rows and not table_filter_non_live_rows:
                 return _rejected_placeholder(
@@ -1009,14 +897,11 @@ class WikipediaInfoboxTableGenerator:
                     tables=page.tables,
                     table_selection=table_selection,
                     min_table_score=self.min_table_score,
-                    allowed_reasoning_types=self.allowed_reasoning_types,
-                    allowed_answer_types=self.allowed_answer_types,
-                    extra_prompts=self.extra_prompts,
-                    table_filter_modes=self.table_filter_modes,
+                        allowed_answer_types=self.allowed_answer_types,
+                        table_filter_modes=self.table_filter_modes,
                     table_source_types=self.table_source_types,
                     page_archive=page.route3_page_archive,
-                    pageview_prefilter=page.pageview_prefilter,
-                    answer_type_mode=self.answer_type_mode,
+                        answer_type_mode=self.answer_type_mode,
                 )
             if table_filter_rows:
                 return _rejected_placeholder(
@@ -1032,14 +917,11 @@ class WikipediaInfoboxTableGenerator:
                     tables=page.tables,
                     table_selection=table_selection,
                     min_table_score=self.min_table_score,
-                    allowed_reasoning_types=self.allowed_reasoning_types,
-                    allowed_answer_types=self.allowed_answer_types,
-                    extra_prompts=self.extra_prompts,
-                    table_filter_modes=self.table_filter_modes,
+                        allowed_answer_types=self.allowed_answer_types,
+                        table_filter_modes=self.table_filter_modes,
                     table_source_types=self.table_source_types,
                     page_archive=page.route3_page_archive,
-                    pageview_prefilter=page.pageview_prefilter,
-                    answer_type_mode=self.answer_type_mode,
+                        answer_type_mode=self.answer_type_mode,
                 )
             return _rejected_placeholder(
                 url=page.source_url,
@@ -1053,13 +935,10 @@ class WikipediaInfoboxTableGenerator:
                 tables=page.tables,
                 table_selection=table_selection,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
             )
         self._extract_first_paragraph_context(page, timings=timings)
@@ -1084,10 +963,7 @@ class WikipediaInfoboxTableGenerator:
             table_selection=selected_table_selection,
             cutoff_year=cutoff_year,
             search_query_count=self.search_query_count,
-            allowed_reasoning_types=self.allowed_reasoning_types,
             allowed_answer_types=self.allowed_answer_types,
-            extra_prompts=self.extra_prompts,
-            llm_choose_table=self.llm_choose_table,
             answer_type_mode=self.answer_type_mode,
         )
         llm_start = perf_counter()
@@ -1124,13 +1000,10 @@ class WikipediaInfoboxTableGenerator:
                 llm_audit=llm_audit,
                 table_selection=table_selection,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
             )
         llm_audit["parsed_response"] = response
@@ -1167,13 +1040,10 @@ class WikipediaInfoboxTableGenerator:
                 llm_audit=llm_audit,
                 table_selection=table_selection,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
             )
 
@@ -1196,13 +1066,10 @@ class WikipediaInfoboxTableGenerator:
                 llm_audit=llm_audit,
                 table_selection=table_selection,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
             )
 
@@ -1213,7 +1080,7 @@ class WikipediaInfoboxTableGenerator:
         answer_items = _answer_items(answer_value)
         source_table_index = _coerce_table_index(response.get("source_table"))
         source_table = _table_by_index(selected_tables, source_table_index)
-        if self.allowed_reasoning_types == ("single_fact",) and len(answer_items) > 1:
+        if len(answer_items) > 1:
             return _rejected_placeholder(
                 url=page.source_url,
                 reason="wikipedia_infobox_single_fact_list_answer",
@@ -1233,49 +1100,10 @@ class WikipediaInfoboxTableGenerator:
                 question=question,
                 answer=answer,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
-                answer_type_mode=self.answer_type_mode,
-            )
-        social_science_violation = _extra_prompt_violation(
-            extra_prompts=self.extra_prompts,
-            question=question,
-            answer=answer,
-            page=page,
-            source_table=source_table,
-        )
-        if social_science_violation:
-            return _rejected_placeholder(
-                url=page.source_url,
-                reason="wikipedia_infobox_extra_prompt_violation",
-                run_date=run_date,
-                timings=timings,
-                title=page.title,
-                canonical_url=page.canonical_url,
-                content_domain=page.content_domain,
-                first_paragraph=page.first_paragraph,
-                discard_reason=social_science_violation,
-                tables=page.tables,
-                llm_response=response,
-                llm_prompt=prompt,
-                llm_audit=llm_audit,
-                table_selection=table_selection,
-                source_table=source_table,
-                question=question,
-                answer=answer,
-                min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
-                allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
-                table_filter_modes=self.table_filter_modes,
-                table_source_types=self.table_source_types,
-                page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
             )
         answer_type = _normalize_answer_type(response.get("answer_type"), answer, question)
@@ -1298,13 +1126,10 @@ class WikipediaInfoboxTableGenerator:
                 question=question,
                 answer=answer,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
             )
         search_queries = _sanitize_answer_blind_queries(
@@ -1314,41 +1139,6 @@ class WikipediaInfoboxTableGenerator:
             answer_items=answer_items,
             max_queries=self.search_query_count,
         )
-        declared_reasoning_type = _declared_reasoning_type(response)
-        if (
-            _model_selects_reasoning_type(self.allowed_reasoning_types)
-            and self.allowed_reasoning_types
-            and declared_reasoning_type not in self.allowed_reasoning_types
-        ):
-            return _rejected_placeholder(
-                url=page.source_url,
-                reason="wikipedia_infobox_reasoning_type_not_allowed",
-                run_date=run_date,
-                timings=timings,
-                title=page.title,
-                canonical_url=page.canonical_url,
-                content_domain=page.content_domain,
-                first_paragraph=page.first_paragraph,
-                discard_reason=_reasoning_type_not_allowed_reason(response, self.allowed_reasoning_types),
-                tables=page.tables,
-                llm_response=response,
-                llm_prompt=prompt,
-                llm_audit=llm_audit,
-                table_selection=table_selection,
-                source_table=source_table,
-                question=question,
-                answer=answer,
-                min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
-                allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
-                table_filter_modes=self.table_filter_modes,
-                table_source_types=self.table_source_types,
-                page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
-                answer_type_mode=self.answer_type_mode,
-            )
-        reasoning_type = _resolved_reasoning_type(response, self.allowed_reasoning_types)
         evidence_text = source_table.normalized_text if source_table is not None else llm_first_paragraph
         return GeneratedCandidate(
             source_type=self.source_type,
@@ -1364,7 +1154,7 @@ class WikipediaInfoboxTableGenerator:
                 url=page.canonical_url,
             ),
             answer_entity=EntityReference(name=answer),
-            relation_or_claim=reasoning_type or "wikipedia_table_fact",
+            relation_or_claim="single_fact",
             evidence=EvidenceRecord(
                 text=evidence_text,
                 url=page.canonical_url,
@@ -1389,18 +1179,13 @@ class WikipediaInfoboxTableGenerator:
                 timings=timings,
                 answer_items=answer_items,
                 answer_type=answer_type,
-                reasoning_type=reasoning_type,
                 subject_anchors=llm_subject_anchors,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=self.allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 prose_leakage_scoring_enabled=self.prose_leakage_scoring_enabled,
-                llm_choose_table=self.llm_choose_table,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
             ),
         )
@@ -1451,14 +1236,11 @@ class WikipediaInfoboxTableGenerator:
                         llm_audit=llm_audit,
                         table_selection=table_selection,
                         min_table_score=self.min_table_score,
-                        allowed_reasoning_types=self.allowed_reasoning_types,
-                        allowed_answer_types=(answer_type,),
-                        extra_prompts=self.extra_prompts,
-                        table_filter_modes=self.table_filter_modes,
+                                allowed_answer_types=(answer_type,),
+                                table_filter_modes=self.table_filter_modes,
                         table_source_types=self.table_source_types,
                         page_archive=page.route3_page_archive,
-                        pageview_prefilter=page.pageview_prefilter,
-                        answer_type_mode=self.answer_type_mode,
+                                answer_type_mode=self.answer_type_mode,
                         route3_slot_id=answer_type,
                     )
                 )
@@ -1520,13 +1302,10 @@ class WikipediaInfoboxTableGenerator:
                 llm_audit=llm_audit,
                 table_selection=table_selection,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=slot_allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
                 route3_slot_id=forced_answer_type,
             )
@@ -1551,13 +1330,10 @@ class WikipediaInfoboxTableGenerator:
                 llm_audit=llm_audit,
                 table_selection=table_selection,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=slot_allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
                 route3_slot_id=forced_answer_type,
             )
@@ -1566,7 +1342,7 @@ class WikipediaInfoboxTableGenerator:
             _string_list(response.get("answer_aliases", [])),
         )
         answer_items = _answer_items(answer_value)
-        if self.allowed_reasoning_types == ("single_fact",) and len(answer_items) > 1:
+        if len(answer_items) > 1:
             return _rejected_placeholder(
                 url=page.source_url,
                 reason="wikipedia_infobox_single_fact_list_answer",
@@ -1586,13 +1362,10 @@ class WikipediaInfoboxTableGenerator:
                 question=question,
                 answer=answer,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=slot_allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
                 route3_slot_id=forced_answer_type,
             )
@@ -1617,86 +1390,10 @@ class WikipediaInfoboxTableGenerator:
                 question=question,
                 answer=answer,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=slot_allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
-                answer_type_mode=self.answer_type_mode,
-                route3_slot_id=forced_answer_type,
-            )
-        declared_reasoning_type = _declared_reasoning_type(response)
-        if (
-            _model_selects_reasoning_type(self.allowed_reasoning_types)
-            and self.allowed_reasoning_types
-            and declared_reasoning_type not in self.allowed_reasoning_types
-        ):
-            return _rejected_placeholder(
-                url=page.source_url,
-                reason="wikipedia_infobox_reasoning_type_not_allowed",
-                run_date=run_date,
-                timings=timings,
-                title=page.title,
-                canonical_url=page.canonical_url,
-                content_domain=page.content_domain,
-                first_paragraph=page.first_paragraph,
-                discard_reason=_reasoning_type_not_allowed_reason(response, self.allowed_reasoning_types),
-                tables=tables,
-                llm_response=response,
-                llm_prompt=prompt,
-                llm_audit=llm_audit,
-                table_selection=table_selection,
-                source_table=source_table,
-                question=question,
-                answer=answer,
-                min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
-                allowed_answer_types=slot_allowed_answer_types,
-                extra_prompts=self.extra_prompts,
-                table_filter_modes=self.table_filter_modes,
-                table_source_types=self.table_source_types,
-                page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
-                answer_type_mode=self.answer_type_mode,
-                route3_slot_id=forced_answer_type,
-            )
-        reasoning_type = _resolved_reasoning_type(response, self.allowed_reasoning_types)
-        social_science_violation = _extra_prompt_violation(
-            extra_prompts=self.extra_prompts,
-            question=question,
-            answer=answer,
-            page=page,
-            source_table=source_table,
-        )
-        if social_science_violation:
-            return _rejected_placeholder(
-                url=page.source_url,
-                reason="wikipedia_infobox_extra_prompt_violation",
-                run_date=run_date,
-                timings=timings,
-                title=page.title,
-                canonical_url=page.canonical_url,
-                content_domain=page.content_domain,
-                first_paragraph=page.first_paragraph,
-                discard_reason=social_science_violation,
-                tables=tables,
-                llm_response=response,
-                llm_prompt=prompt,
-                llm_audit=llm_audit,
-                table_selection=table_selection,
-                source_table=source_table,
-                question=question,
-                answer=answer,
-                min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
-                allowed_answer_types=slot_allowed_answer_types,
-                extra_prompts=self.extra_prompts,
-                table_filter_modes=self.table_filter_modes,
-                table_source_types=self.table_source_types,
-                page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
                 route3_slot_id=forced_answer_type,
             )
@@ -1722,7 +1419,7 @@ class WikipediaInfoboxTableGenerator:
                 url=page.canonical_url,
             ),
             answer_entity=EntityReference(name=answer),
-            relation_or_claim=reasoning_type or "wikipedia_table_fact",
+            relation_or_claim="single_fact",
             evidence=EvidenceRecord(
                 text=evidence_text,
                 url=page.canonical_url,
@@ -1747,18 +1444,13 @@ class WikipediaInfoboxTableGenerator:
                 timings=timings,
                 answer_items=answer_items,
                 answer_type=answer_type,
-                reasoning_type=reasoning_type,
                 subject_anchors=subject_anchors,
                 min_table_score=self.min_table_score,
-                allowed_reasoning_types=self.allowed_reasoning_types,
                 allowed_answer_types=slot_allowed_answer_types,
-                extra_prompts=self.extra_prompts,
                 table_filter_modes=self.table_filter_modes,
                 table_source_types=self.table_source_types,
                 prose_leakage_scoring_enabled=self.prose_leakage_scoring_enabled,
-                llm_choose_table=self.llm_choose_table,
                 page_archive=page.route3_page_archive,
-                pageview_prefilter=page.pageview_prefilter,
                 answer_type_mode=self.answer_type_mode,
                 route3_slot_id=forced_answer_type,
             ),
@@ -1775,26 +1467,20 @@ def build_wikipedia_infobox_prompt(
     table_selection: list[dict[str, Any]],
     cutoff_year: int,
     search_query_count: int = 3,
-    allowed_reasoning_types: Iterable[str] | None = DEFAULT_ROUTE3_REASONING_TYPES,
     allowed_answer_types: Iterable[str] | None = None,
-    extra_prompts: Iterable[str] | str | None = None,
-    llm_choose_table: bool = False,
     source_channel: str = "",
     answer_type_mode: str = DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
 ) -> str:
     """Build the small-model prompt for Wikipedia table QA generation."""
-    normalized_allowed_reasoning_types = normalize_route3_reasoning_types(allowed_reasoning_types)
     normalized_allowed_answer_types = normalize_route3_answer_types(allowed_answer_types)
-    normalized_extra_prompts = normalize_route3_extra_prompts(extra_prompts)
     normalized_answer_type_mode = normalize_route3_answer_type_mode(answer_type_mode)
     is_all5_mode = normalized_answer_type_mode == "all5"
     prompt_answer_types = ROUTE3_ANSWER_TYPES if is_all5_mode else normalized_allowed_answer_types
-    model_selects_reasoning_type = _model_selects_reasoning_type(normalized_allowed_reasoning_types)
-    table_limit = 3 if llm_choose_table else 1
+    table_limit = 1
     prompt_tables = tables[:table_limit]
     prompt_source_label = _route3_prompt_source_label(
         prompt_tables,
-        llm_choose_table=llm_choose_table,
+
         fallback_source_channel=source_channel,
     )
     has_wikitable_prompt_table = any(table.table_type == "wikitable" for table in prompt_tables)
@@ -1802,23 +1488,13 @@ def build_wikipedia_infobox_prompt(
         first_paragraph=first_paragraph,
         subject_anchors=subject_anchors,
         tables=prompt_tables,
-        llm_choose_table=llm_choose_table,
+
     )
-    table_instruction = (
-        "- Choose from the top three ranked tables. Prefer rank 1 unless it cannot support a safe question.\n"
-        if llm_choose_table
-        else "- Use the provided top-ranked table as the only structured evidence table.\n"
-    )
-    toy_table_instruction = (
-        "- If the table is only a toy, tutorial, or teaching example rather than real-world factual data, choose another table.\n"
-        if llm_choose_table
-        else "- If the provided table is only a toy, tutorial, or teaching example rather than real-world factual data, discard it.\n"
-    )
+    table_instruction = "- Use the provided top-ranked table as the only structured evidence table.\n"
+    toy_table_instruction = "- If the provided table is only a toy, tutorial, or teaching example rather than real-world factual data, discard it.\n"
     output_schema = _route3_prompt_output_schema(
         normalized_answer_type_mode,
         prompt_answer_types,
-        normalized_allowed_reasoning_types,
-        include_source_table=bool(llm_choose_table),
     )
     mode_instruction = (
         "- Generate exactly one candidate for the configured answer type scope.\n"
@@ -1847,17 +1523,9 @@ def build_wikipedia_infobox_prompt(
         else f"- Generate exactly {search_query_count} answer-blind search queries.\n"
     )
     discard_instruction = (
-        (
-            "- For each all5 slot, if the table cannot support that answer type or the candidate would violate any rule, still include the slot with its fixed `answer_type`, set `discard_reason`, and set question, answer, answer_aliases, search_queries, source_table, and derivation_summary to empty values. Reject only that slot; still generate every other supported slot.\n\n"
-            if llm_choose_table
-            else "- For each all5 slot, if the table cannot support that answer type or the candidate would violate any rule, still include the slot with its fixed `answer_type`, set `discard_reason`, and set question, answer, answer_aliases, search_queries, and derivation_summary to empty values. Reject only that slot; still generate every other supported slot.\n\n"
-        )
+        "- For each all5 slot, if the table cannot support that answer type or the candidate would violate any rule, still include the slot with its fixed `answer_type`, set `discard_reason`, and set question, answer, answer_aliases, search_queries, and derivation_summary to empty values. Reject only that slot; still generate every other supported slot.\n\n"
         if is_all5_mode
-        else _discard_prompt_rule(
-            normalized_allowed_reasoning_types,
-            normalized_allowed_answer_types,
-            model_selects_reasoning_type=model_selects_reasoning_type,
-        )
+        else _discard_prompt_rule(normalized_allowed_answer_types)
     )
     wikitable_scope_instruction = (
         (
@@ -1899,9 +1567,8 @@ def build_wikipedia_infobox_prompt(
         "### Reasoning type and Answer type rules:\n\n"
         "- Your question must match the reasoning type and answer type.\n"
         f"{mode_instruction}"
-        f"{_reasoning_type_prompt_rule(normalized_allowed_reasoning_types)}"
+        f"{_reasoning_type_prompt_rule()}"
         f"{answer_type_instruction}"
-        f"{_tie_answer_prompt_rule(normalized_allowed_reasoning_types)}"
         f"{unsupported_instruction}"
 
         "### Reference answers should not change over time.\n\n"
@@ -1918,7 +1585,7 @@ def build_wikipedia_infobox_prompt(
         "### Must be challenging.\n\n"
         "- Prefer table facts that are not easily found in article prose outside tables.\n"
         "- Prefer answers that look unfamiliar to you and are likely to remain long-tail after search filtering.\n"
-        
+
         "### Must be answerable.\n\n"
         f"- If the page title contains a cutoff-year marker in {cutoff_year} or later, use one of safe_subject_aliases when you need to name the subject; do not use the cutoff-year title text.\n"
         "- The question must be self-contained. It should be answerable without seeing the list or the table. Do not ask `What is ... in the list(table)?` or use phrases like `according to the table` `listed as`.\n"
@@ -1928,7 +1595,6 @@ def build_wikipedia_infobox_prompt(
         # "- Full-width or partial-width spanned rows can appear anywhere in a table. Use them as local visual/context labels for nearby rows, not as direct answers to unrelated fields.\n"
         f"{wikitable_answerable_instruction}"
         "### Other prompt rules:\n\n"
-        f"{_extra_prompt_rule(normalized_extra_prompts)}"
         "- Do not include the answer or answer aliases in the question or search queries.\n"
         f"{search_query_instruction}"
         f"{answer_type_verification_instruction}"
@@ -1952,7 +1618,6 @@ def build_route3_wikitable_prompt(**kwargs: Any) -> str:
 def _route3_prompt_source_label(
     tables: list[WikipediaTable],
     *,
-    llm_choose_table: bool,
     fallback_source_channel: str = "",
 ) -> str:
     """Return the source label shown in the generation prompt."""
@@ -1962,8 +1627,6 @@ def _route3_prompt_source_label(
         if table.table_type in ROUTE3_TABLE_SOURCE_TYPE_SET
     ]
     unique_types = set(prompt_types)
-    if llm_choose_table and {"wikitable", "infobox"}.issubset(unique_types):
-        return "wikitable or infobox"
     if "wikitable" in unique_types:
         return "wikitable"
     if "infobox" in unique_types:
@@ -1971,7 +1634,7 @@ def _route3_prompt_source_label(
     fallback = str(fallback_source_channel or "").strip()
     if fallback in ROUTE3_TABLE_SOURCE_TYPE_SET:
         return fallback
-    return "wikitable or infobox" if llm_choose_table else "table"
+    return "table"
 
 
 def _render_route3_prompt_payload(
@@ -1979,7 +1642,6 @@ def _render_route3_prompt_payload(
     first_paragraph: str,
     subject_anchors: dict[str, Any],
     tables: list[WikipediaTable],
-    llm_choose_table: bool,
 ) -> str:
     """Render the LLM-facing Route 3 payload as compact Markdown."""
     return "\n".join(
@@ -1988,11 +1650,11 @@ def _render_route3_prompt_payload(
             _render_route3_table_context_section(
                 first_paragraph=first_paragraph,
                 tables=tables,
-                llm_choose_table=llm_choose_table,
+
             ),
             _render_route3_table_content_section(
                 tables=tables,
-                llm_choose_table=llm_choose_table,
+
             ),
         ]
     )
@@ -2017,7 +1679,6 @@ def _render_route3_table_context_section(
     *,
     first_paragraph: str,
     tables: list[WikipediaTable],
-    llm_choose_table: bool,
 ) -> str:
     """Render non-table context passed to the LLM."""
     lines = [
@@ -2026,9 +1687,6 @@ def _render_route3_table_context_section(
         f"- `first_paragraph`: {_route3_prompt_value(first_paragraph)}",
     ]
     for table in tables:
-        if llm_choose_table:
-            lines.append(f"- `source_table`: {table.table_index}")
-            lines.append(f"- `table_type`: {_route3_prompt_value(table.table_type)}")
         if table.table_type != "wikitable":
             continue
         lines.append(f"- `section_heading`: {_route3_prompt_value(table.section_heading)}")
@@ -2040,15 +1698,12 @@ def _render_route3_table_context_section(
 def _render_route3_table_content_section(
     *,
     tables: list[WikipediaTable],
-    llm_choose_table: bool,
 ) -> str:
     """Render table Markdown separately from the surrounding context."""
     lines = ["### table content", ""]
     for table_index, table in enumerate(tables):
         if table_index:
             lines.append("")
-        if llm_choose_table:
-            lines.append(f"- `source_table`: {table.table_index}")
         lines.append(f"- `table_type`: {_route3_prompt_value(table.table_type)}")
         lines.append(_route3_prompt_value(table.markdown or table.normalized_text))
     return "\n".join(lines)
@@ -2061,31 +1716,6 @@ def _route3_prompt_value(value: Any) -> str:
         return "; ".join(cleaned) if cleaned else "(none)"
     text = str(value or "").strip()
     return text if text else "(none)"
-
-
-def normalize_route3_reasoning_types(values: Iterable[str] | str | None) -> tuple[str, ...]:
-    """Return normalized configured Route 3 reasoning types."""
-    if values is None:
-        return ()
-    raw_values: Iterable[str]
-    if isinstance(values, str):
-        raw_values = [values]
-    else:
-        raw_values = values
-    normalized_values: list[str] = []
-    seen: set[str] = set()
-    for raw_value in raw_values:
-        for part in str(raw_value or "").split(","):
-            normalized = _normalize_reasoning_type_value(part)
-            if not normalized:
-                continue
-            if normalized not in ROUTE3_REASONING_TYPE_SET:
-                allowed = ", ".join(ROUTE3_REASONING_TYPES)
-                raise ValueError(f"Unsupported Route 3 reasoning_type {part!r}. Allowed values: {allowed}.")
-            if normalized not in seen:
-                normalized_values.append(normalized)
-                seen.add(normalized)
-    return tuple(normalized_values)
 
 
 def normalize_route3_answer_types(values: Iterable[str] | str | None) -> tuple[str, ...]:
@@ -2110,35 +1740,6 @@ def normalize_route3_answer_types(values: Iterable[str] | str | None) -> tuple[s
             if normalized not in seen:
                 normalized_values.append(normalized)
                 seen.add(normalized)
-    return tuple(normalized_values)
-
-
-def normalize_route3_extra_prompts(values: Iterable[str] | str | None) -> tuple[str, ...]:
-    """Return expanded stricter prompt rules for Route 3."""
-    if values is None:
-        return ()
-    raw_values: Iterable[str]
-    if isinstance(values, str):
-        raw_values = [values]
-    else:
-        raw_values = values
-    normalized_values: list[str] = []
-    seen: set[str] = set()
-    for raw_value in raw_values:
-        direct_prompt = _normalize_extra_prompt(raw_value)
-        if direct_prompt and (direct_prompt != str(raw_value or "").strip() or direct_prompt in ROUTE3_EXTRA_PROMPTS.values()):
-            parts = [direct_prompt]
-        else:
-            parts = [
-                _normalize_extra_prompt(part)
-                for part in str(raw_value or "").split(",")
-            ]
-        for prompt in parts:
-            if not prompt:
-                continue
-            if prompt not in seen:
-                normalized_values.append(prompt)
-                seen.add(prompt)
     return tuple(normalized_values)
 
 
@@ -2228,15 +1829,6 @@ def _single_answer_type_hint(answer_type_hints: Iterable[str] | str | None) -> t
     if len(normalized_allowed_answer_types) != 1:
         return ()
     return normalized_allowed_answer_types
-
-
-def normalize_route3_pageview_unavailable_policy(value: str | None) -> str:
-    """Return the canonical policy for unavailable Route 3 pageview data."""
-    normalized = str(value or DEFAULT_ROUTE3_PAGEVIEW_UNAVAILABLE_POLICY).strip().lower().replace("-", "_")
-    if normalized not in ROUTE3_PAGEVIEW_UNAVAILABLE_POLICIES:
-        allowed = ", ".join(ROUTE3_PAGEVIEW_UNAVAILABLE_POLICIES)
-        raise ValueError(f"Unsupported Route 3 pageview unavailable policy {value!r}. Allowed values: {allowed}.")
-    return normalized
 
 
 def _normalize_table_source_type(value: str) -> tuple[str, ...]:
@@ -2379,15 +1971,6 @@ def _merge_route3_page_archive(page: WikipediaPageTables, updates: dict[str, Any
     if not path_text:
         return
     if bool(archive.get("archive_read_only")):
-        merged = dict(archive)
-        pageview_prefilter = updates.get("pageview_prefilter", {})
-        if isinstance(pageview_prefilter, dict):
-            merged["pageview_decision"] = str(pageview_prefilter.get("decision", "") or "")
-            merged["pageview_status"] = str(pageview_prefilter.get("status", "") or "")
-            pageview_payload = pageview_prefilter.get("pageview", {})
-            if isinstance(pageview_payload, dict):
-                merged["pageview_fetch_status"] = str(pageview_payload.get("fetch_status", "") or "")
-        page.route3_page_archive = merged
         return
     path = Path(path_text)
     payload, _ = _load_route3_page_archive(path)
@@ -2396,13 +1979,6 @@ def _merge_route3_page_archive(page: WikipediaPageTables, updates: dict[str, Any
     archive_info = _write_route3_page_archive(path, payload)
     merged = dict(archive)
     merged.update(archive_info)
-    pageview_prefilter = updates.get("pageview_prefilter", {})
-    if isinstance(pageview_prefilter, dict):
-        merged["pageview_decision"] = str(pageview_prefilter.get("decision", "") or "")
-        merged["pageview_status"] = str(pageview_prefilter.get("status", "") or "")
-        pageview_payload = pageview_prefilter.get("pageview", {})
-        if isinstance(pageview_payload, dict):
-            merged["pageview_fetch_status"] = str(pageview_payload.get("fetch_status", "") or "")
     page.route3_page_archive = merged
 
 
@@ -2427,175 +2003,6 @@ def _write_route3_page_archive(path: Path | None, payload: dict[str, Any]) -> di
         "updated_at": payload.get("updated_at", ""),
         "page_id": _positive_route3_page_id(payload.get("page_id")),
     }
-
-
-def _route3_pageview_prefilter(
-    *,
-    page: WikipediaPageTables,
-    wikipedia_client: WikipediaClient,
-    run_date: str,
-    enabled: bool,
-    window_months: int,
-    max_monthly_average: float,
-    max_underfilled_monthly: float,
-    unavailable_policy: str,
-) -> dict[str, Any]:
-    """Return pageview prefilter metadata for one Route 3 page."""
-    start, end = _pageview_month_range(run_date, window_months)
-    article_title = page.title.replace(" ", "_")
-    request_url = build_pageviews_api_url(article_title, start=start, end=end) if article_title else ""
-    base = {
-        "enabled": bool(enabled),
-        "window_months": int(window_months),
-        "max_monthly_average_pageviews": float(max_monthly_average),
-        "max_underfilled_monthly_pageviews": float(max_underfilled_monthly),
-        "unavailable_policy": unavailable_policy,
-        "request": {
-            "article": article_title,
-            "start": start,
-            "end": end,
-            "url": request_url,
-        },
-        "archive_path": str(page.route3_page_archive.get("archive_path", "")) if isinstance(page.route3_page_archive, dict) else "",
-    }
-    if not enabled:
-        return {**base, "status": "disabled", "decision": "allow", "reason": "pageview_prefilter_disabled"}
-    archived_pageview = {}
-    archive_path = str(page.route3_page_archive.get("archive_path", "")) if isinstance(page.route3_page_archive, dict) else ""
-    if archive_path:
-        archive_payload, _ = _load_route3_page_archive(Path(archive_path))
-        archived_pageview = archive_payload.get("pageview", {}) if isinstance(archive_payload.get("pageview"), dict) else {}
-    response = {}
-    fetch_status = "archive_hit"
-    errors: list[dict[str, str]] = []
-    archived_request = archived_pageview.get("request", {}) if isinstance(archived_pageview, dict) else {}
-    if (
-        isinstance(archived_pageview, dict)
-        and isinstance(archived_pageview.get("response"), dict)
-        and archived_request.get("start") == start
-        and archived_request.get("end") == end
-        and archived_request.get("article") == article_title
-    ):
-        response = archived_pageview.get("response", {})
-    else:
-        fetch_status = "fetched"
-        try:
-            response = wikipedia_client.fetch_pageviews(article_title, start=start, end=end)
-        except Exception as exc:  # noqa: BLE001
-            response = {}
-            fetch_status = "error"
-            errors.append({"error_type": type(exc).__name__, "error_message": str(exc)})
-    items = _pageview_items(response)
-    pageview_payload = {
-        "request": base["request"],
-        "response": response,
-        "fetch_status": fetch_status,
-        "errors": errors,
-    }
-    if not items:
-        decision = unavailable_policy
-        if decision == "allow":
-            reason = "pageview_unavailable_allowed"
-        elif decision == "rerun":
-            reason = "pageview_unavailable_rerun"
-        else:
-            reason = "pageview_unavailable_rejected"
-        return {
-            **base,
-            "status": "unavailable" if not errors else "error",
-            "decision": decision,
-            "reason": reason,
-            "pageview": pageview_payload,
-            "monthly_items": [],
-            "monthly_sum": 0,
-            "monthly_average": None,
-            "errors": errors,
-        }
-    monthly_sum = sum(int(item.get("views", 0) or 0) for item in items)
-    monthly_average = monthly_sum / len(items)
-    max_observed_monthly = max(int(item.get("views", 0) or 0) for item in items)
-    observed_month_count = len(items)
-    required_month_count = max(1, int(window_months))
-    incomplete_window = observed_month_count < required_month_count
-    if incomplete_window:
-        decision = "reject" if max_observed_monthly > float(max_underfilled_monthly) else "allow"
-        reason = (
-            f"underfilled_monthly_pageviews>{float(max_underfilled_monthly):.4f}"
-            if decision == "reject"
-            else "underfilled_monthly_pageviews_within_threshold"
-        )
-    else:
-        decision = "reject" if monthly_average > float(max_monthly_average) else "allow"
-        reason = (
-            f"monthly_average_pageviews>{float(max_monthly_average):.4f}"
-            if decision == "reject"
-            else "monthly_average_pageviews_within_threshold"
-        )
-    return {
-        **base,
-        "status": "incomplete_window" if incomplete_window else "ok",
-        "decision": decision,
-        "reason": reason,
-        "pageview": pageview_payload,
-        "monthly_items": items,
-        "monthly_sum": monthly_sum,
-        "monthly_average": round(monthly_average, 4),
-        "max_observed_monthly": max_observed_monthly,
-        "observed_month_count": observed_month_count,
-        "required_month_count": required_month_count,
-        "incomplete_window": incomplete_window,
-        "errors": errors,
-    }
-
-
-def _pageview_month_range(run_date: str, window_months: int) -> tuple[str, str]:
-    """Return Wikimedia monthly pageview start/end timestamps."""
-    current = _coerce_iso_date(run_date)
-    first_of_current = date(current.year, current.month, 1)
-    end_month = _add_months(first_of_current, -1)
-    start_month = _add_months(end_month, -(max(1, int(window_months)) - 1))
-    return (
-        f"{start_month.year:04d}{start_month.month:02d}0100",
-        f"{end_month.year:04d}{end_month.month:02d}0100",
-    )
-
-
-def _add_months(value: date, months: int) -> date:
-    """Return the first day shifted by a month offset."""
-    month_index = value.year * 12 + value.month - 1 + int(months)
-    year = month_index // 12
-    month = month_index % 12 + 1
-    return date(year, month, 1)
-
-
-def _coerce_iso_date(value: str) -> date:
-    """Return a date from an ISO-like string, falling back to today's UTC date."""
-    try:
-        return date.fromisoformat(str(value or "")[:10])
-    except ValueError:
-        return datetime.now(timezone.utc).date()
-
-
-def _pageview_items(response: dict[str, Any]) -> list[dict[str, Any]]:
-    """Return compact monthly pageview items from a Wikimedia response."""
-    raw_items = response.get("items", []) if isinstance(response, dict) else []
-    if not isinstance(raw_items, list):
-        return []
-    items: list[dict[str, Any]] = []
-    for raw_item in raw_items:
-        if not isinstance(raw_item, dict):
-            continue
-        try:
-            views = int(raw_item.get("views", 0))
-        except (TypeError, ValueError):
-            continue
-        items.append(
-            {
-                "timestamp": str(raw_item.get("timestamp", "")),
-                "views": views,
-            }
-        )
-    return items
 
 
 def _complete_text_with_audit(llm_client: Any, prompt: str) -> dict[str, Any]:
@@ -2696,29 +2103,13 @@ def _tables_matching_source_types(
     return [table for table in tables if table.table_type in allowed]
 
 
-def _reasoning_type_prompt_rule(allowed_reasoning_types: tuple[str, ...]) -> str:
-    """Return the Route 3 prompt rule for configured reasoning types."""
-    reasoning_types = allowed_reasoning_types or ROUTE3_REASONING_TYPES
-    if len(reasoning_types) == 1:
-        reasoning_type = reasoning_types[0]
-        return (
-            f"- Use fixed `{reasoning_type}` reasoning: "
-            f"{ROUTE3_REASONING_TYPE_PROMPT_RULES[reasoning_type]}. Do not include a `reasoning_type` field in the JSON.\n"
-        )
-    if not allowed_reasoning_types:
-        return (
-            "- Choose exactly one reasoning_type from "
-            f"{', '.join(f'`{value}`' for value in ROUTE3_REASONING_TYPES)}. "
-            "Use the matching rule below and no other reasoning_type rule.\n"
-            f"{_type_rule_lines(ROUTE3_REASONING_TYPE_PROMPT_RULES, reasoning_types)}"
-        )
-    allowed_text = ", ".join(f"`{value}`" for value in allowed_reasoning_types)
+def _reasoning_type_prompt_rule() -> str:
+    """Return the fixed Route 3 single-fact reasoning rule."""
     return (
-        f"- Use only these reasoning_type values: {allowed_text}. "
-        "Use the matching rule below and no other reasoning_type rule.\n"
-        f"{_type_rule_lines(ROUTE3_REASONING_TYPE_PROMPT_RULES, reasoning_types)}"
+        "- Use fixed `single_fact` reasoning: ask a direct single fact lookup from the structured source; "
+        "do not ask a compositional question such as min, max, count, sum, comparison, or ordinal. "
+        "Do not include a `reasoning_type` field in the JSON.\n"
     )
-
 
 def _route3_stability_prompt_rule() -> str:
     """Return the Route 3 settled-answer rule without duplicating shared wording."""
@@ -2764,47 +2155,13 @@ def _type_rule_lines(rule_map: dict[str, str], values: tuple[str, ...]) -> str:
     """Return one explanatory rule per configured type."""
     return "".join(f"- `{value}`: {rule_map[value]}.\n" for value in values)
 
-def _tie_answer_prompt_rule(allowed_reasoning_types: tuple[str, ...]) -> str:
-    """Return tie-answer guidance when a tied reasoning operation is available."""
-    if allowed_reasoning_types and not {"max", "min", "ordinal", "count"}.intersection(allowed_reasoning_types):
-        return ""
-    return "- If max/min/ordinal/count has tied answers, return answer as a JSON array containing every tied answer.\n"
-
-
-def _discard_prompt_rule(
-    allowed_reasoning_types: tuple[str, ...],
-    allowed_answer_types: tuple[str, ...] = (),
-    *,
-    model_selects_reasoning_type: bool = True,
-) -> str:
+def _discard_prompt_rule(allowed_answer_types: tuple[str, ...] = ()) -> str:
     """Return the prompt rule for impossible generation cases."""
-    scopes: list[str] = []
-    if allowed_reasoning_types:
-        scopes.append("fixed reasoning rule")
-    elif model_selects_reasoning_type:
-        scopes.append("chosen reasoning_type rule")
-    if allowed_answer_types:
-        scopes.append("allowed answer_type rule")
-    elif not allowed_answer_types:
-        scopes.append("chosen answer_type rule")
-    scope_text = " and ".join(scopes)
-    return f"- If no safe question matching the {scope_text} is possible, set discard_reason and leave the other fields empty.\n\n"
-
-
-def _reasoning_type_schema(allowed_reasoning_types: tuple[str, ...]) -> str:
-    """Return the prompt schema value for reasoning_type."""
-    return "|".join(allowed_reasoning_types or ROUTE3_REASONING_TYPES)
-
-
-def _model_selects_reasoning_type(allowed_reasoning_types: tuple[str, ...]) -> bool:
-    """Return whether the model must output a reasoning_type field."""
-    return len(allowed_reasoning_types) != 1
-
-
-def _fixed_reasoning_type(allowed_reasoning_types: tuple[str, ...]) -> str:
-    """Return the configured reasoning type when it can be passed through."""
-    return allowed_reasoning_types[0] if len(allowed_reasoning_types) == 1 else ""
-
+    answer_scope = "allowed answer_type rule" if allowed_answer_types else "chosen answer_type rule"
+    return (
+        f"- If no safe question matching the fixed reasoning rule and {answer_scope} is possible, "
+        "set discard_reason and leave the other fields empty.\n\n"
+    )
 
 def _answer_type_schema(allowed_answer_types: tuple[str, ...]) -> str:
     """Return the prompt schema value for answer_type."""
@@ -2814,29 +2171,11 @@ def _answer_type_schema(allowed_answer_types: tuple[str, ...]) -> str:
 def _route3_prompt_output_schema(
     answer_type_mode: str,
     allowed_answer_types: tuple[str, ...],
-    allowed_reasoning_types: tuple[str, ...],
-    *,
-    include_source_table: bool,
 ) -> str:
-    """Return the Route 3 prompt output schema for single or all5 mode."""
-    include_reasoning_type = _model_selects_reasoning_type(allowed_reasoning_types)
+    """Return the fixed-reasoning Route 3 prompt output schema."""
     if normalize_route3_answer_type_mode(answer_type_mode) == "all5":
-        slots = ",\n".join(
-            _all5_prompt_output_schema_slot(
-                answer_type,
-                allowed_reasoning_types,
-                include_reasoning_type=include_reasoning_type,
-                include_source_table=include_source_table,
-            )
-            for answer_type in ROUTE3_ANSWER_TYPES
-        )
-        return (
-            "{\n"
-            '  "outputs": [\n'
-            f"{slots}\n"
-            "  ]\n"
-            "}"
-        )
+        slots = ",\n".join(_all5_prompt_output_schema_slot(answer_type) for answer_type in ROUTE3_ANSWER_TYPES)
+        return "{\n" '  "outputs": [\n' f"{slots}\n" "  ]\n" "}"
     return (
         "{\n"
         '  "question": string,\n'
@@ -2844,27 +2183,13 @@ def _route3_prompt_output_schema(
         f'  "answer_type": "{_answer_type_schema(allowed_answer_types)}",\n'
         '  "answer_aliases": string[],\n'
         '  "search_queries": string[],\n'
-        + (
-            f'  "reasoning_type": "{_reasoning_type_schema(allowed_reasoning_types)}",\n'
-            if include_reasoning_type
-            else ""
-        )
-        +
-        ('  "source_table": integer,\n' if include_source_table else "")
-        +
         '  "derivation_summary": string,\n'
         '  "discard_reason": string | null\n'
         "}"
     )
 
 
-def _all5_prompt_output_schema_slot(
-    answer_type: str,
-    allowed_reasoning_types: tuple[str, ...],
-    *,
-    include_reasoning_type: bool,
-    include_source_table: bool,
-) -> str:
+def _all5_prompt_output_schema_slot(answer_type: str) -> str:
     """Return one fixed answer-type object for the all5 prompt schema."""
     return (
         "    {\n"
@@ -2873,19 +2198,10 @@ def _all5_prompt_output_schema_slot(
         '      "answer": string | string[],\n'
         '      "answer_aliases": string[],\n'
         '      "search_queries": string[],\n'
-        + (
-            f'      "reasoning_type": "{_reasoning_type_schema(allowed_reasoning_types)}",\n'
-            if include_reasoning_type
-            else ""
-        )
-        +
-        ('      "source_table": integer | null,\n' if include_source_table else "")
-        +
         '      "derivation_summary": string,\n'
         '      "discard_reason": string | null\n'
         "    }"
     )
-
 
 def _answer_precision_prompt_rule(allowed_answer_types: tuple[str, ...]) -> str:
     """Return precision wording only for answer types available in this run."""
@@ -2899,11 +2215,6 @@ def _answer_precision_prompt_rule(allowed_answer_types: tuple[str, ...]) -> str:
     if "Place" in allowed_answer_types:
         parts.append(PLACE_PRECISION_PROMPT_RULES)
     return "".join(parts)
-
-
-def _extra_prompt_rule(extra_prompts: tuple[str, ...]) -> str:
-    """Return optional stricter prompt rules."""
-    return "".join(f"- {prompt.rstrip('.')}.\n" for prompt in extra_prompts)
 
 
 def extract_wikipedia_tables(html: str, *, page_title: str = "") -> list[WikipediaTable]:
@@ -4861,21 +4172,9 @@ def _finalize_table_for_llm(table: WikipediaTable) -> WikipediaTable:
     )
 
 
-def _route3_archive_record_metadata(
-    page_archive: dict[str, Any],
-    pageview_prefilter: dict[str, Any],
-) -> dict[str, Any]:
-    """Return per-record page archive metadata with pageview decision fields included."""
-    metadata = dict(page_archive or {})
-    if not isinstance(pageview_prefilter, dict) or not pageview_prefilter:
-        return metadata
-    metadata["pageview_decision"] = str(pageview_prefilter.get("decision", "") or "")
-    metadata["pageview_status"] = str(pageview_prefilter.get("status", "") or "")
-    pageview_payload = pageview_prefilter.get("pageview", {})
-    if isinstance(pageview_payload, dict):
-        metadata["pageview_fetch_status"] = str(pageview_payload.get("fetch_status", "") or "")
-    return metadata
-
+def _route3_archive_record_metadata(page_archive: dict[str, Any]) -> dict[str, Any]:
+    """Return per-record Route 3 page archive metadata."""
+    return dict(page_archive or {})
 
 def _positive_route3_page_id(value: object) -> int | None:
     """Return a positive page ID from an archive/source value."""
@@ -4908,32 +4207,22 @@ def _source_metadata(
     timings: dict[str, float],
     answer_items: list[str] | None = None,
     answer_type: str = "",
-    reasoning_type: str = "",
     subject_anchors: dict[str, Any] | None = None,
     min_table_score: float = 0.0,
-    allowed_reasoning_types: Iterable[str] | None = DEFAULT_ROUTE3_REASONING_TYPES,
     allowed_answer_types: Iterable[str] | None = None,
-    extra_prompts: Iterable[str] | str | None = None,
     table_filter_modes: Iterable[str] | str | None = None,
     table_source_types: Iterable[str] | str | None = None,
     prose_leakage_scoring_enabled: bool = DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
-    llm_choose_table: bool = False,
     page_archive: dict[str, Any] | None = None,
-    pageview_prefilter: dict[str, Any] | None = None,
     answer_type_mode: str = DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
     route3_slot_id: str = "",
 ) -> dict[str, Any]:
     """Build Route 3 audit metadata."""
     safe_subject_aliases = _first_paragraph_aliases(page.title, page.first_paragraph)
-    normalized_allowed_reasoning_types = normalize_route3_reasoning_types(allowed_reasoning_types)
     normalized_allowed_answer_types = normalize_route3_answer_types(allowed_answer_types)
-    normalized_extra_prompts = normalize_route3_extra_prompts(extra_prompts)
     normalized_table_filter_modes = normalize_route3_table_filter_modes(table_filter_modes)
     normalized_table_source_types = normalize_route3_table_source_types(table_source_types)
-    archive_metadata = _route3_archive_record_metadata(
-        page_archive or page.route3_page_archive or {},
-        pageview_prefilter or page.pageview_prefilter or {},
-    )
+    archive_metadata = _route3_archive_record_metadata(page_archive or page.route3_page_archive or {})
     page_id = _resolved_route3_page_id(page.source_url, archive_metadata)
     metadata = {
         "source_url": page.source_url,
@@ -4950,17 +4239,17 @@ def _source_metadata(
         "safe_subject_aliases": safe_subject_aliases,
         "subject_anchors": subject_anchors or [],
         "min_table_score": float(min_table_score),
-        "allowed_reasoning_types": list(normalized_allowed_reasoning_types),
+        "allowed_reasoning_types": ["single_fact"],
         "allowed_answer_types": list(normalized_allowed_answer_types),
-        "extra_prompts": list(normalized_extra_prompts),
+        "extra_prompts": [],
         "table_filter_modes": list(normalized_table_filter_modes),
         "table_source_types": list(normalized_table_source_types),
         "prose_leakage_scoring_enabled": bool(prose_leakage_scoring_enabled),
-        "llm_choose_table": bool(llm_choose_table),
+        "llm_choose_table": False,
         "answer_type_mode": normalize_route3_answer_type_mode(answer_type_mode),
         "route3_slot_id": route3_slot_id,
         "route3_page_archive": archive_metadata,
-        "pageview_prefilter": dict(pageview_prefilter or page.pageview_prefilter or {}),
+        "pageview_prefilter": {},
         "parsed_tables": [table.to_metadata() for table in tables],
         "table_selection": [_selection_payload(row) for row in table_selection],
         "selected_source_table": source_table.to_metadata() if source_table is not None else {},
@@ -4971,8 +4260,8 @@ def _source_metadata(
         "answer_items": answer_items or [],
         "answer_is_list": bool(answer_items),
         "answer_type": answer_type,
-        "reasoning_type": reasoning_type or _reasoning_type(llm_response),
-        "legacy_composition_type": str(llm_response.get("composition_type", "")).strip(),
+        "reasoning_type": "single_fact",
+        "legacy_composition_type": "",
         "derivation_summary": str(llm_response.get("derivation_summary", "")).strip(),
         "phase_timings_seconds": dict(timings),
         "route_validation_policy": "provenance_and_parsed_tables_stored_for_review",
@@ -5002,29 +4291,22 @@ def _rejected_placeholder(
     question: str = "",
     answer: str = "",
     min_table_score: float = 0.0,
-    allowed_reasoning_types: Iterable[str] | None = DEFAULT_ROUTE3_REASONING_TYPES,
     allowed_answer_types: Iterable[str] | None = None,
-    extra_prompts: Iterable[str] | str | None = None,
     table_filter_modes: Iterable[str] | str | None = None,
     table_source_types: Iterable[str] | str | None = None,
     prose_leakage_scoring_enabled: bool = DEFAULT_ROUTE3_PROSE_LEAKAGE_SCORING_ENABLED,
     page_archive: dict[str, Any] | None = None,
-    pageview_prefilter: dict[str, Any] | None = None,
     llm_audit: dict[str, Any] | None = None,
     answer_type_mode: str = DEFAULT_ROUTE3_ANSWER_TYPE_MODE,
     route3_slot_id: str = "",
 ) -> GeneratedCandidate:
     """Build a placeholder candidate so shared output records route-local failures."""
-    normalized_allowed_reasoning_types = normalize_route3_reasoning_types(allowed_reasoning_types)
     normalized_allowed_answer_types = normalize_route3_answer_types(allowed_answer_types)
-    normalized_extra_prompts = normalize_route3_extra_prompts(extra_prompts)
     normalized_table_filter_modes = normalize_route3_table_filter_modes(table_filter_modes)
     normalized_table_source_types = normalize_route3_table_source_types(table_source_types)
-    archive_metadata = _route3_archive_record_metadata(page_archive or {}, pageview_prefilter or {})
+    archive_metadata = _route3_archive_record_metadata(page_archive or {})
     page_id = _resolved_route3_page_id(url, archive_metadata)
-    placeholder_reasoning_type = (
-        normalized_allowed_reasoning_types[0] if len(normalized_allowed_reasoning_types) == 1 else "wikipedia_table_fact"
-    )
+    placeholder_reasoning_type = "single_fact"
     return GeneratedCandidate(
         source_type=SOURCE_TYPE,
         generation_route=ROUTE_NAME,
@@ -5055,17 +4337,17 @@ def _rejected_placeholder(
             "content_domain": content_domain,
             "first_paragraph": first_paragraph,
             "min_table_score": float(min_table_score),
-            "allowed_reasoning_types": list(normalized_allowed_reasoning_types),
+            "allowed_reasoning_types": ["single_fact"],
             "allowed_answer_types": list(normalized_allowed_answer_types),
             "reasoning_type": placeholder_reasoning_type if placeholder_reasoning_type != "wikipedia_table_fact" else "",
-            "extra_prompts": list(normalized_extra_prompts),
+            "extra_prompts": [],
             "table_filter_modes": list(normalized_table_filter_modes),
             "table_source_types": list(normalized_table_source_types),
             "prose_leakage_scoring_enabled": bool(prose_leakage_scoring_enabled),
             "answer_type_mode": normalize_route3_answer_type_mode(answer_type_mode),
             "route3_slot_id": route3_slot_id,
             "route3_page_archive": archive_metadata,
-            "pageview_prefilter": dict(pageview_prefilter or {}),
+            "pageview_prefilter": {},
             "parsed_tables": [table.to_metadata() for table in tables or []],
             "table_selection": [_selection_payload(row) for row in table_selection or []],
             "selected_source_table": source_table.to_metadata() if source_table is not None else {},
@@ -5198,22 +4480,6 @@ def _sanitize_answer_blind_queries(
     return queries[: max(0, max_queries)]
 
 
-def _raw_reasoning_type(response: dict[str, Any]) -> str:
-    """Return the raw Route 3 reasoning type, accepting legacy composition_type."""
-    raw_value = response.get("reasoning_type")
-    if raw_value in {None, ""}:
-        raw_value = response.get("composition_type")
-    return str(raw_value or "").strip()
-
-
-def _normalize_reasoning_type_value(value: Any) -> str:
-    """Normalize one Route 3 reasoning type string."""
-    normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
-    if normalized == "simple_fact":
-        normalized = "single_fact"
-    return normalized
-
-
 def _normalize_answer_type_value(value: Any) -> str:
     """Normalize one Route 3 answer type string."""
     normalized = str(value or "").strip().lower().replace("-", "_").replace(" ", "_")
@@ -5237,15 +4503,6 @@ def _normalize_answer_type_value(value: Any) -> str:
         "value": "Other",
     }
     return aliases.get(normalized, str(value or "").strip())
-
-
-def _normalize_extra_prompt(value: Any) -> str:
-    """Normalize one named or literal extra prompt rule."""
-    raw_value = str(value or "").strip()
-    if not raw_value:
-        return ""
-    key = raw_value.lower().replace("-", "_").replace(" ", "_")
-    return ROUTE3_EXTRA_PROMPTS.get(key, raw_value)
 
 
 def _normalize_table_filter_mode(value: Any) -> str:
@@ -5292,40 +4549,10 @@ def _normalize_table_filter_mode(value: Any) -> str:
     return aliases.get(normalized, normalized)
 
 
-def _declared_reasoning_type(response: dict[str, Any]) -> str:
-    """Return the model-declared Route 3 reasoning type when it is supported."""
-    normalized = _normalize_reasoning_type_value(_raw_reasoning_type(response))
-    return normalized if normalized in ROUTE3_REASONING_TYPE_SET else ""
-
-
 def _declared_answer_type(response: dict[str, Any], answer: str, question: str) -> str:
     """Return the model-declared answer type when supported, with conservative fallback inference."""
     normalized = _normalize_answer_type(response.get("answer_type"), answer, question)
     return normalized if normalized in ROUTE3_ANSWER_TYPE_SET else "Other"
-
-
-def _reasoning_type(response: dict[str, Any]) -> str:
-    """Return the normalized Route 3 reasoning type, accepting legacy composition_type."""
-    return _declared_reasoning_type(response) or "single_fact"
-
-
-def _resolved_reasoning_type(response: dict[str, Any], allowed_reasoning_types: tuple[str, ...]) -> str:
-    """Return the configured or model-selected Route 3 reasoning type."""
-    fixed_reasoning_type = _fixed_reasoning_type(allowed_reasoning_types)
-    if fixed_reasoning_type:
-        return fixed_reasoning_type
-    return _declared_reasoning_type(response) or _reasoning_type(response)
-
-
-def _reasoning_type_not_allowed_reason(response: dict[str, Any], allowed_reasoning_types: tuple[str, ...]) -> str:
-    """Return an audit string for a configured reasoning-type rejection."""
-    raw_reasoning_type = _raw_reasoning_type(response)
-    declared_reasoning_type = _declared_reasoning_type(response)
-    rejected_value = declared_reasoning_type or raw_reasoning_type or "<missing>"
-    return (
-        "reasoning_type_not_allowed:"
-        f"{rejected_value}; allowed={','.join(allowed_reasoning_types)}"
-    )
 
 
 def _answer_type_not_allowed_reason(answer_type: str, allowed_answer_types: tuple[str, ...]) -> str:
@@ -5334,35 +4561,6 @@ def _answer_type_not_allowed_reason(answer_type: str, allowed_answer_types: tupl
         "answer_type_not_allowed:"
         f"{answer_type or '<missing>'}; allowed={','.join(allowed_answer_types)}"
     )
-
-
-def _extra_prompt_violation(
-    *,
-    extra_prompts: tuple[str, ...],
-    question: str,
-    answer: str,
-    page: WikipediaPageTables,
-    source_table: WikipediaTable | None,
-) -> str:
-    """Return a deterministic rejection reason for known stricter extra prompt rules."""
-    if NO_SOCIAL_SCIENCE_RESEARCH_PROMPT not in extra_prompts:
-        return ""
-    checked_text = display_key(question)
-    blocked_markers = (
-        "census",
-        "survey",
-        "demographic",
-        "self reported",
-        "ancestry group",
-        "ethinic group",
-        "ethinicity",
-        "population",
-        "language speaker",
-    )
-    for marker in blocked_markers:
-        if marker in checked_text:
-            return f"no_social_science_research_prompt:{marker}"
-    return ""
 
 
 def _normalize_answer_type(value: Any, answer: str, question: str) -> str:
