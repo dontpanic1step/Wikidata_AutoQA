@@ -24,6 +24,7 @@ OPENROUTER_REFERER = "https://example.com/wikidata-simpleqa"
 OPENROUTER_TITLE = "Wikidata SimpleQA Generator"
 OPENROUTER_USER_AGENT = "wikidata-simpleqa-verified-grader/0.1"
 DEFAULT_JUDGE_MODEL = "openai/gpt-4.1-mini"
+DEFAULT_JUDGE_MAX_TOKENS = 2048
 RETRY_STATUS_CODES = {408, 409, 425, 429, 500, 502, 503, 504}
 
 CHOICE_LETTERS = ["A", "B", "C"]
@@ -181,7 +182,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--backoff-base", type=float, default=1.0)
     parser.add_argument("--backoff-cap-seconds", type=float, default=30.0)
     parser.add_argument("--temperature", type=float, default=0.0)
-    parser.add_argument("--max-tokens", type=int, default=None)
+    parser.add_argument("--max-tokens", type=int, default=DEFAULT_JUDGE_MAX_TOKENS)
     parser.add_argument("--limit", type=int, default=None, help="Optional per-file record limit.")
     return parser.parse_args()
 
@@ -227,15 +228,17 @@ class OpenRouterJudgeClient:
         self.max_tokens = max_tokens
         self.proxy = proxy
 
-    def grade(self, *, question: str, target: str, predicted_answer: str) -> dict[str, str]:
+    def grade(self, *, question: str, target: str, predicted_answer: str) -> dict[str, Any]:
         prompt = GRADER_TEMPLATE.format(
             question=question,
             target=target,
             predicted_answer=predicted_answer,
         )
         request_settings = self.request_settings()
+        raw_response: dict[str, Any] | None = None
         try:
-            text = self.complete_text(prompt)
+            raw_response = self.complete_response(prompt)
+            text = str(raw_response["choices"][0]["message"]["content"]).strip()
             letter = parse_choice_letter(text)
             status = "success" if letter in CHOICE_LETTERS else "unparseable"
         except Exception as exc:  # noqa: BLE001
@@ -254,6 +257,8 @@ class OpenRouterJudgeClient:
             "status": status,
             "request_settings": request_settings,
         }
+        if raw_response is not None:
+            result["raw_response"] = raw_response
         if error:
             result["error"] = error
         return result
@@ -266,7 +271,8 @@ class OpenRouterJudgeClient:
             "proxy": self.proxy,
         }
 
-    def complete_text(self, prompt: str) -> str:
+    def complete_response(self, prompt: str) -> dict[str, Any]:
+        """Return the unmodified OpenRouter response object for one judge call."""
         payload = {
             "model": self.model,
             "temperature": self.temperature,
@@ -274,8 +280,7 @@ class OpenRouterJudgeClient:
         }
         if self.max_tokens is not None:
             payload["max_tokens"] = self.max_tokens
-        body = self._request_with_retry(payload)
-        return str(body["choices"][0]["message"]["content"]).strip()
+        return self._request_with_retry(payload)
 
     def _request_with_retry(self, payload: dict[str, Any]) -> dict[str, Any]:
         last_error: str | None = None

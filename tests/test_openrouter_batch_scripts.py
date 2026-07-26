@@ -451,6 +451,16 @@ def test_prediction_runner_user_message_and_mocked_response(monkeypatch, tmp_pat
     assert response["choices"][0]["message"]["content"] == "Example City"
 
 
+def test_judge_cli_defaults_to_simple_evals_max_tokens(monkeypatch) -> None:
+    module = load_script_module(
+        "judge_openrouter_batch_predictions_default_tokens",
+        "scripts/judge_openrouter_batch_predictions.py",
+    )
+    monkeypatch.setattr(sys, "argv", ["judge_openrouter_batch_predictions.py", "input.jsonl"])
+
+    assert module.parse_args().max_tokens == 2048
+
+
 def test_judge_grade_mapping_and_unparseable_default(monkeypatch) -> None:
     module = load_script_module(
         "judge_openrouter_batch_predictions_grade_mapping",
@@ -464,7 +474,7 @@ def test_judge_grade_mapping_and_unparseable_default(monkeypatch) -> None:
         backoff_base=0.0,
         backoff_cap_seconds=0.0,
         temperature=0.0,
-        max_tokens=None,
+        max_tokens=2048,
         proxy=None,
     )
 
@@ -507,6 +517,12 @@ def test_judge_grade_mapping_and_unparseable_default(monkeypatch) -> None:
         "model": "openai/gpt-4.1-mini",
         "temperature": 0.0,
         "messages": [{"role": "user", "content": expected_prompt}],
+        "max_tokens": 2048,
+    }
+    assert result["raw_response"] == {
+        "choices": [
+            {"message": {"role": "assistant", "content": "unparseable response"}}
+        ]
     }
     assert result["letter"] == "C"
     assert result["grade"] == "NOT_ATTEMPTED"
