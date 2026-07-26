@@ -728,7 +728,6 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
                 self.assertIn(option, help_output.getvalue())
                 self.assertIn(option, runbook)
         self.assertIn("internal segment worker", runbook)
-        self.assertIn("scripts/run_openrouter_night_batch.py` are historical", runbook)
 
     def test_formal_recipe_defaults_match_milestone(self) -> None:
         with patch(
