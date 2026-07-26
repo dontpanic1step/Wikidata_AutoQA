@@ -31,7 +31,10 @@ if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
 from run_route3_review import _settings_from_fingerprint  # noqa: E402
-from run_wikipedia_infobox_pipeline import EndpointResumeState, _effective_stream_random_seed  # noqa: E402
+from wikidata_simpleqa.route3_worker_support import (
+    EndpointResumeState,
+    effective_stream_random_seed as _effective_stream_random_seed,
+)
 from run_wikipedia_infobox_pipeline import parse_args as parse_worker_args, _stream_search_queries  # noqa: E402
 from run_wikipedia_infobox_recipe import (  # noqa: E402
     RecipeItem,

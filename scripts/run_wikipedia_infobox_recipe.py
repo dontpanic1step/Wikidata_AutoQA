@@ -61,20 +61,20 @@ from wikidata_simpleqa.wikipedia_infobox_generator import (
     build_wikipedia_infobox_prompt,
     normalize_route3_table_source_types,
 )
-from run_wikipedia_infobox_pipeline import (
-    _aggregate_phase_timings,
-    _effective_stream_random_seed,
-    _failure_reason_counts,
-    _ensure_page_id_list_entry_metadata,
-    _load_endpoint_jsonl,
-    _phase_timing_stats,
-    _llm_generation_table_yield_summary,
-    _normalize_stream_fresh_cached_page_count,
-    _normalize_stream_reuse_cached_page_count,
-    _safe_artifact_id,
-    _stream_budget_numeric_count,
-    _survival_by_layer,
-    _write_stream_walkthrough,
+from wikidata_simpleqa.route3_worker_support import (
+    aggregate_phase_timings,
+    effective_stream_random_seed,
+    failure_reason_counts,
+    ensure_page_id_list_entry_metadata,
+    load_endpoint_jsonl,
+    phase_timing_stats,
+    llm_generation_table_yield_summary,
+    normalize_stream_fresh_cached_page_count,
+    normalize_stream_reuse_cached_page_count,
+    safe_artifact_id,
+    stream_budget_numeric_count,
+    survival_by_layer,
+    write_stream_walkthrough,
 )
 
 @dataclass(frozen=True, slots=True)
@@ -256,7 +256,7 @@ def _main(segment_writer_locks: ExitStack) -> int:
     args = parse_args()
     _validate_lifecycle_args(args)
     if args.status:
-        run_id = _safe_artifact_id(args.run_id, fallback="route3_recipe")
+        run_id = safe_artifact_id(args.run_id, fallback="route3_recipe")
         segment_dir = args.segment_dir or ROOT / "outputs" / "recipe_segments" / run_id
         print(json.dumps(_recipe_status_payload(run_id, segment_dir), indent=2, ensure_ascii=False))
         return 0
@@ -271,10 +271,10 @@ def _main(segment_writer_locks: ExitStack) -> int:
     )
     args.route3_infobox_max_removed_row_rate = max(0.0, min(1.0, float(args.route3_infobox_max_removed_row_rate)))
     args.route3_infobox_min_remaining_rows = max(0, int(args.route3_infobox_min_remaining_rows))
-    args.stream_reuse_cached_page_count = _normalize_stream_reuse_cached_page_count(
+    args.stream_reuse_cached_page_count = normalize_stream_reuse_cached_page_count(
         args.stream_reuse_cached_page_count
     )
-    args.stream_fresh_cached_page_count = _normalize_stream_fresh_cached_page_count(
+    args.stream_fresh_cached_page_count = normalize_stream_fresh_cached_page_count(
         args.stream_fresh_cached_page_count
     )
     run_id = _recipe_run_id(args, recipe_items, reasoning_types)
@@ -418,11 +418,11 @@ def _main(segment_writer_locks: ExitStack) -> int:
             print(" ".join(command))
             remaining_reuse_cached_page_count = _decrement_recipe_budget(
                 remaining_reuse_cached_page_count,
-                _stream_budget_numeric_count(segment_reuse_cached_page_count),
+                stream_budget_numeric_count(segment_reuse_cached_page_count),
             )
             remaining_fresh_cached_page_count = _decrement_recipe_budget(
                 remaining_fresh_cached_page_count,
-                _stream_budget_numeric_count(segment_fresh_cached_page_count),
+                stream_budget_numeric_count(segment_fresh_cached_page_count),
             )
             continue
         subprocess.run(command, cwd=ROOT, check=True)
@@ -463,7 +463,7 @@ def _main(segment_writer_locks: ExitStack) -> int:
 
     accepted_id_offset = 0
     if append_label:
-        existing_accepted_records, _ = _load_endpoint_jsonl(output, label="accepted")
+        existing_accepted_records, _ = load_endpoint_jsonl(output, label="accepted")
         accepted_id_offset = len(existing_accepted_records)
     accepted_records, rejected_records = _combine_segment_records(
         run_id=run_id,
@@ -497,7 +497,7 @@ def _main(segment_writer_locks: ExitStack) -> int:
     )
     summary_output.parent.mkdir(parents=True, exist_ok=True)
     summary_output.write_text(json.dumps(summary, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-    _write_stream_walkthrough(
+    write_stream_walkthrough(
         path=walkthrough_output,
         summary=summary,
         accepted_records=accepted_records,
@@ -594,10 +594,10 @@ def _is_all_types_recipe_answer_type(value: str) -> bool:
 def _recipe_run_id(args: argparse.Namespace, recipe_items: list[RecipeItem], reasoning_types: list[str]) -> str:
     """Return a path-safe run ID for this recipe."""
     if args.run_id.strip():
-        return _safe_artifact_id(args.run_id, fallback="route3_recipe")
+        return safe_artifact_id(args.run_id, fallback="route3_recipe")
     count_text = "_".join(f"{item.record_limit}{item.answer_type.lower()}" for item in recipe_items)
     reasoning_text = "_".join(reasoning_types or ["single_fact"])
-    return _safe_artifact_id(
+    return safe_artifact_id(
         f"wikipedia_stream_recipe_{count_text}_{reasoning_text}_{date.today().isoformat().replace('-', '_')}",
         fallback="route3_recipe",
     )
@@ -625,7 +625,7 @@ def _recipe_append_label(args: argparse.Namespace) -> str:
     raw_label = str(getattr(args, "append_run_label", "") or "").strip()
     if not raw_label:
         raw_label = "append_" + datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
-    return _safe_artifact_id(raw_label, fallback="append")
+    return safe_artifact_id(raw_label, fallback="append")
 
 
 def _base_segment_id(item: RecipeItem, index: int) -> str:
@@ -694,7 +694,7 @@ def _recipe_segment_seed(
         stream_state=f"{run_id}:recipe",
         start_from_endpoint=False,
     )
-    return _effective_stream_random_seed(seed_args)
+    return effective_stream_random_seed(seed_args)
 
 
 def _require_clean_worktree() -> None:
@@ -1356,8 +1356,8 @@ def _combine_segment_records(
     for summary in segment_summaries:
         answer_type = str(summary.get("recipe_answer_type", ""))
         record_limit = int(summary.get("recipe_record_limit", 0) or 0)
-        accepted, _ = _load_endpoint_jsonl(Path(str(summary.get("segment_accepted_output"))), label="accepted")
-        rejected, _ = _load_endpoint_jsonl(Path(str(summary.get("segment_rejected_output"))), label="rejected")
+        accepted, _ = load_endpoint_jsonl(Path(str(summary.get("segment_accepted_output"))), label="accepted")
+        rejected, _ = load_endpoint_jsonl(Path(str(summary.get("segment_rejected_output"))), label="rejected")
         for record in [*accepted, *rejected]:
             if _is_compact_big_batch_record(record):
                 continue
@@ -1369,7 +1369,7 @@ def _combine_segment_records(
                 metadata["recipe_segment_id"] = summary.get("run_segment_id", "")
                 metadata["recipe_segment_run_date"] = summary.get("run_date", "")
                 metadata["recipe_segment_summary"] = summary.get("summary_output", "")
-                _ensure_page_id_list_entry_metadata(record)
+                ensure_page_id_list_entry_metadata(record)
         accepted_records.extend(accepted)
         rejected_records.extend(rejected)
     assign_unique_route3_record_ids(accepted_records)
@@ -1539,16 +1539,16 @@ def _recipe_summary(
         "wikipedia_429_backoff_seconds": args.wikipedia_429_backoff_seconds,
         "wikipedia_429_max_backoff_seconds": args.wikipedia_429_max_backoff_seconds,
         "wikipedia_429_recovery_seconds": args.wikipedia_429_recovery_seconds,
-        **_llm_generation_table_yield_summary(accepted_records, rejected_records),
-        "survival_by_layer": _survival_by_layer(
+        **llm_generation_table_yield_summary(accepted_records, rejected_records),
+        "survival_by_layer": survival_by_layer(
             attempted_count=attempted,
             accepted_records=accepted_records,
             rejected_records=rejected_records,
             rerun_records=[],
         ),
-        "failure_reason_counts": _failure_reason_counts(rejected_records, []),
-        "phase_timing_stats_seconds": _phase_timing_stats([*accepted_records, *rejected_records]),
-        "aggregate_phase_timings_seconds": _aggregate_phase_timings(accepted_records, rejected_records),
+        "failure_reason_counts": failure_reason_counts(rejected_records, []),
+        "phase_timing_stats_seconds": phase_timing_stats([*accepted_records, *rejected_records]),
+        "aggregate_phase_timings_seconds": aggregate_phase_timings(accepted_records, rejected_records),
         "accepted_by_recipe_answer_type": _records_by_recipe_answer_type(accepted_records),
         "rejected_by_recipe_answer_type": _records_by_recipe_answer_type(rejected_records),
     }

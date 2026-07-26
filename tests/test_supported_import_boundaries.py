@@ -97,3 +97,8 @@ def test_package_initialization_exports_only_supported_settings() -> None:
     )
     payload = json.loads(completed.stdout)
     assert payload["exports"] == ["Settings"]
+
+
+def test_recipe_uses_package_worker_support_api() -> None:
+    source = (ROOT / "scripts" / "run_wikipedia_infobox_recipe.py").read_text(encoding="utf-8")
+    assert "from run_wikipedia_infobox_pipeline import" not in source

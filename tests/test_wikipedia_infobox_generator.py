@@ -64,26 +64,30 @@ SCRIPTS = ROOT / "scripts"
 if str(SCRIPTS) not in sys.path:
     sys.path.insert(0, str(SCRIPTS))
 
-from run_wikipedia_infobox_pipeline import (  # noqa: E402
+from wikidata_simpleqa.route3_worker_support import (
     EndpointResumeState,
+    aggregate_phase_timings as _aggregate_phase_timings,
+    failure_reason_counts as _failure_reason_counts,
+    llm_generation_table_yield_summary as _llm_generation_table_yield_summary,
+    load_endpoint_jsonl as _load_endpoint_jsonl,
+    phase_timing_stats as _phase_timing_stats,
+    record_reasoning_type as _record_reasoning_type,
+    survival_by_layer as _survival_by_layer,
+    write_stream_walkthrough as _write_stream_walkthrough,
+)
+from run_wikipedia_infobox_pipeline import (  # noqa: E402
     StreamingConcurrencyContext,
     _accepted_output_records,
     _apply_big_batch_mode,
     _compact_accepted_record,
     _compact_rejected_record,
     _filter_endpoint_url_entries,
-    _failure_reason_counts,
-    _aggregate_phase_timings,
-    _llm_generation_table_yield_summary,
-    _load_endpoint_jsonl,
 
     _load_url_entries,
     _load_urls,
-    _phase_timing_stats,
     _process_one_stream_page_id,
     _process_stream_candidate_slots,
     _remaining_after_endpoint,
-    _record_reasoning_type,
     _rejected_output_records,
     _rerun_error_details_from_record,
     _reserve_stream_cached_page_archives,
@@ -91,10 +95,8 @@ from run_wikipedia_infobox_pipeline import (  # noqa: E402
     _run_artifact_summary,
     _stream_page_id_list_entries,
     _stream_search_queries,
-    _survival_by_layer,
     _wikipedia_stream_record_id,
     _write_summary_and_manifest,
-    _write_stream_walkthrough,
     UrlEntry,
 )
 
