@@ -6,7 +6,6 @@ import unittest
 
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.generation_models import EntityReference, GeneratedCandidate
-from wikidata_simpleqa.models import CandidateFact
 from wikidata_simpleqa.number_reference import (
     build_number_reference_margin,
     normalize_number_answer,
@@ -31,29 +30,6 @@ class NumberReferenceTests(unittest.TestCase):
         self.assertEqual(margin["original_answer"], "5,000 gallons")
         self.assertEqual(margin["numeric_value"], "5000")
         self.assertEqual(margin["reference_answer"], "5000 (acceptable range: anything between 4950 and 5050)")
-
-    def test_candidate_fact_normalizes_number_answer_labels(self) -> None:
-        candidate = CandidateFact(
-            subject_qid="Q1",
-            subject_label="Example Work",
-            subject_aliases=[],
-            domain="example",
-            topic="Tests",
-            answer_type="Number",
-            question_family="numeric_fact",
-            subject_type_qids=[],
-            target_property_pid="P1",
-            target_property_label="count",
-            answer_qids=[],
-            answer_labels=["1,200.0"],
-            answer_aliases=["twelve hundred"],
-            date_property_pid="P2",
-            date_value="2020-01-01",
-            target_time="2020",
-            canonical_question="What is the count of Example Work?",
-        )
-        self.assertEqual(candidate.answer_labels, ["1200"])
-        self.assertEqual(candidate.answer_aliases, ["1200"])
 
     def test_generated_candidate_normalizes_number_answer_before_margin_generation(self) -> None:
         candidate = GeneratedCandidate(

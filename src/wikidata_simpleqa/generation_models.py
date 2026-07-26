@@ -1,4 +1,4 @@
-"""Shared candidate models for the staged multi-generator pipeline."""
+"""Candidate models for the formal Route 3 workflow."""
 
 from __future__ import annotations
 
@@ -6,7 +6,6 @@ from dataclasses import dataclass, field
 from typing import Any
 
 from .date_reference import normalize_date_answer
-from .models import CandidateFact
 from .number_reference import normalize_number_answer
 
 
@@ -33,7 +32,7 @@ class EvidenceRecord:
 
 @dataclass(slots=True)
 class GeneratedCandidate:
-    """Unified candidate structure emitted by all generators."""
+    """Candidate structure emitted by Route 3 generation."""
 
     source_type: str
     generation_route: str
@@ -58,7 +57,6 @@ class GeneratedCandidate:
     notes: list[str] = field(default_factory=list)
     source_metadata: dict[str, Any] = field(default_factory=dict)
     rewritten_question: str | None = None
-    source_candidate: CandidateFact | None = field(default=None, repr=False)
 
     def __post_init__(self) -> None:
         """Normalize numeric answers at the shared downstream boundary."""
@@ -85,12 +83,9 @@ class GeneratedCandidate:
     @property
     def subject_resource_key(self) -> str:
         """Return the stable subject resource key used for deduplication."""
-        if self.source_candidate is not None and self.source_candidate.subject_resource_key:
-            return self.source_candidate.subject_resource_key
-        if self.generation_route == "route3_wikipedia_infobox":
-            slot_id = str(self.source_metadata.get("route3_slot_id") or "").strip()
-            if slot_id:
-                return f"{self.subject_entity.url}#{slot_id}"
+        slot_id = str(self.source_metadata.get("route3_slot_id") or "").strip()
+        if slot_id:
+            return f"{self.subject_entity.url}#{slot_id}"
         return self.subject_entity.url
 
     def to_output_record(self, example_id: str) -> dict[str, Any]:
@@ -141,34 +136,6 @@ class GeneratedCandidate:
             "notes": self.notes,
             "source_metadata": self.source_metadata,
         }
-        if self.source_candidate is not None:
-            record.update(
-                {
-                    "subject_qid": self.source_candidate.subject_qid,
-                    "answer_qids": self.source_candidate.answer_qids,
-                    "property_pid": self.source_candidate.target_property_pid,
-                    "date_filter": {
-                        "property": self.source_candidate.date_property_pid,
-                        "value": self.source_candidate.date_value,
-                    },
-                    "subject_resource_url": self.source_candidate.subject_resource_url,
-                    "subject_resource_key": self.source_candidate.subject_resource_key,
-                    "reasoning_style": self.source_candidate.reasoning_style,
-                    "hop_count": self.source_candidate.hop_count,
-                    "reasoning_path": self.source_candidate.reasoning_path,
-                    "bridge_entities": self.source_candidate.bridge_entities,
-                    "derivation_signature": self.source_candidate.derivation_signature,
-                    "shortcut_checks": self.source_candidate.shortcut_checks,
-                    "provenance_complete": self.source_candidate.provenance_complete,
-                    "question_requires_all_hops": self.source_candidate.question_requires_all_hops,
-                    "hidden_entities": self.source_candidate.source_metadata.get("hidden_entities", []),
-                    "visible_clue_entities_or_values": self.source_candidate.source_metadata.get(
-                        "visible_clue_entities_or_values",
-                        [],
-                    ),
-                    "clue_orientation": self.source_candidate.source_metadata.get("clue_orientation", ""),
-                }
-            )
         return record
 
     def to_rejected_record(

@@ -1,4 +1,4 @@
-"""Shared validators for the staged multi-generator pipeline."""
+"""Deterministic validators for the formal Route 3 workflow."""
 
 from __future__ import annotations
 
@@ -7,9 +7,11 @@ import re
 from time import perf_counter
 from typing import Any
 
+from .constants import TEMPORAL_PHRASES
 from .date_reference import date_answer_variant_strings
 from .entity_normalization import normalize_name
 from .generation_models import GeneratedCandidate
+from .geographic_leakage import question_leaks_geographic_answer_context
 from .number_reference import extract_number_mentions, format_decimal, get_number_reference_margin, number_margin_hits, parse_number_token
 from .text_normalization import (
     TextMatcher,
@@ -19,16 +21,12 @@ from .text_normalization import (
     text_contains_any,
     text_contains_match,
 )
-from .validators import (
-    YEAR_PATTERN,
-    candidate_is_time_invariant,
-    has_forbidden_temporal_text,
-    is_simple_question,
-    question_leaks_any_answer,
-    question_leaks_bridge_entities,
-    shortcut_check,
+YEAR_PATTERN = re.compile(r"\b(17|18|19|20|21)\d{2}\b")
+DATE_PATTERN = re.compile(r"\b\d{4}-\d{2}-\d{2}\b")
+TEMPORAL_PATTERN = re.compile(
+    r"\b(" + "|".join(re.escape(phrase) for phrase in TEMPORAL_PHRASES) + r")\b",
+    re.IGNORECASE,
 )
-
 
 POSITIVE_NUMBER_WORDS = {
     0: "zero",
@@ -87,34 +85,8 @@ def validate_generated_candidate(
     *,
     cutoff_year: int,
 ) -> tuple[bool, dict[str, Any]]:
-    """Run shared deterministic validation on one generated candidate."""
-    if candidate.generation_route == "route3_wikipedia_infobox":
-        return _validate_wikipedia_infobox_candidate(candidate)
-    validation = {
-        "stable_answer": False,
-        "answer_in_evidence": False,
-        "question_unambiguous": False,
-        "rewrite_guard_passed": False,
-    }
-    source_candidate = candidate.source_candidate
-    if source_candidate is None:
-        return False, validation
-    if source_candidate.source_metadata.get("stable_answer_override", False):
-        validation["stable_answer"] = True
-    else:
-        validation["stable_answer"] = candidate_is_time_invariant(
-            source_candidate,
-            source_candidate.source_metadata.get("wikidata_access_date", candidate.target_time),
-        )
-    validation["answer_in_evidence"] = evidence_supports_answer(candidate)
-    validation["question_unambiguous"] = bool(source_candidate.ambiguity_status)
-    validation["rewrite_guard_passed"] = validate_question_surface(
-        candidate.final_question,
-        candidate,
-        cutoff_year=cutoff_year,
-    ) is None
-    return all(validation.values()), validation
-
+    """Run deterministic Route 3 validation on one generated candidate."""
+    return _validate_wikipedia_infobox_candidate(candidate)
 
 def _validate_wikipedia_infobox_candidate(
     candidate: GeneratedCandidate,
@@ -128,14 +100,8 @@ def _validate_wikipedia_infobox_candidate(
 
 
 def evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
-    """Return whether evidence text contains the answer or one alias."""
-    if candidate.generation_route == "route3_wikipedia_infobox":
-        return _route3_evidence_supports_answer(candidate)
-    return bool(display_cleanup(candidate.evidence.text)) and _text_contains_answer(
-        candidate.evidence.text,
-        _build_answer_matchers(candidate),
-    )
-
+    """Return whether Route 3 evidence contains the answer or one alias."""
+    return _route3_evidence_supports_answer(candidate)
 
 def _route3_evidence_supports_answer(candidate: GeneratedCandidate) -> bool:
     """Return whether Route 3 selected table evidence supports the answer."""
@@ -259,20 +225,9 @@ def validate_question_surface(
         _record_surface_warning(candidate, "lost_subject_anchor")
     if _question_leaks_candidate_answer(question, candidate):
         return "answer_leakage"
-    source_candidate = candidate.source_candidate
-    if source_candidate is not None:
-        shortcut_results = shortcut_check(source_candidate, question)
-        source_candidate.shortcut_checks = shortcut_results
-        source_candidate.question_requires_all_hops = bool(
-            shortcut_results.get("question_requires_all_hops", True)
-        )
-        if not shortcut_results.get("question_requires_all_hops", True):
-            return "lost_required_reasoning_clue"
-        if question_leaks_bridge_entities(question, source_candidate):
-            return "bridge_entity_leakage"
-    if not is_simple_question(question):
+    if not _is_simple_question(question):
         return "not_simple_question"
-    if has_forbidden_temporal_text(question):
+    if _has_forbidden_temporal_text(question):
         years = [int(match.group(0)) for match in YEAR_PATTERN.finditer(question)]
         if not years:
             return "forbidden_temporal_phrase"
@@ -298,12 +253,23 @@ def _question_leaks_candidate_answer(question: str, candidate: GeneratedCandidat
                 for value in extract_number_mentions(question)
             }
             return bool(answer_numbers.intersection(question_numbers))
-    return question_leaks_any_answer(
+    answer_labels = _answer_labels_for_leakage(candidate) + candidate.answer_aliases
+    return text_contains_any(question, answer_labels) or question_leaks_geographic_answer_context(
         question,
-        _answer_labels_for_leakage(candidate),
-        candidate.answer_aliases,
+        answer_labels,
     )
 
+
+def _has_forbidden_temporal_text(text: str) -> bool:
+    """Return whether text contains a temporal phrase handled by the cutoff policy."""
+    return bool(YEAR_PATTERN.search(text) or DATE_PATTERN.search(text) or TEMPORAL_PATTERN.search(text))
+
+
+def _is_simple_question(question: str) -> bool:
+    """Return whether the question has the supported short fact-seeking surface."""
+    lowered = question.lower()
+    forbidden_patterns = ("and why", "explain", "compare", "list all")
+    return not any(pattern in lowered for pattern in forbidden_patterns) and len(question.strip()) <= 200
 
 def _answer_number_values(candidate: GeneratedCandidate) -> set[str]:
     """Return normalized numeric values from a numeric answer and aliases."""

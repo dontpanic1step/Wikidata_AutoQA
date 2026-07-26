@@ -7,7 +7,6 @@ import unittest
 from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa import generator_validators as generator_validator_module
 from wikidata_simpleqa import route3_quality_rules
-from wikidata_simpleqa import validators as validator_module
 from wikidata_simpleqa.generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from wikidata_simpleqa.generator_validators import (
     evidence_supports_answer,
@@ -16,7 +15,6 @@ from wikidata_simpleqa.generator_validators import (
     validate_question_surface,
 )
 from wikidata_simpleqa.rule_based_answer_type_gate import evaluate_candidate_answer_type_gate
-from wikidata_simpleqa.models import CandidateFact
 
 
 class FakeSearchClient:
@@ -33,34 +31,6 @@ class FakeSearchClient:
 
 def make_generated_candidate() -> GeneratedCandidate:
     """Build a minimal shared candidate for validator tests."""
-    source_candidate = CandidateFact(
-        subject_qid="Q1",
-        subject_label="Example Film",
-        subject_aliases=[],
-        domain="film_director",
-        topic="Arts and Media",
-        answer_type="Person",
-        question_family="who_directed_film",
-        subject_type_qids=["Q11424"],
-        target_property_pid="P57",
-        target_property_label="director",
-        answer_qids=["Q2"],
-        answer_labels=["Jane Doe"],
-        answer_aliases=["J. Doe"],
-        date_property_pid="P577",
-        date_value="2020-01-01",
-        target_time="2020",
-        canonical_question="Who directed Example Film?",
-        ambiguity_status="label_unique",
-        provenance_complete=True,
-        source_metadata={
-            "wikidata_access_date": "2024-05-01",
-            "subject_sitelink_count": 12,
-            "subject_claim_count": 44,
-        },
-        subject_resource_url="https://en.wikipedia.org/wiki/Example_Film",
-        subject_resource_key="https://en.wikipedia.org/wiki/Example_Film",
-    )
     return GeneratedCandidate(
         source_type="hybrid",
         generation_route="route3_wikipedia_infobox",
@@ -85,8 +55,11 @@ def make_generated_candidate() -> GeneratedCandidate:
         ),
         answer_type="Person",
         topic="Arts and Media",
-        source_candidate=source_candidate,
-        source_metadata=source_candidate.source_metadata.copy(),
+        source_metadata={
+            "wikidata_access_date": "2024-05-01",
+            "subject_sitelink_count": 12,
+            "subject_claim_count": 44,
+        },
     )
 
 
@@ -268,7 +241,7 @@ class GeneratorValidatorTests(unittest.TestCase):
         self.assertFalse(hasattr(generator_validator_module, "run_fact_level_longtail_prefilter"))
         self.assertFalse(hasattr(generator_validator_module, "build_removed_prefilter_stub"))
         self.assertFalse(hasattr(generator_validator_module, "_uses_generic_table_source_wording"))
-        self.assertFalse(hasattr(validator_module, "question_targets_mutable_fact"))
+        self.assertFalse(hasattr(generator_validator_module, "candidate_is_time_invariant"))
 
     def test_route3_list_answer_items_can_match_anywhere_in_selected_table(self) -> None:
         candidate = make_generated_candidate()

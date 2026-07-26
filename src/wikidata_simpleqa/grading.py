@@ -8,8 +8,6 @@ import random
 from time import perf_counter, sleep
 from typing import Any
 
-from .cheap_model_qa import make_cheap_model_qa_client
-from .config import LLMConfig
 from .number_reference import reference_answer_for_grading
 
 VALID_GRADES = {"CORRECT", "INCORRECT", "NOT_ATTEMPTED"}
@@ -117,10 +115,6 @@ class ModelPanelMember:
     name: str
     client: Any
 
-
-def make_grader_client(config: LLMConfig | None, timeout_seconds: float):
-    """Construct the configured grader client."""
-    return make_cheap_model_qa_client(config, timeout_seconds)
 
 
 def grade_prediction(

@@ -16,19 +16,18 @@ from time import perf_counter
 from typing import Any, Iterable
 from uuid import uuid4
 
-from .cheap_model_qa import parse_json_object
 from .route3_circuit import CircuitOpenError
 from .route3_openrouter import (
     AbandonedExternalCallError,
     AmbiguousExternalCallError,
     DefiniteOpenRouterHTTPError,
     DefiniteOpenRouterResponseError,
+    parse_json_object,
 )
 from .generation_models import EntityReference, EvidenceRecord, GeneratedCandidate
 from .date_reference import normalize_date_answer, normalize_gate_date_answer
-from .llm_rewrite import NO_SOCIAL_SCIENCE_RESEARCH_PROMPT
 from .number_reference import parse_number_token
-from .route3_quality_rules import external_links_table_filter_reason
+from .route3_quality_rules import NO_SOCIAL_SCIENCE_RESEARCH_PROMPT, external_links_table_filter_reason
 from .text_normalization import (
     build_text_matcher,
     display_cleanup,

@@ -11,18 +11,27 @@ from typing import Any
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
-from .cheap_model_qa import (
-    OPENROUTER_REFERER,
-    OPENROUTER_TITLE,
-    OPENROUTER_USER_AGENT,
-    SYSTEM_PROMPT,
-)
 from .config import LLMConfig
 from .route3_circuit import ServiceCircuit
 from .grading import ModelPanelMember
 from .network import install_proxy
 from .route3_external_calls import ExternalCallRecordStore
 from .route3_run_ledger import canonical_json_sha256
+
+SYSTEM_PROMPT = ""
+OPENROUTER_REFERER = "https://example.com/wikidata-simpleqa"
+OPENROUTER_TITLE = "Wikidata SimpleQA Generator"
+OPENROUTER_USER_AGENT = "wikidata-simpleqa-generator/0.1"
+
+
+def parse_json_object(text: str) -> dict[str, Any]:
+    """Parse the first JSON object embedded in a Route 3 model response."""
+    stripped = text.strip()
+    start = stripped.find("{")
+    end = stripped.rfind("}")
+    if start == -1 or end == -1 or end < start:
+        raise ValueError("Model response did not contain a JSON object.")
+    return json.loads(stripped[start : end + 1])
 
 
 @dataclass(frozen=True, slots=True)

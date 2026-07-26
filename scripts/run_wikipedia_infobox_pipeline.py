@@ -593,10 +593,6 @@ def main() -> int:
         second_stage_grading_accuracy_threshold=args.second_stage_grading_accuracy_threshold,
         enabled_routes=("route3_wikipedia_infobox",),
         proxy=proxy,
-        output_path=args.output,
-        rejected_output_path=args.rejected_output,
-        rewrite_enabled=False,
-        rewrite_llm=None,
         **duckduckgo_settings_kwargs(args),
     )
     wikipedia_client = WikipediaClient(

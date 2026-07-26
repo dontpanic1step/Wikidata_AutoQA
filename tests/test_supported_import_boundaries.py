@@ -17,11 +17,17 @@ SUPPORTED_SCRIPTS = (
     "judge_openrouter_batch_predictions.py",
 )
 HISTORICAL_MODULE_PARTS = (
+    "candidate_harvester",
+    "cheap_model_qa",
     "generation_pipeline",
+    "llm_rewrite",
+    "wikidata_simpleqa.models",
     "kelm_generator",
     "pipeline",
     "route1_",
     "route4_",
+    "wikidata_simpleqa.validators",
+    "wikidata_client",
 )
 MODULE_MARKER = "__WIKIDATA_SIMPLEQA_MODULES__="
 IMPORT_PROBE = """

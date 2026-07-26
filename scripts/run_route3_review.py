@@ -309,8 +309,6 @@ def _settings_from_fingerprint(fingerprint: dict) -> Settings:
         second_stage_grading_enabled=bool(second_stage["enabled"]),
         second_stage_grading_accuracy_threshold=float(second_stage["accuracy_threshold"]),
         enabled_routes=("route3_wikipedia_infobox",),
-        rewrite_enabled=False,
-        rewrite_llm=None,
     )
     for llm in (*settings.second_stage_grading_models, settings.second_stage_grading_grader_llm):
         if llm is not None:

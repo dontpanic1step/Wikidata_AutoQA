@@ -1317,7 +1317,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     run_date="2026-05-16",
                     cutoff_year=2025,
                     enabled_routes=("route3_wikipedia_infobox",),
-                    rewrite_enabled=False,
                 ),
                 state=state,
                 wikipedia_client=client,
@@ -1408,7 +1407,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                     run_date="2026-07-24",
                     cutoff_year=2025,
                     enabled_routes=("route3_wikipedia_infobox",),
-                    rewrite_enabled=False,
                 ),
                 state=state,
                 wikipedia_client=FakeWikipediaClient(),
@@ -4914,7 +4912,7 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(candidate.answer, "Juno")
         self.assertNotIn("route_guard_warnings", candidate.source_metadata)
 
-    def test_shared_processing_accepts_wikipedia_candidate_without_source_candidate(self) -> None:
+    def test_shared_processing_accepts_route3_candidate(self) -> None:
         generator = WikipediaInfoboxTableGenerator(
             urls=["https://en.wikipedia.org/wiki/2026_FIFA_World_Cup"],
             wikipedia_client=FakeWikipediaClient(),
@@ -4928,8 +4926,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             settings = Settings(
                 target_time="2024",
                 pilot_total=1,
-                output_path=Path(tmpdir) / "accepted.jsonl",
-                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
                 enabled_routes=("route3_wikipedia_infobox",),
             )
             result = process_route3_candidates(
@@ -4974,8 +4970,6 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             settings = Settings(
                 target_time="2024",
                 pilot_total=1,
-                output_path=Path(tmpdir) / "accepted.jsonl",
-                rejected_output_path=Path(tmpdir) / "rejected.jsonl",
                 enabled_routes=("route3_wikipedia_infobox",),
             )
             result = process_route3_candidates(

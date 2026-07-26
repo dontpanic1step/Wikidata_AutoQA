@@ -1,4 +1,4 @@
-"""Runtime configuration for the Stage 1 vertical slice."""
+"""Runtime configuration for the formal Route 3 workflow."""
 
 from __future__ import annotations
 
@@ -54,7 +54,7 @@ def _default_second_stage_grading_grader_llm() -> "LLMConfig":
 
 @dataclass(slots=True)
 class LLMConfig:
-    """Configuration for one-shot rewrite calls."""
+    """Configuration for one Route 3 OpenRouter client."""
 
     provider: str
     model: str
@@ -70,13 +70,11 @@ class LLMConfig:
 
 @dataclass(slots=True)
 class Settings:
-    """Configuration for generation and output writing."""
+    """Configuration shared by the supported Route 3 entry points."""
 
     target_time: str
     run_date: str = field(default_factory=lambda: date.today().isoformat())
-    date_upper_bound: str | None = None
     pilot_total: int = 20
-    harvest_limit_per_template: int = 100
     cutoff_year: int = 2025
     enabled_routes: tuple[str, ...] = ()
     duckduckgo_top_k: int = 10
@@ -98,39 +96,16 @@ class Settings:
     second_stage_grading_grader_llm: LLMConfig | None = field(
         default_factory=_default_second_stage_grading_grader_llm
     )
-    longtail_prefilter_max_sitelinks: int = 80
-    longtail_prefilter_max_claims: int = 400
     search_longtail_max_full_question_hit_rate: float = 0.3
     search_longtail_max_keyword_hit_rate: float = 0.3
     search_longtail_max_overall_hit_rate: float = 0.3
-    allow_year_in_official_title: bool = False
-    reject_future_dated_candidates: bool = True
-    reject_current_or_latest_facts: bool = True
-    reject_mutable_relationships: bool = True
-    reject_mutable_affiliations: bool = True
-    reject_cumulative_statistics: bool = True
-    reject_unreleased_works: bool = True
     user_agent: str = "wikidata-simpleqa-generator/0.1"
     proxy: str | None = None
     timeout_seconds: float = 30.0
-    wikidata_max_entity_ids_per_request: int = 50
-    wikidata_log_checkpoints: bool = False
-    live_probe_mode: bool = False
-    live_probe_harvest_limit: int = 2
-    live_probe_max_entity_ids_per_request: int = 10
-    route1_light_fallback_enabled: bool = True
-    route1_subject_seed_window_granularity: str = "year"
-    random_seed: int = 42
     cache_dir: Path = Path("cache/wikidata")
-    output_path: Path = Path("outputs/pilot_accepted.jsonl")
-    rejected_output_path: Path = Path("outputs/pilot_rejected.jsonl")
-    rewrite_enabled: bool = False
-    rewrite_llm: LLMConfig | None = None
 
     def __post_init__(self) -> None:
         self.proxy = normalize_proxy(self.proxy)
-        if self.date_upper_bound is None:
-            self.date_upper_bound = self.run_date
         self.target_time = self.target_time.strip()
         self._validate_target_time()
         if not 0.0 <= self.second_stage_grading_accuracy_threshold <= 1.0:
@@ -155,18 +130,6 @@ class Settings:
             raise ValueError("duckduckgo_cooldown_max_seconds must be at least duckduckgo_cooldown_initial_seconds")
         if self.generated_search_query_count < 0:
             raise ValueError("generated_search_query_count must be non-negative")
-        if self.route1_subject_seed_window_granularity not in {"year", "month", "day"}:
-            raise ValueError("route1_subject_seed_window_granularity must be one of: year, month, day")
-        if self.live_probe_mode:
-            self.harvest_limit_per_template = min(
-                self.harvest_limit_per_template,
-                self.live_probe_harvest_limit,
-            )
-            self.wikidata_max_entity_ids_per_request = min(
-                self.wikidata_max_entity_ids_per_request,
-                self.live_probe_max_entity_ids_per_request,
-            )
-            self.wikidata_log_checkpoints = True
 
     @property
     def target_start_date(self) -> str:
