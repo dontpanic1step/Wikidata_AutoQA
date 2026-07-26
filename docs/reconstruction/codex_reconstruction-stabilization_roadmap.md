@@ -14,8 +14,9 @@ The branch slash is normalized to an underscore in this filename because `/` can
 | Finalization | `scripts/finalize_route3_review.py` | Validates current review state and emits final CSV | None |
 | Independent prediction | `scripts/run_openrouter_batch_predictions.py` | Runs evaluation-model predictions | OpenRouter |
 | Independent judging | `scripts/judge_openrouter_batch_predictions.py` | Applies the protected SimpleQA Verified-style grader | OpenRouter |
+| Verification-agent handoff | `scripts/convert_batch_evaluation_for_verification_agent.py` | Batch-converts conforming top-level evaluation JSONL into a new agent-input directory | None |
 
-Route 1, Route 2, Route 4, KELM, the old finalization workflow, and `scripts/run_openrouter_night_batch.py` are historical. The night orchestrator is unused. The two protected evaluation scripts remain supported but are deliberately outside generation, review, and finalization. Prediction input is CSV only; prediction and judge artifacts remain JSONL.
+Route 1, Route 2, Route 4, KELM, the old finalization workflow, and `scripts/run_openrouter_night_batch.py` are historical. The night orchestrator is unused. The two protected evaluation scripts remain supported but are deliberately outside generation, review, and finalization. Prediction input is CSV only; prediction and judge artifacts remain JSONL. The offline handoff adapter is downstream interoperability code, not a third evaluator or a generation/finalization stage.
 
 ### Current stabilization baseline
 
@@ -34,6 +35,7 @@ Cleanup must treat the following behaviors as fixed:
 - unexpected Python or persistence exceptions keep the attempt uncommitted and propagate with traceback;
 - review reruns convert returned rejection to `rejected`, while exceptions leave persisted review state pending rerun;
 - prediction input is CSV only, mapping Route 3 `id/problem/answer` or SimpleQA Verified `original_index/problem/answer` into the unchanged prediction call path.
+- the handoff adapter scans one directory non-recursively, selects files by the protected output schema, writes one same-named `model_jsonl` per qualifying file to a new directory, and preserves source JSON while leaving protected artifacts unchanged.
 
 ## 2. End-to-end call chain
 
@@ -90,6 +92,14 @@ Route 3 final CSV or SimpleQA Verified CSV
   -> prediction JSONL
   -> scripts/judge_openrouter_batch_predictions.py
   -> judged JSONL
+
+Directory of prediction or judged JSONL files
+  -> scripts/convert_batch_evaluation_for_verification_agent.py
+       -> non-recursive schema selection and conversion planning
+  -> new directory of same-named model_jsonl files plus conversion_summary.json
+  -> each model_jsonl may enter external Project Verification Agent runs/run_simpleqa_entry.py
+       -> clean responses -> split claims -> retrieve evidence
+       -> one evidence pool shared by exact query text
 ```
 
 The recipe also imports private reporting helpers directly from the internal worker. It imports `_aggregate_phase_timings`, `_effective_stream_random_seed`, `_failure_reason_counts`, `_ensure_page_id_list_entry_metadata`, `_load_endpoint_jsonl`, `_phase_timing_stats`, `_llm_generation_table_yield_summary`, `_normalize_stream_fresh_cached_page_count`, `_normalize_stream_reuse_cached_page_count`, `_safe_artifact_id`, `_stream_budget_numeric_count`, `_survival_by_layer`, and `_write_stream_walkthrough`. The worker therefore cannot be deleted or freely rewritten merely because it is not user-facing.
@@ -110,6 +120,7 @@ The recipe also imports private reporting helpers directly from the internal wor
 | Final CSV | `route3_finalization.py` | Validated output projection with exact public columns |
 | Prediction JSONL | `run_openrouter_batch_predictions.py` | Independent model answers derived from CSV input |
 | Judged JSONL | `judge_openrouter_batch_predictions.py` | Independent SimpleQA Verified-style grading artifact |
+| Verification-agent input directory | `convert_batch_evaluation_for_verification_agent.py` | Same-named lossless `model_jsonl` projections plus conversion summary; source prediction/judged JSONL remains authoritative |
 
 Deletion work must preserve the authority order: manifest, allocation, page archive, external-call record, terminal attempt ledger, then rebuildable projections. The `*_state.json` generation file stores discovery telemetry and is not allocation or retry authority.
 
@@ -124,6 +135,7 @@ Deletion work must preserve the authority order: manifest, allocation, page arch
 | Finalization | `route3_artifacts`, `route3_quantity_prediction`, `route3_review` | No network dependency; imports XLSX review code because workbook parsing lives in `route3_review.py` |
 | Search | `search_client`, `search_cli`, `network` | `ddgs` is preferred; urllib HTML/Lite behavior remains part of the current bounded search implementation |
 | Protected evaluation | self-contained scripts plus standard-library `csv` and `requests` | Input is CSV and prediction/judge artifacts are JSONL; keep independent from Route 3 durable execution and do not reorganize protected prompts, calls, or grading semantics |
+| Verification-agent handoff | self-contained standard-library adapter | Selects and converts files offline without recursion; keep it downstream of protected evaluation and independent from Route 3 and the external agent implementation |
 
 ## 5. Third-party and environment dependencies
 
@@ -262,6 +274,7 @@ Do not combine route deletion with output-schema redesign, fallback changes, pro
 | Review and quantity prediction | `tests/test_route3_review.py`, `tests/test_route3_quantity_prediction.py` |
 | Finalization | `tests/test_route3_finalization.py` |
 | Protected evaluation | `tests/test_openrouter_batch_scripts.py` |
+| Verification-agent handoff | `tests/test_verification_agent_adapter.py` |
 | Any historical deletion | All focused tests above, then `python -m pytest tests -q -p no:cacheprovider --basetemp=tmp\pytest-cleanup` |
 
 Run every Python and test command after activating `simpleqa_synth`. The counts in section 1 record the current stabilization evidence; future cleanup must not hard-code them as a pass condition. Scope the complete suite to `tests/` because output directories may contain inaccessible run artifacts, and use a unique writable `--basetemp` for each concurrent or repeated run.
@@ -285,6 +298,8 @@ Run every Python and test command after activating `simpleqa_synth`. The counts 
 - No new fallback, heuristic gate, or defensive recovery path is introduced during cleanup.
 - Protected prediction input remains CSV only with `id` or `original_index` normalized to output `id`; prediction and judge artifacts remain JSONL.
 - Protected evaluation prompts, OpenRouter call behavior, and grader semantics remain independent and unchanged.
+- The handoff writes one same-named file per schema-conforming top-level input into a new directory, emits the real external entry's primary `original_index/query/model/response` fields, and keeps each file's question rounds contiguous; `reference_answer` is retained metadata, not verification evidence.
+- The handoff preserves every source JSON value across reconstructable agent rows and `conversion_summary.json.unconverted_items`; invalid or empty responses never become claims and are never silently omitted.
 
 ## 11. Evidence commands for the next cleanup session
 
@@ -302,6 +317,8 @@ python scripts\run_route3_review.py --help
 python scripts\finalize_route3_review.py --help
 python scripts\run_openrouter_batch_predictions.py --help
 python scripts\judge_openrouter_batch_predictions.py --help
+python scripts\convert_batch_evaluation_for_verification_agent.py --help
+python -m pytest tests\test_verification_agent_adapter.py -q -p no:cacheprovider --basetemp=tmp\pytest-verification-agent-adapter
 python -m pytest tests -q -p no:cacheprovider --basetemp=tmp\pytest-cleanup-route3
 ```
 

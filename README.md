@@ -348,6 +348,51 @@ python scripts\judge_openrouter_batch_predictions.py `
 
 Both commands read the OpenRouter key from `OPENROUTER_API_KEY` by default. Use each command's `--help` output for the retained batch-evaluation options.
 
+### Project Verification Agent handoff
+
+Use the offline adapter with an input directory and a new output directory:
+
+```powershell
+python scripts\convert_batch_evaluation_for_verification_agent.py `
+  outputs\openrouter_batch_judged `
+  outputs\verification_agent_inputs
+```
+
+The adapter scans only top-level `*.jsonl` files; it never recurses. A file qualifies by content, not by filename: every nonblank line must have the current batch prediction/judging output fields `id`, `question`, `answer`, and `predictions`, with `predictions` as a list of objects. Nonconforming JSONL files are skipped and listed in the summary.
+
+Each qualifying source file is converted independently to a same-named JSONL file in the new output directory. The output directory must not already exist. `conversion_summary.json` records every converted and skipped source, output path, source-record count, response-row count, question-group count, skip reason, and every source item that could not become an agent response row.
+
+Each source `predictions[]` item becomes one response row. Rows within each output file are clustered by stable `(question_id, query)`, so all rounds for a question remain contiguous. Dataset-level IDs such as `original_index` or `simpleqa_verified_id` take precedence over model/repeat-specific row IDs.
+
+The output's primary fields are the exact first-choice fields read by the real Project Verification Agent entry point, `runs/run_simpleqa_entry.py`:
+
+```json
+{
+  "original_index": "stable-question-id",
+  "query": "The original question",
+  "model": "provider/model",
+  "response": "One model response",
+  "reference_answer": "retained source metadata",
+  "verification_agent_adapter": {
+    "schema_version": 1,
+    "source_file": "absolute source path",
+    "source_line_number": 1,
+    "prediction_index": 0,
+    "prediction_count": 5,
+    "batch_record": {},
+    "batch_prediction": {}
+  }
+}
+```
+
+The agent groups equal `(id, query)` rows into one sample's model outputs; retrieval then shares a question evidence pool by exact `query` within that run. `reference_answer` is preserved for audit only and is not supplied as evidence or used as the claim verdict target.
+
+No source JSON value is discarded: `batch_record` contains the unchanged parent fields except `predictions`, and `batch_prediction` contains the unchanged selected prediction, including raw OpenRouter responses, token usage, request settings, errors, and judge audit when present. Source file, line, prediction index, and prediction count make each original record reconstructable in source order.
+
+The complete directory is inspected before the new output directory is created. Empty prediction lists, empty model responses, missing stable identity/question values, and unresolved model IDs are not emitted as agent claims. Instead, `unconverted_items` in `conversion_summary.json` retains the exact parent record (apart from its separately represented `predictions` list), exact prediction when present, source file/line/index/count, and reason. A qualifying file with no usable responses produces no empty agent JSONL and is listed as skipped, while its source data remains in the summary. Use `--model-fallback` only when the exact model ID cannot be recovered from record content or the current batch filename.
+
+Project Verification Agent's current code slices raw input rows with `START_LINE` and `NUM_LINES` before grouping model outputs. Configure that entry to include the intended number of converted response rows; it does not interpret the limit as a question count and can cut through a contiguous question group.
+
 ## Historical-code cleanup preparation
 
 Later cleanup may remove Route 1, Route 2, Route 4, KELM, old finalization, and other historical entry points only after the supported import closure is narrowed. Current Route 3 startup still reaches historical code through two main couplings:
