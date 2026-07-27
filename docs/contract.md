@@ -11,7 +11,7 @@ This document summarizes the implemented, non-negotiable method from `AGENTS.md`
 - Route 1, Route 2, Route 4, KELM, and the old finalization workflow are historical code.
 - `scripts/run_openrouter_night_batch.py` is an unused historical orchestrator, not a formal evaluation entry point.
 - Historical modules may remain import-time dependencies, but must not be presented, maintained, or invoked as formal generation paths.
-- The old rule-based gates listed in the formal section of `docs/design.md` are excluded and must not be replaced by new heuristics.
+- Only legacy rule-based gates explicitly scheduled for removal are excluded. This is not a blanket removal: implemented rule-based gates that were not explicitly removed remain part of the formal pipeline, and removed gates must not be replaced by new heuristics.
 
 ## Formal automated order
 

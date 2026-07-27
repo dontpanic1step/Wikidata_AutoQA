@@ -236,6 +236,40 @@ class GeneratorValidatorTests(unittest.TestCase):
         self.assertTrue(result.matched)
         self.assertEqual(result.details["rule"], "no_rule_for_answer_type")
 
+    def test_place_answer_type_accepts_curated_category_expansion(self) -> None:
+        categories = {
+            "peak",
+            "highest peak",
+            "launch pad",
+            "reserve",
+            "biosphere reserve",
+            "national park",
+            "depot",
+            "sports ground",
+            "park",
+            "cemetery",
+            "temple",
+            "street",
+            "railway station",
+            "reach",
+            "racing circuit",
+            "harbor",
+            "historical hundred",
+            "township",
+            "exhibition centre",
+            "road",
+        }
+        for category in categories:
+            with self.subTest(category=category):
+                candidate = make_generated_candidate()
+                candidate.answer_type = "Place"
+                candidate.question = f"In which {category} is Example Film located?"
+
+                result = evaluate_candidate_answer_type_gate(candidate)
+
+                self.assertTrue(result.matched)
+                self.assertEqual(result.details["extracted_category"], category)
+
     def test_removed_rule_helpers_are_absent(self) -> None:
         self.assertFalse(hasattr(route3_quality_rules, "oversized_table_filter_reasons"))
         self.assertFalse(hasattr(generator_validator_module, "run_fact_level_longtail_prefilter"))

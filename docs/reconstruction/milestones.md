@@ -26,7 +26,7 @@
 - recipe 是唯一用户入口；
 - worker 是内部 segment 执行器；
 - Route 1/2、KELM 和旧 finalization 是历史代码；
-- 本轮新增列出的旧 rule-based gates 均不属于正式方法。
+- 仅本轮明确指定移除的旧 rule-based gates 不属于正式方法；这不表示全部 rule-based gates 都被删除，未明确移除且仍在实现中的 gates 继续属于正式流程。
 
 特别保留：
 
