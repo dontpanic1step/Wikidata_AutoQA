@@ -483,25 +483,26 @@ def process_prediction_task(
     progress: ProgressTracker,
 ) -> None:
     started_at = time.monotonic()
-    ok = False
-    try:
-        response = call_openrouter(
-            model=task.model,
-            user_content=build_user_content(task.record, settings.blob_mode),
-            settings=settings,
-        )
+    response, raw_response, error = call_openrouter(
+        model=task.model,
+        user_content=build_user_content(task.record, settings.blob_mode),
+        settings=settings,
+    )
+    ok = error is None
+    if response is not None:
         prediction = prediction_from_response(
             response,
+            raw_response=raw_response or "",
             request_settings=request_settings_for_output(
                 model=task.model,
                 settings=settings,
             ),
         )
-        ok = True
-    except Exception as exc:  # noqa: BLE001
+    else:
         prediction = {
             "answer": "",
-            "error": f"{type(exc).__name__}: {exc}",
+            "error": error,
+            "raw_response": raw_response,
             "request_settings": request_settings_for_output(
                 model=task.model,
                 settings=settings,
@@ -509,7 +510,7 @@ def process_prediction_task(
         }
         print(
             f"[error] {task.model} {task.input_name} record={task.record_index} "
-            f"round={task.round_number}: {exc}",
+            f"round={task.round_number}: {error}",
             flush=True,
         )
 
@@ -553,7 +554,12 @@ def build_user_content(record: dict[str, Any], blob_mode: str) -> str:
     return question
 
 
-def call_openrouter(*, model: str, user_content: str, settings: RunSettings) -> dict[str, Any]:
+def call_openrouter(
+    *,
+    model: str,
+    user_content: str,
+    settings: RunSettings,
+) -> tuple[dict[str, Any] | None, str | None, str | None]:
     payload: dict[str, Any] = {
         "model": model,
         "temperature": settings.temperature,
@@ -577,6 +583,7 @@ def call_openrouter(*, model: str, user_content: str, settings: RunSettings) -> 
         "X-Title": OPENROUTER_TITLE,
     }
     last_error: str | None = None
+    raw_response: str | None = None
 
     for attempt in range(settings.max_retries + 1):
         try:
@@ -587,17 +594,18 @@ def call_openrouter(*, model: str, user_content: str, settings: RunSettings) -> 
                 timeout=settings.timeout_seconds,
                 proxies=requests_proxies(settings.proxy),
             )
+            raw_response = response.text
             if response.status_code in RETRY_STATUS_CODES:
-                last_error = f"HTTP {response.status_code}: {response.text[:800]}"
+                last_error = f"HTTP {response.status_code}: {raw_response}"
                 if attempt >= settings.max_retries:
                     break
                 sleep_before_retry(attempt, settings, retry_after=response.headers.get("Retry-After"))
                 continue
             if response.status_code != 200:
-                raise RuntimeError(f"HTTP {response.status_code}: {response.text[:800]}")
+                raise RuntimeError(f"HTTP {response.status_code}: {raw_response}")
             data = response.json()
             validate_openrouter_response(data, model=model)
-            return data
+            return data, raw_response, None
         except (
             TimeoutError,
             ConnectionError,
@@ -611,7 +619,8 @@ def call_openrouter(*, model: str, user_content: str, settings: RunSettings) -> 
                 break
             sleep_before_retry(attempt, settings, retry_after=None)
 
-    raise RuntimeError(f"OpenRouter call failed after retries. Last error: {last_error}")
+    error = f"OpenRouter call failed after retries. Last error: {last_error}"
+    return None, raw_response, error
 
 
 def apply_reasoning_settings(
@@ -685,20 +694,21 @@ def validate_openrouter_response(data: dict[str, Any], *, model: str) -> None:
         raise RuntimeError(f"OpenRouter JSON error for {model}: {error}")
     choices = data.get("choices")
     if not isinstance(choices, list) or not choices:
-        snippet = json.dumps(data, ensure_ascii=False)[:800]
-        raise RuntimeError(f"OpenRouter returned no choices for {model}: {snippet}")
+        raw_json = json.dumps(data, ensure_ascii=False)
+        raise RuntimeError(f"OpenRouter returned no choices for {model}: {raw_json}")
     message = (choices[0] or {}).get("message")
     if not isinstance(message, dict):
-        snippet = json.dumps(data, ensure_ascii=False)[:800]
-        raise RuntimeError(f"OpenRouter returned empty message for {model}: {snippet}")
+        raw_json = json.dumps(data, ensure_ascii=False)
+        raise RuntimeError(f"OpenRouter returned empty message for {model}: {raw_json}")
 
 
 def prediction_from_response(
     data: dict[str, Any],
     *,
+    raw_response: str,
     request_settings: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Return the raw predicted answer plus the unmodified OpenRouter response."""
+    """Return the predicted answer plus the complete original HTTP response body."""
     choice = (data.get("choices") or [{}])[0] or {}
     message = choice.get("message") or {}
     usage = dict(data.get("usage") or {})
@@ -706,7 +716,7 @@ def prediction_from_response(
     usage["native_finish_reason"] = choice.get("native_finish_reason")
     return {
         "answer": message.get("content"),
-        "raw_response": data,
+        "raw_response": raw_response,
         "usage": usage,
         "request_settings": request_settings if isinstance(request_settings, dict) else {},
     }

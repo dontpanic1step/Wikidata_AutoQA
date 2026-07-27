@@ -3,6 +3,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import importlib.util
+import json
 from pathlib import Path
 import sys
 from types import ModuleType, SimpleNamespace
@@ -242,7 +243,7 @@ def test_unknown_model_accepts_explicit_effort_or_provider_defaults() -> None:
     assert provider_payload == {}
 
 
-def test_prediction_from_response_preserves_raw_openrouter_response() -> None:
+def test_prediction_from_response_preserves_complete_raw_openrouter_response() -> None:
     module = load_script_module(
         "run_openrouter_batch_predictions",
         "scripts/run_openrouter_batch_predictions.py",
@@ -263,16 +264,16 @@ def test_prediction_from_response_preserves_raw_openrouter_response() -> None:
         "usage": {"prompt_tokens": 3, "completion_tokens": 5},
     }
 
+    raw_response = json.dumps(response, ensure_ascii=False)
     prediction = module.prediction_from_response(
         response,
+        raw_response=raw_response,
         request_settings={"reasoning": {"effort": "xhigh", "exclude": False}},
     )
 
     assert prediction["answer"] == "<step>internal-looking text</step>\nFinal answer"
-    assert prediction["raw_response"] is response
-    assert prediction["raw_response"]["choices"][0]["message"]["reasoning"] == (
-        "optional provider reasoning"
-    )
+    assert prediction["raw_response"] == raw_response
+    assert "optional provider reasoning" in prediction["raw_response"]
     assert prediction["request_settings"]["reasoning"]["exclude"] is False
 
 
@@ -435,7 +436,7 @@ def test_prediction_runner_user_message_and_mocked_response(monkeypatch, tmp_pat
         {"question": "Which city hosted the example event?", "blob": "Context"},
         "ignore",
     )
-    response = module.call_openrouter(
+    response, raw_response, error = module.call_openrouter(
         model="example/model",
         user_content=user_content,
         settings=settings,
@@ -448,7 +449,64 @@ def test_prediction_runner_user_message_and_mocked_response(monkeypatch, tmp_pat
             {"role": "user", "content": "Which city hosted the example event?"}
         ],
     }
+    assert response is not None
     assert response["choices"][0]["message"]["content"] == "Example City"
+    assert raw_response == "ok"
+    assert error is None
+
+
+@pytest.mark.parametrize("status_code", [400, 200])
+def test_prediction_failures_preserve_complete_raw_response(
+    monkeypatch,
+    tmp_path: Path,
+    status_code: int,
+) -> None:
+    module = load_script_module(
+        f"run_openrouter_batch_predictions_failure_{status_code}",
+        "scripts/run_openrouter_batch_predictions.py",
+    )
+    body = "failure-body-" + ("x" * 1200)
+
+    class MockResponse:
+        headers: dict[str, str] = {}
+
+        def __init__(self) -> None:
+            self.status_code = status_code
+            self.text = body
+
+        def json(self):
+            raise json.JSONDecodeError("invalid JSON", self.text, 0)
+
+    monkeypatch.setattr(module.requests, "post", lambda *args, **kwargs: MockResponse())
+    settings = module.RunSettings(
+        api_key="test-key",
+        models=["example/model"],
+        output_dir=tmp_path,
+        rounds=1,
+        concurrency=1,
+        timeout_seconds=1.0,
+        max_retries=0,
+        backoff_base=0.0,
+        backoff_cap_seconds=0.0,
+        max_tokens=None,
+        temperature=0.0,
+        reasoning_effort="auto",
+        use_provider_reasoning_defaults=True,
+        proxy=None,
+        blob_mode="ignore",
+        limit=None,
+    )
+
+    response, raw_response, error = module.call_openrouter(
+        model="example/model",
+        user_content="Question?",
+        settings=settings,
+    )
+
+    assert response is None
+    assert raw_response == body
+    assert len(raw_response) > 800
+    assert error is not None
 
 
 def test_judge_cli_defaults_to_simple_evals_max_tokens(monkeypatch) -> None:
@@ -519,14 +577,55 @@ def test_judge_grade_mapping_and_unparseable_default(monkeypatch) -> None:
         "messages": [{"role": "user", "content": expected_prompt}],
         "max_tokens": 2048,
     }
-    assert result["raw_response"] == {
-        "choices": [
-            {"message": {"role": "assistant", "content": "unparseable response"}}
-        ]
-    }
+    assert result["raw_response"] == "ok"
     assert result["letter"] == "C"
     assert result["grade"] == "NOT_ATTEMPTED"
     assert result["status"] == "success"
+
+
+@pytest.mark.parametrize("status_code", [400, 200])
+def test_judge_failures_preserve_complete_raw_response(
+    monkeypatch,
+    status_code: int,
+) -> None:
+    module = load_script_module(
+        f"judge_openrouter_batch_predictions_failure_{status_code}",
+        "scripts/judge_openrouter_batch_predictions.py",
+    )
+    body = "judge-failure-body-" + ("y" * 1200)
+
+    class MockResponse:
+        headers: dict[str, str] = {}
+
+        def __init__(self) -> None:
+            self.status_code = status_code
+            self.text = body
+
+        def json(self):
+            raise json.JSONDecodeError("invalid JSON", self.text, 0)
+
+    monkeypatch.setattr(module.requests, "post", lambda *args, **kwargs: MockResponse())
+    client = module.OpenRouterJudgeClient(
+        api_key="test-key",
+        model="openai/gpt-4.1-mini",
+        timeout_seconds=1.0,
+        max_retries=0,
+        backoff_base=0.0,
+        backoff_cap_seconds=0.0,
+        temperature=0.0,
+        max_tokens=2048,
+        proxy=None,
+    )
+
+    result = client.grade(
+        question="Question?",
+        target="Gold",
+        predicted_answer="Prediction",
+    )
+
+    assert result["raw_response"] == body
+    assert len(result["raw_response"]) > 800
+    assert result["status"] == "error"
 
 
 def test_prediction_output_is_readable_by_judge(tmp_path: Path) -> None:

@@ -235,19 +235,21 @@ class OpenRouterJudgeClient:
             predicted_answer=predicted_answer,
         )
         request_settings = self.request_settings()
-        raw_response: dict[str, Any] | None = None
-        try:
-            raw_response = self.complete_response(prompt)
-            text = str(raw_response["choices"][0]["message"]["content"]).strip()
-            letter = parse_choice_letter(text)
-            status = "success" if letter in CHOICE_LETTERS else "unparseable"
-        except Exception as exc:  # noqa: BLE001
-            print(f"[error] judge {self.model}: {type(exc).__name__}: {exc}")
+        response, raw_response, error = self.complete_response(prompt)
+        if response is None:
+            print(f"[error] judge {self.model}: {error}")
             letter = DEFAULT_GRADE_IF_UNPARSEABLE
             status = "error"
-            error = f"{type(exc).__name__}: {exc}"
         else:
-            error = ""
+            try:
+                text = str(response["choices"][0]["message"]["content"]).strip()
+                letter = parse_choice_letter(text)
+                status = "success" if letter in CHOICE_LETTERS else "unparseable"
+            except (KeyError, TypeError, IndexError) as exc:
+                print(f"[error] judge {self.model}: {type(exc).__name__}: {exc}")
+                letter = DEFAULT_GRADE_IF_UNPARSEABLE
+                status = "error"
+                error = f"{type(exc).__name__}: {exc}"
         if letter not in CHOICE_LETTERS:
             letter = DEFAULT_GRADE_IF_UNPARSEABLE
         result: dict[str, Any] = {
@@ -256,9 +258,8 @@ class OpenRouterJudgeClient:
             "grade": CHOICE_LETTER_TO_STRING[letter],
             "status": status,
             "request_settings": request_settings,
+            "raw_response": raw_response,
         }
-        if raw_response is not None:
-            result["raw_response"] = raw_response
         if error:
             result["error"] = error
         return result
@@ -271,8 +272,11 @@ class OpenRouterJudgeClient:
             "proxy": self.proxy,
         }
 
-    def complete_response(self, prompt: str) -> dict[str, Any]:
-        """Return the unmodified OpenRouter response object for one judge call."""
+    def complete_response(
+        self,
+        prompt: str,
+    ) -> tuple[dict[str, Any] | None, str | None, str | None]:
+        """Return parsed JSON, the complete response body, and any request error."""
         payload = {
             "model": self.model,
             "temperature": self.temperature,
@@ -282,8 +286,12 @@ class OpenRouterJudgeClient:
             payload["max_tokens"] = self.max_tokens
         return self._request_with_retry(payload)
 
-    def _request_with_retry(self, payload: dict[str, Any]) -> dict[str, Any]:
+    def _request_with_retry(
+        self,
+        payload: dict[str, Any],
+    ) -> tuple[dict[str, Any] | None, str | None, str | None]:
         last_error: str | None = None
+        raw_response: str | None = None
         for attempt in range(self.max_retries + 1):
             headers = {
                     "Authorization": f"Bearer {self.api_key}",
@@ -301,8 +309,9 @@ class OpenRouterJudgeClient:
                     timeout=self.timeout_seconds,
                     proxies=requests_proxies(self.proxy),
                 )
+                raw_response = response.text
                 if response.status_code in RETRY_STATUS_CODES:
-                    last_error = f"HTTP {response.status_code}: {response.text[:800]}"
+                    last_error = f"HTTP {response.status_code}: {raw_response}"
                     if attempt >= self.max_retries:
                         break
                     sleep_before_retry(
@@ -313,14 +322,13 @@ class OpenRouterJudgeClient:
                     )
                     continue
                 if response.status_code != 200:
-                    raise RuntimeError(f"HTTP {response.status_code}: {response.text[:800]}")
-                return response.json()
+                    raise RuntimeError(f"HTTP {response.status_code}: {raw_response}")
+                return response.json(), raw_response, None
             except (
                 TimeoutError,
                 ConnectionError,
                 OSError,
                 json.JSONDecodeError,
-                KeyError,
                 requests.RequestException,
                 RuntimeError,
             ) as exc:
@@ -333,7 +341,8 @@ class OpenRouterJudgeClient:
                     cap=self.backoff_cap_seconds,
                     retry_after=None,
                 )
-        raise RuntimeError(f"Judge request failed for {self.model}. Last error: {last_error}")
+        error = f"Judge request failed for {self.model}. Last error: {last_error}"
+        return None, raw_response, error
 
 
 def parse_choice_letter(text: str) -> str:
