@@ -49,6 +49,7 @@ from wikidata_simpleqa.route3_openrouter import (
 from wikidata_simpleqa.route3_run_ledger import (
     SegmentLedgerIndex,
     atomic_write_json,
+    canonical_json_sha256,
     derived_records,
     ledger_summary,
     load_segment_manifest,
@@ -307,6 +308,12 @@ def parse_args() -> argparse.Namespace:
         "--page-allocation-ledger-dir",
         type=Path,
         required=True,
+        help=argparse.SUPPRESS,
+    )
+    parser.add_argument(
+        "--excluded-page-ids-file",
+        type=Path,
+        default=None,
         help=argparse.SUPPRESS,
     )
     parser.add_argument(
@@ -616,6 +623,20 @@ def main() -> int:
     )
     print_json_summary(summary)
     return 0
+
+
+def _load_external_page_exclusion(path: Path | None) -> tuple[set[int], str]:
+    """Load and verify one frozen external page-ID exclusion snapshot."""
+    if path is None:
+        return set(), ""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    page_ids = sorted({int(page_id) for page_id in payload["page_ids"]})
+    page_ids_sha256 = canonical_json_sha256(page_ids)
+    if len(page_ids) != int(payload["page_id_count"]):
+        raise ValueError(f"External page exclusion count mismatch: {path}")
+    if page_ids_sha256 != str(payload["page_ids_sha256"]):
+        raise ValueError(f"External page exclusion hash mismatch: {path}")
+    return set(page_ids), page_ids_sha256
 
 
 def _load_endpoint_resume(args: argparse.Namespace) -> EndpointResumeState:
@@ -1067,6 +1088,9 @@ def _run_streaming_page_id_pipeline(
         segment_id=run_segment_id(args),
         run_group_segments_dir=args.run_group_segments_dir,
     )
+    external_excluded_page_ids, external_excluded_page_ids_sha256 = _load_external_page_exclusion(
+        args.excluded_page_ids_file
+    )
     ambiguous_calls = scan_ambiguous_external_calls(args.external_call_record_dir)
     quarantined_page_ids = {
         int(row["page_id"])
@@ -1082,6 +1106,7 @@ def _run_streaming_page_id_pipeline(
     primary_page_ids_at_start = ledger_index.primary_page_ids
     run_group_allocated_page_ids = ledger_index.run_group_page_ids
     run_group_allocated_page_count_at_start = len(run_group_allocated_page_ids)
+    state.used_ids.update(external_excluded_page_ids)
     state.used_ids.update(run_group_allocated_page_ids)
     _initialize_table_search_offsets(state, args)
     endpoint_sync = {"accepted_ids_synced": 0, "rejected_ids_synced": 0}
@@ -1173,7 +1198,7 @@ def _run_streaming_page_id_pipeline(
             state=state,
             args=args,
             requested_count=request_count,
-            excluded_page_ids=run_group_allocated_page_ids,
+            excluded_page_ids=external_excluded_page_ids | run_group_allocated_page_ids,
         )
         if not entries:
             break
@@ -1205,7 +1230,7 @@ def _run_streaming_page_id_pipeline(
             wikipedia_client=wikipedia_client,
             rng=rng,
             count=request_count,
-            excluded_page_ids=run_group_allocated_page_ids,
+            excluded_page_ids=external_excluded_page_ids | run_group_allocated_page_ids,
         )
         if not reserved_ids:
             break
@@ -1235,6 +1260,9 @@ def _run_streaming_page_id_pipeline(
         if str(row.get("page_source", "")) == "fresh"
     ]
     all_decision_records = [*accepted_records, *rejected_records]
+    external_exclusion_collisions = ledger_index.primary_page_ids & external_excluded_page_ids
+    if external_exclusion_collisions:
+        raise RuntimeError("external page exclusion violated")
     summary = {
         **_run_artifact_summary(args),
         "start_stage": "generate",
@@ -1248,6 +1276,9 @@ def _run_streaming_page_id_pipeline(
         "stream_search_queries": _stream_search_queries(),
         "stream_search_offsets": state.table_search_offsets.copy(),
         "run_group_allocated_page_ids_at_start": run_group_allocated_page_count_at_start,
+        "external_excluded_page_count": len(external_excluded_page_ids),
+        "external_excluded_page_ids_sha256": external_excluded_page_ids_sha256,
+        "external_exclusion_collision_count": len(external_exclusion_collisions),
         "run_date": settings.run_date,
         "stream_state": str(args.stream_state),
         "page_attempt_ledger_dir": str(args.page_attempt_ledger_dir),
@@ -2264,18 +2295,24 @@ def _reserve_stream_page_ids(
         made_progress = False
         for query in queries:
             offset = state.table_search_offset(query)
+            request_limit = min(
+                args.stream_search_limit,
+                count - len(selected),
+            )
             hits = _search_page_ids_with_retries(
                 wikipedia_client,
                 query=query,
                 namespace=0,
-                limit=args.stream_search_limit,
+                limit=request_limit,
                 offset=offset,
                 args=args,
                 state=state,
             )
             if hits is None:
                 continue
-            state.advance_table_search_offset(query, args.stream_search_limit)
+            if not hits:
+                continue
+            state.advance_table_search_offset(query, len(hits))
             reserved: list[int] = []
             for hit in hits:
                 page_id = hit.page_id
@@ -2293,8 +2330,7 @@ def _reserve_stream_page_ids(
                     f"table_search:{query}:offset={offset}",
                 )
                 state.save()
-            if hits:
-                made_progress = True
+            made_progress = True
             _extend_unique_page_ids(selected, reserved)
             if len(selected) >= count:
                 break

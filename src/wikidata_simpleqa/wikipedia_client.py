@@ -108,6 +108,8 @@ class WikipediaClient:
             offset=bounded_offset,
         )
         payload = self._fetch_json(url)
+        if isinstance(payload, dict) and "error" in payload:
+            raise RuntimeError(f"MediaWiki search error: {payload['error']}")
         rows = payload.get("query", {}).get("search", []) if isinstance(payload, dict) else []
         hits: list[WikipediaSearchHit] = []
         for row in rows:

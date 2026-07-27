@@ -942,10 +942,15 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
         self.assertEqual(state.in_progress_ids, {103})
         self.assertTrue(any(event.get("event") == "reserve_cached_page_archives" for event in state.events))
 
-    def test_cache_and_fresh_discovery_share_run_group_exclusions(self) -> None:
+    def test_external_exclusions_apply_to_cached_and_fresh_discovery(self) -> None:
         class FakeWikipediaSearchClient:
+            def __init__(self) -> None:
+                self.calls = 0
+
             def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
-                return [SimpleNamespace(page_id=101), SimpleNamespace(page_id=102)]
+                self.calls += 1
+                page_id = 101 if self.calls == 1 else 103
+                return [SimpleNamespace(page_id=page_id)]
 
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -971,14 +976,15 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
             args = SimpleNamespace(
                 stream_reuse_cached_page_count=1,
                 route3_page_archive_dir=cache_dir,
-                stream_search_max_rounds=1,
+                stream_search_max_rounds=2,
                 stream_search_limit=50,
             )
             allocated_page_ids: set[int] = set()
+            external_excluded_page_ids = {101}
             cached, _summary = _reserve_stream_cached_page_archives(
                 state=PageIdStreamState.load(root / "cache_state.json"),
                 args=args,
-                excluded_page_ids=allocated_page_ids,
+                excluded_page_ids=external_excluded_page_ids | allocated_page_ids,
             )
             allocated_page_ids.update(entry.page_id for entry in cached)
             fresh_state = PageIdStreamState.load(root / "fresh_state.json")
@@ -989,11 +995,12 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 wikipedia_client=FakeWikipediaSearchClient(),
                 rng=random.Random(1),
                 count=1,
-                excluded_page_ids=allocated_page_ids,
+                excluded_page_ids=external_excluded_page_ids | allocated_page_ids,
             )
 
-        self.assertEqual([entry.page_id for entry in cached], [101])
-        self.assertEqual(fresh, [102])
+        self.assertEqual([entry.page_id for entry in cached], [102])
+        self.assertEqual(fresh, [103])
+
     def test_route3_source_metadata_uses_archive_page_id_for_title_url(self) -> None:
         class PageIdWikipediaClient(FakeWikipediaClient):
             def fetch_parse(self, title_or_url: str) -> dict:
@@ -1259,6 +1266,39 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
     def test_formal_table_search_query_is_fixed(self) -> None:
         self.assertEqual(_stream_search_queries(), ['insource:"wikitable"'])
 
+    def test_table_search_advances_by_actual_requested_hits(self) -> None:
+        class FakeWikipediaSearchClient:
+            def __init__(self) -> None:
+                self.calls: list[dict] = []
+
+            def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
+                self.calls.append(kwargs)
+                return [SimpleNamespace(page_id=page_id) for page_id in range(101, 111)]
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            state = PageIdStreamState.load(Path(tmpdir) / "state.json")
+            args = SimpleNamespace(
+                stream_page_source="table-search",
+                stream_search_max_rounds=1,
+                stream_search_limit=50,
+                stream_search_query=[],
+                enable_broad_table_search=False,
+            )
+            client = FakeWikipediaSearchClient()
+
+            selected = _reserve_stream_page_ids(
+                state=state,
+                args=args,
+                wikipedia_client=client,
+                rng=random.Random(1),
+                count=10,
+                excluded_page_ids=set(),
+            )
+
+        self.assertEqual(selected, list(range(101, 111)))
+        self.assertEqual(client.calls[0]["limit"], 10)
+        self.assertEqual(state.table_search_offset('insource:"wikitable"'), 10)
+
     def test_normal_table_search_reservation_does_not_consume_rerun_pool(self) -> None:
         class FakeWikipediaSearchClient:
             def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
@@ -1303,13 +1343,13 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
     def test_table_search_reservation_skips_external_page_id_exclusions(self) -> None:
         class FakeWikipediaSearchClient:
             def __init__(self) -> None:
-                self.calls = 0
+                self.offsets: list[int] = []
 
             def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
-                self.calls += 1
-                if self.calls == 1:
-                    return [SimpleNamespace(page_id=101), SimpleNamespace(page_id=102)]
-                return [SimpleNamespace(page_id=201)]
+                offset = kwargs["offset"]
+                self.offsets.append(offset)
+                start = 101 if offset == 0 else 201
+                return [SimpleNamespace(page_id=page_id) for page_id in range(start, start + 10)]
 
         with tempfile.TemporaryDirectory() as tmpdir:
             root = Path(tmpdir)
@@ -1321,31 +1361,23 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 stream_search_query=[],
                 enable_broad_table_search=False,
             )
+            client = FakeWikipediaSearchClient()
 
             selected = _reserve_stream_page_ids(
                 state=state,
                 args=args,
-                wikipedia_client=FakeWikipediaSearchClient(),
+                wikipedia_client=client,
                 rng=random.Random(1),
-                count=1,
-                excluded_page_ids={101, 102},
+                count=10,
+                excluded_page_ids=set(range(101, 111)),
             )
 
-        self.assertEqual(selected, [201])
-        self.assertEqual(state.table_search_offset('insource:"wikitable"'), 100)
-        self.assertEqual(state.used_ids, {201})
+        self.assertEqual(selected, list(range(201, 211)))
+        self.assertEqual(client.offsets, [0, 10])
+        self.assertEqual(state.table_search_offset('insource:"wikitable"'), 20)
+        self.assertEqual(state.used_ids, set(range(201, 211)))
 
     def test_table_search_discovery_retries_transient_errors_before_stopping(self) -> None:
-        class FlakyWikipediaSearchClient:
-            def __init__(self) -> None:
-                self.calls = 0
-
-            def search_page_ids(self, *args, **kwargs):  # noqa: ANN002, ANN003
-                self.calls += 1
-                if self.calls == 1:
-                    raise RuntimeError("HTTP Error 429: Too Many Requests")
-                return [SimpleNamespace(page_id=501)]
-
         with tempfile.TemporaryDirectory() as tmpdir:
             state = PageIdStreamState.load(Path(tmpdir) / "state.json")
             args = SimpleNamespace(
@@ -1358,20 +1390,33 @@ class WikipediaInfoboxGeneratorTests(unittest.TestCase):
                 stream_discovery_retry_backoff_seconds=0.0,
                 stream_discovery_retry_max_sleep_seconds=0.0,
             )
-            client = FlakyWikipediaSearchClient()
-
-            selected = _reserve_stream_page_ids(
-                state=state,
-                args=args,
-                wikipedia_client=client,
-                rng=random.Random(1),
-                count=1,
-                excluded_page_ids=set(),
+            client = WikipediaClient(
+                user_agent="test-agent",
+                proxy=None,
+                timeout_seconds=1.0,
+                cache_dir=None,
             )
 
+            with patch.object(
+                WikipediaClient,
+                "_fetch_json",
+                side_effect=[
+                    {"error": {"code": "readonly", "info": "retry"}},
+                    {"query": {"search": [{"pageid": 501, "title": "Page 501"}]}},
+                ],
+            ) as fetch_json:
+                selected = _reserve_stream_page_ids(
+                    state=state,
+                    args=args,
+                    wikipedia_client=client,
+                    rng=random.Random(1),
+                    count=1,
+                    excluded_page_ids=set(),
+                )
+
         self.assertEqual(selected, [501])
-        self.assertEqual(client.calls, 2)
-        self.assertEqual(state.table_search_offset('insource:"wikitable"'), 50)
+        self.assertEqual(fetch_json.call_count, 2)
+        self.assertEqual(state.table_search_offset('insource:"wikitable"'), 1)
         self.assertTrue(any(event.get("event") == "discovery_error" for event in state.events))
 
     def test_endpoint_resume_loads_jsonl_and_skips_malformed_lines(self) -> None:

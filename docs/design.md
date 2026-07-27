@@ -58,6 +58,8 @@ Table filters, prose-leakage scoring, and minimum table score remain fixed at th
 
 Formal non-dry runs require a clean Git worktree. Before reading or creating a segment manifest, the recipe acquires a non-blocking OS-held exclusive writer lock for that segment and holds it through worker execution and projection. The OS releases the lock when the recipe exits or is killed; durable artifacts remain responsible for crash recovery. Each segment owns a `segment_manifest.json` whose fingerprint covers the Git SHA, generation prompt hash, resolved result-affecting configuration, model parameters, answer and source modes, primary page budget, seed, cache policy, table ranking and filters, DuckDuckGo settings, and second-stage settings. A complete segment with the same fingerprint is reused; an incomplete segment with the same fingerprint resumes. A different fingerprint requires a new run or an explicit compatible top-up segment. Incomplete legacy schemas are rejected rather than migrated. Manifest status is either `incomplete` or `complete`; the derived `blocking_reasons` set records `external_service` and/or `ambiguous` without inventing allocations or retries.
 
+A new run may use `--exclude-run-id` to exclude the canonical page IDs allocated by one older run. On first execution, the recipe freezes the sorted unique exclusion set as a segment artifact; resume reads that snapshot instead of rescanning the older run. The exclusion count and the SHA-256 of the canonically encoded page-ID list are part of the segment fingerprint. Page overlap is defined by canonical page ID, not candidate ID.
+
 The authoritative hierarchy is:
 
 ```text

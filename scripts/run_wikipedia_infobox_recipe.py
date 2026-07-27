@@ -36,6 +36,7 @@ from wikidata_simpleqa.route3_run_ledger import (
     SegmentLedgerIndex,
     atomic_write_json,
     build_segment_fingerprint,
+    canonical_json_sha256,
     create_segment_manifest,
     derive_segment_manifest_state,
     ledger_summary,
@@ -146,6 +147,11 @@ def parse_args() -> argparse.Namespace:
         default=DEFAULT_ROUTE3_INFOBOX_MIN_REMAINING_ROWS,
     )
     parser.add_argument("--run-id", default="", help="Path-safe batch ID. Defaults to a dated recipe ID.")
+    parser.add_argument(
+        "--exclude-run-id",
+        default="",
+        help="Older recipe run whose canonical page IDs are excluded from this new run.",
+    )
     parser.add_argument("--run-date", default=None)
     parser.add_argument("--cutoff-year", type=int, default=2025)
     parser.add_argument("--timeout-seconds", type=float, default=30.0)
@@ -289,6 +295,8 @@ def _main(segment_writer_locks: ExitStack) -> int:
         _require_clean_worktree()
 
     segment_dir.mkdir(parents=True, exist_ok=True)
+    if not args.dry_run:
+        segment_writer_locks.enter_context(_recipe_group_lock(segment_dir))
     segment_summaries: list[dict] = []
     remaining_reuse_cached_page_count = args.stream_reuse_cached_page_count
     remaining_fresh_cached_page_count = args.stream_fresh_cached_page_count
@@ -310,6 +318,15 @@ def _main(segment_writer_locks: ExitStack) -> int:
         segment_id = _append_segment_id(base_segment_id, append_label)
         if not args.dry_run:
             segment_writer_locks.enter_context(_segment_writer_lock(segment_dir / segment_id))
+        excluded_page_ids_file: Path | None = None
+        external_page_exclusion: dict | None = None
+        if args.exclude_run_id:
+            excluded_page_ids_file = segment_dir / segment_id / EXCLUDED_PAGE_IDS_FILENAME
+            if not args.dry_run:
+                external_page_exclusion = _create_or_load_external_page_exclusion(
+                    segment_root=segment_dir / segment_id,
+                    exclude_run_id=args.exclude_run_id,
+                )
         base_stream_search_initial_offset = _segment_stream_search_initial_offset(
             recipe_items,
             index,
@@ -329,6 +346,7 @@ def _main(segment_writer_locks: ExitStack) -> int:
             base_segment_id=base_segment_id,
             stream_reuse_cached_page_count=segment_reuse_cached_page_count,
             stream_fresh_cached_page_count=segment_fresh_cached_page_count,
+            excluded_page_ids_file=excluded_page_ids_file,
         )
         manifest: dict | None = None
         if not args.dry_run:
@@ -348,6 +366,7 @@ def _main(segment_writer_locks: ExitStack) -> int:
                 table_source_types=table_source_types,
                 stream_reuse_cached_page_count=segment_reuse_cached_page_count,
                 stream_fresh_cached_page_count=segment_fresh_cached_page_count,
+                external_page_exclusion=external_page_exclusion,
             )
             if append_label:
                 _require_top_up_prerequisites(
@@ -378,6 +397,11 @@ def _main(segment_writer_locks: ExitStack) -> int:
                         "ddg_verifier_results": str(paths["ddg_results"]),
                         "ambiguous_external_calls_json": str(paths["ambiguous_json"]),
                         "ambiguous_external_calls_markdown": str(paths["ambiguous_markdown"]),
+                        **(
+                            {"external_page_exclusion": str(paths["excluded_page_ids"])}
+                            if external_page_exclusion is not None
+                            else {}
+                        ),
                     },
                 )
                 atomic_write_json(paths["manifest"], manifest)
@@ -710,11 +734,82 @@ def _require_clean_worktree() -> None:
         raise RuntimeError("Formal Route 3 runs require a clean Git worktree.")
 
 
+EXCLUDED_PAGE_IDS_FILENAME = "excluded_page_ids.json"
+
+
+def _read_external_page_exclusion(path: Path) -> dict:
+    """Read and verify one frozen page-ID exclusion snapshot."""
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    page_ids = sorted({int(page_id) for page_id in payload["page_ids"]})
+    page_ids_sha256 = canonical_json_sha256(page_ids)
+    if len(page_ids) != int(payload["page_id_count"]):
+        raise ValueError(f"External page exclusion count mismatch: {path}")
+    if page_ids_sha256 != str(payload["page_ids_sha256"]):
+        raise ValueError(f"External page exclusion hash mismatch: {path}")
+    return {
+        "schema_version": 1,
+        "source_run_id": str(payload["source_run_id"]),
+        "page_id_count": len(page_ids),
+        "page_ids_sha256": page_ids_sha256,
+        "page_ids": page_ids,
+    }
+
+
+def _create_or_load_external_page_exclusion(
+    *,
+    segment_root: Path,
+    exclude_run_id: str,
+) -> dict:
+    """Freeze one older run's canonical allocation IDs for this segment."""
+    source_run_id = safe_artifact_id(exclude_run_id, fallback="excluded_run")
+    snapshot_path = segment_root / EXCLUDED_PAGE_IDS_FILENAME
+    if snapshot_path.exists():
+        snapshot = _read_external_page_exclusion(snapshot_path)
+        if snapshot["source_run_id"] != source_run_id:
+            raise ValueError(f"External page exclusion source mismatch: {snapshot_path}")
+        return snapshot
+
+    source_root = ROOT / "outputs" / "recipe_segments" / source_run_id
+    allocation_paths = sorted(source_root.glob("*/page_allocations/a*_p*.json"))
+    if not allocation_paths:
+        raise FileNotFoundError(f"No page allocations found for excluded run: {source_run_id}")
+    page_ids = sorted(
+        {
+            int(json.loads(path.read_text(encoding="utf-8"))["canonical_page_id"])
+            for path in allocation_paths
+        }
+    )
+    snapshot = {
+        "schema_version": 1,
+        "source_run_id": source_run_id,
+        "page_id_count": len(page_ids),
+        "page_ids_sha256": canonical_json_sha256(page_ids),
+        "page_ids": page_ids,
+    }
+    atomic_write_json(snapshot_path, snapshot)
+    return snapshot
+
+
+def _external_page_exclusion_summary(
+    ledger_index: SegmentLedgerIndex,
+    snapshot: dict,
+) -> dict:
+    """Return exclusion audit fields and reject canonical page overlap."""
+    external_excluded_page_ids = set(snapshot["page_ids"])
+    collisions = ledger_index.primary_page_ids & external_excluded_page_ids
+    if collisions:
+        raise RuntimeError("external page exclusion violated")
+    return {
+        "external_excluded_page_count": snapshot["page_id_count"],
+        "external_excluded_page_ids_sha256": snapshot["page_ids_sha256"],
+        "external_exclusion_collision_count": len(collisions),
+    }
+
+
 @contextmanager
-def _segment_writer_lock(segment_root: Path):
-    """Hold one non-blocking OS lock for the segment writer lifetime."""
-    segment_root.mkdir(parents=True, exist_ok=True)
-    lock_path = segment_root / ".recipe_writer.lock"
+def _exclusive_writer_lock(lock_path: Path, unavailable_message: str):
+    """Hold one non-blocking exclusive OS lock."""
+    lock_path.parent.mkdir(parents=True, exist_ok=True)
     handle = lock_path.open("a+b")
     handle.seek(0, 2)
     if handle.tell() == 0:
@@ -732,11 +827,31 @@ def _segment_writer_lock(segment_root: Path):
             fcntl.flock(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
     except OSError as exc:
         handle.close()
-        raise RuntimeError(f"Segment already has an active recipe writer: {segment_root}") from exc
+        raise RuntimeError(unavailable_message) from exc
     try:
         yield
     finally:
         handle.close()
+
+
+@contextmanager
+def _recipe_group_lock(segment_dir: Path):
+    """Hold the non-blocking writer lock for one recipe run group."""
+    with _exclusive_writer_lock(
+        segment_dir / ".recipe_group.lock",
+        f"Run group already has an active recipe writer: {segment_dir}",
+    ):
+        yield
+
+
+@contextmanager
+def _segment_writer_lock(segment_root: Path):
+    """Hold one non-blocking OS lock for the segment writer lifetime."""
+    with _exclusive_writer_lock(
+        segment_root / ".recipe_writer.lock",
+        f"Segment already has an active recipe writer: {segment_root}",
+    ):
+        yield
 
 
 def _git_sha() -> str:
@@ -771,6 +886,7 @@ def _segment_fingerprint(
     table_source_types: list[str],
     stream_reuse_cached_page_count: int | str,
     stream_fresh_cached_page_count: int | str,
+    external_page_exclusion: dict | None = None,
 ) -> dict:
     """Build the complete resolved fingerprint for one formal segment."""
     resolved_config = {
@@ -814,6 +930,17 @@ def _segment_fingerprint(
             },
             "source_mode": list(table_source_types),
             "page_attempt_count": item.record_limit,
+            **(
+                {
+                    "external_page_exclusion": {
+                        "source_run_id": external_page_exclusion["source_run_id"],
+                        "page_id_count": external_page_exclusion["page_id_count"],
+                        "page_ids_sha256": external_page_exclusion["page_ids_sha256"],
+                    }
+                }
+                if external_page_exclusion is not None
+                else {}
+            ),
             "seed": stream_random_seed,
             "cache_policy": {
                 "reuse_cached_page_count": stream_reuse_cached_page_count,
@@ -980,6 +1107,7 @@ def _segment_command(
     base_segment_id: str | None = None,
     stream_reuse_cached_page_count: int | str | None = None,
     stream_fresh_cached_page_count: int | str | None = None,
+    excluded_page_ids_file: Path | None = None,
 ) -> tuple[list[str], dict[str, Path]]:
     """Build the pipeline subprocess command for one recipe segment."""
     normalized_table_source_types = list(
@@ -1128,6 +1256,8 @@ def _segment_command(
         "--route3-infobox-min-remaining-rows",
         str(args.route3_infobox_min_remaining_rows),
     ]
+    if excluded_page_ids_file is not None:
+        command.extend(["--excluded-page-ids-file", str(excluded_page_ids_file)])
     for fallback in args.duckduckgo_disable_fallback:
         command.extend(["--duckduckgo-disable-fallback", str(fallback)])
     command.append("--duckduckgo-prefer-ddgs" if args.duckduckgo_prefer_ddgs else "--no-duckduckgo-prefer-ddgs")
@@ -1164,6 +1294,7 @@ def _segment_command(
         "ddg_results": ddg_verifier_result_dir,
         "ambiguous_json": ambiguous_json,
         "ambiguous_markdown": ambiguous_markdown,
+        "excluded_page_ids": excluded_page_ids_file or segment_root / EXCLUDED_PAGE_IDS_FILENAME,
     }
 
 
@@ -1265,6 +1396,11 @@ def _project_segment_from_ledger(
         segment_ledger,
         base_summary=base_summary,
     )
+    exclusion_path = paths.get("excluded_page_ids")
+    if exclusion_path is not None and exclusion_path.exists():
+        external_page_exclusion = _read_external_page_exclusion(exclusion_path)
+        summary.update(_external_page_exclusion_summary(segment_ledger, external_page_exclusion))
+
     _attach_recipe_segment_budget_summary(
         summary,
         item=item,
@@ -1431,6 +1567,15 @@ def _recipe_summary(
         "run_group_id": run_id,
         "run_segment_id": "recipe_combined",
         "recipe_id": run_id,
+        "external_excluded_page_count": (
+            segment_summaries[0].get("external_excluded_page_count", 0) if segment_summaries else 0
+        ),
+        "external_excluded_page_ids_sha256": (
+            segment_summaries[0].get("external_excluded_page_ids_sha256", "") if segment_summaries else ""
+        ),
+        "external_exclusion_collision_count": sum(
+            int(summary.get("external_exclusion_collision_count", 0) or 0) for summary in segment_summaries
+        ),
         "recipe_items": [
             {"answer_type": item.answer_type, "target_count": item.record_limit, "record_limit": item.record_limit}
             for item in recipe_items

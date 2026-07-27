@@ -18,6 +18,7 @@ from test_support import ROOT  # noqa: F401
 from wikidata_simpleqa.route3_run_ledger import (
     atomic_write_json,
     build_segment_fingerprint,
+    canonical_json_sha256,
     SegmentLedgerIndex,
     create_segment_manifest,
     derive_segment_manifest_state,
@@ -37,11 +38,14 @@ from wikidata_simpleqa.route3_worker_support import (
 )
 from run_wikipedia_infobox_pipeline import parse_args as parse_worker_args, _stream_search_queries  # noqa: E402
 from run_wikipedia_infobox_recipe import (  # noqa: E402
+    EXCLUDED_PAGE_IDS_FILENAME,
     RecipeItem,
     _apply_recipe_big_batch_mode,
 
     _base_segment_id_for_run,
     _combine_segment_records,
+    _create_or_load_external_page_exclusion,
+    _external_page_exclusion_summary,
     _generation_protocol_compatibility_fingerprint,
     _parse_recipe,
     parse_args as parse_recipe_args,
@@ -49,6 +53,7 @@ from run_wikipedia_infobox_recipe import (  # noqa: E402
     _recipe_summary,
     _require_clean_worktree,
     _require_top_up_prerequisites,
+    _recipe_group_lock,
     _segment_fingerprint,
     _recipe_segment_budget,
     _decrement_recipe_budget,
@@ -130,6 +135,7 @@ def _recipe_args(**overrides):
         "status": False,
         "resolve_ambiguous": None,
         "run_id": "",
+        "exclude_run_id": "",
     }
     values.update(overrides)
     return SimpleNamespace(**values)
@@ -302,6 +308,15 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
             with _segment_writer_lock(segment_root):
                 self.assertTrue((segment_root / ".recipe_writer.lock").exists())
+
+    def test_recipe_group_lock_rejects_second_writer(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            segment_dir = Path(tmpdir) / "segments"
+            with _recipe_group_lock(segment_dir):
+                self.assertTrue((segment_dir / ".recipe_group.lock").exists())
+                with self.assertRaisesRegex(RuntimeError, "Run group already has an active recipe writer"):
+                    with _recipe_group_lock(segment_dir):
+                        pass
 
     def test_fresh_recipe_projects_zero_accepted_records_after_worker(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -568,6 +583,116 @@ class WikipediaInfoboxRecipeTests(unittest.TestCase):
 
         self.assertNotIn("--reset-stream-state", resumed_command)
         self.assertEqual(resumed_paths["ledger"], paths["ledger"])
+
+    def test_external_exclusion_snapshot_matches_old_run_allocations(self) -> None:
+        expected_hash = "23202fff0088f4c44244b3a5ffb01245848e9e2a2f479f51bd4736dada1f3d2b"
+        page_ids = json.loads(
+            (ROOT / "tests" / "fixtures" / "wikipedia_alltypes_20260726_page_ids.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            source_run_id = "wikipedia_stream_recipe_3500alltypes_single_fact_2026_07_26"
+            allocation_dir = (
+                root
+                / "outputs"
+                / "recipe_segments"
+                / source_run_id
+                / "01_alltypes_3500"
+                / "page_allocations"
+            )
+            for ordinal, page_id in enumerate(page_ids, start=1):
+                atomic_write_json(
+                    allocation_dir / f"a{ordinal:06d}_p{page_id}.json",
+                    {"canonical_page_id": page_id},
+                )
+            segment_root = root / "outputs" / "recipe_segments" / "new_run" / "01_place_6000"
+            with patch("run_wikipedia_infobox_recipe.ROOT", root):
+                snapshot = _create_or_load_external_page_exclusion(
+                    segment_root=segment_root,
+                    exclude_run_id=source_run_id,
+                )
+                atomic_write_json(
+                    allocation_dir / "a999999_p99999999.json",
+                    {"canonical_page_id": 99999999},
+                )
+                resumed_snapshot = _create_or_load_external_page_exclusion(
+                    segment_root=segment_root,
+                    exclude_run_id=source_run_id,
+                )
+
+        self.assertEqual(snapshot["page_id_count"], 2328)
+        self.assertEqual(snapshot["page_ids_sha256"], expected_hash)
+        self.assertEqual(canonical_json_sha256(snapshot["page_ids"]), expected_hash)
+        self.assertEqual(resumed_snapshot, snapshot)
+
+    def test_new_ledger_has_zero_external_exclusion_collisions(self) -> None:
+        page_ids = json.loads(
+            (ROOT / "tests" / "fixtures" / "wikipedia_alltypes_20260726_page_ids.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        snapshot = {
+            "source_run_id": "wikipedia_stream_recipe_3500alltypes_single_fact_2026_07_26",
+            "page_id_count": len(page_ids),
+            "page_ids_sha256": canonical_json_sha256(page_ids),
+            "page_ids": page_ids,
+        }
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            index = SegmentLedgerIndex(
+                allocation_dir=root / "page_allocations",
+                attempt_dir=root / "page_attempts",
+                run_group_id="new_place_run",
+                segment_id="01_place_6000",
+                run_group_segments_dir=root,
+            )
+            index.commit_allocation(canonical_page_id=90000001, page_source="fresh")
+            audit = _external_page_exclusion_summary(index, snapshot)
+
+        self.assertEqual(index.primary_page_ids & set(page_ids), set())
+        self.assertEqual(audit["external_exclusion_collision_count"], 0)
+
+    def test_exclusion_hash_changes_segment_fingerprint(self) -> None:
+        args = _recipe_args(run_date="2026-07-27")
+        common = {
+            "args": args,
+            "item": RecipeItem("Place", 6000),
+            "run_id": "place_run",
+            "segment_id": "01_place_6000",
+            "stream_random_seed": 42,
+            "table_source_types": ["infobox", "wikitable"],
+            "stream_reuse_cached_page_count": 0,
+            "stream_fresh_cached_page_count": "fill",
+        }
+        first_exclusion = {
+            "source_run_id": "old_run",
+            "page_id_count": 2328,
+            "page_ids_sha256": "a" * 64,
+        }
+        second_exclusion = {
+            **first_exclusion,
+            "page_ids_sha256": "b" * 64,
+        }
+        with (
+            patch("run_wikipedia_infobox_recipe._git_sha", return_value="abc123"),
+            patch("run_wikipedia_infobox_recipe._generation_prompt_hash", return_value="prompt123"),
+        ):
+            first = _segment_fingerprint(
+                **common,
+                external_page_exclusion=first_exclusion,
+            )
+            second = _segment_fingerprint(
+                **common,
+                external_page_exclusion=second_exclusion,
+            )
+
+        self.assertNotEqual(first["sha256"], second["sha256"])
+        self.assertEqual(
+            first["inputs"]["external_page_exclusion"],
+            first_exclusion,
+        )
 
     def test_segment_fingerprint_contains_required_inputs(self) -> None:
         args = _recipe_args(run_date="2026-07-24")
