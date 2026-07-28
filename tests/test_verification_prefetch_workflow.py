@@ -373,3 +373,105 @@ def test_verification_run_keeps_all_models_for_a_question_in_one_shard(
     assert report["question_count"] == 2
     assert report["response_count"] == 4
     assert report["shard_count"] == 2
+
+
+def test_simpleqa_synth_answers_become_gold_free_model_responses(
+    tmp_path: Path,
+) -> None:
+    module = load_script("prepare_simpleqa_synth_answer_verification")
+    csv_path = tmp_path / "simpleqa_synth.csv"
+    with csv_path.open("w", encoding="utf-8", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=["id", "problem", "answer"])
+        writer.writeheader()
+        writer.writerow(
+            {
+                "id": "simpleqa_synth_000001",
+                "problem": "Question one?",
+                "answer": "Alpha",
+            }
+        )
+        writer.writerow(
+            {
+                "id": "simpleqa_synth_000002",
+                "problem": "Question two?",
+                "answer": "Beta",
+            }
+        )
+
+    prefetch_dir = tmp_path / "prefetch"
+    write_jsonl(
+        prefetch_dir / "topic_guidance_with_answer.jsonl",
+        [
+            {
+                "topic_id": "simpleqa_synth_000001",
+                "query": "Question one?",
+                "answer": "Alpha",
+                "topic_guidance": "The answer is Alpha [S1].",
+                "topic_brief": "Alpha is supported [S1].",
+                "answer_assessment": {"canonical_answer": "Alpha"},
+                "evidence_items": [
+                    {
+                        "snippet_id": "S1",
+                        "source_url": "https://example.org/one",
+                        "source_title": "One",
+                        "content": "Selected source row: Alpha",
+                    }
+                ],
+            },
+            {
+                "topic_id": "simpleqa_synth_000002",
+                "query": "Question two?",
+                "answer": "Beta",
+                "topic_guidance": "The answer is Beta [S1].",
+                "answer_assessment": {"canonical_answer": "Beta"},
+                "evidence_items": [
+                    {
+                        "snippet_id": "S1",
+                        "source_url": "https://example.org/two",
+                        "source_title": "Two",
+                        "content": "Selected source row: Beta",
+                    }
+                ],
+            },
+        ],
+    )
+    output_dir = tmp_path / "answer_verification"
+
+    report = module.prepare_answer_verification(
+        csv_path=csv_path,
+        prefetch_input=prefetch_dir,
+        output_dir=output_dir,
+        expected_count=2,
+        questions_per_shard=1,
+    )
+
+    model_rows = read_jsonl(output_dir / "model_answers.jsonl")
+    assert model_rows == [
+        {
+            "original_index": "simpleqa_synth_000001",
+            "query": "Question one?",
+            "model": "simpleqa_synth",
+            "response": "Alpha",
+        },
+        {
+            "original_index": "simpleqa_synth_000002",
+            "query": "Question two?",
+            "model": "simpleqa_synth",
+            "response": "Beta",
+        },
+    ]
+    grounding = read_jsonl(output_dir / "topic_grounding.jsonl")
+    assert all("answer" not in row for row in grounding)
+    assert all("answer_assessment" not in row for row in grounding)
+    assert all("topic_brief" not in row for row in grounding)
+    assert all(
+        "Do not treat the response as a reference answer" in row["topic_guidance"]
+        for row in grounding
+    )
+    assert grounding[0]["evidence_items"][0]["content"] == (
+        "Selected source row: Alpha"
+    )
+    assert report["has_reference_answers"] is False
+    assert report["model"] == "simpleqa_synth"
+    assert report["shard_count"] == 2
+    assert len(read_jsonl(output_dir / "shards/shard_001/model_answers.jsonl")) == 1

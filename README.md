@@ -396,6 +396,177 @@ The complete directory is inspected before the new output directory is created. 
 
 Project Verification Agent's current code slices raw input rows with `START_LINE` and `NUM_LINES` before grouping model outputs. Configure that entry to include the intended number of converted response rows; it does not interpret the limit as a question count and can cut through a contiguous question group.
 
+### Offline prefetch and run assembly
+
+Four offline scripts prepare the finalized benchmark, cached evidence, and batch
+responses for Project Verification Agent. All paths are configurable; the
+dataset-specific defaults point at the current 328-question SimpleQA Synth CSV,
+its integrated review state, the durable public-ID registry, and the selected
+100-question SimpleQA Verified CSV.
+
+The normal combined workflow is:
+
+1. build the 328 SimpleQA Synth prefetch artifacts from finalization provenance;
+2. convert the 100 SimpleQA Verified rows into the official prefetch input;
+3. run the Verification Agent answer-aware prefetch for those 100 rows;
+4. combine both prefetch products with all batch-evaluation outputs;
+5. run Verification Agent on the generated question-aligned shards.
+
+The independent gold-free check of the 328 published answers uses steps 1 and
+4 below instead of the combined workflow.
+
+#### 1. Build the SimpleQA Synth prefetch product
+
+`build_simpleqa_synth_prefetch.py` joins each final public ID to its internal
+candidate through `outputs/public_ids/simpleqa_synth.json`, locates the final
+active review record, and reuses its selected table/infobox evidence and stored
+DDG snippets. The final CSV remains authoritative when finalization contains a
+later wording or answer-direction revision. A revised answer must still occur
+in the selected evidence or the command fails.
+
+```powershell
+python scripts\build_simpleqa_synth_prefetch.py `
+  --output-dir outputs\verification_prefetch\simpleqa_synth `
+  --require-complete
+```
+
+Important parameters:
+
+| Parameter | Default or purpose |
+| --- | --- |
+| `--csv` | Current 328-row `simpleqa_synth.csv` |
+| `--public-id-registry` | `outputs/public_ids/simpleqa_synth.json` |
+| `--review-state` | Current integrated review state; repeatable |
+| `--page-cache-dir` | Existing page archive directory; repeatable |
+| `--segment-id` | Optional review segment filter; repeatable |
+| `--max-page-chars` | `30000` characters per trusted-page candidate |
+| `--max-ddg-results-per-topic` | `15` stored, URL-deduplicated snippets |
+| `--include-answer-probe` | Opt in to answer-bearing DDG probes; off by default |
+| `--require-complete` | Exit nonzero unless all 328 target topics are present |
+
+The four primary files match the answer-aware Verification Agent prefetch
+product names and schemas:
+
+```text
+topic_guidance_with_answer.jsonl
+fetched_fulltext_pages.jsonl
+topic_grounding_trace_with_answer.jsonl
+run_prefetch_topic_evidence_with_answer_report.json
+```
+
+The directory also contains `prefetch_topics.jsonl` and
+`simpleqa_synth_id_map.jsonl` for audit. If cached candidates must be assembled
+from separate invocations, run the command sequentially against the same
+`--output-dir`; records are merged by stable identity, identical duplicates are
+accepted, conflicts fail, and the final invocation should add
+`--require-complete`.
+
+#### 2. Prepare the SimpleQA Verified prefetch input
+
+`prepare_simpleqa_verified_prefetch.py` converts the selected 100-row CSV into
+the `id`, `question`, `answer`, and trusted `url` fields expected by
+`run_prefetch_topic_evidence_with_answer.py`. It accepts both JSON-list and
+comma-separated URL fields, removes duplicate URLs, repairs only unmatched CSV
+punctuation, and preserves balanced parentheses in Wikipedia titles.
+
+```powershell
+python scripts\prepare_simpleqa_verified_prefetch.py `
+  --output-dir outputs\verification_prefetch\simpleqa_verified_input
+```
+
+The output `prefetch_topics.jsonl` is then supplied to the Verification Agent
+answer-aware prefetch runner. Configure that runner with:
+
+```text
+INPUT_JSONL=<absolute path to prefetch_topics.jsonl>
+USE_INPUT_URLS=True
+REQUIRE_TOPIC_ID_FROM_INPUT=True
+REQUIRE_ANSWER_FROM_INPUT=True
+TOPIC_START_INDEX=0
+LIMIT_TOPICS=None
+```
+
+Its output directory must contain `topic_guidance_with_answer.jsonl` before the
+combined assembly step. Use `--input-csv` to select a different CSV and
+`--expected-count` to change or disable the default count check.
+
+#### 3. Assemble the combined Verification Agent run
+
+`prepare_verification_agent_run.py` accepts both raw protected batch-evaluation
+JSONL and already converted `model_jsonl`. Repeat `--evaluation-input` for each
+model/round directory and repeat `--prefetch` for the SimpleQA Synth and
+SimpleQA Verified prefetch products.
+
+```powershell
+python scripts\prepare_verification_agent_run.py `
+  --prefetch outputs\verification_prefetch\simpleqa_synth `
+  --prefetch outputs\verification_prefetch\simpleqa_verified `
+  --evaluation-input outputs\batch_predictions_rounds_1_to_5 `
+  --evaluation-input outputs\batch_predictions_rounds_6_to_9 `
+  --output-dir outputs\verification_agent_run `
+  --questions-per-shard 10
+```
+
+Defaults enforce the currently supplied files: 428 question groups and 11,052
+responses (`100 * 9 * 5 + 100 * 9 * 4 + 328 * 9`). For the planned scale with
+400 SimpleQA Synth questions, pass `--expected-question-count 500` and
+`--expected-response-count 11700`, corresponding to
+`100 * 9 * 5 + 100 * 9 * 4 + 400 * 9 * 1`. Set either count explicitly for
+other workloads. `--allow-unconverted` preserves unusable prediction items
+instead of failing, and `--allow-unused-prefetch` permits prefetch topics with no
+responses; neither relaxation is enabled by default.
+
+The output contains a complete unsharded bundle and question-aligned shard
+directories:
+
+```text
+model_answers.jsonl
+topic_grounding.jsonl
+topic_guidance.jsonl
+lineage_crosswalk.jsonl
+prepare_verification_agent_run_report.json
+shards/shard_NNN/
+```
+
+Every model and round for one exact `(id, query)` remains in the same shard.
+The report and each `shard_manifest.json` provide the exact main-entry paths and
+raw-line count. Copy them into `runs/run_simpleqa_entry.py` as follows:
+
+```text
+INPUT_MODE="model_jsonl"
+INPUT_PATH=<shard model_answers.jsonl>
+START_LINE=1
+NUM_LINES=<shard manifest num_lines>
+EXISTING_TOPIC_GROUNDING_PATH=<shard topic_grounding.jsonl>
+EXISTING_TOPIC_GUIDANCE_PATH=<shard topic_guidance.jsonl>
+RUN_TARGET_STAGE="retrieve"
+ENABLE_FIXED_TOPIC_GROUNDING_EVIDENCE=True
+```
+
+#### 4. Verify the 328 published answers without gold labels
+
+`prepare_simpleqa_synth_answer_verification.py` treats each final CSV `answer`
+as the response of one model named `simpleqa_synth`. It deliberately omits
+`reference_answer`. It also sanitizes the first script's prefetch rows by
+removing `answer`, `answer_assessment`, and `topic_brief`, replacing the old
+answer-directed guidance with neutral source-grounding guidance while retaining
+the fixed evidence itself.
+
+```powershell
+python scripts\prepare_simpleqa_synth_answer_verification.py `
+  --prefetch outputs\verification_prefetch\simpleqa_synth `
+  --output-dir outputs\verification_agent_simpleqa_synth_answers `
+  --questions-per-shard 10
+```
+
+`--model-name` defaults to `simpleqa_synth`, `--expected-count` defaults to 328,
+and `--csv` defaults to the current final CSV. The output layout and shard
+manifests use the same main-entry paths listed in step 3, but contain exactly
+one gold-free response per question. The fixed source evidence may naturally
+contain the factual value being checked; the removed fields ensure the pending
+response is not separately declared to be a reference answer or pre-judged as
+supported.
+
 ## Historical-code cleanup preparation
 
 Later cleanup may remove Route 1, Route 2, Route 4, KELM, old finalization, and other historical entry points only after the supported import closure is narrowed. Current Route 3 startup still reaches historical code through two main couplings:
